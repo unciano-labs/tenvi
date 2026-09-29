@@ -1,13 +1,23 @@
-// Multi-tenant Website & Role constants from environment
-export const WEBSITE_ID =
-  process.env.NEXT_PUBLIC_WEBSITE_ID ||
-  process.env.WEBSITE_ID ||
-  '65d4f86e-1829-417a-981f-bc7aad7bc953';
+// Canonical Tenvi Multi-tenant Website & Role constants
+export const TENVI_WEBSITE_ID = '65d4f86e-1829-417a-981f-bc7aad7bc953';
+export const TENVI_DEFAULT_ROLE_ID = '02bf8818-b503-4f94-beac-6c45aa12e368';
 
-export const DEFAULT_ROLE_ID =
-  process.env.NEXT_PUBLIC_DEFAULT_ROLE_ID ||
-  process.env.DEFAULT_ROLE_ID ||
-  '02bf8818-b503-4f94-beac-6c45aa12e368';
+function sanitizeUuid(val: string | undefined, fallback: string): string {
+  if (!val) return fallback;
+  const cleaned = val.trim().replace(/^["']|["']$/g, '').trim();
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(cleaned) ? cleaned : fallback;
+}
+
+export const WEBSITE_ID = sanitizeUuid(
+  process.env.NEXT_PUBLIC_WEBSITE_ID || process.env.WEBSITE_ID,
+  TENVI_WEBSITE_ID
+);
+
+export const DEFAULT_ROLE_ID = sanitizeUuid(
+  process.env.NEXT_PUBLIC_DEFAULT_ROLE_ID || process.env.DEFAULT_ROLE_ID,
+  TENVI_DEFAULT_ROLE_ID
+);
 
 // Default Currency for display
 export const DEFAULT_CURRENCY = 'PHP';

@@ -1,22 +1,34 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.NEXT_SUPABASE_URL ||
-  '';
+function getSupabaseServerConfig() {
+  const url = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.NEXT_SUPABASE_URL ||
+    'https://xhjkkrjnlorrayuaxbra.supabase.co'
+  ).trim().replace(/^["']|["']$/g, '');
 
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.NEXT_SUPABASE_ANON_KEY ||
-  '';
+  const anonKey = (
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_SUPABASE_ANON_KEY ||
+    ''
+  ).trim().replace(/^["']|["']$/g, '');
+
+  const serviceRoleKey = (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    ''
+  ).trim().replace(/^["']|["']$/g, '');
+
+  return { url, anonKey, serviceRoleKey };
+}
 
 export async function createClient() {
   const cookieStore = await cookies();
+  const { url, anonKey } = getSupabaseServerConfig();
 
   return createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {
@@ -39,13 +51,13 @@ export async function createClient() {
 
 // Service role client strictly for server-side admin operations (e.g., initial user profile linking)
 export function createAdminClient() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const { url, serviceRoleKey } = getSupabaseServerConfig();
   if (!serviceRoleKey) {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
   }
 
   return createServerClient(
-    supabaseUrl,
+    url,
     serviceRoleKey,
     {
       cookies: {

@@ -3,32 +3,70 @@ import { WEBSITE_ID } from '@/lib/constants';
 
 /**
  * Checks whether a specific user ID has an active membership/role for a given website.
- * Uses public.has_website_access RPC function with admin client fallback.
+ * Uses public.has_website_access RPC function with standard client first (SECURITY DEFINER),
+ * falling back to admin client if available.
  */
 export async function checkUserWebsiteMembership(
   userId: string,
   websiteId: string = WEBSITE_ID
 ): Promise<boolean> {
-  const admin = createAdminClient();
+  const targetWebsiteId = (websiteId || WEBSITE_ID)
+    .trim()
+    .replace(/^["']|["']$/g, '');
 
-  const { data, error } = await admin.rpc('has_website_access', {
-    p_website_id: websiteId,
-    p_user_id: userId,
-  });
-
-  if (!error && typeof data === 'boolean') {
-    return data;
+  if (!userId || !targetWebsiteId) {
+    return false;
   }
 
-  // Fallback direct relational query if RPC encounters issues
-  const { data: roleRecord } = await admin
-    .from('user_roles')
-    .select('id, user_profiles!inner(user_id), website_roles!inner(website_id)')
-    .eq('user_profiles.user_id', userId)
-    .eq('website_roles.website_id', websiteId)
-    .maybeSingle();
+  // 1. Primary check: call has_website_access RPC using standard client
+  // Note: has_website_access is SECURITY DEFINER and executable by anon and authenticated
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc('has_website_access', {
+      p_website_id: targetWebsiteId,
+      p_user_id: userId,
+    });
 
-  return Boolean(roleRecord);
+    if (!error && typeof data === 'boolean') {
+      return data;
+    }
+    if (error) {
+      console.warn('Standard client has_website_access RPC returned error:', error.message);
+    }
+  } catch (clientErr) {
+    console.warn('Standard client RPC execution error in checkUserWebsiteMembership:', clientErr);
+  }
+
+  // 2. Secondary check: call has_website_access RPC using admin client (if service role key is present)
+  try {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const admin = createAdminClient();
+      const { data: adminData, error: adminErr } = await admin.rpc('has_website_access', {
+        p_website_id: targetWebsiteId,
+        p_user_id: userId,
+      });
+
+      if (!adminErr && typeof adminData === 'boolean') {
+        return adminData;
+      }
+
+      // 3. Fallback direct relational query if RPC encounters issues
+      const { data: roleRecord } = await admin
+        .from('user_roles')
+        .select('id, user_profiles!inner(user_id), website_roles!inner(website_id)')
+        .eq('user_profiles.user_id', userId)
+        .eq('website_roles.website_id', targetWebsiteId)
+        .maybeSingle();
+
+      if (roleRecord) {
+        return true;
+      }
+    }
+  } catch (adminErr) {
+    console.warn('Admin client check error in checkUserWebsiteMembership:', adminErr);
+  }
+
+  return false;
 }
 
 /**
@@ -61,16 +99,23 @@ export async function requireWebsiteUser(websiteId: string = WEBSITE_ID) {
     };
   }
 
-  // Retrieve user role name for website
-  const admin = createAdminClient();
-  const { data: roleData } = await admin
-    .from('user_roles')
-    .select('website_roles(role)')
-    .eq('user_profiles.user_id', user.id)
-    .eq('website_roles.website_id', websiteId)
-    .maybeSingle();
+  // Retrieve user role name for website (safely handle missing admin credentials)
+  let roleName = 'user';
+  try {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const admin = createAdminClient();
+      const { data: roleData } = await admin
+        .from('user_roles')
+        .select('website_roles(role)')
+        .eq('user_profiles.user_id', user.id)
+        .eq('website_roles.website_id', websiteId)
+        .maybeSingle();
 
-  const roleName = (roleData?.website_roles as any)?.role || 'user';
+      roleName = (roleData?.website_roles as any)?.role || 'user';
+    }
+  } catch {
+    roleName = 'user';
+  }
 
   return {
     user,

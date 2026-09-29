@@ -141,15 +141,23 @@ export async function loginAction(
   const isEnrolled = await checkUserWebsiteMembership(data.user.id, WEBSITE_ID);
   if (!isEnrolled) {
     // Fetch profile details for pre-populating registration
-    const admin = createAdminClient();
-    const { data: profile } = await admin
-      .from('user_profiles')
-      .select('full_name')
-      .eq('user_id', data.user.id)
-      .maybeSingle();
+    let fullName = (data.user.user_metadata?.full_name as string) || '';
+    try {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const admin = createAdminClient();
+        const { data: profile } = await admin
+          .from('user_profiles')
+          .select('full_name')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
 
-    const fullName =
-      profile?.full_name || (data.user.user_metadata?.full_name as string) || '';
+        if (profile?.full_name) {
+          fullName = profile.full_name;
+        }
+      }
+    } catch (profileErr) {
+      console.warn('Profile fetch warning in loginAction:', profileErr);
+    }
 
     // Revoke the active session — user cannot access Tenvi dashboard yet
     await supabase.auth.signOut();
