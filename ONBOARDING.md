@@ -83,43 +83,62 @@ CREATE POLICY "Users can update their own onboarding status"
 
 ---
 
-## 3. The 2-Tier User Experience
+## 3. The 2-Tier User Experience (Senior & Non-Techy Accessible)
 
-### Tier 1: The 60-Second Welcome Wizard (`WelcomeWizardModal.tsx`)
-Rendered when a user enters `/dashboard` and `initialOnboarding.completed === false`.
-
-- **Step 1: Your Primary Spending Pocket**
-  - Instant presets:
-    - 📱 **GCash** (E-Wallet)
-    - 💳 **Maya** (Digital Bank)
-    - 💵 **Cash on Hand** (Physical Wallet)
-    - 🏦 **Primary Bank** (BDO / BPI / UnionBank)
-  - Quick-fill balance buttons: `+₱1,000`, `+₱5,000`, `+₱10,000`, `+₱20,000`, or custom.
-  - Automatically updates/inserts their primary float record in `bili_savings`.
-- **Step 2: Choose Your Focus**
-  - Checkboxes for core feature interest:
-    - 💸 Expenses & Income
-    - 💳 Credit Card Cutoff Reminders
-    - 🤝 Bill Splits & Lent Money (Utang)
-    - 🏠 Real Estate & Properties
-- **Finish / Skip**:
-  - Primary button: *"Launch My Dashboard"* (calls `saveInitialSetupAction()`).
-  - Secondary button: *"Skip for now"* (dismisses modal to let curious users explore freely).
+### 3.1 Design Principles: Zero-Gradient & Non-Techy Accessibility
+1. **No Gradients (Flat & High-Contrast)**:
+   - Gradients introduce visual noise and lower contrast for older eyes. All onboarding surfaces use crisp solid backgrounds (`bg-white`, `bg-slate-900`, `bg-slate-50`), solid status indicators, and distinct 2px borders (`border-2 border-slate-200`).
+2. **Zero Financial Jargon**:
+   - Instead of *"Float account"*, we say *"Where do you keep your everyday spending money?"*.
+   - Instead of *"Ledger balance"*, we say *"How much is in here right now? (Rough estimate is fine)"*.
+   - Instead of *"Statement reconciliation"*, we say *"Scan a paper receipt or bank statement"*.
+3. **Large Touch Targets & Legible Typography**:
+   - Minimum button and card height: `48px` to `68px`.
+   - Primary text sizes: `14px` to `24px` with clear, distinct weights.
+4. **Tactile Micro-Animations**:
+   - Card selection: gentle tactile scale feedback (`active:scale-[0.98] transition-transform duration-150`).
+   - Checkmark reveals: instant pop-in animation (`animate-in zoom-in-75 duration-200`).
+   - Step transitions: smooth slide-in (`animate-in fade-in slide-in-from-right-2 duration-200`).
+   - Progress bar: smooth width transition (`transition-all duration-500 ease-out`).
 
 ---
 
-### Tier 2: The Dashboard "Launchpad" Checklist (`OnboardingLaunchpad.tsx`)
+### 3.2 Tier 1: The 60-Second Welcome Wizard (`WelcomeWizardModal.tsx`)
+Rendered when a user enters `/dashboard` and `initialOnboarding.completed === false`.
+
+- **Step 1: Your Everyday Money Pocket**
+  - Big, easily tappable preset buttons:
+    - 📱 **GCash** — *"Mobile wallet on your phone"*
+    - 💳 **Maya** — *"Digital wallet & savings app"*
+    - 💵 **Cash on Hand** — *"Paper bills & coins in your wallet"*
+    - 🏦 **Bank Account** — *"BDO, BPI, Metrobank, etc."*
+  - Nickname field with plain examples (e.g. *"My Main GCash, Wallet Cash"*).
+  - Estimated balance field with large `₱` sign and quick-tap buttons: `₱0 (Start with zero)`, `₱1,000`, `₱5,000`, `₱10,000`.
+- **Step 2: Choose What You Want Help With**
+  - Plain English feature cards with big checkboxes:
+    - 🛒 **Daily Expenses & Groceries**: *"Keep track of food, bills, shopping, and everyday receipts."*
+    - 💳 **Credit Cards & Due Dates**: *"Get reminded before billing deadlines to avoid late fees."*
+    - 🤝 **Borrowed & Lent Money**: *"Remember who owes you money or what loans you are paying."*
+    - 🏠 **House, Car & Properties**: *"Keep track of your home value, vehicle, or rental properties."*
+- **Finish / Skip**:
+  - Primary button: *"Finish & Open Dashboard"* (calls `saveInitialSetupAction()`).
+  - Secondary button: *"Skip for now"* (lets users explore freely).
+
+---
+
+### 3.3 Tier 2: The Dashboard "Launchpad" Checklist (`OnboardingLaunchpad.tsx`)
 Docked at the top of `/dashboard` above financial summary cards:
 
 - **Features**:
-  - **Dynamic Progress Bar**: Calculated in real-time (`25%`, `50%`, `75%`, `100%`).
-  - **Auto-Completion Awareness**: Evaluates live database counts. If the user records an expense or credit card anywhere in the app, the checklist milestone marks itself done automatically.
+  - **Zero-Gradient Solid Styling**: White card with `border-2 border-slate-200` and high-contrast text.
+  - **Dynamic Progress Bar**: Calculated in real-time (`25%`, `50%`, `75%`, `100%`) with smooth animation.
+  - **Auto-Completion Awareness**: Evaluates live database records. If the user records an expense or credit card anywhere in the app, the checklist milestone marks itself done automatically.
   - **Collapsible & Dismissible**: Users can minimize the checklist with a chevron or dismiss it permanently with `X` (persisted to `bili_user_onboarding.dismissed_checklist`).
   - **Interactive Milestones**:
-    1. **Bank or E-Wallet**: Links to `/dashboard/savings`.
-    2. **Log First Expense or Income**: Links to `/dashboard/transactions`.
-    3. **Add Credit Card or Loan**: Links to `/dashboard/cards`.
-    4. **Chat with Tenvi AI**: Dispatches window custom event `open-tenvi-ai-chat` to pop open the AI assistant.
+    1. **Bank or E-Wallet**: *"Add GCash, Maya, Bank, or Cash"* (Links to `/dashboard/savings`).
+    2. **Record an Expense**: *"Type an entry or snap a receipt"* (Links to `/dashboard/transactions`).
+    3. **Credit Card or Loan**: *"Track due dates & avoid late fees"* (Links to `/dashboard/cards`).
+    4. **Ask Tenvi AI**: *"Get friendly financial answers"* (Dispatches window custom event `open-tenvi-ai-chat` to pop open the AI assistant).
 
 ---
 

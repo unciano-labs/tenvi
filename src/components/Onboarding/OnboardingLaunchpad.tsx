@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
   CheckCircle2,
   Circle,
   ArrowRight,
@@ -14,6 +13,7 @@ import {
   Bot,
   ChevronDown,
   ChevronUp,
+  Sparkles,
 } from 'lucide-react';
 import { dismissOnboardingChecklistAction } from '@/app/actions/onboarding';
 
@@ -39,33 +39,37 @@ export function OnboardingLaunchpad({
   const steps = [
     {
       id: 'account',
-      title: 'Set up Bank or E-Wallet',
-      desc: 'GCash, Maya, Bank, or Cash',
+      title: 'Bank or E-Wallet',
+      desc: 'Add GCash, Maya, Bank, or Cash',
       icon: Wallet,
+      iconBg: 'bg-blue-600 text-white',
       done: progress.accountAdded,
       href: '/dashboard/savings',
     },
     {
       id: 'transaction',
-      title: 'Log First Expense or Income',
-      desc: 'Type an entry or drop a receipt',
+      title: 'Record an Expense',
+      desc: 'Type an entry or snap a receipt',
       icon: Receipt,
+      iconBg: 'bg-amber-600 text-white',
       done: progress.firstTransaction,
       href: '/dashboard/transactions',
     },
     {
       id: 'card',
-      title: 'Add Credit Card or Loan',
-      desc: 'Track cutoffs & due dates',
+      title: 'Credit Card or Loan',
+      desc: 'Track due dates & avoid late fees',
       icon: CreditCardIcon,
+      iconBg: 'bg-slate-800 text-white',
       done: progress.cardOrLoanAdded,
       href: '/dashboard/cards',
     },
     {
       id: 'ai',
-      title: 'Chat with Tenvi AI',
-      desc: 'Ask about cash flow or advice',
+      title: 'Ask Tenvi AI',
+      desc: 'Get friendly financial answers',
       icon: Bot,
+      iconBg: 'bg-purple-600 text-white',
       done: progress.aiConsulted,
       onClick: onOpenAi,
     },
@@ -84,102 +88,107 @@ export function OnboardingLaunchpad({
   };
 
   return (
-    <div className="mb-6 p-5 sm:p-6 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 text-white rounded-3xl shadow-xl relative overflow-hidden border border-indigo-500/25">
-      {/* Decorative Glow */}
-      <div className="absolute top-0 right-1/4 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="mb-6 p-5 sm:p-6 bg-white text-slate-900 rounded-3xl shadow-sm border-2 border-slate-200 transition-all duration-200">
+      
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-4 relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-500/20 text-indigo-300 rounded-2xl border border-indigo-400/20">
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center shrink-0">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm sm:text-base font-bold text-white">
-                Getting Started with Tenvi
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                Getting Started Checklist
               </h3>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                {percent}% Ready
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                {completedCount} of {steps.length} Completed ({percent}%)
               </span>
             </div>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Complete these {steps.length - completedCount} quick setup steps to unlock your full financial picture.
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+              Follow these simple steps to set up your finances. Tap any step to get started!
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           {onOpenWizard && (
             <button
               onClick={onOpenWizard}
-              className="hidden sm:inline-flex text-xs font-semibold px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition mr-1"
+              className="hidden sm:inline-flex text-xs font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition active:scale-95"
             >
-              Quick Setup Wizard
+              Setup Wizard
             </button>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
             aria-label="Toggle launchpad"
-            className="p-1.5 text-slate-400 hover:text-white transition rounded-lg hover:bg-white/5"
+            className="p-2 text-slate-500 hover:text-slate-800 transition rounded-xl hover:bg-slate-100 active:scale-95"
           >
-            {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            {collapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
           </button>
           <button
             onClick={handleDismiss}
             aria-label="Dismiss launchpad"
-            className="p-1.5 text-slate-400 hover:text-white transition rounded-lg hover:bg-white/5"
+            className="p-2 text-slate-400 hover:text-slate-700 transition rounded-xl hover:bg-slate-100 active:scale-95"
+            title="Dismiss checklist"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="w-full bg-slate-800/80 rounded-full h-2 mb-4 overflow-hidden relative z-10">
+      {/* Solid High-Contrast Progress Bar */}
+      <div className="w-full bg-slate-100 rounded-full h-2.5 mb-4 overflow-hidden border border-slate-200/80">
         <div
-          className="bg-gradient-to-r from-indigo-400 to-emerald-400 h-2 rounded-full transition-all duration-700 ease-out"
+          className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-out"
           style={{ width: `${percent}%` }}
         />
       </div>
 
       {/* Interactive Milestones */}
       {!collapsed && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {steps.map((step) => {
             const Icon = step.icon;
             const content = (
               <div
-                className={`p-3.5 rounded-2xl flex items-center justify-between text-xs font-medium transition cursor-pointer group ${
+                className={`p-4 rounded-2xl border-2 flex items-center justify-between text-xs transition-all duration-150 cursor-pointer active:scale-[0.98] ${
                   step.done
-                    ? 'bg-emerald-950/40 text-emerald-200 border border-emerald-500/30'
-                    : 'bg-white/5 hover:bg-white/10 text-slate-100 border border-white/10 hover:border-indigo-400/40'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-950 shadow-none'
+                    : 'bg-slate-50 hover:bg-white border-slate-200 hover:border-indigo-400 hover:shadow-sm'
                 }`}
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3.5 min-w-0 pr-2">
                   <div
-                    className={`p-2 rounded-xl shrink-0 ${
-                      step.done
-                        ? 'bg-emerald-500/20 text-emerald-400'
-                        : 'bg-indigo-500/20 text-indigo-300 group-hover:bg-indigo-500/30'
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      step.done ? 'bg-emerald-600 text-white' : step.iconBg
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-5 h-5" />
                   </div>
-                  <div className="truncate">
-                    <p className={`font-semibold truncate ${step.done ? 'line-through text-slate-400' : 'text-white'}`}>
+                  <div className="min-w-0">
+                    <p
+                      className={`text-sm font-bold truncate ${
+                        step.done ? 'line-through text-slate-500' : 'text-slate-900'
+                      }`}
+                    >
                       {step.title}
                     </p>
-                    <p className="text-[11px] text-slate-400 truncate">{step.desc}</p>
+                    <p className="text-xs text-slate-600 truncate mt-0.5">
+                      {step.desc}
+                    </p>
                   </div>
                 </div>
 
-                <div className="shrink-0 ml-2">
+                <div className="shrink-0 ml-1">
                   {step.done ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center animate-in zoom-in-75 duration-200">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </div>
                   ) : (
-                    <div className="flex items-center text-slate-400 group-hover:text-indigo-300 transition">
-                      <Circle className="w-4 h-4" />
+                    <div className="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center text-slate-400 group-hover:border-indigo-600 transition-colors">
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </div>
                   )}
                 </div>

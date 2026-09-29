@@ -2,18 +2,19 @@
 
 import React, { useState } from 'react';
 import {
-  Sparkles,
-  Wallet,
   Smartphone,
   Building2,
   Banknote,
   Check,
   ArrowRight,
+  ArrowLeft,
   X,
   CreditCard,
   Users,
   Home,
   Loader2,
+  HelpCircle,
+  Sparkles,
 } from 'lucide-react';
 import { saveInitialSetupAction } from '@/app/actions/onboarding';
 
@@ -27,42 +28,74 @@ const ACCOUNT_PRESETS = [
   {
     id: 'gcash',
     name: 'GCash',
+    subtitle: 'Mobile wallet on your phone',
     institution: 'GCash',
     type: 'ewallet' as const,
     icon: Smartphone,
-    color: 'from-blue-600 to-sky-500',
+    iconBg: 'bg-blue-600 text-white',
   },
   {
     id: 'maya',
     name: 'Maya',
+    subtitle: 'Digital wallet & savings app',
     institution: 'Maya Philippines',
     type: 'digital_bank' as const,
     icon: Smartphone,
-    color: 'from-emerald-600 to-teal-500',
+    iconBg: 'bg-emerald-600 text-white',
   },
   {
     id: 'cash',
     name: 'Cash on Hand',
+    subtitle: 'Paper bills & coins in your wallet',
     institution: 'Physical Wallet',
     type: 'cash' as const,
     icon: Banknote,
-    color: 'from-amber-600 to-yellow-500',
+    iconBg: 'bg-amber-600 text-white',
   },
   {
     id: 'bank',
-    name: 'Primary Bank',
-    institution: 'BDO / BPI / UnionBank',
+    name: 'Bank Account',
+    subtitle: 'BDO, BPI, Metrobank, etc.',
+    institution: 'Traditional Bank',
     type: 'traditional_bank' as const,
     icon: Building2,
-    color: 'from-indigo-600 to-purple-500',
+    iconBg: 'bg-slate-800 text-white',
   },
 ];
 
 const MODULE_OPTIONS = [
-  { id: 'expenses', label: 'Expenses & Income', icon: Banknote, defaultChecked: true },
-  { id: 'cards', label: 'Credit Card Cutoffs', icon: CreditCard, defaultChecked: true },
-  { id: 'splits', label: 'Bill Splits & Loans', icon: Users, defaultChecked: false },
-  { id: 'properties', label: 'Property & Assets', icon: Home, defaultChecked: false },
+  {
+    id: 'expenses',
+    label: 'Daily Expenses & Groceries',
+    desc: 'Keep track of food, bills, shopping, and everyday receipts.',
+    icon: Banknote,
+    iconBg: 'bg-slate-800 text-white',
+    defaultChecked: true,
+  },
+  {
+    id: 'cards',
+    label: 'Credit Cards & Due Dates',
+    desc: 'Get reminded before billing deadlines to avoid late fees.',
+    icon: CreditCard,
+    iconBg: 'bg-blue-700 text-white',
+    defaultChecked: true,
+  },
+  {
+    id: 'splits',
+    label: 'Borrowed & Lent Money',
+    desc: 'Remember who owes you money or what loans you are paying.',
+    icon: Users,
+    iconBg: 'bg-emerald-700 text-white',
+    defaultChecked: false,
+  },
+  {
+    id: 'properties',
+    label: 'House, Car & Properties',
+    desc: 'Keep track of your home value, vehicle, or rental properties.',
+    icon: Home,
+    iconBg: 'bg-purple-700 text-white',
+    defaultChecked: false,
+  },
 ];
 
 export function WelcomeWizardModal({
@@ -97,7 +130,7 @@ export function WelcomeWizardModal({
     setIsSubmitting(true);
     try {
       await saveInitialSetupAction({
-        accountName: accountName || selectedPreset.name,
+        accountName: accountName.trim() || selectedPreset.name,
         institutionName: selectedPreset.institution,
         accountType: selectedPreset.type,
         initialBalance: parseFloat(balance.replace(/[^0-9.]/g, '')) || 0,
@@ -112,42 +145,52 @@ export function WelcomeWizardModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
-        {/* Header Ribbon */}
-        <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 p-6 text-white relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-slate-200 animate-in zoom-in-95 duration-200">
+        
+        {/* Solid Accessible Header */}
+        <div className="bg-slate-900 p-6 sm:p-7 text-white relative">
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 text-slate-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition"
+            className="absolute top-5 right-5 text-slate-300 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition active:scale-95"
+            aria-label="Close welcome setup"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2 mb-2">
-            <span className="p-1.5 bg-indigo-500/30 rounded-xl text-indigo-300">
-              <Sparkles className="w-4 h-4" />
+          {/* Step Pill */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 text-slate-200 text-xs font-bold border border-slate-700">
+              <span className={`w-2 h-2 rounded-full ${step === 1 ? 'bg-indigo-400 animate-pulse' : 'bg-emerald-400'}`} />
+              Step {step} of 2
             </span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-indigo-200">
-              Welcome to Tenvi
+            <span className="text-xs text-slate-300 font-medium">
+              {step === 1 ? 'Everyday Money Pocket' : 'Your Main Focus'}
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold">
-            Hello, {userName}! Let's set up your ledger.
+
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            Welcome, {userName}! 👋
           </h2>
-          <p className="text-xs text-indigo-200 mt-1">
-            Step {step} of 2: {step === 1 ? 'Your Primary Spending Pocket' : 'Custom Preferences'}
+          <p className="text-sm text-slate-300 mt-1 leading-relaxed">
+            Let's get your account set up in two easy steps. No complicated financial terms!
           </p>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6 sm:p-8 space-y-6">
+        {/* Modal Content */}
+        <div className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto">
           {step === 1 ? (
-            <div className="space-y-5">
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-200">
+              {/* Question 1: Account Selection */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  1. Pick where you hold your everyday money:
+                <label className="block text-sm sm:text-base font-bold text-slate-900 mb-1">
+                  1. Where do you keep your everyday spending money?
                 </label>
-                <div className="grid grid-cols-2 gap-2.5">
+                <p className="text-xs text-slate-600 mb-3.5">
+                  Pick the main place you use to pay for food, bills, or shopping.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {ACCOUNT_PRESETS.map((preset) => {
                     const Icon = preset.icon;
                     const isSelected = selectedPreset.id === preset.id;
@@ -156,23 +199,30 @@ export function WelcomeWizardModal({
                         key={preset.id}
                         type="button"
                         onClick={() => handleSelectPreset(preset)}
-                        className={`p-3.5 rounded-2xl border text-left flex items-center gap-3 transition ${
+                        className={`p-4 rounded-2xl border-2 text-left flex items-center gap-3.5 transition-all duration-150 active:scale-[0.98] ${
                           isSelected
-                            ? 'border-indigo-600 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-600'
-                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                            ? 'border-indigo-600 bg-indigo-50/70 shadow-sm'
+                            : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
                         }`}
                       >
                         <div
-                          className={`p-2 rounded-xl text-white bg-gradient-to-br ${preset.color} shrink-0`}
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${preset.iconBg}`}
                         >
-                          <Icon className="w-4 h-4" />
+                          <Icon className="w-5 h-5" />
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 truncate">
-                            {preset.name}
-                          </p>
-                          <p className="text-[10px] text-slate-500 truncate">
-                            {preset.type.replace('_', ' ')}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-bold text-slate-900 truncate">
+                              {preset.name}
+                            </p>
+                            {isSelected && (
+                              <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 animate-in zoom-in-75 duration-150">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-600 truncate mt-0.5">
+                            {preset.subtitle}
                           </p>
                         </div>
                       </button>
@@ -181,28 +231,30 @@ export function WelcomeWizardModal({
                 </div>
               </div>
 
+              {/* Question 2: Nickname */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  2. Account Display Name:
+                <label className="block text-xs sm:text-sm font-bold text-slate-900 mb-1">
+                  2. Give this money pocket a nickname:
                 </label>
                 <input
                   type="text"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
-                  placeholder="e.g. My Main GCash"
-                  className="w-full text-sm font-medium border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition"
+                  placeholder="e.g. My Main GCash, Wallet Cash, BDO Savings"
+                  className="w-full text-sm font-medium border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-600 text-slate-900 bg-white transition"
                 />
               </div>
 
+              {/* Question 3: Balance */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    3. Current Estimated Balance (PHP):
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs sm:text-sm font-bold text-slate-900">
+                    3. How much is in here right now? (Optional)
                   </label>
-                  <span className="text-[11px] text-slate-400 font-medium">Optional</span>
+                  <span className="text-xs text-slate-500 font-medium">Rough estimate is fine</span>
                 </div>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center font-bold text-slate-400">
+                  <span className="absolute inset-y-0 left-0 pl-4 flex items-center font-bold text-xl text-slate-500">
                     ₱
                   </span>
                   <input
@@ -211,35 +263,44 @@ export function WelcomeWizardModal({
                     value={balance}
                     onChange={(e) => setBalance(e.target.value)}
                     placeholder="0.00"
-                    className="w-full text-sm font-semibold pl-8 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition"
+                    className="w-full text-xl font-bold pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-600 text-slate-900 bg-white transition"
                   />
                 </div>
-                <div className="flex items-center gap-1.5 mt-2">
-                  {['1000', '5000', '10000', '20000'].map((presetVal) => (
+
+                {/* Quick tap buttons */}
+                <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setBalance('0')}
+                    className="text-xs font-semibold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition active:scale-95"
+                  >
+                    ₱0 (Start with zero)
+                  </button>
+                  {['1000', '5000', '10000'].map((presetVal) => (
                     <button
                       key={presetVal}
                       type="button"
                       onClick={() => setBalance(presetVal)}
-                      className="text-[11px] font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
+                      className="text-xs font-semibold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition active:scale-95"
                     >
-                      +₱{Number(presetVal).toLocaleString()}
+                      ₱{Number(presetVal).toLocaleString()}
                     </button>
                   ))}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-5">
+            <div className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-200">
               <div>
-                <h3 className="text-sm font-bold text-slate-800 mb-1">
-                  What features will you use the most?
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">
+                  What would you like Tenvi to help you with?
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Select your primary focus so we can tailor your dashboard shortcuts.
+                <p className="text-xs text-slate-600">
+                  Tap any that apply. You can change your choices at any time.
                 </p>
               </div>
 
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {MODULE_OPTIONS.map((mod) => {
                   const Icon = mod.icon;
                   const isChecked = selectedModules.includes(mod.id);
@@ -247,34 +308,36 @@ export function WelcomeWizardModal({
                     <div
                       key={mod.id}
                       onClick={() => toggleModule(mod.id)}
-                      className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition ${
+                      className={`p-4 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition-all duration-150 active:scale-[0.98] ${
                         isChecked
-                          ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600'
-                          : 'border-slate-200 hover:bg-slate-50'
+                          ? 'border-indigo-600 bg-indigo-50/70 shadow-sm'
+                          : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3.5 min-w-0 pr-3">
                         <div
-                          className={`p-2 rounded-xl ${
-                            isChecked
-                              ? 'bg-indigo-600 text-white'
-                              : 'bg-slate-100 text-slate-500'
-                          }`}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mod.iconBg}`}
                         >
-                          <Icon className="w-4 h-4" />
+                          <Icon className="w-5 h-5" />
                         </div>
-                        <span className="text-xs font-semibold text-slate-900">
-                          {mod.label}
-                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900">
+                            {mod.label}
+                          </p>
+                          <p className="text-xs text-slate-600 leading-snug mt-0.5">
+                            {mod.desc}
+                          </p>
+                        </div>
                       </div>
+
                       <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center border transition ${
+                        className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 shrink-0 transition-colors ${
                           isChecked
                             ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'border-slate-300'
+                            : 'border-slate-300 bg-white'
                         }`}
                       >
-                        {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                        {isChecked && <Check className="w-4 h-4 stroke-[3]" />}
                       </div>
                     </div>
                   );
@@ -284,20 +347,21 @@ export function WelcomeWizardModal({
           )}
 
           {/* Navigation Controls */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-between pt-5 border-t border-slate-200 gap-3">
             {step === 2 ? (
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition py-2 px-3 rounded-xl hover:bg-slate-100 active:scale-95"
               >
-                ← Back
+                <ArrowLeft className="w-4 h-4" />
+                Back
               </button>
             ) : (
               <button
                 type="button"
                 onClick={onClose}
-                className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition"
+                className="text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 transition py-2 px-3 rounded-xl hover:bg-slate-100 active:scale-95"
               >
                 Skip for now
               </button>
@@ -307,27 +371,27 @@ export function WelcomeWizardModal({
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-bold rounded-2xl shadow-sm transition active:scale-[0.98]"
               >
                 Next Step
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             ) : (
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleSubmit}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-7 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-bold rounded-2xl shadow-sm transition active:scale-[0.98] disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     Setting Up...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Launch My Dashboard
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    Finish & Open Dashboard
                   </>
                 )}
               </button>

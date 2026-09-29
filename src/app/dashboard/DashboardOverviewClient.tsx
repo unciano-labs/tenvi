@@ -1100,27 +1100,29 @@ export function DashboardOverviewClient({
           </div>
 
           {recentTransactions.length === 0 ? (
-            <div className="p-8 text-center bg-[#F6F7F9] rounded-3xl border border-dashed border-slate-300">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+            <div className="p-8 text-center bg-white rounded-3xl border-2 border-dashed border-slate-300">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center mx-auto mb-3">
                 <Receipt className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-bold text-slate-800 mb-1">No transactions recorded yet</h4>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4 leading-relaxed">
-                Record your first expense, drop a bank statement PDF, or snap a photo of a receipt to see your cash flow charts come to life.
+              <h4 className="text-base font-bold text-slate-900 mb-1">
+                You haven't recorded any expenses yet
+              </h4>
+              <p className="text-sm text-slate-600 max-w-md mx-auto mb-5 leading-relaxed">
+                Add your first expense or upload a paper receipt to see where your money goes.
               </p>
-              <div className="flex items-center justify-center gap-2.5 flex-wrap">
+              <div className="flex items-center justify-center gap-3 flex-wrap">
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-bold rounded-xl shadow-sm transition active:scale-[0.98] cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  Log First Expense
+                  <Plus className="w-4 h-4" />
+                  Add First Expense
                 </button>
                 <Link
                   href="/dashboard/transactions"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl shadow-sm transition"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold rounded-xl transition active:scale-[0.98]"
                 >
-                  Smart Statement Scanner →
+                  Upload Receipt or Statement →
                 </Link>
               </div>
             </div>
