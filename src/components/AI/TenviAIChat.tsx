@@ -352,6 +352,12 @@ export function TenviAIChat() {
 
   // Load persistent chat history from localStorage on initial render
   useEffect(() => {
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener('open-tenvi-ai-chat', handleOpenChat);
+    return () => window.removeEventListener('open-tenvi-ai-chat', handleOpenChat);
+  }, []);
+
+  useEffect(() => {
     try {
       const saved = localStorage.getItem('tenvi_ai_chat_session');
       if (saved) {

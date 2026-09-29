@@ -7,38 +7,87 @@ import { loginSchema, registerSchema } from '@/lib/validations/schemas';
 import { checkUserWebsiteMembership } from '@/lib/auth/guards';
 
 /**
- * Ensures default categories exist for a user on this website.
+ * Ensures initial default state exists for a user on this website:
+ * 1. Default categories
+ * 2. Default "Cash on Hand" float account in bili_savings
+ * 3. Initial bili_user_onboarding record
  */
-async function seedDefaultCategories(userId: string) {
+async function seedInitialUserData(userId: string) {
   const admin = createAdminClient();
 
-  const { data: existingCats } = await admin
-    .from('bili_categories')
-    .select('id')
-    .eq('website_id', WEBSITE_ID)
-    .eq('user_id', userId)
-    .limit(1);
-
-  if (!existingCats || existingCats.length === 0) {
-    const categoriesToInsert = DEFAULT_CATEGORIES.map((cat) => ({
-      website_id: WEBSITE_ID,
-      user_id: userId,
-      name: cat.name,
-      icon: cat.icon,
-      color: cat.color,
-      kind: cat.kind,
-      is_default: true,
-    }));
-
-    const { error: catErr } = await admin
+  // 1. Seed categories
+  try {
+    const { data: existingCats } = await admin
       .from('bili_categories')
-      .insert(categoriesToInsert);
+      .select('id')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', userId)
+      .limit(1);
 
-    if (catErr) {
-      console.error('Error seeding default categories:', catErr);
+    if (!existingCats || existingCats.length === 0) {
+      const categoriesToInsert = DEFAULT_CATEGORIES.map((cat) => ({
+        website_id: WEBSITE_ID,
+        user_id: userId,
+        name: cat.name,
+        icon: cat.icon,
+        color: cat.color,
+        kind: cat.kind,
+        is_default: true,
+      }));
+
+      await admin.from('bili_categories').insert(categoriesToInsert);
     }
+  } catch (catErr) {
+    console.error('Error seeding default categories:', catErr);
+  }
+
+  // 2. Seed default "Cash on Hand" float account
+  try {
+    const { data: existingSavings } = await admin
+      .from('bili_savings')
+      .select('id')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', userId)
+      .limit(1);
+
+    if (!existingSavings || existingSavings.length === 0) {
+      await admin.from('bili_savings').insert({
+        website_id: WEBSITE_ID,
+        user_id: userId,
+        name: 'Cash on Hand',
+        institution_name: 'Physical Wallet',
+        account_type: 'cash',
+        current_balance: 0,
+        color_theme: 'emerald',
+        is_active: true,
+      });
+    }
+  } catch (savErr) {
+    console.error('Error seeding default savings account:', savErr);
+  }
+
+  // 3. Seed onboarding record
+  try {
+    await admin.from('bili_user_onboarding').upsert(
+      {
+        website_id: WEBSITE_ID,
+        user_id: userId,
+        completed: false,
+        step: 1,
+        dismissed_checklist: false,
+        has_added_account: false,
+        has_added_transaction: false,
+        has_added_card_or_loan: false,
+        has_tried_ai: false,
+        preferred_modules: ['expenses', 'cards'],
+      },
+      { onConflict: 'website_id,user_id', ignoreDuplicates: true }
+    );
+  } catch (onboardErr) {
+    console.error('Error seeding onboarding status:', onboardErr);
   }
 }
+
 
 /**
  * Enrolls a user into Tenvi (WEBSITE_ID) by creating user_profile if needed
@@ -172,8 +221,8 @@ export async function loginAction(
     redirect(`/register?${params.toString()}`);
   }
 
-  // Ensure default categories are seeded
-  await seedDefaultCategories(data.user.id);
+  // Ensure default categories, cash account, and onboarding are seeded
+  await seedInitialUserData(data.user.id);
 
   redirect('/dashboard');
 }
@@ -233,7 +282,7 @@ export async function registerAction(prevState: any, formData: FormData) {
       fullName || existingProfile.full_name || ''
     );
 
-    await seedDefaultCategories(authData.user.id);
+    await seedInitialUserData(authData.user.id);
     redirect('/dashboard');
   }
 
@@ -265,7 +314,7 @@ export async function registerAction(prevState: any, formData: FormData) {
       }
 
       await enrollUserInTenvi(authData.user.id, email, fullName);
-      await seedDefaultCategories(authData.user.id);
+      await seedInitialUserData(authData.user.id);
       redirect('/dashboard');
     }
 
@@ -274,7 +323,7 @@ export async function registerAction(prevState: any, formData: FormData) {
 
   if (signUpData.user) {
     await enrollUserInTenvi(signUpData.user.id, email, fullName);
-    await seedDefaultCategories(signUpData.user.id);
+    await seedInitialUserData(signUpData.user.id);
   }
 
   redirect('/dashboard');

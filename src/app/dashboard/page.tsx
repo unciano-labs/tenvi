@@ -93,6 +93,14 @@ export default async function DashboardPage() {
     .eq('user_id', user?.id)
     .order('created_at', { ascending: false });
 
+  // 8. Fetch user onboarding status
+  const { data: onboarding } = await supabase
+    .from('bili_user_onboarding')
+    .select('*')
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user?.id)
+    .maybeSingle();
+
   return (
     <DashboardOverviewClient
       userName={userName}
@@ -103,6 +111,7 @@ export default async function DashboardPage() {
       splits={splits || []}
       savings={savings || []}
       properties={properties || []}
+      initialOnboarding={onboarding || null}
     />
   );
 }

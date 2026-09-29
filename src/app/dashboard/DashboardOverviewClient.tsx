@@ -45,7 +45,10 @@ import {
   BillSplit,
   SavingsAccount,
   Property,
+  UserOnboarding,
 } from '@/types';
+import { OnboardingLaunchpad } from '@/components/Onboarding/OnboardingLaunchpad';
+import { WelcomeWizardModal } from '@/components/Onboarding/WelcomeWizardModal';
 
 interface DashboardOverviewClientProps {
   userName: string;
@@ -56,7 +59,9 @@ interface DashboardOverviewClientProps {
   splits: BillSplit[];
   savings: SavingsAccount[];
   properties?: Property[];
+  initialOnboarding?: UserOnboarding | null;
 }
+
 
 const CATEGORY_COLORS = [
   { bg: 'bg-emerald-500', text: 'text-emerald-700', hex: '#10B981' },
@@ -80,11 +85,36 @@ export function DashboardOverviewClient({
   splits,
   savings,
   properties = [],
+  initialOnboarding,
 }: DashboardOverviewClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCardForModal, setSelectedCardForModal] = useState<string | undefined>(undefined);
   const [timeframe, setTimeframe] = useState<'month' | '30days' | '6months'>('month');
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
+  const [isWizardOpen, setIsWizardOpen] = useState(
+    Boolean(initialOnboarding && !initialOnboarding.completed)
+  );
+
+  const onboardingProgress = useMemo(() => {
+    return {
+      accountAdded:
+        Boolean(initialOnboarding?.has_added_account) ||
+        (savings.length > 0 &&
+          (savings.length > 1 ||
+            savings.some((s) => Number(s.current_balance) > 0))),
+      firstTransaction:
+        Boolean(initialOnboarding?.has_added_transaction) || transactions.length > 0,
+      cardOrLoanAdded:
+        Boolean(initialOnboarding?.has_added_card_or_loan) ||
+        creditCards.length > 0 ||
+        loans.length > 0,
+      aiConsulted: Boolean(initialOnboarding?.has_tried_ai),
+    };
+  }, [initialOnboarding, savings, transactions, creditCards, loans]);
+
+  const handleOpenAi = () => {
+    window.dispatchEvent(new CustomEvent('open-tenvi-ai-chat'));
+  };
 
   const now = useMemo(() => new Date(), []);
   const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -318,6 +348,22 @@ export function DashboardOverviewClient({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-150">
+      {/* Onboarding Launchpad Checklist */}
+      {(!initialOnboarding || !initialOnboarding.dismissed_checklist) && (
+        <OnboardingLaunchpad
+          progress={onboardingProgress}
+          onOpenWizard={() => setIsWizardOpen(true)}
+          onOpenAi={handleOpenAi}
+        />
+      )}
+
+      {/* First-Run Welcome Wizard Modal */}
+      <WelcomeWizardModal
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        userName={userName}
+      />
+
       {/* 1. Header with Timeframe Filter & Quick Action */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -1054,16 +1100,29 @@ export function DashboardOverviewClient({
           </div>
 
           {recentTransactions.length === 0 ? (
-            <div className="p-8 text-center bg-[#F6F7F9] rounded-2xl">
-              <p className="text-sm text-slate-500 mb-3">
-                No transactions recorded yet.
+            <div className="p-8 text-center bg-[#F6F7F9] rounded-3xl border border-dashed border-slate-300">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+                <Receipt className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-800 mb-1">No transactions recorded yet</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4 leading-relaxed">
+                Record your first expense, drop a bank statement PDF, or snap a photo of a receipt to see your cash flow charts come to life.
               </p>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="text-xs font-semibold text-slate-900 underline"
-              >
-                Log your first expense
-              </button>
+              <div className="flex items-center justify-center gap-2.5 flex-wrap">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Log First Expense
+                </button>
+                <Link
+                  href="/dashboard/transactions"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl shadow-sm transition"
+                >
+                  Smart Statement Scanner →
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">

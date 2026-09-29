@@ -352,4 +352,21 @@ export interface GeminiUsageStats {
   resetHoursRemaining: number;
 }
 
+export interface UserOnboarding {
+  id: string;
+  website_id: string;
+  user_id: string;
+  completed: boolean;
+  step: number;
+  dismissed_checklist: boolean;
+  has_added_account: boolean;
+  has_added_transaction: boolean;
+  has_added_card_or_loan: boolean;
+  has_tried_ai: boolean;
+  preferred_modules: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+
 
