@@ -1,22 +1,31 @@
+import { cache } from 'react';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
 
 /**
+ * Retrieves the currently authenticated Supabase user, memoized per request.
+ * Prevents redundant auth API roundtrips when called in both layout.tsx and page.tsx.
+ */
+export const getAuthenticatedUser = cache(async () => {
+  const supabase = await createClient();
+  return await supabase.auth.getUser();
+});
+
+/**
  * Checks whether a specific user ID has an active membership/role for a given website.
+ * Memoized per request using React cache().
  * Uses public.has_website_access RPC function with standard client first (SECURITY DEFINER),
  * falling back to admin client if available.
  */
-export async function checkUserWebsiteMembership(
-  userId: string,
-  websiteId: string = WEBSITE_ID
-): Promise<boolean> {
-  const targetWebsiteId = (websiteId || WEBSITE_ID)
-    .trim()
-    .replace(/^["']|["']$/g, '');
+export const checkUserWebsiteMembership = cache(
+  async (userId: string, websiteId: string = WEBSITE_ID): Promise<boolean> => {
+    const targetWebsiteId = (websiteId || WEBSITE_ID)
+      .trim()
+      .replace(/^["']|["']$/g, '');
 
-  if (!userId || !targetWebsiteId) {
-    return false;
-  }
+    if (!userId || !targetWebsiteId) {
+      return false;
+    }
 
   // 1. Primary check: call has_website_access RPC using standard client
   // Note: has_website_access is SECURITY DEFINER and executable by anon and authenticated
@@ -67,7 +76,7 @@ export async function checkUserWebsiteMembership(
   }
 
   return false;
-}
+});
 
 /**
  * Enforces that the current request is from an authenticated user who has an active

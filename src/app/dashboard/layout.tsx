@@ -4,7 +4,7 @@ import { Sidebar } from '@/components/Navigation/Sidebar';
 import { MobileNav } from '@/components/Navigation/MobileNav';
 import { MobileHeader } from '@/components/Navigation/MobileHeader';
 import { TenviAIChat } from '@/components/AI/TenviAIChat';
-import { checkUserWebsiteMembership } from '@/lib/auth/guards';
+import { checkUserWebsiteMembership, getAuthenticatedUser } from '@/lib/auth/guards';
 import { WEBSITE_ID } from '@/lib/constants';
 
 export default async function DashboardLayout({
@@ -12,10 +12,9 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await getAuthenticatedUser();
 
   if (!user) {
     redirect('/login');
@@ -28,6 +27,7 @@ export default async function DashboardLayout({
     const userName = (user.user_metadata?.full_name as string) || '';
 
     // Revoke foreign session and redirect to registration with pre-populated details
+    const supabase = await createClient();
     await supabase.auth.signOut();
     const params = new URLSearchParams({
       email: userEmail,
