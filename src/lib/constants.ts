@@ -1,9 +1,13 @@
 // Multi-tenant Website & Role constants from environment
 export const WEBSITE_ID =
-  process.env.NEXT_PUBLIC_WEBSITE_ID || '65d4f86e-1829-417a-981f-bc7aad7bc953';
+  process.env.NEXT_PUBLIC_WEBSITE_ID ||
+  process.env.WEBSITE_ID ||
+  '65d4f86e-1829-417a-981f-bc7aad7bc953';
 
 export const DEFAULT_ROLE_ID =
-  process.env.NEXT_PUBLIC_DEFAULT_ROLE_ID || '02bf8818-b503-4f94-beac-6c45aa12e368';
+  process.env.NEXT_PUBLIC_DEFAULT_ROLE_ID ||
+  process.env.DEFAULT_ROLE_ID ||
+  '02bf8818-b503-4f94-beac-6c45aa12e368';
 
 // Default Currency for display
 export const DEFAULT_CURRENCY = 'PHP';
