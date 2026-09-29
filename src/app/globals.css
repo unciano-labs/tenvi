@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Natural, non-AI solid palette - ZERO GRADIENTS */
+  --color-canvas: #f6f7f9;           /* Soft pearl canvas */
+  --color-surface: #ffffff;          /* Pure solid white */
+  --color-surface-subtle: #f1f3f6;   /* Tonal well background */
+  --color-surface-hover: #e8ecf1;
+
+  /* High legibility typography for everyday non-techy users */
+  --color-text-main: #0f172a;        /* Deep slate text */
+  --color-text-body: #334155;        /* Neutral slate body */
+  --color-text-muted: #64748b;       /* Helper text */
+
+  /* Calm, trustworthy brand actions */
+  --color-action-primary: #0f172a;   /* Solid dark slate */
+  --color-action-hover: #1e293b;
+  --color-action-light: #f1f5f9;
+
+  /* Everyday financial semantic badges (solid, soft tints) */
+  --color-money-in: #059669;         /* Emerald 600 */
+  --color-money-in-bg: #ecfdf5;      /* Emerald 50 */
+  --color-money-out: #e11d48;        /* Rose 600 */
+  --color-money-out-bg: #fff1f2;     /* Rose 50 */
+
+  --color-due-warning: #b45309;      /* Amber 700 */
+  --color-due-warning-bg: #fffbeb;   /* Amber 50 */
+  --color-due-critical: #b91c1c;     /* Red 700 */
+  --color-due-critical-bg: #fef2f2;  /* Red 50 */
+
+  /* Soft, organic shadows for border-free depth */
+  --shadow-bili-sm: 0 2px 6px -1px rgba(15, 23, 42, 0.04), 0 1px 3px -1px rgba(15, 23, 42, 0.03);
+  --shadow-bili-card: 0 4px 14px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  --shadow-bili-hover: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+  --shadow-tenvi-sm: 0 2px 6px -1px rgba(15, 23, 42, 0.04), 0 1px 3px -1px rgba(15, 23, 42, 0.03);
+  --shadow-tenvi-card: 0 4px 14px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  --shadow-tenvi-hover: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-text-main);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    line-height: 1.5;
+  }
+
+  /* Strict Anti-AI Rule: Enforce ZERO BORDERS on cards, inputs, and buttons */
+  .border,
+  .border-t,
+  .border-b,
+  .border-l,
+  .border-r,
+  .border-slate-200,
+  .border-gray-200 {
+    border: none !important;
+  }
+}
+
+/* Borderless, soft-floating card */
+.bili-card,
+.tenvi-card {
+  background-color: #ffffff;
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  border: none !important;
+}
+
+/* Inset subtle well for secondary details */
+.bili-well,
+.tenvi-well {
+  background-color: #f1f3f6;
+  border-radius: 1rem;
+  border: none !important;
+}
+
+/* Touch-friendly inputs with no borders */
+@utility bili-input {
+  background-color: #f1f3f6;
+  border-radius: 0.875rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+}
+
+@utility tenvi-input {
+  background-color: #f1f3f6;
+  border-radius: 0.875rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+}
+
+.bili-input,
+.tenvi-input {
+  background-color: #f1f3f6;
+  border: none !important;
+  border-radius: 0.875rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+}
+
+/* Ensure inputs with left icons never overlap the placeholder or text */
+.bili-input.pl-9,
+.bili-input.pl-10,
+.bili-input.pl-11,
+.bili-input.\!pl-11,
+.tenvi-input.pl-9,
+.tenvi-input.pl-10,
+.tenvi-input.pl-11,
+.tenvi-input.\!pl-11,
+.bili-input-icon {
+  padding-left: 2.75rem !important;
+}
+
+.bili-input:focus,
+.tenvi-input:focus {
+  background-color: #ffffff;
+  box-shadow: 0 0 0 2px #0f172a, 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* Big, readable touchable buttons */
+.bili-btn-primary,
+.tenvi-btn-primary {
+  background-color: #0f172a;
+  color: #ffffff;
+  border: none !important;
+  border-radius: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.bili-btn-primary:hover,
+.tenvi-btn-primary:hover {
+  background-color: #1e293b;
+  transform: translateY(-1px);
+}
+
+.bili-btn-secondary,
+.tenvi-btn-secondary {
+  background-color: #f1f3f6;
+  color: #0f172a;
+  border: none !important;
+  border-radius: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.bili-btn-secondary:hover,
+.tenvi-btn-secondary:hover {
+  background-color: #e2e8f0;
+}
+
+/* Sleek unobtrusive scrollbar for scrollable lists */
+.bili-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.bili-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.bili-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bili-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.bili-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
