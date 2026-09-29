@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logoutAction } from '@/app/actions/auth';
+import { TenviIcon } from '@/components/UI/TenviIcon';
 import {
   LayoutDashboard,
   Wallet,
@@ -87,9 +88,7 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
       <div>
         {/* Brand */}
         <Link href="/dashboard" className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-            T
-          </div>
+          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
           <div>
             <div className="text-xl font-bold tracking-tight text-slate-900">Tenvi</div>
             <div className="text-xs text-slate-500 font-medium">Wealth OS</div>

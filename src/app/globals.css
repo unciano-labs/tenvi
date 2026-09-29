@@ -50,6 +50,7 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
     font-size: 16px;
   }
 
@@ -59,6 +60,18 @@
     font-family: var(--font-sans);
     min-height: 100dvh;
     line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* iOS Safari: Prevent auto-zoom on input focus by guaranteeing 16px on mobile viewports */
+  @media screen and (max-width: 768px) {
+    input,
+    select,
+    textarea,
+    .bili-input,
+    .tenvi-input {
+      font-size: 16px !important;
+    }
   }
 
   /* Strict Anti-AI Rule: Enforce ZERO BORDERS on cards, inputs, and buttons */

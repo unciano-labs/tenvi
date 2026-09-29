@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { loginAction } from '@/app/actions/auth';
 import { ArrowLeft, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
+import { TenviIcon } from '@/components/UI/TenviIcon';
 
 function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
@@ -132,9 +133,7 @@ export default function LoginPage() {
         </Link>
 
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-            T
-          </div>
+          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Welcome back to Tenvi
           </h1>

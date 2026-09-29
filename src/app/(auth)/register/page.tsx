@@ -4,6 +4,7 @@ import { Suspense, useActionState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { registerAction } from '@/app/actions/auth';
+import { TenviIcon } from '@/components/UI/TenviIcon';
 import {
   ArrowLeft,
   Lock,
@@ -235,9 +236,7 @@ export default function RegisterPage() {
         </Link>
 
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-            T
-          </div>
+          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Create your Tenvi account
           </h1>

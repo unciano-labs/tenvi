@@ -41,14 +41,14 @@ export default async function DashboardLayout({
   const userName = (user.user_metadata?.full_name as string) || userEmail.split('@')[0];
 
   return (
-    <div className="h-screen w-full bg-[#F6F7F9] flex flex-col md:flex-row overflow-hidden">
+    <div className="h-[100dvh] w-full bg-[#F6F7F9] flex flex-col md:flex-row overflow-hidden">
       {/* Desktop Sidebar (Menu always visible) */}
       <div className="hidden md:flex shrink-0 h-full">
         <Sidebar userEmail={userEmail} userName={userName} />
       </div>
 
       {/* Main Content Area (Only scrollable container) */}
-      <main className="flex-1 h-full overflow-y-auto flex flex-col">
+      <main className="flex-1 h-full overflow-y-auto overscroll-contain flex flex-col">
         {/* Sticky Mobile Top Header */}
         <MobileHeader userName={userName} userEmail={userEmail} />
 

@@ -689,18 +689,20 @@ export function TenviAIChat() {
 
   return (
     <>
-      {/* Floating Trigger Button */}
+      {/* Floating Trigger Button (Compressed icon-only on mobile, full pill on desktop) */}
       <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40">
         {!isOpen && (
           <button
             onClick={() => setIsOpen(true)}
             aria-label="Open Tenvi AI Chat"
-            className="group flex items-center gap-3 bg-slate-900 text-white pl-4 pr-5 py-3.5 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+            title="Open Tenvi AI Assistant"
+            className="group flex items-center justify-center sm:justify-start gap-3 bg-slate-900 text-white w-12 h-12 sm:w-auto sm:h-auto p-0 sm:pl-4 sm:pr-5 sm:py-3.5 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-white/20 transition-colors">
-              <Sparkles className="w-4 h-4 text-emerald-400 group-hover:rotate-12 transition-transform duration-300" />
+            <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-white/20 transition-colors relative">
+              <Sparkles className="w-5 h-5 sm:w-4 sm:h-4 text-emerald-400 group-hover:rotate-12 transition-transform duration-300" />
+              <span className="sm:hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900 animate-pulse" />
             </div>
-            <div className="text-left">
+            <div className="hidden sm:block text-left">
               <div className="text-xs font-bold tracking-wide flex items-center gap-1.5">
                 Tenvi AI
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -713,7 +715,7 @@ export function TenviAIChat() {
 
       {/* Floating Chat Modal */}
       {isOpen && (
-        <div className="fixed bottom-20 sm:bottom-6 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[440px] max-w-[440px] h-[580px] max-h-[calc(100vh-6rem)] sm:max-h-[86vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-20 sm:bottom-6 left-2 right-2 sm:left-auto sm:right-6 z-50 sm:w-[440px] max-w-[440px] h-[580px] max-h-[calc(100dvh-6.5rem)] sm:max-h-[86vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
           {/* Header */}
           <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
@@ -1126,7 +1128,7 @@ export function TenviAIChat() {
                 placeholder="Ask Tenvi AI or log spending (e.g. 'paid 450 for coffee via gcash')..."
                 rows={1}
                 disabled={isProcessing}
-                className="flex-1 bg-transparent text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 resize-none outline-none max-h-24 py-1.5 px-2 font-medium"
+                className="flex-1 bg-transparent text-base sm:text-sm text-slate-900 placeholder:text-slate-400 resize-none outline-none max-h-24 py-1.5 px-2 font-medium"
               />
               <button
                 onClick={() => setIsPromptsDrawerOpen((prev) => !prev)}

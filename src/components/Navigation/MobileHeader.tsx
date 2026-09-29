@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Sparkles, User, Bell, Settings } from 'lucide-react';
+import { TenviIcon } from '@/components/UI/TenviIcon';
 
 interface MobileHeaderProps {
   userName: string;
@@ -16,9 +17,7 @@ export function MobileHeader({ userName, userEmail }: MobileHeaderProps) {
     <header className="md:hidden sticky top-0 z-30 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/70 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] flex items-center justify-between transition-all">
       {/* Brand logo & platform identity */}
       <Link href="/dashboard" className="flex items-center gap-2.5 active:scale-95 transition-transform">
-        <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm shadow-xs">
-          T
-        </div>
+        <TenviIcon className="w-8 h-8 rounded-xl shrink-0 shadow-xs" />
         <div>
           <div className="flex items-center gap-1.5">
             <span className="text-base font-extrabold tracking-tight text-slate-900 leading-none">Tenvi</span>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { TenviIcon } from '@/components/UI/TenviIcon';
 import {
   Wallet,
   CreditCard,
@@ -30,9 +31,7 @@ export default async function HomePage() {
       {/* Top Navbar */}
       <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-            T
-          </div>
+          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
           <div>
             <span className="text-xl font-bold tracking-tight text-slate-900">Tenvi</span>
             <span className="hidden sm:inline-block ml-2 text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full">
