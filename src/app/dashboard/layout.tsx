@@ -41,7 +41,7 @@ export default async function DashboardLayout({
   const userName = (user.user_metadata?.full_name as string) || userEmail.split('@')[0];
 
   return (
-    <div className="h-[100dvh] w-full bg-[#F6F7F9] flex flex-col md:flex-row overflow-hidden">
+    <div className="h-[100dvh] w-full bg-[#F8F9FA] flex flex-col md:flex-row overflow-hidden">
       {/* Desktop Sidebar (Menu always visible) */}
       <div className="hidden md:flex shrink-0 h-full">
         <Sidebar userEmail={userEmail} userName={userName} />

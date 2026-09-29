@@ -40,7 +40,7 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
       active: pathname.startsWith('/dashboard/transactions'),
     },
     {
-      label: 'Receivables Hub',
+      label: 'Money Owed to Me',
       href: '/dashboard/receivables',
       icon: Coins,
       active: pathname.startsWith('/dashboard/receivables'),
@@ -64,7 +64,7 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
       active: pathname.startsWith('/dashboard/cards'),
     },
     {
-      label: 'People Who Owe You',
+      label: 'Loans & Debts',
       href: '/dashboard/loans',
       icon: HandCoins,
       active: pathname.startsWith('/dashboard/loans'),
@@ -90,8 +90,8 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
         <Link href="/dashboard" className="flex items-center gap-3 mb-10">
           <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
           <div>
-            <div className="text-xl font-bold tracking-tight text-slate-900">Tenvi</div>
-            <div className="text-xs text-slate-500 font-medium">Wealth OS</div>
+            <div className="text-xl font-bold tracking-tight text-slate-800">Tenvi</div>
+            <div className="text-xs text-slate-500 font-medium">Personal Money Hub</div>
           </div>
         </Link>
 
@@ -105,8 +105,8 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
                   item.active
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-[#F6F7F9]'
+                    ? 'bg-slate-800 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-800 hover:bg-[#F1F3F6]'
                 }`}
               >
                 <Icon className={`w-5 h-5 ${item.active ? 'text-white' : 'text-slate-500'}`} />

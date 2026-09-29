@@ -39,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#F6F7F9] text-slate-900 antialiased selection:bg-slate-200">
+      <body className="min-h-screen bg-[#F8F9FA] text-slate-800 antialiased selection:bg-slate-200">
         {children}
         <Toaster
           position="top-center"

@@ -20,7 +20,7 @@ export function TenviIcon({
       aria-label="Tenvi"
       {...props}
     >
-      {isSolid && <rect width="100" height="100" rx="24" fill="#0F172A" />}
+      {isSolid && <rect width="100" height="100" rx="24" fill="#1E293B" />}
       {/* Outer framing ring */}
       <circle
         cx="50"
@@ -37,7 +37,7 @@ export function TenviIcon({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Emerald growth ledger dot */}
+      {/* Soft sage growth ledger dot */}
       <circle cx="65.5" cy="37.5" r="4.5" fill="#10B981" />
     </svg>
   );

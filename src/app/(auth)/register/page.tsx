@@ -112,17 +112,17 @@ function RegisterForm() {
 
         {/* Email Address (Pre-populated & Read-only if from matched credentials) */}
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-1.5">
             <label
               htmlFor="email"
-              className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+              className="block text-sm font-semibold text-slate-700"
             >
-              Email Address
+              Email address
             </label>
             {isEnrolling && (
-              <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <Lock className="w-2.5 h-2.5" />
-                Linked Account (Read-Only)
+              <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Lock className="w-3 h-3" />
+                Linked Account
               </span>
             )}
           </div>
@@ -147,8 +147,8 @@ function RegisterForm() {
             />
           </div>
           {isEnrolling && (
-            <p className="text-[11px] text-slate-400 mt-1">
-              Locked to your verified platform account email.
+            <p className="text-xs text-slate-500 mt-1">
+              Connected to your verified account email.
             </p>
           )}
         </div>
@@ -157,7 +157,7 @@ function RegisterForm() {
         <div>
           <label
             htmlFor="password"
-            className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2"
+            className="block text-sm font-semibold text-slate-700 mb-1.5"
           >
             {isEnrolling ? 'Confirm Account Password' : 'Password'}
           </label>
@@ -180,7 +180,7 @@ function RegisterForm() {
             />
           </div>
           {isEnrolling && (
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Required: Enter your account password to confirm identity and activate Tenvi.
             </p>
           )}
@@ -198,13 +198,13 @@ function RegisterForm() {
             </>
           ) : isEnrolling ? (
             <>
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <ShieldCheck className="w-4 h-4 text-emerald-300" />
               Confirm &amp; Activate Tenvi
             </>
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              Get Started Free
+              Create Free Account
             </>
           )}
         </button>
@@ -214,9 +214,9 @@ function RegisterForm() {
         Already have an account?{' '}
         <Link
           href="/login"
-          className="font-semibold text-slate-900 hover:underline"
+          className="font-semibold text-slate-800 hover:text-slate-950 underline underline-offset-4"
         >
-          Log in instead
+          Sign in here
         </Link>
       </div>
     </div>
@@ -225,11 +225,11 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <main className="min-h-screen bg-[#F6F7F9] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#F8F9FA] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
@@ -237,12 +237,12 @@ export default function RegisterPage() {
 
         <div className="flex items-center gap-3 mb-2">
           <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-800">
             Create your Tenvi account
           </h1>
         </div>
-        <p className="text-sm text-slate-500 mb-8">
-          Your all-in-one personal wealth infrastructure ledger.
+        <p className="text-sm text-slate-600 mb-8">
+          Your simple, secure, and private personal money ledger.
         </p>
       </div>
 

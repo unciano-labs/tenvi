@@ -20,13 +20,10 @@ export function MobileHeader({ userName, userEmail }: MobileHeaderProps) {
         <TenviIcon className="w-8 h-8 rounded-xl shrink-0 shadow-xs" />
         <div>
           <div className="flex items-center gap-1.5">
-            <span className="text-base font-extrabold tracking-tight text-slate-900 leading-none">Tenvi</span>
-            <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded leading-none">
-              OS
-            </span>
+            <span className="text-base font-extrabold tracking-tight text-slate-800 leading-none">Tenvi</span>
           </div>
-          <span className="text-[10px] text-slate-400 font-medium leading-none block mt-0.5">
-            Personal Wealth Hub
+          <span className="text-xs text-slate-500 font-medium leading-none block mt-0.5">
+            Personal Money Hub
           </span>
         </div>
       </Link>
@@ -35,7 +32,7 @@ export function MobileHeader({ userName, userEmail }: MobileHeaderProps) {
       <div className="flex items-center gap-2">
         <Link
           href="/dashboard/settings"
-          className="w-8 h-8 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 flex items-center justify-center text-slate-600 transition-colors"
+          className="w-9 h-9 rounded-xl bg-slate-100/90 hover:bg-slate-200/90 flex items-center justify-center text-slate-600 transition-colors"
           title="Alerts & Notification Settings"
           aria-label="Settings"
         >
@@ -47,7 +44,7 @@ export function MobileHeader({ userName, userEmail }: MobileHeaderProps) {
           className="flex items-center gap-1.5 p-1 pl-1.5 pr-2 sm:pr-2.5 rounded-full bg-slate-100/90 hover:bg-slate-200 transition-colors active:scale-95 shrink-0"
           title={`Signed in as ${userEmail}`}
         >
-          <div className="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
+          <div className="w-7 h-7 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
             {initial}
           </div>
           <span className="text-xs font-semibold text-slate-700 max-w-[70px] sm:max-w-[90px] truncate">

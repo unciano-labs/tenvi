@@ -48,9 +48,9 @@ function LoginForm() {
         <div>
           <label
             htmlFor="email"
-            className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2"
+            className="block text-sm font-semibold text-slate-700 mb-1.5"
           >
-            Email Address
+            Email address
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -71,7 +71,7 @@ function LoginForm() {
         <div>
           <label
             htmlFor="password"
-            className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2"
+            className="block text-sm font-semibold text-slate-700 mb-1.5"
           >
             Password
           </label>
@@ -99,10 +99,10 @@ function LoginForm() {
           {isPending ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Logging in...
+              Signing in...
             </>
           ) : (
-            'Log In'
+            'Sign In to Your Account'
           )}
         </button>
       </form>
@@ -111,7 +111,7 @@ function LoginForm() {
         Don&apos;t have an account yet?{' '}
         <Link
           href="/register"
-          className="font-semibold text-slate-900 hover:underline"
+          className="font-semibold text-slate-800 hover:text-slate-950 underline underline-offset-4"
         >
           Sign up for free
         </Link>
@@ -122,11 +122,11 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#F6F7F9] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#F8F9FA] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
@@ -134,12 +134,12 @@ export default function LoginPage() {
 
         <div className="flex items-center gap-3 mb-2">
           <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-800">
             Welcome back to Tenvi
           </h1>
         </div>
-        <p className="text-sm text-slate-500 mb-8">
-          Sign in to manage your unified wealth ledger.
+        <p className="text-sm text-slate-600 mb-8">
+          Sign in to view your daily spending, bills, and savings.
         </p>
       </div>
 

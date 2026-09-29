@@ -3,32 +3,32 @@
 @theme {
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  /* Natural, non-AI solid palette - ZERO GRADIENTS */
-  --color-canvas: #f6f7f9;           /* Soft pearl canvas */
-  --color-surface: #ffffff;          /* Pure solid white */
-  --color-surface-subtle: #f1f3f6;   /* Tonal well background */
-  --color-surface-hover: #e8ecf1;
+  /* Calm, eye-friendly, low-contrast solid palette for senior adults & non-techy users */
+  --color-canvas: #f8f9fa;           /* Warm soft pearl canvas (avoids cold glaring white) */
+  --color-surface: #ffffff;          /* Clean solid white */
+  --color-surface-subtle: #f1f3f6;   /* Gentle tonal well background */
+  --color-surface-hover: #e9ecf0;
 
-  /* High legibility typography for everyday non-techy users */
-  --color-text-main: #0f172a;        /* Deep slate text */
+  /* Comfortable, soft-contrast typography (avoids eye-straining jet-black) */
+  --color-text-main: #1e293b;        /* Soft warm slate text (11:1 ratio, easy on older eyes) */
   --color-text-body: #334155;        /* Neutral slate body */
-  --color-text-muted: #64748b;       /* Helper text */
+  --color-text-muted: #64748b;       /* Readable helper text */
 
-  /* Calm, trustworthy brand actions */
-  --color-action-primary: #0f172a;   /* Solid dark slate */
-  --color-action-hover: #1e293b;
+  /* Gentle, trustworthy brand actions */
+  --color-action-primary: #1e293b;   /* Soft slate instead of harsh #0f172a */
+  --color-action-hover: #334155;
   --color-action-light: #f1f5f9;
 
-  /* Everyday financial semantic badges (solid, soft tints) */
-  --color-money-in: #059669;         /* Emerald 600 */
-  --color-money-in-bg: #ecfdf5;      /* Emerald 50 */
-  --color-money-out: #e11d48;        /* Rose 600 */
-  --color-money-out-bg: #fff1f2;     /* Rose 50 */
+  /* Softer financial badges (no blinding neon greens or reds) */
+  --color-money-in: #15803d;         /* Soft forest emerald */
+  --color-money-in-bg: #f0fdf4;      /* Gentle pastel green */
+  --color-money-out: #b91c1c;        /* Soft warm red */
+  --color-money-out-bg: #fef2f2;     /* Gentle pastel red */
 
-  --color-due-warning: #b45309;      /* Amber 700 */
-  --color-due-warning-bg: #fffbeb;   /* Amber 50 */
-  --color-due-critical: #b91c1c;     /* Red 700 */
-  --color-due-critical-bg: #fef2f2;  /* Red 50 */
+  --color-due-warning: #92400e;      /* Gentle warm amber */
+  --color-due-warning-bg: #fffbeb;   /* Soft warm honey */
+  --color-due-critical: #b91c1c;     /* Soft warm crimson */
+  --color-due-critical-bg: #fef2f2;  /* Gentle pastel red */
 
   /* Soft, organic shadows for border-free depth */
   --shadow-bili-sm: 0 2px 6px -1px rgba(15, 23, 42, 0.04), 0 1px 3px -1px rgba(15, 23, 42, 0.03);
@@ -52,6 +52,7 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
     font-size: 16px;
+    letter-spacing: 0.01em;
   }
 
   body {
@@ -59,8 +60,15 @@
     color: var(--color-text-main);
     font-family: var(--font-sans);
     min-height: 100dvh;
-    line-height: 1.5;
+    line-height: 1.6;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Senior readability safeguard: prevent tiny illegible text */
+  .text-\[10px\],
+  .text-\[11px\] {
+    font-size: 0.775rem !important; /* ~12.5px accessible minimum */
+    line-height: 1.25rem !important;
   }
 
   /* iOS Safari: Prevent auto-zoom on input focus by guaranteeing 16px on mobile viewports */
@@ -152,18 +160,19 @@
 .bili-input:focus,
 .tenvi-input:focus {
   background-color: #ffffff;
-  box-shadow: 0 0 0 2px #0f172a, 0 4px 12px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 0 0 2px #334155, 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
-/* Big, readable touchable buttons */
+/* Big, readable touchable buttons - soft comfortable slate */
 .bili-btn-primary,
 .tenvi-btn-primary {
-  background-color: #0f172a;
+  background-color: #1e293b;
   color: #ffffff;
   border: none !important;
   border-radius: 0.875rem;
-  padding: 0.75rem 1.25rem;
-  font-weight: 500;
+  padding: 0.85rem 1.35rem;
+  font-weight: 600;
+  font-size: 0.975rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -174,18 +183,19 @@
 
 .bili-btn-primary:hover,
 .tenvi-btn-primary:hover {
-  background-color: #1e293b;
+  background-color: #334155;
   transform: translateY(-1px);
 }
 
 .bili-btn-secondary,
 .tenvi-btn-secondary {
   background-color: #f1f3f6;
-  color: #0f172a;
+  color: #1e293b;
   border: none !important;
   border-radius: 0.875rem;
-  padding: 0.75rem 1.25rem;
-  font-weight: 500;
+  padding: 0.85rem 1.35rem;
+  font-weight: 600;
+  font-size: 0.975rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
