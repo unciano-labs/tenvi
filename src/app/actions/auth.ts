@@ -62,7 +62,7 @@ async function enrollUserInTenvi(userId: string, email: string, fullName: string
 
   let { data: profile } = await admin
     .from('user_profiles')
-    .select('id')
+    .select('id, full_name')
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -74,7 +74,7 @@ async function enrollUserInTenvi(userId: string, email: string, fullName: string
         email: email,
         full_name: fullName || null,
       })
-      .select('id')
+      .select('id, full_name')
       .single();
 
     if (profileErr) {
@@ -85,6 +85,14 @@ async function enrollUserInTenvi(userId: string, email: string, fullName: string
   }
 
   if (profile) {
+    // If a new or edited fullName is provided, update user_profiles
+    if (fullName && profile.full_name !== fullName) {
+      await admin
+        .from('user_profiles')
+        .update({ full_name: fullName })
+        .eq('id', profile.id);
+    }
+
     const { error: roleErr } = await admin.from('user_roles').upsert(
       {
         user_profile_id: profile.id,
@@ -102,9 +110,13 @@ async function enrollUserInTenvi(userId: string, email: string, fullName: string
 /**
  * LOGIN ACTION:
  * Strict isolation: Authenticate credentials -> Check website role.
- * If user has no role for this website -> SIGN OUT immediately & return actionable error.
+ * If user has no role for this website -> SIGN OUT immediately & redirect to registration
+ * with email pre-populated (readonly) and name pre-populated (editable).
  */
-export async function loginAction(prevState: any, formData: FormData) {
+export async function loginAction(
+  prevState: any,
+  formData: FormData
+): Promise<{ error?: string; code?: string } | void> {
   const email = (formData.get('email') as string)?.trim().toLowerCase();
   const password = formData.get('password') as string;
 
@@ -128,13 +140,28 @@ export async function loginAction(prevState: any, formData: FormData) {
   // 2. Authorize website membership
   const isEnrolled = await checkUserWebsiteMembership(data.user.id, WEBSITE_ID);
   if (!isEnrolled) {
-    // Revoke the session immediately — user is not authorized for Tenvi
+    // Fetch profile details for pre-populating registration
+    const admin = createAdminClient();
+    const { data: profile } = await admin
+      .from('user_profiles')
+      .select('full_name')
+      .eq('user_id', data.user.id)
+      .maybeSingle();
+
+    const fullName =
+      profile?.full_name || (data.user.user_metadata?.full_name as string) || '';
+
+    // Revoke the active session — user cannot access Tenvi dashboard yet
     await supabase.auth.signOut();
-    return {
-      error:
-        'No Tenvi account found for this email. If you have an account on another connected website, please register on Tenvi to activate access.',
-      code: 'NOT_ENROLLED_FOR_WEBSITE',
-    };
+
+    // Redirect to registration with pre-populated email (readonly) and name (editable)
+    const params = new URLSearchParams({
+      email,
+      ...(fullName ? { name: fullName } : {}),
+      enrolling: 'true',
+    });
+
+    redirect(`/register?${params.toString()}`);
   }
 
   // Ensure default categories are seeded
@@ -186,7 +213,7 @@ export async function registerAction(prevState: any, formData: FormData) {
     if (authErr || !authData.user) {
       return {
         error:
-          'An account with this email exists on our network. Please enter your existing account password to add Tenvi to your account.',
+          'Incorrect password for this account. Please enter your correct account password to activate Tenvi.',
         code: 'EXISTING_ACCOUNT_PASSWORD_REQUIRED',
       };
     }
@@ -224,7 +251,7 @@ export async function registerAction(prevState: any, formData: FormData) {
       if (authErr || !authData.user) {
         return {
           error:
-            'An account with this email exists on our network. Please enter your existing account password to add Tenvi to your account.',
+            'Incorrect password for this account. Please enter your correct account password to activate Tenvi.',
           code: 'EXISTING_ACCOUNT_PASSWORD_REQUIRED',
         };
       }

@@ -24,9 +24,17 @@ export default async function DashboardLayout({
   // Authoritative authorization gate: check membership for current website
   const isEnrolled = await checkUserWebsiteMembership(user.id, WEBSITE_ID);
   if (!isEnrolled) {
-    // Revoke foreign session and redirect with explanation
+    const userEmail = user.email || '';
+    const userName = (user.user_metadata?.full_name as string) || '';
+
+    // Revoke foreign session and redirect to registration with pre-populated details
     await supabase.auth.signOut();
-    redirect('/login?error=not_enrolled');
+    const params = new URLSearchParams({
+      email: userEmail,
+      ...(userName ? { name: userName } : {}),
+      enrolling: 'true',
+    });
+    redirect(`/register?${params.toString()}`);
   }
 
   const userEmail = user.email || '';

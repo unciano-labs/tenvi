@@ -12,7 +12,11 @@ function LoginForm() {
   const urlError = searchParams.get('error');
 
   const isNotEnrolled =
-    state?.code === 'NOT_ENROLLED_FOR_WEBSITE' || urlError === 'not_enrolled';
+    (state as any)?.code === 'NOT_ENROLLED_FOR_WEBSITE' || urlError === 'not_enrolled';
+  const urlEmail = searchParams.get('email');
+  const registerHref = urlEmail
+    ? `/register?email=${encodeURIComponent(urlEmail)}&enrolling=true`
+    : '/register';
 
   return (
     <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-sm">
@@ -27,7 +31,7 @@ function LoginForm() {
             registered for Tenvi yet. Please register to activate your Tenvi access.
           </p>
           <Link
-            href="/register"
+            href={registerHref}
             className="inline-flex items-center gap-1 text-xs font-bold text-amber-950 underline hover:text-amber-800"
           >
             Register for Tenvi now →
