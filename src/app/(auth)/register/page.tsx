@@ -84,7 +84,7 @@ function RegisterForm() {
               Your Full Name
             </label>
             {isEnrolling && (
-              <span className="text-[11px] font-medium text-slate-400">
+              <span className="text-xs font-medium text-slate-400">
                 Editable
               </span>
             )}
@@ -104,7 +104,7 @@ function RegisterForm() {
             />
           </div>
           {isEnrolling && (
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               Pre-filled from your profile. You can edit this name for Tenvi.
             </p>
           )}

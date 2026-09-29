@@ -256,13 +256,13 @@ export function LoanModal({
               </label>
             </div>
 
-            <p className="text-[11px] text-slate-500">
+            <p className="text-xs text-slate-500">
               Provide the borrower&apos;s mobile number or email so Tenvi can automatically dispatch a friendly payment reminder 3 days before their due date.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-medium text-slate-600 mb-1 flex items-center gap-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
                   <Phone className="w-3 h-3 text-slate-400" /> Mobile Number (SMS)
                 </label>
                 <input
@@ -275,7 +275,7 @@ export function LoanModal({
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-600 mb-1 flex items-center gap-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
                   <Mail className="w-3 h-3 text-slate-400" /> Email Address
                 </label>
                 <input
@@ -336,7 +336,7 @@ export function LoanModal({
                     <span>Card Billing Cycle Synced ⚡</span>
                     <span className="text-indigo-600">Cutoff: Every {getOrdinalSuffix(selectedCard.statement_day)}</span>
                   </div>
-                  <p className="text-[11px] text-indigo-700">
+                  <p className="text-xs text-indigo-700">
                     Payment due day automatically synchronized with your card&apos;s payment due date (every {getOrdinalSuffix(selectedCard.due_day)}).
                   </p>
                 </div>
@@ -387,7 +387,7 @@ export function LoanModal({
             </div>
 
             {parsedDownpayment > 0 && (
-              <div className="text-[11px] text-slate-500 flex justify-between items-center pt-1">
+              <div className="text-xs text-slate-500 flex justify-between items-center pt-1">
                 <span>Remaining Net Loan to Amortize:</span>
                 <span className="font-extrabold text-slate-900">
                   ₱{principalToFinance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
@@ -478,7 +478,7 @@ export function LoanModal({
                   className="bili-input w-full text-sm bg-white"
                   placeholder="e.g. 15 (due every 15th)"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-xs text-slate-400 mt-1">
                   {selectedCard
                     ? `Synchronized with ${selectedCard.name} payment due date (every ${getOrdinalSuffix(selectedCard.due_day)}).`
                     : 'We automatically adjust for shorter months like February or 30-day months.'}
@@ -547,7 +547,7 @@ export function LoanModal({
                     ₱{estimatedMonthly}{' '}
                     <span className="text-xs font-medium text-slate-400">/ month</span>
                   </div>
-                  <div className="text-[11px] text-slate-500 space-y-0.5 pt-1 border-t border-slate-100">
+                  <div className="text-xs text-slate-500 space-y-0.5 pt-1 border-t border-slate-100">
                     <div className="flex justify-between">
                       <span>Total Purchase:</span>
                       <span className="font-semibold text-slate-700">₱{parsedAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>

@@ -178,7 +178,7 @@ export function PropertyDocumentsSection({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+              <span className="text-xs font-bold uppercase text-slate-400 block tracking-wider">
                 Total Files
               </span>
               <span className="text-xl font-extrabold text-slate-900">{stats.total}</span>
@@ -188,7 +188,7 @@ export function PropertyDocumentsSection({
 
           <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase text-emerald-800 block tracking-wider">
+              <span className="text-xs font-bold uppercase text-emerald-800 block tracking-wider">
                 Valid & Compliant
               </span>
               <span className="text-xl font-extrabold text-emerald-950">{stats.valid}</span>
@@ -198,7 +198,7 @@ export function PropertyDocumentsSection({
 
           <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-100 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase text-amber-800 block tracking-wider">
+              <span className="text-xs font-bold uppercase text-amber-800 block tracking-wider">
                 Expiring Soon
               </span>
               <span className="text-xl font-extrabold text-amber-950">{stats.expiringSoon}</span>
@@ -208,7 +208,7 @@ export function PropertyDocumentsSection({
 
           <div className="p-3.5 rounded-2xl bg-rose-50/60 border border-rose-100 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase text-rose-800 block tracking-wider">
+              <span className="text-xs font-bold uppercase text-rose-800 block tracking-wider">
                 Overdue / Expired
               </span>
               <span className="text-xl font-extrabold text-rose-950">{stats.expired}</span>
@@ -264,7 +264,7 @@ export function PropertyDocumentsSection({
                         <TypeIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
                           {preset?.label.split('(')[0].trim() || doc.document_type}
                         </span>
                         <h4 className="text-sm font-bold text-slate-900 line-clamp-1">
@@ -275,7 +275,7 @@ export function PropertyDocumentsSection({
 
                     {/* Expiry Pill */}
                     <span
-                      className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border shrink-0 ${expiryStatus.badgeClass}`}
+                      className={`text-xs font-bold px-2.5 py-1 rounded-xl border shrink-0 ${expiryStatus.badgeClass}`}
                     >
                       {expiryStatus.label}
                     </span>
@@ -285,17 +285,17 @@ export function PropertyDocumentsSection({
                   <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                     {doc.document_number && (
                       <div className="space-y-0.5">
-                        <span className="text-[10px] font-medium text-slate-400 block uppercase">
+                        <span className="text-xs font-medium text-slate-400 block uppercase">
                           Ref / Policy #
                         </span>
-                        <span className="font-semibold text-slate-800 font-mono text-[11px]">
+                        <span className="font-semibold text-slate-800 font-mono text-xs">
                           {doc.document_number}
                         </span>
                       </div>
                     )}
 
                     <div className="space-y-0.5">
-                      <span className="text-[10px] font-medium text-slate-400 block uppercase">
+                      <span className="text-xs font-medium text-slate-400 block uppercase">
                         Expiry Date
                       </span>
                       <span className="font-semibold text-slate-800">
@@ -305,7 +305,7 @@ export function PropertyDocumentsSection({
 
                     {doc.issue_date && (
                       <div className="space-y-0.5">
-                        <span className="text-[10px] font-medium text-slate-400 block uppercase">
+                        <span className="text-xs font-medium text-slate-400 block uppercase">
                           Issued On
                         </span>
                         <span className="font-medium text-slate-600">
@@ -315,22 +315,22 @@ export function PropertyDocumentsSection({
                     )}
 
                     <div className="space-y-0.5">
-                      <span className="text-[10px] font-medium text-slate-400 block uppercase">
+                      <span className="text-xs font-medium text-slate-400 block uppercase">
                         Alert Channels
                       </span>
                       <div className="flex items-center gap-1.5 pt-0.5">
                         {doc.notify_email && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
                             Email
                           </span>
                         )}
                         {doc.notify_sms && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
                             SMS
                           </span>
                         )}
                         {!doc.notify_email && !doc.notify_sms && (
-                          <span className="text-[10px] text-slate-400">Off</span>
+                          <span className="text-xs text-slate-400">Off</span>
                         )}
                       </div>
                     </div>
@@ -338,7 +338,7 @@ export function PropertyDocumentsSection({
 
                   {/* Notes / Instructions */}
                   {doc.notes && (
-                    <div className="p-2.5 rounded-xl bg-slate-100/70 text-[11px] text-slate-600 leading-relaxed">
+                    <div className="p-2.5 rounded-xl bg-slate-100/70 text-xs text-slate-600 leading-relaxed">
                       {doc.notes}
                     </div>
                   )}
@@ -359,14 +359,14 @@ export function PropertyDocumentsSection({
                         View File
                       </a>
                     ) : (
-                      <span className="text-[11px] text-slate-400 italic">No file scan attached</span>
+                      <span className="text-xs text-slate-400 italic">No file scan attached</span>
                     )}
 
                     {doc.expiry_date && (
                       <button
                         onClick={() => handleSendTestAlert(doc)}
                         disabled={isSendingAlertId === doc.id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
                         title="Send immediate test alert via Email / SMS"
                       >
                         {isSendingAlertId === doc.id ? (

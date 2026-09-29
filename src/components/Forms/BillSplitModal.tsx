@@ -254,7 +254,7 @@ export function BillSplitModal({
             {/* Existing contacts quick pills */}
             {contacts.length > 0 && (
               <div className="flex flex-wrap gap-1.5 pt-1">
-                <span className="text-[11px] text-slate-400 self-center mr-1">
+                <span className="text-xs text-slate-400 self-center mr-1">
                   Quick pick:
                 </span>
                 {contacts.slice(0, 5).map((c) => (

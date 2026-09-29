@@ -221,7 +221,7 @@ export function PropertyTransactionModal({
           {/* Quick Preset Buttons */}
           {selectedProperty && (
             <div className="space-y-1.5">
-              <span className="text-[11px] font-semibold text-slate-400 block">
+              <span className="text-xs font-semibold text-slate-400 block">
                 Quick 1-Click Suggestions:
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -236,7 +236,7 @@ export function PropertyTransactionModal({
                             Number(selectedProperty.expected_income_daily)
                           )
                         }
-                        className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        className="text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                       >
                         + Daily Boundary (₱{selectedProperty.expected_income_daily})
                       </button>
@@ -250,7 +250,7 @@ export function PropertyTransactionModal({
                             Number(selectedProperty.expected_income_monthly)
                           )
                         }
-                        className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        className="text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                       >
                         + Monthly Rent (₱{selectedProperty.expected_income_monthly})
                       </button>
@@ -258,7 +258,7 @@ export function PropertyTransactionModal({
                     <button
                       type="button"
                       onClick={() => handleQuickPreset('Booking / Trip Fare')}
-                      className="text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                      className="text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                     >
                       Trip Fare
                     </button>
@@ -274,7 +274,7 @@ export function PropertyTransactionModal({
                             Number(selectedProperty.monthly_amortization)
                           )
                         }
-                        className="text-[11px] font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        className="text-xs font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                       >
                         - Monthly Amort (₱{selectedProperty.monthly_amortization})
                       </button>
@@ -288,7 +288,7 @@ export function PropertyTransactionModal({
                             Number(selectedProperty.annual_insurance_amount)
                           )
                         }
-                        className="text-[11px] font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        className="text-xs font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                       >
                         - Yearly Insurance (₱{selectedProperty.annual_insurance_amount})
                       </button>
@@ -296,14 +296,14 @@ export function PropertyTransactionModal({
                     <button
                       type="button"
                       onClick={() => handleQuickPreset('Oil Change / PMS Maintenance')}
-                      className="text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                      className="text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                     >
                       PMS / Maintenance
                     </button>
                     <button
                       type="button"
                       onClick={() => handleQuickPreset('Gas / Fuel')}
-                      className="text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                      className="text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                     >
                       Gasoline / Fuel
                     </button>

@@ -249,7 +249,7 @@ export function SplitsClient({
             return (
               <div
                 key={split.id}
-                className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm hover:shadow-md transition-shadow space-y-5"
+                className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-shadow space-y-5"
               >
                 {/* Header row */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -371,7 +371,7 @@ export function SplitsClient({
             >
               Load More Splits ({filteredSplits.length - visibleCount} remaining)
             </button>
-            <p className="text-[11px] text-slate-400 mt-2">
+            <p className="text-xs text-slate-400 mt-2">
               Showing {Math.min(visibleCount, filteredSplits.length)} of {filteredSplits.length} splits
             </p>
           </div>

@@ -326,7 +326,7 @@ export function EditLoanModal({
                 Swiped on a Credit Card?
               </label>
               {selectedCard && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
                   Billing Cycle Synced
                 </span>
               )}
@@ -352,7 +352,7 @@ export function EditLoanModal({
                   <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
                   Synchronized with {selectedCard.name} ({selectedCard.bank_name})
                 </div>
-                <p className="text-[11px] text-indigo-700 leading-relaxed">
+                <p className="text-xs text-indigo-700 leading-relaxed">
                   Monthly installment due dates follow this card's payment deadline on the{' '}
                   <span className="font-extrabold">{getOrdinalSuffix(Number(selectedCard.due_day))}</span> of
                   every month (Statement cutoff:{' '}
@@ -360,7 +360,7 @@ export function EditLoanModal({
                 </p>
               </div>
             ) : (
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 Linking a credit card automatically calculates statement cutoff and due date schedules.
               </p>
             )}
@@ -373,7 +373,7 @@ export function EditLoanModal({
                 <Percent className="w-4 h-4 text-amber-600" />
                 Monthly Interest Rate (%)
               </label>
-              <span className="text-[11px] font-bold text-slate-600">
+              <span className="text-xs font-bold text-slate-600">
                 {parsedRate > 0 ? `${parsedRate.toFixed(2)}% / month` : '0% (Interest-Free)'}
               </span>
             </div>
@@ -398,7 +398,7 @@ export function EditLoanModal({
                     key={r}
                     type="button"
                     onClick={() => setMonthlyInterestRate(String(r))}
-                    className={`text-[10px] font-bold px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                    className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors cursor-pointer ${
                       parsedRate === r
                         ? 'bg-slate-900 text-white'
                         : 'bg-white text-slate-600 hover:bg-slate-200'
@@ -409,7 +409,7 @@ export function EditLoanModal({
                 ))}
               </div>
             </div>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-xs text-slate-500">
               Interest is computed monthly on the financed principal and added to the repayment schedule.
             </p>
           </div>
@@ -528,7 +528,7 @@ export function EditLoanModal({
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] text-slate-400 block">Monthly Amortization</span>
+                  <span className="text-xs text-slate-400 block">Monthly Amortization</span>
                   <span className="text-lg font-extrabold text-emerald-400">
                     {formatMoney(monthlyAmortization || 0)}
                     <span className="text-xs text-slate-300 font-normal"> / month</span>

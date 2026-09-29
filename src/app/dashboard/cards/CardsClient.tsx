@@ -207,7 +207,7 @@ export function CardsClient({
 
       {/* 3. Streamlined Float Optimization Spotlight (Best Card to Swipe) */}
       {bestCard && (
-        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-100 space-y-3">
+        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm overflow-hidden min-w-0 border border-slate-100 space-y-3">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-3.5 min-w-0">
               <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -215,10 +215,10 @@ export function CardsClient({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full">
                     Best to Swipe Today
                   </span>
-                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">
                     {bestCard.floatDays} Days Interest-Free Runway
                   </span>
                 </div>
@@ -290,14 +290,14 @@ export function CardsClient({
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-5 h-5 rounded-full bg-white flex items-center justify-center font-bold text-[10px] text-slate-700 shadow-2xs shrink-0">
+                      <span className="w-5 h-5 rounded-full bg-white flex items-center justify-center font-bold text-xs text-slate-700 shadow-2xs shrink-0">
                         #{idx + 1}
                       </span>
                       <div className="min-w-0">
                         <p className="font-bold text-slate-900 truncate">
                           {rc.card.bank_name} {rc.card.name}
                         </p>
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-xs text-slate-500">
                           Cutoff: Day {rc.card.statement_day} • Due: {rc.paymentDueDateFormatted}
                         </p>
                       </div>
@@ -309,7 +309,7 @@ export function CardsClient({
                       </span>
                       <Link
                         href={`/dashboard/cards/${rc.card.id}`}
-                        className="text-[11px] font-semibold text-indigo-600 hover:underline"
+                        className="text-xs font-semibold text-indigo-600 hover:underline"
                       >
                         View →
                       </Link>
@@ -418,7 +418,7 @@ export function CardsClient({
             return (
               <div
                 key={card.id}
-                className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 border border-slate-100/70"
+                className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-all flex flex-col justify-between space-y-4 border border-slate-100/70"
               >
                 {/* Top Section: Card Identity & Urgency Badge */}
                 <div>
@@ -440,7 +440,7 @@ export function CardsClient({
                       </Link>
 
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] uppercase font-bold text-slate-400 truncate">
+                        <p className="text-xs uppercase font-bold text-slate-400 truncate">
                           {card.bank_name}
                         </p>
                         <Link
@@ -454,7 +454,7 @@ export function CardsClient({
 
                     <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                       {rec?.isBestCard && (
-                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 flex items-center gap-1">
+                        <span className="text-xs font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 flex items-center gap-1">
                           <Sparkles className="w-2.5 h-2.5 fill-current" />
                           Best to Swipe
                         </span>
@@ -503,13 +503,13 @@ export function CardsClient({
                 {/* Key Schedule Grid (Minimalist Tonal Box) */}
                 <div className="bg-[#F6F7F9] p-3 rounded-2xl grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Statement Cutoff</span>
+                    <span className="text-slate-400 block text-xs">Statement Cutoff</span>
                     <span className="font-bold text-slate-800">
                       Day {card.statement_day} of month
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Payment Due Day</span>
+                    <span className="text-slate-400 block text-xs">Payment Due Day</span>
                     <span className="font-bold text-slate-800">
                       Day {card.due_day} {rec ? `(${rec.floatDays}d float)` : ''}
                     </span>

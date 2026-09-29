@@ -363,7 +363,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
               return (
                 <div
                   key={group.contactId}
-                  className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-5"
+                  className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-all flex flex-col justify-between space-y-5"
                 >
                   <div className="space-y-4">
                     {/* Entity Card Header */}
@@ -408,7 +408,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                     <div className="p-4 rounded-2xl bg-[#F6F7F9] space-y-2.5">
                       <div className="flex justify-between items-end">
                         <div>
-                          <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">
+                          <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">
                             Total Outstanding
                           </span>
                           <span className="text-2xl font-extrabold text-slate-900">
@@ -427,7 +427,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                         />
                       </div>
 
-                      <div className="flex justify-between items-center text-[11px] text-slate-500 font-medium pt-0.5">
+                      <div className="flex justify-between items-center text-xs text-slate-500 font-medium pt-0.5">
                         <span>{formatMoney(group.totalPaid)} repaid ({percentPaid}%)</span>
                         <span className="bg-white px-2 py-0.5 rounded-md font-semibold text-slate-700 shadow-2xs">
                           {group.loans.length} {group.loans.length === 1 ? 'Advance / Loan' : 'Advances / Loans'}
@@ -461,7 +461,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <span
-                                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                                      className={`text-xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
                                         loan.status === 'paid'
                                           ? 'bg-emerald-50 text-emerald-700'
                                           : loan.is_installment
@@ -477,7 +477,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                                     </span>
 
                                     {loan.credit_card && (
-                                      <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                      <span className="text-xs font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1">
                                         <CreditCardIcon className="w-3 h-3 text-slate-400" />
                                         {loan.credit_card.bank_name} •••• {loan.credit_card.last_4}
                                       </span>
@@ -488,7 +488,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                                     {loan.reason || 'Personal Advance'}
                                   </span>
 
-                                  <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5 flex-wrap">
+                                  <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5 flex-wrap">
                                     <span>Lent {formatDate(loan.loaned_on)}</span>
                                     {loan.is_installment && loan.monthly_due_day && (
                                       <span>• Due day {loan.monthly_due_day}</span>
@@ -508,7 +508,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                                     {formatMoney(loan.balance_remaining)}
                                   </span>
                                   {Number(loan.amount) > Number(loan.balance_remaining) && loan.status !== 'paid' && (
-                                    <span className="text-[10px] text-slate-400 block">
+                                    <span className="text-xs text-slate-400 block">
                                       of {formatMoney(Number(loan.amount))}
                                     </span>
                                   )}
@@ -605,7 +605,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
               >
                 Load More Entities ({groupedEntities.length - entityVisibleCount} remaining)
               </button>
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-xs text-slate-400 mt-2">
                 Showing {Math.min(entityVisibleCount, groupedEntities.length)} of {groupedEntities.length} entities
               </p>
             </div>
@@ -624,7 +624,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                 <div
                   key={loan.id}
                   onClick={() => router.push(`/dashboard/loans/${loan.id}`)}
-                  className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between space-y-5 group"
+                  className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between space-y-5 group"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-3 mb-2">
@@ -634,19 +634,19 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                             {loan.contact?.name || 'Borrower'}
                           </h3>
                           {loan.is_installment && (
-                            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 inline-flex items-center gap-1">
+                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 inline-flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {loan.installment_months} Mos Installment
                             </span>
                           )}
                           {loan.credit_card && (
-                            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 inline-flex items-center gap-1">
+                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 inline-flex items-center gap-1">
                               <CreditCardIcon className="w-3 h-3 text-slate-500" />
                               {loan.credit_card.bank_name} •••• {loan.credit_card.last_4}
                             </span>
                           )}
                           {loan.downpayment_amount && loan.downpayment_amount > 0 ? (
-                            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 inline-flex items-center gap-1">
+                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 inline-flex items-center gap-1">
                               ₱{Number(loan.downpayment_amount).toLocaleString()} Downpayment
                             </span>
                           ) : null}
@@ -698,7 +698,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                           style={{ width: `${math.percentPaid}%` }}
                         />
                       </div>
-                      <div className="flex justify-between text-[11px] text-slate-400 font-medium mt-1.5">
+                      <div className="flex justify-between text-xs text-slate-400 font-medium mt-1.5">
                         <span>{formatMoney(math.paidAmount)} repaid</span>
                         <span>{math.percentPaid}% complete</span>
                       </div>
@@ -766,7 +766,7 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
               >
                 Load More Loans ({filteredLoans.length - visibleCount} remaining)
               </button>
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-xs text-slate-400 mt-2">
                 Showing {Math.min(visibleCount, filteredLoans.length)} of {filteredLoans.length} loans
               </p>
             </div>

@@ -278,7 +278,7 @@ export function CardDetailsClient({
         >
           <div className="flex justify-between items-start">
             <div className="min-w-0 pr-2">
-              <p className="text-[11px] uppercase font-bold tracking-wider text-slate-400 truncate">
+              <p className="text-xs uppercase font-bold tracking-wider text-slate-400 truncate">
                 {card.bank_name}
               </p>
               <p className="text-base sm:text-lg font-bold tracking-tight mt-0.5 truncate">
@@ -292,7 +292,7 @@ export function CardDetailsClient({
 
           <div className="space-y-3 pt-2">
             <div>
-              <p className="text-[10px] text-slate-400 font-medium">Card Number</p>
+              <p className="text-xs text-slate-400 font-medium">Card Number</p>
               <p className="text-sm font-mono tracking-widest font-bold">
                 •••• •••• •••• {card.last_4}
               </p>
@@ -300,11 +300,11 @@ export function CardDetailsClient({
 
             <div className="flex justify-between items-end border-t border-white/10 pt-2 text-xs">
               <div>
-                <span className="text-[10px] text-slate-400 block font-medium">Cutoff</span>
+                <span className="text-xs text-slate-400 block font-medium">Cutoff</span>
                 <span className="font-bold text-slate-200">Day {card.statement_day}</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-slate-400 block font-medium">Credit Limit</span>
+                <span className="text-xs text-slate-400 block font-medium">Credit Limit</span>
                 <span className="font-bold text-white">
                   {creditLimit > 0 ? formatMoney(creditLimit) : 'No limit set'}
                 </span>
@@ -314,7 +314,7 @@ export function CardDetailsClient({
         </div>
 
         {/* Minimalist Financial Overview & Key Schedule */}
-        <div className="lg:col-span-2 bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-2 bg-white rounded-3xl p-5 sm:p-6 shadow-sm overflow-hidden min-w-0 border border-slate-100 flex flex-col justify-between space-y-4">
           {/* Credit Utilization Bar */}
           <div>
             <div className="flex items-center justify-between text-xs mb-1.5">
@@ -345,32 +345,32 @@ export function CardDetailsClient({
           {/* Key Schedule & Smart Float Well */}
           <div className="bg-[#F6F7F9] p-3.5 rounded-2xl grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div>
-              <span className="text-slate-400 block text-[11px] font-medium">Statement Cutoff</span>
+              <span className="text-slate-400 block text-xs font-medium">Statement Cutoff</span>
               <span className="font-bold text-slate-900 block mt-0.5">
                 Day {card.statement_day} of month
               </span>
-              <span className="text-[10px] text-slate-400">
+              <span className="text-xs text-slate-400">
                 Next: {thisCardRec?.nextCutoffDateFormatted || 'Upcoming'}
               </span>
             </div>
 
             <div>
-              <span className="text-slate-400 block text-[11px] font-medium">Payment Due Day</span>
+              <span className="text-slate-400 block text-xs font-medium">Payment Due Day</span>
               <span className="font-bold text-slate-900 block mt-0.5">
                 Day {card.due_day} of month
               </span>
-              <span className="text-[10px] text-emerald-700 font-semibold">
+              <span className="text-xs text-emerald-700 font-semibold">
                 Due: {thisCardRec?.paymentDueDateFormatted || 'Upcoming'}
               </span>
             </div>
 
             <div>
-              <span className="text-slate-400 block text-[11px] font-medium">Interest-Free Float</span>
+              <span className="text-slate-400 block text-xs font-medium">Interest-Free Float</span>
               <span className="font-bold text-slate-900 block mt-0.5">
                 {thisCardRec ? `${thisCardRec.floatDays} Days Runway` : '30-45 Days'}
               </span>
               <span 
-                className="text-[10px] text-slate-500 block truncate"
+                className="text-xs text-slate-500 block truncate"
                 title={thisCardRec?.advice || 'Optimized cash runway'}
               >
                 {thisCardRec?.advice || 'Optimized cash runway'}
@@ -393,7 +393,7 @@ export function CardDetailsClient({
               )}
             </span>
 
-            <span className="text-[11px] text-slate-400 shrink-0 font-medium">
+            <span className="text-xs text-slate-400 shrink-0 font-medium">
               Next Due: {dueInfo.nextDueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
           </div>
@@ -402,7 +402,7 @@ export function CardDetailsClient({
 
       {/* 3. Swiped for Others / Connected Installment Loans */}
       {linkedLoans.length > 0 && (
-        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-100 space-y-3">
+        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm overflow-hidden min-w-0 border border-slate-100 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-700 shrink-0">
@@ -412,7 +412,7 @@ export function CardDetailsClient({
                 <h3 className="text-sm font-bold text-slate-900">
                   Swiped for Others on this Card ({linkedLoans.length})
                 </h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-xs text-slate-400">
                   Loans charged to this card line that friends/relatives are paying back.
                 </p>
               </div>
@@ -434,7 +434,7 @@ export function CardDetailsClient({
                   <p className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                     {loan.contact?.name || 'Borrower'} {loan.reason ? `• ${loan.reason}` : ''}
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-400 mt-0.5">
                     Original: {formatMoney(loan.amount)}
                   </p>
                 </div>
@@ -442,7 +442,7 @@ export function CardDetailsClient({
                   <span className="font-extrabold text-blue-900 block">
                     {formatMoney(loan.balance_remaining)}
                   </span>
-                  <span className="text-[10px] text-blue-700 font-semibold">
+                  <span className="text-xs text-blue-700 font-semibold">
                     Schedule →
                   </span>
                 </div>
@@ -558,7 +558,7 @@ export function CardDetailsClient({
               return (
                 <div
                   key={group.statementKey}
-                  className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-100 space-y-3"
+                  className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm overflow-hidden min-w-0 border border-slate-100 space-y-3"
                 >
                   {/* Statement Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -569,15 +569,15 @@ export function CardDetailsClient({
                         </span>
 
                         {group.isCurrentCycle ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800">
                             Current Unbilled Cycle
                           </span>
                         ) : group.status === 'billed_due_soon' ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800">
                             {group.statusLabel}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
                             {group.statusLabel}
                           </span>
                         )}
@@ -590,7 +590,7 @@ export function CardDetailsClient({
 
                     <div className="flex items-center gap-3 self-end sm:self-auto">
                       <div className="text-right">
-                        <span className="text-[11px] text-slate-400 block font-medium">
+                        <span className="text-xs text-slate-400 block font-medium">
                           Statement Total
                         </span>
                         <span className="text-sm sm:text-base font-extrabold text-slate-900">
@@ -652,11 +652,11 @@ export function CardDetailsClient({
                                     <span className="font-bold text-slate-900 truncate">
                                       {tx.note || 'Card Purchase'}
                                     </span>
-                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white text-slate-700 shadow-2xs shrink-0">
+                                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-white text-slate-700 shadow-2xs shrink-0">
                                       {tx.category?.name || 'General'}
                                     </span>
                                   </div>
-                                  <span className="text-[11px] text-slate-400 block mt-0.5">
+                                  <span className="text-xs text-slate-400 block mt-0.5">
                                     {formatDate(tx.occurred_on)}
                                   </span>
                                 </div>
@@ -725,7 +725,7 @@ export function CardDetailsClient({
           Card Settings & Danger Zone
         </h4>
 
-        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm overflow-hidden min-w-0 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <h5 className="text-sm font-bold text-slate-900">
               Delete Credit Card
@@ -733,7 +733,7 @@ export function CardDetailsClient({
             <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
               Permanently remove this card and all associated statement records. Existing transaction records will remain preserved in your general ledger.
             </p>
-            <p className="text-[11px] text-slate-400 font-mono pt-1">
+            <p className="text-xs text-slate-400 font-mono pt-1">
               Credit Card ID: {card.id}
             </p>
           </div>

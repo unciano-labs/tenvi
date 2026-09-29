@@ -224,7 +224,7 @@ export function PropertyDocumentModal({
                 </option>
               ))}
             </select>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-xs text-slate-400">
               {DOCUMENT_TYPE_PRESETS.find((p) => p.value === documentType)?.description}
             </p>
           </div>
@@ -274,7 +274,7 @@ export function PropertyDocumentModal({
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 block flex items-center justify-between">
                 <span>Expiration / Renewal Date</span>
-                <span className="text-[10px] text-slate-400 font-normal">Leave blank if permanent</span>
+                <span className="text-xs text-slate-400 font-normal">Leave blank if permanent</span>
               </label>
               <input
                 type="date"
@@ -292,13 +292,13 @@ export function PropertyDocumentModal({
                 <Bell className="w-4 h-4 text-amber-600" />
                 Automated Renewal & Expiry Alerts
               </div>
-              <p className="text-[11px] text-amber-800 leading-relaxed">
+              <p className="text-xs text-amber-800 leading-relaxed">
                 Tenvi will automatically monitor this document and send alerts when it is approaching expiration.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 <div>
-                  <label className="text-[10px] font-bold text-amber-900 uppercase block mb-1">
+                  <label className="text-xs font-bold text-amber-900 uppercase block mb-1">
                     Notice Lead Time
                   </label>
                   <select
@@ -347,7 +347,7 @@ export function PropertyDocumentModal({
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 block flex items-center justify-between">
               <span>Digital File (PDF, Image)</span>
-              <span className="text-[10px] text-slate-400 font-normal">Optional (Max 15MB)</span>
+              <span className="text-xs text-slate-400 font-normal">Optional (Max 15MB)</span>
             </label>
 
             <div
@@ -381,7 +381,7 @@ export function PropertyDocumentModal({
                   </div>
                   <div className="text-left">
                     <p className="text-xs font-bold text-slate-800 truncate max-w-xs">{selectedFile.name}</p>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       {(selectedFile.size / 1024 / 1024).toFixed(2)} MB • Click to replace
                     </p>
                   </div>
@@ -395,7 +395,7 @@ export function PropertyDocumentModal({
                     <p className="text-xs font-bold text-slate-800 truncate max-w-xs">
                       {documentToEdit.file_name}
                     </p>
-                    <p className="text-[10px] text-slate-500">File on record • Click to replace with new file</p>
+                    <p className="text-xs text-slate-500">File on record • Click to replace with new file</p>
                   </div>
                 </div>
               ) : (
@@ -404,7 +404,7 @@ export function PropertyDocumentModal({
                   <p className="text-xs font-semibold text-slate-700">
                     Click to browse or drop document scan here
                   </p>
-                  <p className="text-[10px] text-slate-400">PDF, PNG, JPG, or WEBP up to 15MB</p>
+                  <p className="text-xs text-slate-400">PDF, PNG, JPG, or WEBP up to 15MB</p>
                 </div>
               )}
             </div>

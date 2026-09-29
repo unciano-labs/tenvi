@@ -90,7 +90,7 @@ export function MarkdownMessage({ content, isUser = false }: MarkdownMessageProp
             <tr className="hover:bg-slate-100/50 transition-colors">{children}</tr>
           ),
           th: ({ children }) => (
-            <th className="p-2 font-bold text-slate-900 text-[11px]">{children}</th>
+            <th className="p-2 font-bold text-slate-900 text-xs">{children}</th>
           ),
           td: ({ children }) => <td className="p-2 text-slate-700">{children}</td>,
           hr: () => <hr className="my-2.5 border-t border-slate-200/70" />,

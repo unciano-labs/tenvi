@@ -64,12 +64,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Senior readability safeguard: prevent tiny illegible text */
-  .text-\[10px\],
-  .text-\[11px\] {
-    font-size: 0.775rem !important; /* ~12.5px accessible minimum */
-    line-height: 1.25rem !important;
-  }
+
 
   /* iOS Safari: Prevent auto-zoom on input focus by guaranteeing 16px on mobile viewports */
   @media screen and (max-width: 768px) {

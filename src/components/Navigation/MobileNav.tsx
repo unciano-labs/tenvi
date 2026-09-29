@@ -89,7 +89,7 @@ export function MobileNav() {
             }`}
           >
             <Icon className={`w-5 h-5 ${item.active ? 'text-slate-900' : 'text-slate-400'}`} />
-            <span className="text-[11px] leading-tight whitespace-nowrap">{item.label}</span>
+            <span className="text-xs leading-tight whitespace-nowrap">{item.label}</span>
           </Link>
         );
       })}

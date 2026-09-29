@@ -214,7 +214,7 @@ export function TransactionModal({
                   key={pm.id}
                   type="button"
                   onClick={() => setPaymentMethod(pm.id)}
-                  className={`py-2 px-2 sm:px-3 rounded-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer text-center truncate ${
+                  className={`py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-xs font-semibold transition-all cursor-pointer text-center truncate ${
                     paymentMethod === pm.id
                       ? 'bg-slate-900 text-white shadow-sm'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -276,7 +276,7 @@ export function TransactionModal({
                   </option>
                 ))}
               </select>
-              <p className="text-[11px] text-emerald-800/80 mt-1.5">
+              <p className="text-xs text-emerald-800/80 mt-1.5">
                 {kind === 'income'
                   ? 'Deposit will be automatically added to this vault balance.'
                   : 'Expense will be automatically deducted from this vault balance.'}
@@ -303,7 +303,7 @@ export function TransactionModal({
                   </option>
                 ))}
               </select>
-              <p className="text-[11px] text-amber-800/80 mt-1.5">
+              <p className="text-xs text-amber-800/80 mt-1.5">
                 {kind === 'income'
                   ? 'Earnings will be attributed to this property/vehicle revenue.'
                   : 'Costs will be attributed to this property/vehicle expenses.'}

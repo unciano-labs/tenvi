@@ -26,7 +26,7 @@ export default function DashboardLoading() {
 
       {/* 3. Middle Section: Cash Flow & Quick Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 space-y-5">
+        <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 border border-slate-100 space-y-5">
           <div className="flex items-center justify-between">
             <div className="space-y-1.5">
               <Skeleton className="h-5 w-40 rounded-lg" />
@@ -38,7 +38,7 @@ export default function DashboardLoading() {
           <Skeleton className="h-52 w-full rounded-2xl" />
         </div>
 
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 space-y-4">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 border border-slate-100 space-y-4">
           <Skeleton className="h-5 w-36 rounded-lg" />
           <Skeleton className="h-3.5 w-48 rounded-md mb-4" />
           <div className="space-y-3">
@@ -50,7 +50,7 @@ export default function DashboardLoading() {
       </div>
 
       {/* 4. Recent Transactions List Placeholder */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 space-y-4">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 border border-slate-100 space-y-4">
         <div className="flex items-center justify-between mb-2">
           <div className="space-y-1.5">
             <Skeleton className="h-5 w-44 rounded-lg" />

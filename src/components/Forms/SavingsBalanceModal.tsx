@@ -84,7 +84,7 @@ export function SavingsBalanceModal({
         </div>
 
         {/* Action Type Toggle */}
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-slate-100 mb-5 text-[11px] sm:text-xs font-bold">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-slate-100 mb-5 text-xs sm:text-xs font-bold">
           <button
             type="button"
             onClick={() => setType('deposit')}

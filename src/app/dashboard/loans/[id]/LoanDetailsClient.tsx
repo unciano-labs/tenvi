@@ -389,7 +389,7 @@ export function LoanDetailsClient({
       </div>
 
       {/* Main Loan Overview Card */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
@@ -544,7 +544,7 @@ export function LoanDetailsClient({
         {/* Loan Meta details row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 pt-2">
           <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
               Date Lent
             </span>
             <span className="text-sm font-bold text-slate-900 mt-1 block">
@@ -555,7 +555,7 @@ export function LoanDetailsClient({
           {loan.is_installment ? (
             <>
               <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
                   Monthly Due Day
                 </span>
                 <span className="text-sm font-bold text-slate-900 mt-1 block">
@@ -564,7 +564,7 @@ export function LoanDetailsClient({
               </div>
 
               <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
                   Monthly Due Amount
                 </span>
                 <span className="text-sm font-bold text-blue-700 mt-1 block">
@@ -573,7 +573,7 @@ export function LoanDetailsClient({
               </div>
 
               <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
                   Installment Term
                 </span>
                 <span className="text-sm font-bold text-slate-900 mt-1 block">
@@ -582,7 +582,7 @@ export function LoanDetailsClient({
               </div>
 
               <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
                   Interest Rate
                 </span>
                 <span className="text-sm font-bold text-slate-900 mt-1 block">
@@ -594,7 +594,7 @@ export function LoanDetailsClient({
             </>
           ) : (
             <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
                 Target Return Date
               </span>
               <span className="text-sm font-bold text-slate-900 mt-1 block">
@@ -609,16 +609,16 @@ export function LoanDetailsClient({
       {(loan.credit_card || (loan.downpayment_amount && loan.downpayment_amount > 0)) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {loan.credit_card && (
-            <div className="bg-white rounded-3xl p-6 shadow-sm flex items-start gap-4">
+            <div className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                 <CreditCard className="w-6 h-6" />
               </div>
               <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
                     Purchased via Credit Card
                   </span>
-                  <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
                     Cycle Synchronized ⚡
                   </span>
                 </div>
@@ -650,13 +650,13 @@ export function LoanDetailsClient({
           )}
 
           {loan.downpayment_amount && loan.downpayment_amount > 0 ? (
-            <div className="bg-white rounded-3xl p-6 shadow-sm flex items-start gap-4">
+            <div className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
                     Initial Downpayment
                   </span>
                   <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">
@@ -676,7 +676,7 @@ export function LoanDetailsClient({
       )}
 
       {/* Borrower Contact & Automated Reminders Card */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
@@ -793,7 +793,7 @@ export function LoanDetailsClient({
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5 text-slate-500" /> Mobile Number
                 </span>
                 <span className="text-sm font-bold text-slate-900 mt-1 block">
@@ -804,7 +804,7 @@ export function LoanDetailsClient({
               </div>
 
               <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5 text-slate-500" /> Email Address
                 </span>
                 <span className="text-sm font-bold text-slate-900 mt-1 block truncate">
@@ -815,7 +815,7 @@ export function LoanDetailsClient({
               </div>
 
               <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-slate-500" /> Next Scheduled Alert
                 </span>
                 <span className="text-sm font-bold text-slate-900 mt-1 block">
@@ -903,7 +903,7 @@ export function LoanDetailsClient({
                           <button
                             type="button"
                             onClick={() => handleSwitchCustomChannel('sms')}
-                            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
                               customChannel === 'sms'
                                 ? 'bg-blue-600 text-white'
                                 : 'text-slate-500 hover:text-slate-900'
@@ -914,7 +914,7 @@ export function LoanDetailsClient({
                           <button
                             type="button"
                             onClick={() => handleSwitchCustomChannel('email')}
-                            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
                               customChannel === 'email'
                                 ? 'bg-indigo-600 text-white'
                                 : 'text-slate-500 hover:text-slate-900'
@@ -928,7 +928,7 @@ export function LoanDetailsClient({
                       <button
                         type="button"
                         onClick={handleResetCustomText}
-                        className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1 self-start sm:self-auto"
+                        className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1 self-start sm:self-auto"
                       >
                         <RotateCcw className="w-3 h-3 text-slate-400" />
                         Reset to Default
@@ -937,7 +937,7 @@ export function LoanDetailsClient({
 
                     {/* Variable Inserter Chips */}
                     <div className="space-y-1.5">
-                      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
                         Tap to Insert Dynamic Variable Value:
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -949,10 +949,10 @@ export function LoanDetailsClient({
                             className="bg-white hover:bg-blue-50 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 hover:text-blue-700 shadow-sm transition-all"
                             title={`Insert ${currentLoanVariables[v.key]}`}
                           >
-                            <span className="font-mono text-blue-600 font-bold text-[11px]">
+                            <span className="font-mono text-blue-600 font-bold text-xs">
                               {v.label}:
                             </span>{' '}
-                            <span className="text-slate-600 text-[11px]">
+                            <span className="text-slate-600 text-xs">
                               {currentLoanVariables[v.key] || v.sample}
                             </span>
                           </button>
@@ -969,7 +969,7 @@ export function LoanDetailsClient({
                         placeholder="Write reminder message..."
                         className="bili-input w-full text-sm font-sans bg-white leading-relaxed resize-y"
                       />
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+                      <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
                         <span>
                           Sending to:{' '}
                           <strong className="text-slate-700">
@@ -1132,7 +1132,7 @@ export function LoanDetailsClient({
                     <span className="text-lg font-extrabold text-blue-700">
                       ₱{previewMonthly} / month
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-xs text-slate-400">
                       Generates exactly {selectedMonths} records until loan end
                     </span>
                   </div>
@@ -1202,7 +1202,7 @@ export function LoanDetailsClient({
                         <span className="text-sm font-bold text-slate-900 block">
                           Month {inst.installment_number} of {totalInstallmentsCount}
                         </span>
-                        <span className="text-[11px] text-slate-400 font-medium">
+                        <span className="text-xs text-slate-400 font-medium">
                           Installment record #{inst.installment_number}
                         </span>
                       </div>
@@ -1214,12 +1214,12 @@ export function LoanDetailsClient({
                         {formatDate(inst.due_date)}
                       </div>
                       {inst.statement_date && (
-                        <div className="text-[11px] text-indigo-600 font-medium">
+                        <div className="text-xs text-indigo-600 font-medium">
                           Statement Cutoff: {formatDate(inst.statement_date)}
                         </div>
                       )}
                       <span
-                        className={`text-[11px] font-medium block ${
+                        className={`text-xs font-medium block ${
                           inst.is_paid
                             ? 'text-emerald-700'
                             : dueStatus.variant === 'overdue'
@@ -1243,7 +1243,7 @@ export function LoanDetailsClient({
                         {formatMoney(inst.amount)}
                       </span>
                       {inst.principal_amount !== null && inst.principal_amount !== undefined && inst.interest_amount !== null && inst.interest_amount !== undefined && Number(inst.interest_amount) > 0 && (
-                        <span className="text-[10px] text-slate-400 font-medium block">
+                        <span className="text-xs text-slate-400 font-medium block">
                           P: {formatMoney(inst.principal_amount)} • I: {formatMoney(inst.interest_amount)}
                         </span>
                       )}
@@ -1316,7 +1316,7 @@ export function LoanDetailsClient({
         </div>
       ) : (
         /* If no schedule is configured yet, provide 1-click schedule generator */
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
@@ -1374,7 +1374,7 @@ export function LoanDetailsClient({
                   className="bili-input w-full text-sm font-bold bg-white"
                   placeholder="e.g. 20 (Due every 20th)"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-xs text-slate-400 mt-1">
                   Due date will automatically be set on this day every month.
                 </p>
               </div>
@@ -1399,7 +1399,7 @@ export function LoanDetailsClient({
                       key={rate}
                       type="button"
                       onClick={() => setSelectedRate(rate)}
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md transition-colors ${
+                      className={`text-xs font-bold px-2 py-0.5 rounded-md transition-colors ${
                         selectedRate === rate
                           ? 'bg-indigo-600 text-white'
                           : 'bg-white hover:bg-slate-200 text-slate-600'
@@ -1526,7 +1526,7 @@ export function LoanDetailsClient({
                     {tx.kind === 'income' ? '+' : '-'} {formatMoney(tx.amount)}
                   </div>
                   <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                       tx.kind === 'income'
                         ? 'bg-emerald-50 text-emerald-800'
                         : 'bg-rose-50 text-rose-800'

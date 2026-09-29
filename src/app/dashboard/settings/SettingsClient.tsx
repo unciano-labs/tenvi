@@ -478,7 +478,7 @@ export function SettingsClient({
             >
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Logs</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
                 {stats.total}
               </span>
             </button>
@@ -510,7 +510,7 @@ export function SettingsClient({
             <div className="lg:col-span-2 space-y-6">
               <form onSubmit={handleSave} className="space-y-6">
                 {/* Email Notifications & Destination Box */}
-                <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
+                <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 space-y-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
@@ -551,7 +551,7 @@ export function SettingsClient({
                           onChange={(e) => setEmailAddress(e.target.value)}
                           className="bili-input w-full text-sm font-medium bg-white"
                         />
-                        <p className="text-[11px] text-slate-500 mt-1.5">
+                        <p className="text-xs text-slate-500 mt-1.5">
                           Your credit card upcoming statement digest will be delivered to this mailbox.
                         </p>
                       </div>
@@ -575,7 +575,7 @@ export function SettingsClient({
                 </div>
 
                 {/* Gmail SMTP Server Configuration Box */}
-                <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
+                <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 space-y-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
@@ -586,7 +586,7 @@ export function SettingsClient({
                           <h2 className="text-base font-bold text-slate-900">
                             Gmail SMTP Relay
                           </h2>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 uppercase tracking-wider">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 uppercase tracking-wider">
                             smtp.gmail.com:465
                           </span>
                         </div>
@@ -627,7 +627,7 @@ export function SettingsClient({
                         }}
                         className="bili-input w-full text-sm font-medium bg-white"
                       />
-                      <p className="text-[11px] text-slate-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1">
                         Emails will be delivered with this Gmail account as the verified sender.
                       </p>
                     </div>
@@ -641,7 +641,7 @@ export function SettingsClient({
                         <button
                           type="button"
                           onClick={() => setShowSmtpGuide(!showSmtpGuide)}
-                          className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
                         >
                           {showSmtpGuide ? 'Hide Setup Guide' : 'How to get an App Password?'}
                           {showSmtpGuide ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -668,7 +668,7 @@ export function SettingsClient({
                           {showSmtpPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1">
                         Do not use your regular account password. Google generates dedicated 16-character App Passwords.
                       </p>
                     </div>
@@ -694,7 +694,7 @@ export function SettingsClient({
                             Give it an app name like <strong className="text-slate-800">Tenvi</strong>, click <strong>Create</strong>, and copy the 16-character code into the field above.
                           </li>
                         </ol>
-                        <p className="text-[11px] text-slate-400 pt-1">
+                        <p className="text-xs text-slate-400 pt-1">
                           Note: Any spaces in the app password will be automatically handled.
                         </p>
                       </div>
@@ -746,7 +746,7 @@ export function SettingsClient({
                 </div>
 
                 {/* SMS Mobile Notifications Box */}
-                <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
+                <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 space-y-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
@@ -786,7 +786,7 @@ export function SettingsClient({
                           onChange={(e) => setPhoneNumber(e.target.value)}
                           className="bili-input w-full text-sm font-medium bg-white"
                         />
-                        <p className="text-[11px] text-slate-500 mt-1.5">
+                        <p className="text-xs text-slate-500 mt-1.5">
                           Your mobile number to receive card due date alerts (Philippine 09XX or +639XX format).
                         </p>
                       </div>
@@ -800,7 +800,7 @@ export function SettingsClient({
                               httpSMS Gateway Configuration
                             </span>
                             <span
-                              className={`font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider ${
+                              className={`font-bold px-2 py-0.5 rounded-md text-xs uppercase tracking-wider ${
                                 httpsmsApiKey && httpsmsFromNumber
                                   ? 'bg-emerald-50 text-emerald-700'
                                   : 'bg-amber-50 text-amber-700'
@@ -813,7 +813,7 @@ export function SettingsClient({
                           <button
                             type="button"
                             onClick={() => setShowHttpSmsGuide(!showHttpSmsGuide)}
-                            className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1 transition-colors"
+                            className="text-xs font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1 transition-colors"
                           >
                             <Info className="w-3 h-3" />
                             {showHttpSmsGuide ? 'Hide Setup Guide' : 'Setup Guide'}
@@ -829,7 +829,7 @@ export function SettingsClient({
                               href="https://httpsms.com/settings"
                               target="_blank"
                               rel="noreferrer"
-                              className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                              className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
                             >
                               Get Key from httpsms.com
                               <ExternalLink className="w-2.5 h-2.5" />
@@ -866,7 +866,7 @@ export function SettingsClient({
                             onChange={(e) => setHttpsmsFromNumber(e.target.value)}
                             className="bili-input w-full text-sm font-medium bg-white"
                           />
-                          <p className="text-[11px] text-slate-500 mt-1">
+                          <p className="text-xs text-slate-500 mt-1">
                             The phone number of the SIM card inside your Android phone running the httpSMS app.
                           </p>
                         </div>
@@ -892,7 +892,7 @@ export function SettingsClient({
                                 Paste your <strong className="text-slate-800">API Key</strong> and your device SIM number (<strong className="text-slate-800">Sender Number</strong>) above, then click <strong>Verify httpSMS Key</strong>.
                               </li>
                             </ol>
-                            <p className="text-[11px] text-slate-400 pt-1">
+                            <p className="text-xs text-slate-400 pt-1">
                               💡 Tip: All outgoing SMS messages will use your phone’s regular carrier plan (e.g. unlimited SMS promo).
                             </p>
                           </div>
@@ -952,7 +952,7 @@ export function SettingsClient({
                 </div>
 
                 {/* Timing & Schedule Preferences */}
-                <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
+                <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 space-y-5">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center shrink-0">
                       <Calendar className="w-5 h-5" />
@@ -1035,7 +1035,7 @@ export function SettingsClient({
                   <div className="p-4 rounded-2xl bg-[#F6F7F9] text-center space-y-1">
                     <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto" />
                     <p className="text-xs font-bold text-slate-800">All clear!</p>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       No cards are due within the next {daysBefore} days.
                     </p>
                   </div>
@@ -1050,13 +1050,13 @@ export function SettingsClient({
                           <span className="font-bold text-slate-800 block">
                             {item.bank_name} {item.name}
                           </span>
-                          <span className="text-[11px] text-slate-500">
+                          <span className="text-xs text-slate-500">
                             •••• {item.last_4} • Due Day {item.due_day}
                           </span>
                         </div>
 
                         <span
-                          className={`font-bold px-2.5 py-1 rounded-full text-[11px] ${
+                          className={`font-bold px-2.5 py-1 rounded-full text-xs ${
                             item.dueInfo.urgency === 'critical'
                               ? 'bg-rose-100 text-rose-800'
                               : 'bg-amber-100 text-amber-800'
@@ -1103,7 +1103,7 @@ export function SettingsClient({
                   <div className="p-3 rounded-2xl bg-[#F6F7F9] flex items-center justify-between">
                     <span className="text-slate-500 font-medium">Operating Mode</span>
                     <span
-                      className={`font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider ${
+                      className={`font-bold px-2 py-0.5 rounded-md text-xs uppercase tracking-wider ${
                         smtpEmail && smtpAppPassword
                           ? 'bg-emerald-50 text-emerald-700'
                           : 'bg-amber-50 text-amber-700'
@@ -1133,7 +1133,7 @@ export function SettingsClient({
                   <div className="p-3 rounded-2xl bg-[#F6F7F9] flex items-center justify-between">
                     <span className="text-slate-500 font-medium">Operating Mode</span>
                     <span
-                      className={`font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider ${
+                      className={`font-bold px-2 py-0.5 rounded-md text-xs uppercase tracking-wider ${
                         httpsmsApiKey && httpsmsFromNumber
                           ? 'bg-emerald-50 text-emerald-700'
                           : 'bg-amber-50 text-amber-700'
@@ -1180,7 +1180,7 @@ export function SettingsClient({
 
       {/* TAB 3: LOGS (Admin Only) */}
       {isAdmin && currentTab === 'logs' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-in fade-in duration-150">
+        <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 space-y-6 animate-in fade-in duration-150">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5">
@@ -1211,19 +1211,19 @@ export function SettingsClient({
           {/* Aggregate Stats Row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3.5 rounded-2xl bg-[#F6F7F9] space-y-0.5">
-              <span className="text-[11px] text-slate-500 font-medium">Total Events</span>
+              <span className="text-xs text-slate-500 font-medium">Total Events</span>
               <p className="text-lg font-bold text-slate-900">{stats.total}</p>
             </div>
             <div className="p-3.5 rounded-2xl bg-emerald-50/60 space-y-0.5">
-              <span className="text-[11px] text-emerald-700 font-medium">Delivered (Sent)</span>
+              <span className="text-xs text-emerald-700 font-medium">Delivered (Sent)</span>
               <p className="text-lg font-bold text-emerald-800">{stats.sent}</p>
             </div>
             <div className="p-3.5 rounded-2xl bg-amber-50/60 space-y-0.5">
-              <span className="text-[11px] text-amber-700 font-medium">Simulated / Fallback</span>
+              <span className="text-xs text-amber-700 font-medium">Simulated / Fallback</span>
               <p className="text-lg font-bold text-amber-800">{stats.simulated}</p>
             </div>
             <div className="p-3.5 rounded-2xl bg-rose-50/60 space-y-0.5">
-              <span className="text-[11px] text-rose-700 font-medium">Failed Dispatches</span>
+              <span className="text-xs text-rose-700 font-medium">Failed Dispatches</span>
               <p className="text-lg font-bold text-rose-800">{stats.failed}</p>
             </div>
           </div>
@@ -1321,7 +1321,7 @@ export function SettingsClient({
                       }`}
                     >
                       <span>{st === 'all' ? 'All' : st}</span>
-                      <span className="text-[10px] opacity-75 font-mono">({countMap[st]})</span>
+                      <span className="text-xs opacity-75 font-mono">({countMap[st]})</span>
                     </button>
                   );
                 })}
@@ -1404,7 +1404,7 @@ export function SettingsClient({
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         {/* Channel Pill */}
-                        <span className="font-bold text-slate-800 uppercase text-[10px] tracking-wider px-2.5 py-1 rounded-lg bg-white shadow-xs flex items-center gap-1.5">
+                        <span className="font-bold text-slate-800 uppercase text-xs tracking-wider px-2.5 py-1 rounded-lg bg-white shadow-xs flex items-center gap-1.5">
                           {isEmail ? (
                             <>
                               <Mail className="w-3 h-3 text-emerald-600" />
@@ -1420,19 +1420,19 @@ export function SettingsClient({
 
                         {/* Status Pill */}
                         {log.status === 'sent' && (
-                          <span className="font-bold text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 flex items-center gap-1">
+                          <span className="font-bold text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
                             Sent / Delivered
                           </span>
                         )}
                         {log.status === 'simulated' && (
-                          <span className="font-bold text-[11px] px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 flex items-center gap-1">
+                          <span className="font-bold text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 flex items-center gap-1">
                             <Info className="w-3 h-3 text-amber-600" />
                             Simulated
                           </span>
                         )}
                         {log.status === 'failed' && (
-                          <span className="font-bold text-[11px] px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 flex items-center gap-1">
+                          <span className="font-bold text-xs px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 flex items-center gap-1">
                             <XCircle className="w-3 h-3" />
                             Failed
                           </span>
@@ -1469,7 +1469,7 @@ export function SettingsClient({
                         {log.card_names && (
                           <>
                             <span className="text-slate-300">•</span>
-                            <span className="text-[11px] font-medium text-slate-500">
+                            <span className="text-xs font-medium text-slate-500">
                               Cards: {log.card_names}
                             </span>
                           </>
@@ -1477,7 +1477,7 @@ export function SettingsClient({
                         {log.loan_id && (
                           <>
                             <span className="text-slate-300">•</span>
-                            <span className="text-[11px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
                               Borrower Loan Reminder
                             </span>
                           </>
@@ -1491,7 +1491,7 @@ export function SettingsClient({
                         <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                         <div className="space-y-0.5">
                           <span className="font-bold block">Delivery Diagnostic Notice:</span>
-                          <p className="font-mono text-[11px] leading-relaxed text-rose-800">
+                          <p className="font-mono text-xs leading-relaxed text-rose-800">
                             {log.error_message}
                           </p>
                         </div>
@@ -1520,7 +1520,7 @@ export function SettingsClient({
 
                       {isExpanded && (
                         <div className="mt-2.5 p-3.5 rounded-xl bg-white space-y-2 animate-in fade-in duration-150">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                             Message Body:
                           </span>
                           <pre className="text-xs text-slate-700 whitespace-pre-wrap font-sans leading-relaxed bg-[#F6F7F9] p-3 rounded-lg">
@@ -1571,7 +1571,7 @@ export function SettingsClient({
       {isAdmin && currentTab === 'ai' && (
         <div className="space-y-6 animate-in fade-in duration-150">
           {/* Hero Status Card */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-start sm:items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
                 <Sparkles className="w-7 h-7" />
@@ -1638,7 +1638,7 @@ export function SettingsClient({
                       ? `Tenvi AI Connection Verified (${geminiTestResult.latencyMs}ms round-trip)`
                       : 'Connection Test Failed'}
                   </span>
-                  <span className="text-[11px] opacity-80">
+                  <span className="text-xs opacity-80">
                     {geminiTestResult.success
                       ? `Tenvi Intelligence Engine (${geminiTestResult.model}) responded successfully. Your AI pipeline is ready!`
                       : geminiTestResult.error}
@@ -1646,7 +1646,7 @@ export function SettingsClient({
                 </div>
               </div>
 
-              <span className="font-mono text-[11px] font-bold shrink-0">
+              <span className="font-mono text-xs font-bold shrink-0">
                 {geminiTestResult.latencyMs}ms
               </span>
             </div>
@@ -1656,7 +1656,7 @@ export function SettingsClient({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Daily Requests */}
             <div className="bg-white rounded-3xl p-6 shadow-sm space-y-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 Daily Requests Used
               </span>
               <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
@@ -1672,7 +1672,7 @@ export function SettingsClient({
 
             {/* Rate Limit */}
             <div className="bg-white rounded-3xl p-6 shadow-sm space-y-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 Burst Rate Limit
               </span>
               <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
@@ -1686,7 +1686,7 @@ export function SettingsClient({
 
             {/* Tokens Processed */}
             <div className="bg-white rounded-3xl p-6 shadow-sm space-y-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 Tokens Processed Today
               </span>
               <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
@@ -1699,7 +1699,7 @@ export function SettingsClient({
 
             {/* Daily Reset Countdown */}
             <div className="bg-white rounded-3xl p-6 shadow-sm space-y-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 Daily Quota Reset
               </span>
               <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
@@ -1712,7 +1712,7 @@ export function SettingsClient({
           </div>
 
           {/* Daily Consumption Progress Meter Card */}
-          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm space-y-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
@@ -1803,7 +1803,7 @@ export function SettingsClient({
                 <div className="p-3.5 rounded-2xl bg-indigo-50/60 flex items-center justify-between text-xs">
                   <div>
                     <span className="font-bold text-indigo-950 block">Statement Vision Scans</span>
-                    <span className="text-[11px] text-indigo-700">
+                    <span className="text-xs text-indigo-700">
                       PDF statements & receipt photos
                     </span>
                   </div>
@@ -1815,7 +1815,7 @@ export function SettingsClient({
                 <div className="p-3.5 rounded-2xl bg-emerald-50/60 flex items-center justify-between text-xs">
                   <div>
                     <span className="font-bold text-emerald-950 block">AI Wealth Chat Assistant</span>
-                    <span className="text-[11px] text-emerald-700">
+                    <span className="text-xs text-emerald-700">
                       Natural language prompt entries
                     </span>
                   </div>
@@ -1827,7 +1827,7 @@ export function SettingsClient({
                 <div className="p-3.5 rounded-2xl bg-slate-50 flex items-center justify-between text-xs">
                   <div>
                     <span className="font-bold text-slate-800 block">Health & Latency Tests</span>
-                    <span className="text-[11px] text-slate-500">Manual connection tests</span>
+                    <span className="text-xs text-slate-500">Manual connection tests</span>
                   </div>
                   <span className="text-lg font-extrabold text-slate-800">
                     {geminiStats?.usageByFeature.other || 0}

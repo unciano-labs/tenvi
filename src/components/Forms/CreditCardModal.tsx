@@ -172,7 +172,7 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
           >
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-[10px] uppercase font-semibold tracking-wider text-white/70">
+                <p className="text-xs uppercase font-semibold tracking-wider text-white/70">
                   {finalBankName || 'Bank Name'}
                 </p>
                 <p className="text-base font-bold tracking-tight mt-0.5">
@@ -184,7 +184,7 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
 
             <div className="flex justify-between items-end">
               <div>
-                <p className="text-[10px] text-white/70 font-medium">Card Number</p>
+                <p className="text-xs text-white/70 font-medium">Card Number</p>
                 <p className="text-sm font-mono tracking-widest font-bold">
                   •••• •••• •••• {last4 || '0000'}
                 </p>
@@ -192,7 +192,7 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
 
               {creditLimit && parseFloat(creditLimit) > 0 ? (
                 <div className="text-right">
-                  <p className="text-[10px] text-white/70 font-medium">Spending Power</p>
+                  <p className="text-xs text-white/70 font-medium">Spending Power</p>
                   <p className="text-xs font-bold">
                     ₱{parseFloat(creditLimit).toLocaleString()}
                   </p>
@@ -338,7 +338,7 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
                 </div>
               </div>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-xs text-slate-400">
               Example: If your payment is due every 5th of the month, set Due Day to 5.
             </p>
           </div>

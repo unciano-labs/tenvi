@@ -18,7 +18,7 @@ export default function LoansLoading() {
         <SkeletonStatCard />
       </div>
 
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 space-y-3">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 border border-slate-100 space-y-3">
         <SkeletonTableRow />
         <SkeletonTableRow />
         <SkeletonTableRow />

@@ -440,7 +440,7 @@ export function DashboardOverviewClient({
               <h2 className="text-sm font-bold text-amber-950">
                 Payment Deadline Alert
               </h2>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-200/80 text-amber-900">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-200/80 text-amber-900">
                 {criticalCards.length} {criticalCards.length === 1 ? 'card' : 'cards'} urgent
               </span>
             </div>
@@ -510,7 +510,7 @@ export function DashboardOverviewClient({
       {/* 4. Financial Health & Runway Matrix Bar (3 Tonal Sub-Cards) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Emergency Living Runway */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm flex items-center gap-4">
+        <div className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
             <ShieldCheck className="w-6 h-6" />
           </div>
@@ -533,7 +533,7 @@ export function DashboardOverviewClient({
         </div>
 
         {/* Credit Utilization Meter */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm flex items-center gap-4">
+        <div className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
             <CardIcon className="w-6 h-6" />
           </div>
@@ -579,7 +579,7 @@ export function DashboardOverviewClient({
         </div>
 
         {/* Outstanding Receivables / Owed to You */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm flex items-center gap-4">
+        <div className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
             <HandCoins className="w-6 h-6" />
           </div>
@@ -610,7 +610,7 @@ export function DashboardOverviewClient({
         const bestCard = cardRecommendation?.bestCard;
         if (!bestCard) return null;
         return (
-          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
                 <Sparkles className="w-6 h-6" />
@@ -659,7 +659,7 @@ export function DashboardOverviewClient({
       {/* 6. Interactive Visual Charts Section (2 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Chart A: 6-Month Cash Flow Trend (Interactive SVG Bar Chart) */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -692,7 +692,7 @@ export function DashboardOverviewClient({
             {/* Micro Stats Bar */}
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-[#F6F7F9] mb-6 text-center">
               <div>
-                <p className="text-[10px] uppercase font-semibold text-slate-400 truncate">
+                <p className="text-xs uppercase font-semibold text-slate-400 truncate">
                   Avg. Inflow
                 </p>
                 <p className="text-xs font-extrabold text-slate-900 mt-0.5 truncate">
@@ -702,7 +702,7 @@ export function DashboardOverviewClient({
                 </p>
               </div>
               <div>
-                <p className="text-[10px] uppercase font-semibold text-slate-400 truncate">
+                <p className="text-xs uppercase font-semibold text-slate-400 truncate">
                   Avg. Outflow
                 </p>
                 <p className="text-xs font-extrabold text-slate-900 mt-0.5 truncate">
@@ -712,7 +712,7 @@ export function DashboardOverviewClient({
                 </p>
               </div>
               <div>
-                <p className="text-[10px] uppercase font-semibold text-slate-400 truncate">
+                <p className="text-xs uppercase font-semibold text-slate-400 truncate">
                   Net 6-Mo
                 </p>
                 <p className="text-xs font-extrabold text-emerald-700 mt-0.5 truncate">
@@ -739,7 +739,7 @@ export function DashboardOverviewClient({
                   >
                     {/* Tooltip Overlay */}
                     {isHovered && (
-                      <div className="absolute -top-14 z-20 px-3 py-2 rounded-xl bg-slate-900 text-white text-[11px] shadow-lg whitespace-nowrap animate-in fade-in duration-100 pointer-events-none left-1/2 -translate-x-1/2">
+                      <div className="absolute -top-14 z-20 px-3 py-2 rounded-xl bg-slate-900 text-white text-xs shadow-lg whitespace-nowrap animate-in fade-in duration-100 pointer-events-none left-1/2 -translate-x-1/2">
                         <p className="font-bold text-center text-slate-200">
                           {m.label} ({m.key})
                         </p>
@@ -770,7 +770,7 @@ export function DashboardOverviewClient({
 
                     {/* Month Label */}
                     <span
-                      className={`text-[11px] mt-2 font-semibold transition-colors ${
+                      className={`text-xs mt-2 font-semibold transition-colors ${
                         isHovered ? 'text-slate-900 font-extrabold' : 'text-slate-400'
                       }`}
                     >
@@ -782,14 +782,14 @@ export function DashboardOverviewClient({
             </div>
           </div>
 
-          <div className="pt-3 text-[11px] text-slate-400 text-center flex items-center justify-center gap-1">
+          <div className="pt-3 text-xs text-slate-400 text-center flex items-center justify-center gap-1">
             <Activity className="w-3.5 h-3.5 text-slate-400" />
             Hover over any monthly bar to inspect detailed cash in vs cash out
           </div>
         </div>
 
         {/* Chart B: Category Expense Breakdown Matrix */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -851,7 +851,7 @@ export function DashboardOverviewClient({
                         <p className="text-xs font-bold text-slate-900 truncate">
                           {cat.name}
                         </p>
-                        <p className="text-[11px] text-slate-400 truncate">
+                        <p className="text-xs text-slate-400 truncate">
                           {cat.count} {cat.count === 1 ? 'transaction' : 'transactions'}
                         </p>
                       </div>
@@ -861,7 +861,7 @@ export function DashboardOverviewClient({
                       <p className="text-xs font-extrabold text-slate-900">
                         {formatMoney(cat.amount)}
                       </p>
-                      <span className="text-[11px] font-semibold text-slate-500">
+                      <span className="text-xs font-semibold text-slate-500">
                         {cat.percentage}% of total
                       </span>
                     </div>
@@ -871,7 +871,7 @@ export function DashboardOverviewClient({
             )}
           </div>
 
-          <div className="pt-3 text-[11px] text-slate-400 flex items-center justify-between">
+          <div className="pt-3 text-xs text-slate-400 flex items-center justify-between">
             <span>Ranked by highest spending</span>
             <Link
               href="/dashboard/transactions"
@@ -885,7 +885,7 @@ export function DashboardOverviewClient({
 
       {/* 7. Properties & Asset Fleet Snapshot (if properties are tracked) */}
       {propertiesFinancials && properties.length > 0 && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center">
@@ -917,7 +917,7 @@ export function DashboardOverviewClient({
           {/* Properties KPI Ribbon */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 Total Fleet Valuation
               </span>
               <p className="text-lg font-extrabold text-slate-900 mt-1">
@@ -925,24 +925,24 @@ export function DashboardOverviewClient({
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 Monthly Fixed Run-Rate
               </span>
               <p className="text-lg font-extrabold text-rose-600 mt-1">
                 {formatMoney(propertiesFinancials.totalMonthlyCommitments)}
               </p>
-              <span className="text-[10px] text-slate-400">
+              <span className="text-xs text-slate-400">
                 Amortizations + insurance reserve
               </span>
             </div>
             <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 Expected Monthly Income
               </span>
               <p className="text-lg font-extrabold text-emerald-700 mt-1">
                 {formatMoney(propertiesFinancials.totalExpectedIncomeMonthly)}
               </p>
-              <span className="text-[10px] text-slate-400">
+              <span className="text-xs text-slate-400">
                 Daily boundary & rent targets
               </span>
             </div>
@@ -964,7 +964,7 @@ export function DashboardOverviewClient({
                     </p>
                   </div>
                   {property.identifier && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white font-bold text-slate-700">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-white font-bold text-slate-700">
                       {property.identifier}
                     </span>
                   )}
@@ -1000,7 +1000,7 @@ export function DashboardOverviewClient({
       {/* 8. Credit Card Watcher & Recent Transactions (2 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left: Credit Cards & Due Dates */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
@@ -1076,7 +1076,7 @@ export function DashboardOverviewClient({
         </div>
 
         {/* Right: Recent Spending Feed */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center">

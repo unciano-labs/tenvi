@@ -360,7 +360,7 @@ export function PropertiesClient({
       </div>
 
       {/* Monthly Commitments Quick Bar */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs uppercase font-bold text-slate-400 tracking-wider">
             <ShieldCheck className="w-4 h-4 text-indigo-600" />
@@ -378,7 +378,7 @@ export function PropertiesClient({
 
         <div className="flex items-center gap-4 flex-wrap">
           <div className="p-3.5 rounded-2xl bg-[#F6F7F9] min-w-[140px]">
-            <span className="text-[11px] font-bold text-slate-500 block uppercase">
+            <span className="text-xs font-bold text-slate-500 block uppercase">
               Total Monthly Loans
             </span>
             <span className="text-base font-extrabold text-slate-900">
@@ -387,7 +387,7 @@ export function PropertiesClient({
           </div>
 
           <div className="p-3.5 rounded-2xl bg-[#F6F7F9] min-w-[140px]">
-            <span className="text-[11px] font-bold text-slate-500 block uppercase">
+            <span className="text-xs font-bold text-slate-500 block uppercase">
               Annual Insurance Total
             </span>
             <span className="text-base font-extrabold text-slate-900">
@@ -417,7 +417,7 @@ export function PropertiesClient({
                   <span className="text-xs font-bold text-slate-900 block truncate">
                     {item.property.name}
                   </span>
-                  <div className="flex items-center gap-1.5 text-[11px] text-amber-800 font-semibold mt-0.5">
+                  <div className="flex items-center gap-1.5 text-xs text-amber-800 font-semibold mt-0.5">
                     <Clock className="w-3.5 h-3.5" />
                     <span>
                       {item.type === 'amortization' ? 'Amortization' : 'Insurance'}:{' '}
@@ -432,7 +432,7 @@ export function PropertiesClient({
                   </span>
                   <button
                     onClick={() => handleOpenTxModal(item.property.id, 'expense')}
-                    className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 underline mt-0.5 cursor-pointer"
+                    className="text-xs font-bold text-indigo-700 hover:text-indigo-900 underline mt-0.5 cursor-pointer"
                   >
                     Pay / Log
                   </button>
@@ -453,7 +453,7 @@ export function PropertiesClient({
                 Asset Document Expirations & Renewals ({documentInsights.attentionDocs.length} requiring attention)
               </h4>
             </div>
-            <span className="text-[11px] font-semibold text-amber-800">
+            <span className="text-xs font-semibold text-amber-800">
               LTO OR/CR, Insurance Policies, LTFRB Franchises
             </span>
           </div>
@@ -468,15 +468,15 @@ export function PropertiesClient({
                   <span className="text-xs font-bold text-slate-900 block truncate">
                     {item.propertyName}
                   </span>
-                  <p className="text-[11px] text-slate-600 font-medium truncate mt-0.5">
+                  <p className="text-xs text-slate-600 font-medium truncate mt-0.5">
                     {item.document.title}
                   </p>
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold mt-1">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] ${item.status.badgeClass}`}>
+                  <div className="flex items-center gap-1.5 text-xs font-bold mt-1">
+                    <span className={`px-2 py-0.5 rounded-md text-xs ${item.status.badgeClass}`}>
                       {item.status.label}
                     </span>
                     {item.document.document_number && (
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-xs text-slate-400 font-mono">
                         #{item.document.document_number}
                       </span>
                     )}
@@ -485,7 +485,7 @@ export function PropertiesClient({
 
                 <Link
                   href={`/dashboard/properties/${item.document.property_id}`}
-                  className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-[11px] font-bold shrink-0 transition-colors"
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold shrink-0 transition-colors"
                 >
                   Manage
                 </Link>
@@ -595,7 +595,7 @@ export function PropertiesClient({
             return (
               <div
                 key={property.id}
-                className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-5"
+                className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-shadow flex flex-col justify-between space-y-5"
               >
                 {/* Header: Icon, Name, Identifier, Status */}
                 <div>
@@ -610,14 +610,14 @@ export function PropertiesClient({
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wider ${getAssetBadgeColor(
+                            className={`text-xs font-bold px-2 py-0.5 rounded-lg uppercase tracking-wider ${getAssetBadgeColor(
                               property.property_type
                             )}`}
                           >
                             {property.property_type.replace('_', ' ')}
                           </span>
                           {property.identifier && (
-                            <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg uppercase tracking-wide">
+                            <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg uppercase tracking-wide">
                               {property.identifier}
                             </span>
                           )}
@@ -649,7 +649,7 @@ export function PropertiesClient({
                   {/* Valuation */}
                   <div className="p-3.5 rounded-2xl bg-[#F6F7F9] mb-4 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                         Estimated Market Valuation
                       </span>
                       <span className="text-lg font-extrabold text-slate-900">
@@ -659,7 +659,7 @@ export function PropertiesClient({
 
                     {property.status && (
                       <span
-                        className={`text-[10px] font-bold px-2.5 py-1 rounded-xl uppercase tracking-wider ${
+                        className={`text-xs font-bold px-2.5 py-1 rounded-xl uppercase tracking-wider ${
                           property.status === 'active'
                             ? 'bg-emerald-50 text-emerald-800'
                             : property.status === 'maintenance'
@@ -676,7 +676,7 @@ export function PropertiesClient({
                   {financials && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center p-3 rounded-2xl bg-slate-50/70 mb-4">
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                        <span className="text-xs font-bold text-slate-400 uppercase block">
                           Income
                         </span>
                         <span className="text-xs font-bold text-emerald-700 block truncate">
@@ -684,7 +684,7 @@ export function PropertiesClient({
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                        <span className="text-xs font-bold text-slate-400 uppercase block">
                           Expense
                         </span>
                         <span className="text-xs font-bold text-rose-700 block truncate">
@@ -692,7 +692,7 @@ export function PropertiesClient({
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                        <span className="text-xs font-bold text-slate-400 uppercase block">
                           Net Cash
                         </span>
                         <span
@@ -718,7 +718,7 @@ export function PropertiesClient({
                         </div>
                         {financials?.amortizationDue && (
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                            className={`text-xs font-bold px-2 py-0.5 rounded-md ${
                               financials.amortizationDue.urgency === 'critical'
                                 ? 'bg-rose-100 text-rose-800'
                                 : financials.amortizationDue.urgency === 'warning'
@@ -742,7 +742,7 @@ export function PropertiesClient({
                         </div>
                         {financials?.insuranceRenewal.daysRemaining !== null && (
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                            className={`text-xs font-bold px-2 py-0.5 rounded-md ${
                               financials.insuranceRenewal.urgency === 'critical'
                                 ? 'bg-rose-100 text-rose-800'
                                 : financials.insuranceRenewal.urgency === 'warning'
@@ -758,7 +758,7 @@ export function PropertiesClient({
 
                     {/* Daily Boundary or Expected Rental */}
                     {Number(property.expected_income_daily || 0) > 0 && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/40 text-[11px] text-emerald-950">
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/40 text-xs text-emerald-950">
                         <span>Expected Daily Boundary:</span>
                         <span className="font-bold text-emerald-800">
                           {formatMoney(property.expected_income_daily)} / day
@@ -767,7 +767,7 @@ export function PropertiesClient({
                     )}
 
                     {Number(property.expected_income_monthly || 0) > 0 && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/40 text-[11px] text-emerald-950">
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/40 text-xs text-emerald-950">
                         <span>Expected Monthly Rent:</span>
                         <span className="font-bold text-emerald-800">
                           {formatMoney(property.expected_income_monthly)} / mo
@@ -785,7 +785,7 @@ export function PropertiesClient({
                       }).length;
 
                       return (
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/60 text-[11px]">
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/60 text-xs">
                           <div className="flex items-center gap-1.5 text-slate-700 font-medium">
                             <FileText className="w-3.5 h-3.5 text-indigo-600" />
                             <span>Documents Vault:</span>
@@ -794,16 +794,16 @@ export function PropertiesClient({
                             </span>
                           </div>
                           {expiringCount > 0 ? (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 flex items-center gap-1">
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 flex items-center gap-1">
                               <AlertCircle className="w-3 h-3 text-amber-700" />
                               {expiringCount} renewal alert
                             </span>
                           ) : propDocs.length > 0 ? (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
                               Compliant
                             </span>
                           ) : (
-                            <span className="text-[10px] text-slate-400">None attached</span>
+                            <span className="text-xs text-slate-400">None attached</span>
                           )}
                         </div>
                       );
@@ -816,13 +816,13 @@ export function PropertiesClient({
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleOpenTxModal(property.id, 'income')}
-                      className="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-[11px] font-bold transition-colors cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition-colors cursor-pointer"
                     >
                       + Income
                     </button>
                     <button
                       onClick={() => handleOpenTxModal(property.id, 'expense')}
-                      className="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-800 hover:bg-rose-100 text-[11px] font-bold transition-colors cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-800 hover:bg-rose-100 text-xs font-bold transition-colors cursor-pointer"
                     >
                       + Expense
                     </button>

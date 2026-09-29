@@ -44,9 +44,9 @@ export function StatCard({
   const style = variantStyles[variant];
 
   return (
-    <div className={`bg-white rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow min-w-0 ${className}`}>
+    <div className={`bg-white rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow min-w-0 overflow-hidden ${className}`}>
       <div className="flex items-start justify-between gap-2 mb-3">
-        <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide leading-snug">
+        <span className="text-xs sm:text-xs font-bold text-slate-500 uppercase tracking-wide leading-snug">
           {label}
         </span>
         <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${style.iconBg} ${style.iconText} flex items-center justify-center shrink-0`}>

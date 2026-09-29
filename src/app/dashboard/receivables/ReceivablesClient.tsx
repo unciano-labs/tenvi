@@ -652,14 +652,14 @@ export function ReceivablesClient({
       {/* 1. Executive Top Metrics Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Total Outstanding */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 col-span-2 sm:col-span-1">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 col-span-2 sm:col-span-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
             Total Receivables
           </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 truncate">
             {formatMoney(metrics.totalOutstanding)}
           </div>
-          <div className="text-[11px] text-slate-500 flex items-center gap-1 pt-0.5">
+          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5 flex-wrap">
             <span>Loans: {formatMoney(metrics.loansOutstanding)}</span>
             <span>•</span>
             <span>Splits: {formatMoney(metrics.splitsOutstanding)}</span>
@@ -667,22 +667,22 @@ export function ReceivablesClient({
         </div>
 
         {/* Due This Month */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
             Due This Month
           </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-blue-700">
+          <div className="text-2xl sm:text-3xl font-extrabold text-blue-700 truncate">
             {formatMoney(metrics.dueThisMonth)}
           </div>
-          <div className="text-[11px] text-slate-500 flex items-center gap-1 pt-0.5">
+          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5">
             <Clock className="w-3 h-3 text-blue-500" />
             <span>Scheduled collections</span>
           </div>
         </div>
 
         {/* Overdue / Action Needed */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
             Overdue / At Risk
           </span>
           <div
@@ -692,7 +692,7 @@ export function ReceivablesClient({
           >
             {formatMoney(metrics.overdueAmount)}
           </div>
-          <div className="text-[11px] text-slate-500 flex items-center gap-1 pt-0.5">
+          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5">
             {metrics.overdueCount > 0 ? (
               <span className="text-rose-600 font-semibold flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
@@ -708,28 +708,28 @@ export function ReceivablesClient({
         </div>
 
         {/* Collected This Month */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
             Collected This Month
           </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700">
+          <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 truncate">
             {formatMoney(metrics.collectedThisMonth)}
           </div>
-          <div className="text-[11px] text-slate-500 flex items-center gap-1 pt-0.5">
+          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5">
             <TrendingUp className="w-3 h-3 text-emerald-600" />
             <span>Recovered capital</span>
           </div>
         </div>
 
         {/* Total Interest Yield */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
             Interest Accrued
           </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-indigo-700">
+          <div className="text-2xl sm:text-3xl font-extrabold text-indigo-700 truncate">
             {formatMoney(metrics.totalInterestYield)}
           </div>
-          <div className="text-[11px] text-slate-500 flex items-center gap-1 pt-0.5">
+          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5">
             <Percent className="w-3 h-3 text-indigo-500" />
             <span>Yield on loans</span>
           </div>
@@ -892,7 +892,7 @@ export function ReceivablesClient({
 
         {/* Status Filter Chips */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
-          <span className="text-slate-400 font-medium text-[11px] uppercase tracking-wider shrink-0 flex items-center gap-1">
+          <span className="text-slate-400 font-medium text-xs uppercase tracking-wider shrink-0 flex items-center gap-1">
             <Filter className="w-3 h-3" /> Status:
           </span>
 
@@ -943,17 +943,17 @@ export function ReceivablesClient({
                 return (
                   <div
                     key={debtor.contactId}
-                    className="bg-white rounded-3xl p-6 shadow-sm space-y-4 transition-all hover:shadow-md"
+                    className="bg-white rounded-3xl p-6 shadow-sm space-y-4 transition-all hover:shadow-md overflow-hidden"
                   >
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-extrabold text-base shrink-0">
                           {debtor.name.charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <h3 className="text-base font-bold text-slate-900">{debtor.name}</h3>
-                          <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
+                        <div className="min-w-0">
+                          <h3 className="text-base font-bold text-slate-900 truncate">{debtor.name}</h3>
+                          <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5 flex-wrap">
                             {debtor.phone && (
                               <span className="flex items-center gap-1">
                                 <Phone className="w-3 h-3 text-slate-400" />
@@ -961,9 +961,9 @@ export function ReceivablesClient({
                               </span>
                             )}
                             {debtor.email && (
-                              <span className="flex items-center gap-1">
-                                <Mail className="w-3 h-3 text-slate-400" />
-                                {debtor.email}
+                              <span className="flex items-center gap-1 truncate">
+                                <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span className="truncate">{debtor.email}</span>
                               </span>
                             )}
                           </div>
@@ -1025,7 +1025,7 @@ export function ReceivablesClient({
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
                             <span
-                              className={`font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider shrink-0 ${
+                              className={`font-bold px-2 py-0.5 rounded-md text-xs uppercase tracking-wider shrink-0 ${
                                 l.status === 'paid'
                                   ? 'bg-emerald-50 text-emerald-700'
                                   : 'bg-indigo-50 text-indigo-700'
@@ -1037,7 +1037,7 @@ export function ReceivablesClient({
                               <span className="font-bold text-slate-900 truncate block">
                                 {l.reason || 'Receivable Advance'}
                               </span>
-                              <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
+                              <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
                                 <span>
                                   {l.due_date ? `Due ${formatDate(l.due_date)}` : `Lent ${formatDate(l.loaned_on)}`}
                                 </span>
@@ -1060,7 +1060,7 @@ export function ReceivablesClient({
                                 {formatMoney(l.balance_remaining)}
                               </span>
                               {Number(l.amount) > Number(l.balance_remaining) && l.status !== 'paid' && (
-                                <span className="text-[10px] text-slate-400 block">
+                                <span className="text-xs text-slate-400 block">
                                   of {formatMoney(Number(l.amount))}
                                 </span>
                               )}
@@ -1083,7 +1083,7 @@ export function ReceivablesClient({
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
                             <span
-                              className={`font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider shrink-0 ${
+                              className={`font-bold px-2 py-0.5 rounded-md text-xs uppercase tracking-wider shrink-0 ${
                                 s.isPaid
                                   ? 'bg-emerald-50 text-emerald-700'
                                   : 'bg-amber-50 text-amber-800'
@@ -1095,7 +1095,7 @@ export function ReceivablesClient({
                               <span className="font-bold text-slate-900 truncate block">
                                 {s.split.title}
                               </span>
-                              <span className="text-[11px] text-slate-400 block mt-0.5">
+                              <span className="text-xs text-slate-400 block mt-0.5">
                                 {formatDate(s.split.occurred_on)}
                               </span>
                             </div>
@@ -1172,7 +1172,7 @@ export function ReceivablesClient({
               >
                 Load More Debtors ({filteredDebtors.length - debtorsVisibleCount} remaining)
               </button>
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-xs text-slate-400 mt-2">
                 Showing {Math.min(debtorsVisibleCount, filteredDebtors.length)} of {filteredDebtors.length} debtors
               </p>
             </div>
@@ -1243,7 +1243,7 @@ export function ReceivablesClient({
                               {item.debtorName}
                             </span>
                             <span
-                              className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                              className={`text-xs font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                                 item.kind === 'loan'
                                   ? 'bg-indigo-50 text-indigo-700'
                                   : 'bg-amber-50 text-amber-800'
@@ -1256,7 +1256,7 @@ export function ReceivablesClient({
                           <div className="text-xs text-slate-500 truncate flex items-center gap-2 mt-0.5">
                             <span>{item.title}</span>
                             {item.creditCard && (
-                              <span className="text-slate-400 flex items-center gap-1 text-[11px]">
+                              <span className="text-slate-400 flex items-center gap-1 text-xs">
                                 • <CreditCardIcon className="w-3 h-3 text-slate-400" />
                                 {item.creditCard.name}
                               </span>
@@ -1271,7 +1271,7 @@ export function ReceivablesClient({
                           {formatDate(item.dueDate || item.occurredOn)}
                         </div>
                         <span
-                          className={`text-[11px] font-medium block mt-0.5 ${
+                          className={`text-xs font-medium block mt-0.5 ${
                             item.isPaid
                               ? 'text-emerald-700 font-bold'
                               : item.isOverdue
@@ -1290,14 +1290,14 @@ export function ReceivablesClient({
                             {formatMoney(item.balanceRemaining)}
                           </span>
                           {!item.isPaid && item.balanceRemaining !== item.amount && (
-                            <span className="text-[11px] text-slate-400">
+                            <span className="text-xs text-slate-400">
                               of {formatMoney(item.amount)}
                             </span>
                           )}
                         </div>
 
                         {item.rawLoan && Number(item.rawLoan.monthly_interest_rate || 0) > 0 && (
-                          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded mt-0.5 inline-block">
+                          <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded mt-0.5 inline-block">
                             {item.rawLoan.monthly_interest_rate}% / mo Interest
                           </span>
                         )}
@@ -1373,7 +1373,7 @@ export function ReceivablesClient({
                   >
                     Load More Records ({filteredItems.length - itemsVisibleCount} remaining)
                   </button>
-                  <p className="text-[11px] text-slate-400 mt-2">
+                  <p className="text-xs text-slate-400 mt-2">
                     Showing {Math.min(itemsVisibleCount, filteredItems.length)} of {filteredItems.length} records
                   </p>
                 </div>

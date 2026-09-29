@@ -316,7 +316,7 @@ export function NotificationTemplatesEditor({
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
             Click to Insert Dynamic Variables
           </span>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-xs text-slate-500">
             Replaced automatically on send
           </span>
         </div>
@@ -330,10 +330,10 @@ export function NotificationTemplatesEditor({
               className="group bg-white hover:bg-blue-50 px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-700 hover:text-blue-700 shadow-sm transition-all flex items-center gap-1.5"
               title={`${v.description} (e.g. ${v.sample})`}
             >
-              <code className="text-blue-600 font-bold font-mono text-[11px]">
+              <code className="text-blue-600 font-bold font-mono text-xs">
                 &#123;&#123;{v.key}&#125;&#125;
               </code>
-              <span className="text-slate-400 group-hover:text-blue-600 text-[11px]">
+              <span className="text-slate-400 group-hover:text-blue-600 text-xs">
                 {v.label}
               </span>
             </button>
@@ -352,7 +352,7 @@ export function NotificationTemplatesEditor({
                 <label className="text-xs font-semibold text-slate-700">
                   SMS Message Body
                 </label>
-                <span className="text-[11px] font-mono text-slate-400">
+                <span className="text-xs font-mono text-slate-400">
                   {(activeCategory === 'loans' ? loanSms : cardSms).length} characters
                 </span>
               </div>
@@ -372,7 +372,7 @@ export function NotificationTemplatesEditor({
                 placeholder="Enter SMS template..."
                 className="bili-input w-full text-sm font-sans resize-y leading-relaxed"
               />
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Keep SMS under 160 characters when possible for standard single-segment delivery.
               </p>
             </div>
@@ -437,7 +437,7 @@ export function NotificationTemplatesEditor({
               <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
               Live Output Preview (Recipient View)
             </span>
-            <span className="text-[11px] text-slate-400">
+            <span className="text-xs text-slate-400">
               Sample test data rendered
             </span>
           </div>
@@ -445,14 +445,14 @@ export function NotificationTemplatesEditor({
           {activeChannel === 'sms' ? (
             /* SMS Bubble Preview */
             <div className="p-5 rounded-2xl bg-[#F6F7F9] space-y-3">
-              <div className="flex items-center justify-between text-[11px] text-slate-400 pb-1">
+              <div className="flex items-center justify-between text-xs text-slate-400 pb-1">
                 <span className="font-semibold text-slate-600">📱 Text Message</span>
                 <span>Today • Just now</span>
               </div>
               <div className="p-4 rounded-2xl bg-white text-slate-900 text-sm leading-relaxed shadow-sm whitespace-pre-wrap font-sans">
                 {previewSms}
               </div>
-              <div className="text-[11px] text-slate-400 flex items-center justify-between">
+              <div className="text-xs text-slate-400 flex items-center justify-between">
                 <span>Delivered via httpSMS Gateway</span>
                 <span>{previewSms.length} chars</span>
               </div>
@@ -462,11 +462,11 @@ export function NotificationTemplatesEditor({
             <div className="p-5 rounded-2xl bg-[#F6F7F9] space-y-3">
               <div className="p-4 rounded-2xl bg-white shadow-sm space-y-3">
                 <div className="space-y-1 pb-2">
-                  <span className="text-[11px] text-slate-400 block">Subject:</span>
+                  <span className="text-xs text-slate-400 block">Subject:</span>
                   <div className="text-sm font-bold text-slate-900">
                     {previewEmailSubject}
                   </div>
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-xs text-slate-500">
                     From: <span className="font-semibold text-slate-700">Tenvi &lt;alerts@tenvi.app&gt;</span>
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export function NotificationTemplatesEditor({
                   {previewEmailBody}
                 </div>
               </div>
-              <div className="text-[11px] text-slate-400 text-center">
+              <div className="text-xs text-slate-400 text-center">
                 Rendered with simulated data for {activeCategory === 'loans' ? 'Vevien Unciano' : 'upcoming cards'}
               </div>
             </div>

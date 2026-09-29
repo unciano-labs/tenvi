@@ -318,11 +318,11 @@ export function StatementUploadModal({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-indigo-950">Tenvi AI Vision Active</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 uppercase">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 uppercase">
                         Tenvi Vision
                       </span>
                     </div>
-                    <p className="text-[11px] text-indigo-700">
+                    <p className="text-xs text-indigo-700">
                       Key configured ({geminiStats.maskedKey}) • Free Tier Limit: 1,500 requests/day
                     </p>
                   </div>
@@ -332,9 +332,9 @@ export function StatementUploadModal({
                   <div className="text-right">
                     <div className="font-extrabold text-indigo-950">
                       {geminiStats.dailyRequestsUsed} / {geminiStats.dailyRequestsLimit}
-                      <span className="font-normal text-slate-500 text-[11px] ml-1">used today</span>
+                      <span className="font-normal text-slate-500 text-xs ml-1">used today</span>
                     </div>
-                    <span className="text-[10px] text-indigo-600 font-semibold block">
+                    <span className="text-xs text-indigo-600 font-semibold block">
                       {geminiStats.dailyRemainingRequests} requests remaining
                     </span>
                   </div>
@@ -352,7 +352,7 @@ export function StatementUploadModal({
                   <Sparkles className="w-4 h-4 text-slate-400" />
                   <span>Using built-in local PDF & OCR parser (100% free & offline).</span>
                 </div>
-                <span className="text-[11px] font-bold text-slate-400">Offline Parser</span>
+                <span className="text-xs font-bold text-slate-400">Offline Parser</span>
               </div>
             )}
 
@@ -424,7 +424,7 @@ export function StatementUploadModal({
                 </div>
 
                 {selectedFile && (
-                  <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl">
+                  <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl">
                     {(selectedFile.size / 1024).toFixed(1)} KB • Ready to parse
                   </span>
                 )}
@@ -434,7 +434,7 @@ export function StatementUploadModal({
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>Paste raw transaction lines or statement text:</span>
-                  <span className="text-[11px] font-normal text-slate-400">
+                  <span className="text-xs font-normal text-slate-400">
                     From online banking / email bill
                   </span>
                 </label>
@@ -471,7 +471,7 @@ export function StatementUploadModal({
                     onChange={(e) => setGeminiApiKey(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl bg-white text-xs text-slate-900 focus:outline-none"
                   />
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-xs text-slate-500">
                     If left blank, Tenvi uses its built-in local PDF and OCR parser with 100% privacy and zero API costs.
                   </p>
                 </div>
@@ -522,11 +522,11 @@ export function StatementUploadModal({
                     {stagedTransactions.length} Transactions Detected
                   </span>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] text-slate-500">
+                    <span className="text-xs text-slate-500">
                       Source: {parseResult.source.replace('_', ' ').toUpperCase()} • Review and adjust categories or uncheck items before importing.
                     </span>
                     {duplicateCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
                         <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
                         {duplicateCount} duplicate{duplicateCount > 1 ? 's' : ''} detected & unchecked
                       </span>
@@ -537,7 +537,7 @@ export function StatementUploadModal({
 
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  <span className="text-xs uppercase font-bold text-slate-400 block">
                     Selected To Log
                   </span>
                   <span className="text-sm font-extrabold text-slate-900">
@@ -716,7 +716,7 @@ export function StatementUploadModal({
                       {/* Duplicate Badge */}
                       {tx.isDuplicate && (
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1 ${
+                          className={`text-xs font-bold px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1 ${
                             tx.duplicateType === 'loan_installment'
                               ? 'bg-purple-50 text-purple-800'
                               : 'bg-amber-50 text-amber-800'
@@ -739,7 +739,7 @@ export function StatementUploadModal({
 
                       {/* Payment vs Swipe Badge */}
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
+                        className={`text-xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
                           tx.isPayment
                             ? 'bg-emerald-50 text-emerald-800'
                             : 'bg-slate-100 text-slate-700'
@@ -761,10 +761,10 @@ export function StatementUploadModal({
 
                     {/* Duplicate Reason Subtext */}
                     {tx.isDuplicate && tx.duplicateReason && (
-                      <div className="flex items-center gap-1.5 pl-7 text-[11px] font-medium text-amber-800/90 bg-amber-50/70 p-1.5 rounded-xl">
+                      <div className="flex items-center gap-1.5 pl-7 text-xs font-medium text-amber-800/90 bg-amber-50/70 p-1.5 rounded-xl">
                         <span className="font-bold">⚠️ Flagged:</span>
                         <span className="truncate">{tx.duplicateReason}</span>
-                        <span className="text-[10px] text-slate-400 ml-auto shrink-0 font-normal">
+                        <span className="text-xs text-slate-400 ml-auto shrink-0 font-normal">
                           (Unchecked by default to prevent double counting)
                         </span>
                       </div>

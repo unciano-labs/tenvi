@@ -117,7 +117,7 @@ export function TransactionsClient({
       </div>
 
       {/* Filter Controls (Pill buttons without borders) */}
-      <div className="bg-white rounded-3xl p-5 shadow-sm space-y-4">
+      <div className="bg-white rounded-3xl p-5 shadow-sm overflow-hidden min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Kind Filter Tabs */}
           <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl max-w-full overflow-x-auto no-scrollbar shrink-0">
@@ -212,7 +212,7 @@ export function TransactionsClient({
           onAction={() => setIsModalOpen(true)}
         />
       ) : (
-        <div className="bg-white rounded-3xl p-5 sm:p-8 shadow-sm space-y-4">
+        <div className="bg-white rounded-3xl p-5 sm:p-8 shadow-sm overflow-hidden min-w-0 space-y-4">
           <div className="space-y-3">
             {filtered.slice(0, visibleCount).map((t) => (
               <div
@@ -235,13 +235,13 @@ export function TransactionsClient({
                       <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">
                         {t.category?.name || (t.kind === 'income' ? 'Income' : 'Expense')}
                       </p>
-                      <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full capitalize shrink-0">
+                      <span className="text-xs sm:text-xs font-medium text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full capitalize shrink-0">
                         {t.payment_method.replace('_', ' ')}
                       </span>
                       {t.loan_id && (
                         <Link
                           href={`/dashboard/loans/${t.loan_id}`}
-                          className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full transition-colors shrink-0"
+                          className="inline-flex items-center gap-1 text-xs sm:text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full transition-colors shrink-0"
                         >
                           <HandCoins className="w-3 h-3" />
                           Loan: {t.loan?.contact?.name || 'Borrower'} →
@@ -249,7 +249,7 @@ export function TransactionsClient({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-[11px] sm:text-xs text-slate-400 mt-0.5">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs sm:text-xs text-slate-400 mt-0.5">
                       <span>{formatDate(t.occurred_on)}</span>
                       {t.note && <span className="truncate max-w-[160px] sm:max-w-xs">• {t.note}</span>}
 
@@ -257,7 +257,7 @@ export function TransactionsClient({
                       {t.credit_card && (
                         <Link
                           href={`/dashboard/cards/${t.credit_card.id}`}
-                          className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-full transition-colors shrink-0"
+                          className="inline-flex items-center gap-1 text-xs sm:text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-full transition-colors shrink-0"
                           title="Traceable: View card details and statement breakdown"
                         >
                           <CardIcon className="w-3 h-3 text-indigo-600" />
@@ -269,7 +269,7 @@ export function TransactionsClient({
                       {t.savings && (
                         <Link
                           href="/dashboard/savings"
-                          className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full transition-colors shrink-0"
+                          className="inline-flex items-center gap-1 text-xs sm:text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full transition-colors shrink-0"
                           title="Traceable: View under Savings Stash"
                         >
                           <PiggyBank className="w-3 h-3 text-emerald-600" />
@@ -311,7 +311,7 @@ export function TransactionsClient({
               >
                 Load More Transactions ({filtered.length - visibleCount} remaining)
               </button>
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-xs text-slate-400 mt-2">
                 Showing {visibleCount} of {filtered.length} transactions
               </p>
             </div>

@@ -272,7 +272,7 @@ export function SavingsClient({
             return (
               <div
                 key={acc.id}
-                className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-5"
+                className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-shadow flex flex-col justify-between space-y-5"
               >
                 <div>
                   <div className="flex items-start justify-between mb-3">
@@ -317,7 +317,7 @@ export function SavingsClient({
                             style={{ width: `${progress}%` }}
                           />
                         </div>
-                        <div className="flex justify-between text-[11px] text-slate-500 font-medium">
+                        <div className="flex justify-between text-xs text-slate-500 font-medium">
                           <span>Target: {formatMoney(target)}</span>
                           <span className="font-bold text-slate-700">{progress}%</span>
                         </div>
@@ -348,7 +348,7 @@ export function SavingsClient({
                                   [acc.id]: !isExpanded,
                                 }))
                               }
-                              className="text-[11px] font-semibold text-emerald-800 hover:text-emerald-950 flex items-center gap-0.5 cursor-pointer bg-white/70 px-2 py-0.5 rounded-lg shadow-xs"
+                              className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 flex items-center gap-0.5 cursor-pointer bg-white/70 px-2 py-0.5 rounded-lg shadow-xs"
                             >
                               {isExpanded ? (
                                 <>
@@ -372,7 +372,7 @@ export function SavingsClient({
                               >
                                 <div className="truncate pr-2">
                                   <div className="font-semibold text-slate-900 truncate flex items-center gap-1.5">
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-medium shrink-0">
+                                    <span className="text-xs px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-medium shrink-0">
                                       {tx.category?.name ||
                                         (tx.kind === 'income' ? 'Deposit' : 'Expense')}
                                     </span>
@@ -383,7 +383,7 @@ export function SavingsClient({
                                           : 'Withdrawal')}
                                     </span>
                                   </div>
-                                  <div className="text-[11px] text-slate-400 mt-0.5">
+                                  <div className="text-xs text-slate-400 mt-0.5">
                                     {tx.occurred_on}
                                   </div>
                                 </div>
@@ -406,7 +406,7 @@ export function SavingsClient({
                         )}
 
                         {thisAccTxs.length === 0 && (
-                          <p className="text-[11px] text-emerald-800/80">
+                          <p className="text-xs text-emerald-800/80">
                             No direct transactions linked yet. Expenses or income tagged to this account will appear here.
                           </p>
                         )}
@@ -448,7 +448,7 @@ export function SavingsClient({
             >
               Load More Accounts ({filtered.length - visibleCount} remaining)
             </button>
-            <p className="text-[11px] text-slate-400 mt-2">
+            <p className="text-xs text-slate-400 mt-2">
               Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} accounts
             </p>
           </div>

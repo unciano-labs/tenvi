@@ -208,7 +208,7 @@ export function PropertyDetailsClient({
       </div>
 
       {/* Property Header Banner */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start sm:items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
             <Icon className="w-7 h-7" />
@@ -219,7 +219,7 @@ export function PropertyDetailsClient({
                 {property.name}
               </h1>
               <span
-                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider ${
+                className={`text-xs font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider ${
                   property.status === 'active'
                     ? 'bg-emerald-50 text-emerald-800'
                     : property.status === 'maintenance'
@@ -253,14 +253,14 @@ export function PropertyDetailsClient({
 
         {/* Valuation display */}
         <div className="p-4 rounded-2xl bg-[#F6F7F9] min-w-[200px] text-left md:text-right">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
             Current Valuation
           </span>
           <span className="text-2xl font-extrabold text-slate-900 block">
             {formatMoney(property.estimated_value)}
           </span>
           {Number(property.purchase_price || 0) > 0 && (
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-500">
               Purchased for {formatMoney(property.purchase_price)}
             </span>
           )}
@@ -326,7 +326,7 @@ export function PropertyDetailsClient({
                   {formatMoney(property.monthly_amortization)}
                   <span className="text-xs font-normal text-blue-700 ml-1">/ month</span>
                 </span>
-                <div className="text-[11px] text-blue-800">
+                <div className="text-xs text-blue-800">
                   {property.amortization_due_day ? (
                     <span>Due every {property.amortization_due_day}th of the month</span>
                   ) : (
@@ -372,7 +372,7 @@ export function PropertyDetailsClient({
                   {formatMoney(property.annual_insurance_amount)}
                   <span className="text-xs font-normal text-slate-500 ml-1">/ year</span>
                 </span>
-                <div className="text-[11px] text-slate-500">
+                <div className="text-xs text-slate-500">
                   {property.insurance_renewal_date ? (
                     <span>Next Renewal: {financials.insuranceRenewal.formattedDate}</span>
                   ) : (
@@ -422,29 +422,29 @@ export function PropertyDetailsClient({
               <span className="text-xs font-bold text-emerald-950 block">Target Revenue Run-Rates</span>
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <span className="text-[10px] font-semibold text-emerald-800 uppercase block">
+                  <span className="text-xs font-semibold text-emerald-800 uppercase block">
                     Expected Daily Boundary
                   </span>
                   <span className="text-base font-extrabold text-emerald-950">
                     {formatMoney(property.expected_income_daily || 0)}
                   </span>
-                  <span className="text-[10px] text-emerald-700 block">/ day</span>
+                  <span className="text-xs text-emerald-700 block">/ day</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-semibold text-emerald-800 uppercase block">
+                  <span className="text-xs font-semibold text-emerald-800 uppercase block">
                     Expected Monthly Rental
                   </span>
                   <span className="text-base font-extrabold text-emerald-950">
                     {formatMoney(property.expected_income_monthly || 0)}
                   </span>
-                  <span className="text-[10px] text-emerald-700 block">/ month</span>
+                  <span className="text-xs text-emerald-700 block">/ month</span>
                 </div>
               </div>
             </div>
 
             {/* Notes & Reminders */}
             <div className="p-4 rounded-2xl bg-[#F6F7F9] space-y-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 Operating Notes & Reminders
               </span>
               <p className="text-xs text-slate-700 leading-relaxed">
@@ -463,7 +463,7 @@ export function PropertyDetailsClient({
 
       {/* Transaction Ledger Section */}
 
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-lg font-bold text-slate-900">Asset Transaction Ledger</h3>
@@ -611,7 +611,7 @@ export function PropertyDetailsClient({
                       {tx.kind === 'income' ? '+' : '-'}
                       {formatMoney(tx.amount)}
                     </span>
-                    <span className="text-[10px] text-slate-400 capitalize block">
+                    <span className="text-xs text-slate-400 capitalize block">
                       {tx.kind}
                     </span>
                   </div>
