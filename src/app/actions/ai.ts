@@ -11,6 +11,7 @@ import {
   executeFallbackLocalChat,
   ChatHistoryItem,
 } from '@/lib/ai/financialContext';
+import { retrieveRagFinancialContext } from '@/lib/ai/ragRetriever';
 import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS } from '@/lib/ai/gemini';
 import { isClearlyOffTopic, hasFinancialOrTenviRelevance } from '@/lib/ai/guardrails';
 import { revalidatePath } from 'next/cache';
@@ -93,6 +94,15 @@ export async function processAIChatMessageAction(
     };
   }
 
+  // Retrieve RAG Historical Context if appropriate
+  const ragResult = await retrieveRagFinancialContext({
+    supabase,
+    userId: user.id,
+    message: trimmedMessage,
+    ctx,
+    history,
+  });
+
   // Try Google Gemini GenAI First
   const apiKey = getGeminiApiKey();
 
@@ -101,7 +111,13 @@ export async function processAIChatMessageAction(
     try {
       const { GoogleGenAI } = await import('@google/genai');
       const ai = new GoogleGenAI({ apiKey });
-      const fullPrompt = buildGeminiChatPrompt(ctx, trimmedMessage, pendingState, history);
+      const fullPrompt = buildGeminiChatPrompt(
+        ctx,
+        trimmedMessage,
+        pendingState,
+        history,
+        ragResult.ragContextText
+      );
 
       let activeModel = GEMINI_CANDIDATE_MODELS[0];
       let geminiRespText = '';
@@ -300,6 +316,7 @@ export async function processAIChatMessageAction(
     pendingState,
     supabase,
     userId: user.id,
+    ragResult,
   });
 
   return {

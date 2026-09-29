@@ -7,6 +7,7 @@ import {
   commitAIMultipleTransactions,
   executeFallbackLocalChat,
 } from '@/lib/ai/financialContext';
+import { retrieveRagFinancialContext } from '@/lib/ai/ragRetriever';
 import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS } from '@/lib/ai/gemini';
 import {
   createJsonReplyStreamExtractor,
@@ -92,13 +93,28 @@ export async function POST(request: Request) {
         return;
       }
 
+      // Retrieve RAG Historical Context if appropriate
+      const ragResult = await retrieveRagFinancialContext({
+        supabase,
+        userId: user.id,
+        message: trimmedMessage,
+        ctx,
+        history,
+      });
+
       // Try Google Gemini Streaming First
       const apiKey = getGeminiApiKey();
       let geminiSuccess = false;
 
       if (apiKey) {
         const startTime = Date.now();
-        const fullPrompt = buildGeminiChatPrompt(ctx, trimmedMessage, pendingState, history);
+        const fullPrompt = buildGeminiChatPrompt(
+          ctx,
+          trimmedMessage,
+          pendingState,
+          history,
+          ragResult.ragContextText
+        );
 
         try {
           const { GoogleGenAI } = await import('@google/genai');
@@ -283,6 +299,7 @@ export async function POST(request: Request) {
           pendingState,
           supabase,
           userId: user.id,
+          ragResult,
         });
 
         await simulateStreamText(localResult.reply, (delta) => {

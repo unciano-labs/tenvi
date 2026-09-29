@@ -30,6 +30,19 @@ export interface SplitSummaryItem {
   unpaidShare: number;
 }
 
+export interface RecentLedgerItem {
+  id: string;
+  kind: 'expense' | 'income';
+  amount: number;
+  occurredOn: string;
+  paymentMethod: string;
+  note: string;
+  categoryName?: string;
+  cardName?: string;
+  savingsName?: string;
+  propertyName?: string;
+}
+
 export interface UserFinancialContext {
   todayISO: string;
   currentYear: number;
@@ -49,6 +62,7 @@ export interface UserFinancialContext {
   bestCardInfo: string;
   activeLoansList: LoanSummaryItem[];
   activeSplitsList: SplitSummaryItem[];
+  recentTransactions?: RecentLedgerItem[];
 }
 
 
@@ -59,7 +73,7 @@ export async function fetchUserFinancialContext(
   const now = new Date();
   const startOfMonthISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
-  const [categoriesRes, cardsRes, savingsRes, transactionsRes, loansRes, splitsRes, propertiesRes] = await Promise.all([
+  const [categoriesRes, cardsRes, savingsRes, transactionsRes, loansRes, splitsRes, propertiesRes, recentTransactionsRes] = await Promise.all([
     supabase
       .from('bili_categories')
       .select('id, name, kind')
@@ -122,6 +136,25 @@ export async function fetchUserFinancialContext(
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', userId)
       .eq('status', 'active'),
+    supabase
+      .from('bili_transactions')
+      .select(`
+        id,
+        kind,
+        amount,
+        occurred_on,
+        payment_method,
+        note,
+        category:bili_categories(name),
+        credit_card:bili_credit_cards(name, last_4),
+        savings:bili_savings(name),
+        property:bili_properties(name)
+      `)
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', userId)
+      .order('occurred_on', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(10),
   ]);
 
   const categories: AvailableCategory[] = (categoriesRes.data || []).map((c: any) => ({
@@ -246,6 +279,20 @@ export async function fetchUserFinancialContext(
     balance: Number(s.current_balance || 0),
   }));
 
+  const rawRecentTransactions = recentTransactionsRes?.data || [];
+  const recentTransactions: RecentLedgerItem[] = rawRecentTransactions.map((t: any) => ({
+    id: t.id,
+    kind: t.kind,
+    amount: Number(t.amount || 0),
+    occurredOn: t.occurred_on,
+    paymentMethod: t.payment_method,
+    note: t.note || '',
+    categoryName: t.category?.name,
+    cardName: t.credit_card?.name ? `${t.credit_card.name} (*${t.credit_card.last_4})` : undefined,
+    savingsName: t.savings?.name,
+    propertyName: t.property?.name,
+  }));
+
   return {
     todayISO,
     currentYear,
@@ -265,6 +312,7 @@ export async function fetchUserFinancialContext(
     activeLoansList,
     activeSplitsList,
     properties,
+    recentTransactions,
   };
 }
 
@@ -277,7 +325,8 @@ export function buildGeminiChatPrompt(
   ctx: UserFinancialContext,
   message: string,
   pendingState: ParsedFinancialIntent | null,
-  history?: ChatHistoryItem[]
+  history?: ChatHistoryItem[],
+  ragContext?: string | null
 ): string {
   const systemPrompt = `You are Tenvi AI, a warm, highly knowledgeable, and friendly personal wealth assistant exclusively designed for Tenvi users in the Philippines.
 You understand English, Tagalog, and Taglish ("nag-grab", "bayad kuryente", "swinipe", "kanina", "kahapon", "sahod", "ipon", "utang", "pautang", "bili").
@@ -314,6 +363,8 @@ USER LIVE FINANCIAL CONTEXT:
   * Active Loans / Money Lent Breakdown (${ctx.activeLoansList.length} items): ${JSON.stringify(ctx.activeLoansList)}
   * Unpaid Bill Splits Breakdown (${ctx.activeSplitsList.length} items): ${JSON.stringify(ctx.activeSplitsList)}
   * Active Payables (Debts owed): ₱${ctx.totalPayables.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+${ctx.recentTransactions && ctx.recentTransactions.length > 0 ? `- Recent 10 Transactions in Ledger:\n${ctx.recentTransactions.map((t, idx) => `  ${idx + 1}. [${t.occurredOn}] ${t.kind.toUpperCase()} ₱${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} | ${t.categoryName || 'General'} | ${t.cardName || t.paymentMethod} | Note: "${t.note}"`).join('\n')}` : ''}
+${ragContext ? `\n${ragContext}\n` : ''}
 
 YOUR RESPONSIBILITIES:
 1. Determine the user's INTENT:
@@ -375,7 +426,12 @@ YOUR RESPONSIBILITIES:
      * Provide helpful "quickReplies".
 
 5. If intent is "financial_query":
-   - Provide an intelligent, concise, accurate answer using the USER LIVE FINANCIAL CONTEXT and RECENT CONVERSATION HISTORY.
+   - Provide an intelligent, concise, accurate answer using the USER LIVE FINANCIAL CONTEXT, RETRIEVED HISTORICAL FINANCIAL RECORDS (RAG), and RECENT CONVERSATION HISTORY.
+   - When asked about historical spending, past months (e.g. "last month", "in August", "this year"), past weeks, specific dates, merchants (e.g. Jollibee, Grab, Meralco), or past transactions:
+     * Rely strictly on the exact figures from the RETRIEVED HISTORICAL FINANCIAL RECORDS (RAG) section.
+     * State exact totals in Philippine Pesos (₱), exact transaction count, dates, and item notes.
+     * If comparing periods (e.g. this month vs last month), cite the exact difference and breakdown.
+     * If no matching transactions exist for that timeframe or merchant, clearly explain that no matching records were found in their Tenvi ledger.
    - When asked about receivables, pautang, or who owes money: Always cite the exact total of ₱${ctx.totalReceivables.toLocaleString('en-US', { minimumFractionDigits: 2 })}, and itemize the specific borrowers, items, and remaining balances from the Active Loans / Money Lent Breakdown.
    - Suggest 2-3 relevant follow-up "quickReplies".
 
@@ -649,14 +705,49 @@ export async function executeFallbackLocalChat({
   pendingState,
   supabase,
   userId,
+  ragResult,
 }: {
   message: string,
   ctx: UserFinancialContext,
   pendingState: ParsedFinancialIntent | null,
   supabase: any,
   userId: string,
+  ragResult?: any,
 }) {
   const lowerMsg = message.toLowerCase().trim();
+
+  // 0. Structured RAG fallback response if query was historical
+  if (ragResult && ragResult.needsRetrieval) {
+    if (ragResult.transactions.length === 0) {
+      return {
+        reply: `🔍 No transactions were found for **${ragResult.filters.timeframeLabel}**${ragResult.filters.categoryName ? ` under **${ragResult.filters.categoryName}**` : ''}${ragResult.filters.searchTerm ? ` matching *"${ragResult.filters.searchTerm}"*` : ''} in your Tenvi ledger.`,
+        quickReplies: ['Which card is best to swipe today?', 'How much did I spend this month?'],
+        pendingState: null,
+      };
+    }
+
+    if (ragResult.filters.searchTerm) {
+      const txs = ragResult.transactions.slice(0, 5);
+      return {
+        reply: `🔍 Found **${ragResult.transactions.length}** transaction${ragResult.transactions.length > 1 ? 's' : ''} for *"${ragResult.filters.searchTerm}"* totaling **₱${ragResult.aggregations.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}**:\n\n${txs.map((t: any) => `• **${t.occurredOn}**: ₱${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} - ${t.note} (${t.categoryName || 'General'})`).join('\n')}`,
+        quickReplies: ['How much did I spend this month?', 'Which card is best to swipe today?'],
+        pendingState: null,
+      };
+    }
+
+    const highestMsg = ragResult.aggregations.highestExpense
+      ? `\n• **Highest Expense**: ₱${ragResult.aggregations.highestExpense.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} for *${ragResult.aggregations.highestExpense.note}* on ${ragResult.aggregations.highestExpense.occurredOn}.`
+      : '';
+    const topCatMsg = ragResult.aggregations.categoryBreakdown.length > 0
+      ? `\n• **Top Category**: ${ragResult.aggregations.categoryBreakdown[0].name} (₱${ragResult.aggregations.categoryBreakdown[0].amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}, ${ragResult.aggregations.categoryBreakdown[0].percentage}%).`
+      : '';
+
+    return {
+      reply: `📊 **${ragResult.filters.timeframeLabel} Summary**:\n\n• **Total Expenses**: ₱${ragResult.aggregations.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}\n• **Total Income**: ₱${ragResult.aggregations.totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}\n• **Total Transactions**: ${ragResult.transactions.length}${highestMsg}${topCatMsg}`,
+      quickReplies: ['Which card is best to swipe today?', 'What is my emergency living runway?'],
+      pendingState: null,
+    };
+  }
 
   // 1. Common Financial Queries
   if (lowerMsg.includes('which card') || lowerMsg.includes('best card') || lowerMsg.includes('swipe today')) {
