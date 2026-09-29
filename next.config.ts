@@ -25,6 +25,11 @@ const paymongoPublicKey =
   process.env.NEXT_PAYMONGO_PUBLIC_KEY ||
   '';
 
+const adminEmail =
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+  process.env.ADMIN_EMAIL ||
+  'webcareer1+admin@gmail.com';
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['192.168.8.42', 'localhost:3000', '127.0.0.1'],
   env: {
@@ -38,6 +43,8 @@ const nextConfig: NextConfig = {
     DEFAULT_ROLE_ID: defaultRoleId,
     NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY: paymongoPublicKey,
     NEXT_PAYMONGO_PUBLIC_KEY: paymongoPublicKey,
+    NEXT_PUBLIC_ADMIN_EMAIL: adminEmail,
+    ADMIN_EMAIL: adminEmail,
   },
 };
 

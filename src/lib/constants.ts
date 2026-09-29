@@ -19,6 +19,29 @@ export const DEFAULT_ROLE_ID = sanitizeUuid(
   TENVI_DEFAULT_ROLE_ID
 );
 
+// Admin Configuration & Access Control
+export const ADMIN_EMAIL = (
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+  process.env.ADMIN_EMAIL ||
+  'webcareer1+admin@gmail.com'
+)
+  .toLowerCase()
+  .trim();
+
+/**
+ * Checks if an email belongs to a platform superadmin:
+ * Matches either webcareer1@gmail.com or configured ADMIN_EMAIL.
+ */
+export function isUserAdmin(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const normalized = email.toLowerCase().trim();
+  const configuredAdmin = (process.env.ADMIN_EMAIL || ADMIN_EMAIL).toLowerCase().trim();
+  return (
+    normalized === 'webcareer1@gmail.com' ||
+    Boolean(configuredAdmin && normalized === configuredAdmin)
+  );
+}
+
 // Default Currency for display
 export const DEFAULT_CURRENCY = 'PHP';
 export const CURRENCY_SYMBOL = '₱';

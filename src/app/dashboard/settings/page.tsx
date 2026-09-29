@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
-import { WEBSITE_ID } from '@/lib/constants';
+import { WEBSITE_ID, isUserAdmin } from '@/lib/constants';
+import { getAuthenticatedUser } from '@/lib/auth/guards';
 import { SettingsClient } from './SettingsClient';
 import { NotificationSettings, NotificationLog, CreditCard, NotificationLogsStats } from '@/types';
 
@@ -8,11 +9,12 @@ export default async function SettingsPage() {
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await getAuthenticatedUser();
 
   const userEmail = user?.email || '';
+  const isAdmin = isUserAdmin(userEmail);
 
-  // 1. Fetch notification settings
+  // 1. Fetch notification settings (needed for templates and general preferences)
   const { data: settingsData } = await supabase
     .from('bili_notification_settings')
     .select('*')
@@ -35,53 +37,74 @@ export default async function SettingsPage() {
 
   const initialSettings = (settingsData as NotificationSettings) || defaultSettings;
 
-  // 2. Fetch initial batch of notification history logs (optimized for lazy loading)
-  const [{ data: logsData, count: logsCount }, { data: allStatsRows }] = await Promise.all([
-    supabase
-      .from('bili_notification_logs')
-      .select('*', { count: 'exact' })
-      .eq('website_id', WEBSITE_ID)
-      .eq('user_id', user?.id)
-      .order('created_at', { ascending: false })
-      .range(0, 14),
-    supabase
-      .from('bili_notification_logs')
-      .select('channel, status')
-      .eq('website_id', WEBSITE_ID)
-      .eq('user_id', user?.id),
-  ]);
-
-  const initialStats: NotificationLogsStats = {
-    total: allStatsRows?.length || 0,
-    sent: allStatsRows?.filter((r) => r.status === 'sent').length || 0,
-    simulated: allStatsRows?.filter((r) => r.status === 'simulated').length || 0,
-    failed: allStatsRows?.filter((r) => r.status === 'failed').length || 0,
-    email: allStatsRows?.filter((r) => r.channel === 'email').length || 0,
-    sms: allStatsRows?.filter((r) => r.channel === 'sms').length || 0,
+  let logsData: NotificationLog[] = [];
+  let logsCount = 0;
+  let initialStats: NotificationLogsStats = {
+    total: 0,
+    sent: 0,
+    simulated: 0,
+    failed: 0,
+    email: 0,
+    sms: 0,
   };
+  let creditCardsData: CreditCard[] = [];
+  let initialGeminiStats = null;
 
-  // 3. Fetch active credit cards to show live due window
-  const { data: creditCardsData } = await supabase
-    .from('bili_credit_cards')
-    .select('*')
-    .eq('website_id', WEBSITE_ID)
-    .eq('user_id', user?.id)
-    .eq('is_active', true)
-    .order('due_day', { ascending: true });
+  // Only query delivery logs, credit cards, and Gemini usage stats for admin users
+  if (isAdmin) {
+    const [{ data: lData, count: lCount }, { data: allStatsRows }, { data: cData }] =
+      await Promise.all([
+        supabase
+          .from('bili_notification_logs')
+          .select('*', { count: 'exact' })
+          .eq('website_id', WEBSITE_ID)
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .range(0, 14),
+        supabase
+          .from('bili_notification_logs')
+          .select('channel, status')
+          .eq('website_id', WEBSITE_ID)
+          .eq('user_id', user?.id),
+        supabase
+          .from('bili_credit_cards')
+          .select('*')
+          .eq('website_id', WEBSITE_ID)
+          .eq('user_id', user?.id)
+          .eq('is_active', true)
+          .order('due_day', { ascending: true }),
+      ]);
 
-  // 4. Fetch real-time Gemini AI usage and quota stats
-  const { getGeminiUsageStats } = await import('@/lib/ai/gemini');
-  const initialGeminiStats = user ? await getGeminiUsageStats(user.id) : null;
+    logsData = (lData as NotificationLog[]) || [];
+    logsCount = lCount || 0;
+    creditCardsData = (cData as CreditCard[]) || [];
+    initialStats = {
+      total: allStatsRows?.length || 0,
+      sent: allStatsRows?.filter((r) => r.status === 'sent').length || 0,
+      simulated: allStatsRows?.filter((r) => r.status === 'simulated').length || 0,
+      failed: allStatsRows?.filter((r) => r.status === 'failed').length || 0,
+      email: allStatsRows?.filter((r) => r.channel === 'email').length || 0,
+      sms: allStatsRows?.filter((r) => r.channel === 'sms').length || 0,
+    };
+
+    try {
+      const { getGeminiUsageStats } = await import('@/lib/ai/gemini');
+      initialGeminiStats = user ? await getGeminiUsageStats(user.id) : null;
+    } catch {
+      // Safe fallback
+    }
+  }
 
   return (
     <SettingsClient
       initialSettings={initialSettings}
-      initialLogs={(logsData as NotificationLog[]) || []}
-      initialTotalCount={logsCount || 0}
+      initialLogs={logsData}
+      initialTotalCount={logsCount}
       initialStats={initialStats}
-      activeCards={(creditCardsData as CreditCard[]) || []}
+      activeCards={creditCardsData}
       userEmail={userEmail}
       initialGeminiStats={initialGeminiStats}
+      isAdmin={isAdmin}
     />
   );
 }

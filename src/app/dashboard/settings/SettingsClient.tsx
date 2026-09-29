@@ -57,6 +57,7 @@ interface SettingsClientProps {
   activeCards: CreditCard[];
   userEmail: string;
   initialGeminiStats?: GeminiUsageStats | null;
+  isAdmin?: boolean;
 }
 
 export function SettingsClient({
@@ -67,9 +68,14 @@ export function SettingsClient({
   activeCards,
   userEmail,
   initialGeminiStats,
+  isAdmin = false,
 }: SettingsClientProps) {
-  // Top-level Navigation Tab ('settings' default, 'templates', 'logs', 'ai')
-  const [activeTab, setActiveTab] = useState<'settings' | 'templates' | 'logs' | 'ai'>('settings');
+  // If user is not admin, they are strictly restricted to 'templates' tab
+  const [activeTab, setActiveTab] = useState<'settings' | 'templates' | 'logs' | 'ai'>(
+    isAdmin ? 'settings' : 'templates'
+  );
+
+  const currentTab = isAdmin ? activeTab : 'templates';
 
   // Gemini AI Vision state
   const [geminiStats, setGeminiStats] = useState<GeminiUsageStats | null>(
@@ -420,33 +426,37 @@ export function SettingsClient({
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-          Settings & Intelligence Center
+          {isAdmin ? 'Settings & Intelligence Center' : 'Notification Templates'}
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Manage your notification settings, configure templates, inspect delivery logs, and monitor Tenvi AI Vision quota.
+          {isAdmin
+            ? 'Manage your notification settings, configure templates, inspect delivery logs, and monitor Tenvi AI Vision quota.'
+            : 'Customize and preview your automated notification message templates for payment reminders and bill alerts.'}
         </p>
       </div>
 
-      {/* Navigation Tabs (Settings default, Templates, Logs, AI) */}
+      {/* Navigation Tabs */}
       <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F6F7F9] max-w-fit shadow-xs flex-wrap">
-        <button
-          type="button"
-          onClick={() => setActiveTab('settings')}
-          className={`text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-            activeTab === 'settings'
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Sliders className="w-4 h-4 text-blue-600" />
-          Settings
-        </button>
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('settings')}
+            className={`text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
+              currentTab === 'settings'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Sliders className="w-4 h-4 text-blue-600" />
+            Settings
+          </button>
+        )}
 
         <button
           type="button"
           onClick={() => setActiveTab('templates')}
           className={`text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-            activeTab === 'templates'
+            currentTab === 'templates'
               ? 'bg-white text-slate-900 shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
           }`}
@@ -455,41 +465,45 @@ export function SettingsClient({
           Templates
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('logs')}
-          className={`text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-            activeTab === 'logs'
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>Logs</span>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-            {stats.total}
-          </span>
-        </button>
+        {isAdmin && (
+          <>
+            <button
+              type="button"
+              onClick={() => setActiveTab('logs')}
+              className={`text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
+                currentTab === 'logs'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Logs</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                {stats.total}
+              </span>
+            </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('ai')}
-          className={`text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-            activeTab === 'ai'
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Sparkles className="w-4 h-4 text-indigo-600" />
-          <span>Tenvi AI & Vision</span>
-          {geminiStats?.hasKeyConfigured && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          )}
-        </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('ai')}
+              className={`text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
+                currentTab === 'ai'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>Tenvi AI & Vision</span>
+              {geminiStats?.hasKeyConfigured && (
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              )}
+            </button>
+          </>
+        )}
       </div>
 
-      {/* TAB 1: SETTINGS (Default) */}
-      {activeTab === 'settings' && (
+      {/* TAB 1: SETTINGS (Admin Only) */}
+      {isAdmin && currentTab === 'settings' && (
         <div className="space-y-6 animate-in fade-in duration-150">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Settings Form Column */}
@@ -1157,15 +1171,15 @@ export function SettingsClient({
         </div>
       )}
 
-      {/* TAB 2: TEMPLATES */}
-      {activeTab === 'templates' && (
+      {/* TAB 2: TEMPLATES (Accessible to all users) */}
+      {currentTab === 'templates' && (
         <div className="animate-in fade-in duration-150">
           <NotificationTemplatesEditor initialSettings={initialSettings} />
         </div>
       )}
 
-      {/* TAB 3: LOGS (With Optimized Search & Lazy Loading) */}
-      {activeTab === 'logs' && (
+      {/* TAB 3: LOGS (Admin Only) */}
+      {isAdmin && currentTab === 'logs' && (
         <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-in fade-in duration-150">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -1553,8 +1567,8 @@ export function SettingsClient({
         </div>
       )}
 
-      {/* TAB 4: AI & GEMINI VISION QUOTA MONITOR */}
-      {activeTab === 'ai' && (
+      {/* TAB 4: AI & GEMINI VISION QUOTA MONITOR (Admin Only) */}
+      {isAdmin && currentTab === 'ai' && (
         <div className="space-y-6 animate-in fade-in duration-150">
           {/* Hero Status Card */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
