@@ -41,10 +41,10 @@ async function seedDefaultCategories(userId: string) {
 }
 
 /**
- * Enrolls a user into Bili (WEBSITE_ID) by creating user_profile if needed
+ * Enrolls a user into Tenvi (WEBSITE_ID) by creating user_profile if needed
  * and linking to user_roles.
  */
-async function enrollUserInBili(userId: string, email: string, fullName: string) {
+async function enrollUserInTenvi(userId: string, email: string, fullName: string) {
   const admin = createAdminClient();
 
   // Try RPC function first
@@ -128,11 +128,11 @@ export async function loginAction(prevState: any, formData: FormData) {
   // 2. Authorize website membership
   const isEnrolled = await checkUserWebsiteMembership(data.user.id, WEBSITE_ID);
   if (!isEnrolled) {
-    // Revoke the session immediately — user is not authorized for Bili
+    // Revoke the session immediately — user is not authorized for Tenvi
     await supabase.auth.signOut();
     return {
       error:
-        'No Bili account found for this email. If you have an account on another connected website, please register on Bili to activate access.',
+        'No Tenvi account found for this email. If you have an account on another connected website, please register on Tenvi to activate access.',
       code: 'NOT_ENROLLED_FOR_WEBSITE',
     };
   }
@@ -168,16 +168,16 @@ export async function registerAction(prevState: any, formData: FormData) {
     .maybeSingle();
 
   if (existingProfile) {
-    // 2. Check if already enrolled in Bili
+    // 2. Check if already enrolled in Tenvi
     const isEnrolled = await checkUserWebsiteMembership(existingProfile.user_id, WEBSITE_ID);
     if (isEnrolled) {
       return {
-        error: 'You already have a Bili account with this email. Please log in instead.',
+        error: 'You already have a Tenvi account with this email. Please log in instead.',
         code: 'ALREADY_REGISTERED',
       };
     }
 
-    // 3. User exists on another site! Verify password before enrolling into Bili
+    // 3. User exists on another site! Verify password before enrolling into Tenvi
     const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -186,13 +186,13 @@ export async function registerAction(prevState: any, formData: FormData) {
     if (authErr || !authData.user) {
       return {
         error:
-          'An account with this email exists on our network. Please enter your existing account password to add Bili to your account.',
+          'An account with this email exists on our network. Please enter your existing account password to add Tenvi to your account.',
         code: 'EXISTING_ACCOUNT_PASSWORD_REQUIRED',
       };
     }
 
-    // 4. Enroll existing user in Bili
-    await enrollUserInBili(
+    // 4. Enroll existing user in Tenvi
+    await enrollUserInTenvi(
       authData.user.id,
       email,
       fullName || existingProfile.full_name || ''
@@ -224,12 +224,12 @@ export async function registerAction(prevState: any, formData: FormData) {
       if (authErr || !authData.user) {
         return {
           error:
-            'An account with this email exists on our network. Please enter your existing account password to add Bili to your account.',
+            'An account with this email exists on our network. Please enter your existing account password to add Tenvi to your account.',
           code: 'EXISTING_ACCOUNT_PASSWORD_REQUIRED',
         };
       }
 
-      await enrollUserInBili(authData.user.id, email, fullName);
+      await enrollUserInTenvi(authData.user.id, email, fullName);
       await seedDefaultCategories(authData.user.id);
       redirect('/dashboard');
     }
@@ -238,7 +238,7 @@ export async function registerAction(prevState: any, formData: FormData) {
   }
 
   if (signUpData.user) {
-    await enrollUserInBili(signUpData.user.id, email, fullName);
+    await enrollUserInTenvi(signUpData.user.id, email, fullName);
     await seedDefaultCategories(signUpData.user.id);
   }
 

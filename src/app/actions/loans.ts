@@ -1170,7 +1170,7 @@ export async function sendLoanBorrowerReminderAction(
     amountDue: upcomingAmount,
     installmentInfo: installmentNote,
     balanceRemaining: Number(loan.balance_remaining),
-    lenderName: 'Bili',
+    lenderName: 'Tenvi',
   });
 
   const smsTemplate = settings?.loan_sms_template || DEFAULT_LOAN_SMS_TEMPLATE;

@@ -44,7 +44,7 @@ export default function RegisterPage() {
                 Account Already Enrolled
               </div>
               <p className="text-xs text-indigo-800 leading-relaxed mb-3">
-                You already have an active Bili account with this email address. Please log in
+                You already have an active Tenvi account with this email address. Please log in
                 to access your dashboard.
               </p>
               <Link
@@ -62,7 +62,7 @@ export default function RegisterPage() {
               </div>
               <p className="text-xs text-blue-800 leading-relaxed">
                 An account with this email exists across our platform. Please enter your existing
-                account password below to link and activate your Bili account.
+                account password below to link and activate your Tenvi account.
               </p>
             </div>
           ) : state?.error ? (

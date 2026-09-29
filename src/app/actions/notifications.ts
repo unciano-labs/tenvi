@@ -435,7 +435,7 @@ export async function checkAndSendCardDueAlertsAction({
     cardCount: upcomingCards.length,
     cardList: cardItemsSummary,
     daysBefore,
-    appUrl: 'https://bili.app/dashboard/cards',
+    appUrl: 'https://tenvi.app/dashboard/cards',
   });
 
   const smsTemplate = settings?.card_sms_template || DEFAULT_CARD_SMS_TEMPLATE;
@@ -579,12 +579,12 @@ export async function sendTestNotificationAction(
 
   let logStatus: 'sent' | 'simulated' | 'failed' = 'sent';
   let logError: string | null = null;
-  let testSubject = '[Bili Test Alert]';
+  let testSubject = '[Tenvi Test Alert]';
   let messageBody = '';
 
   if (channel === 'email') {
-    testSubject = '[Bili Test] Gmail Notification Connected Successfully';
-    messageBody = `Kumusta!\n\nThis is a test notification confirming your email alerts are connected and active on Bili.\n\nYou will receive automated alerts 3 days before credit card bills or loan installments are due.\n\nSent via Gmail SMTP.`;
+    testSubject = '[Tenvi Test] Gmail Notification Connected Successfully';
+    messageBody = `Kumusta!\n\nThis is a test notification confirming your email alerts are connected and active on Tenvi.\n\nYou will receive automated alerts 3 days before credit card bills or loan installments are due.\n\nSent via Gmail SMTP.`;
 
     const emailRes = await sendGmailEmail({
       to: recipient,
@@ -597,7 +597,7 @@ export async function sendTestNotificationAction(
     logStatus = emailRes.status;
     logError = emailRes.error || null;
   } else {
-    messageBody = `[Bili Alert] Kumusta! Your phone number ${recipient} is connected to Bili via httpSMS. You will receive automated alerts before due dates.`;
+    messageBody = `[Tenvi Alert] Kumusta! Your phone number ${recipient} is connected to Tenvi via httpSMS. You will receive automated alerts before due dates.`;
 
     const smsRes = await sendHttpSms({
       to: recipient,

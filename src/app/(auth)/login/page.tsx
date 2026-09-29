@@ -20,17 +20,17 @@ function LoginForm() {
         <div className="mb-6 p-4 rounded-2xl bg-amber-50 text-amber-900 border border-amber-200/70 text-sm">
           <div className="font-semibold flex items-center gap-1.5 mb-1 text-amber-950">
             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            No Bili Account Found
+            No Tenvi Account Found
           </div>
           <p className="text-xs text-amber-800 leading-relaxed mb-3">
             Your credentials belong to an account on our platform, but it has not been
-            registered for Bili yet. Please register to activate your Bili access.
+            registered for Tenvi yet. Please register to activate your Tenvi access.
           </p>
           <Link
             href="/register"
             className="inline-flex items-center gap-1 text-xs font-bold text-amber-950 underline hover:text-amber-800"
           >
-            Register for Bili now →
+            Register for Tenvi now →
           </Link>
         </div>
       ) : state?.error ? (

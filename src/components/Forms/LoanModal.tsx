@@ -257,7 +257,7 @@ export function LoanModal({
             </div>
 
             <p className="text-[11px] text-slate-500">
-              Provide the borrower&apos;s mobile number or email so Bili can automatically dispatch a friendly payment reminder 3 days before their due date.
+              Provide the borrower&apos;s mobile number or email so Tenvi can automatically dispatch a friendly payment reminder 3 days before their due date.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

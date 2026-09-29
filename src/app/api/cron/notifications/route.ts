@@ -100,7 +100,7 @@ export async function GET(request: Request) {
         cardCount: upcoming.length,
         cardList: cardItemsSummary,
         daysBefore: targetDays,
-        appUrl: 'https://bili.app/dashboard/cards',
+        appUrl: 'https://tenvi.app/dashboard/cards',
       });
 
       const smsTemplate = settings.card_sms_template || DEFAULT_CARD_SMS_TEMPLATE;
@@ -243,7 +243,7 @@ export async function GET(request: Request) {
           amountDue: dueAmount,
           installmentInfo: installmentNote,
           balanceRemaining: Number(loan.balance_remaining),
-          lenderName: 'Bili',
+          lenderName: 'Tenvi',
         });
 
         const smsTemplate = lenderSettings?.loan_sms_template || DEFAULT_LOAN_SMS_TEMPLATE;

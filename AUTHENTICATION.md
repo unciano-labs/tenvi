@@ -1,7 +1,7 @@
 # Multi-Website Authentication & Authorization Architecture Specification
 
-> **Scope**: Standardized specification and implementation blueprint for shared-database multi-website authentication across independent web applications (`Bili`, `Invoicer`, `Orgy`, `Parmasi`, `Denti`, etc.) using Supabase Auth and multi-tenant Role-Based Access Control (RBAC).  
-> **Status**: Implemented & Verified in Bili  
+> **Scope**: Standardized specification and implementation blueprint for shared-database multi-website authentication across independent web applications (`Tenvi`, `Invoicer`, `Orgy`, `Parmasi`, `Denti`, etc.) using Supabase Auth and multi-tenant Role-Based Access Control (RBAC).  
+> **Status**: Implemented & Verified in Tenvi  
 > **Version**: 2.0 (Production-Ready)  
 > **Target Audience**: AI Agents, Backend/Full-Stack Engineers, DevOps
 
@@ -13,7 +13,7 @@ In our multi-tenant architecture, multiple distinct web applications share a sin
 
 ### 1.1 The Core Dilemma in Shared-Database Auth
 Because `auth.users` is global to the entire Supabase project:
-1. **Accidental Cross-Site Access**: When a user registers on **Website 1** (`Orgy` or `Invoicer`), their credentials exist globally in `auth.users`. If **Website 2** (`Bili`) naively verifies credentials using standard `supabase.auth.signInWithPassword()`, authentication succeeds at the identity layer. If Website 2 does not verify website-specific authorization, **User 1 gains access to Website 2 without ever registering for it.**
+1. **Accidental Cross-Site Access**: When a user registers on **Website 1** (`Orgy` or `Invoicer`), their credentials exist globally in `auth.users`. If **Website 2** (`Tenvi`) naively verifies credentials using standard `supabase.auth.signInWithPassword()`, authentication succeeds at the identity layer. If Website 2 does not verify website-specific authorization, **User 1 gains access to Website 2 without ever registering for it.**
 2. **Registration Deadlock**: If User 1 then visits Website 2's registration page (`/register`), standard `supabase.auth.signUp()` throws `"User already registered"`, blocking the user from joining Website 2.
 3. **Flawed Auto-Role Provisioning**: Naive login actions that auto-create a user role or seed tenant data upon successful password verification violate tenant boundaries and allow any user in the database to enter any connected website.
 
@@ -82,7 +82,7 @@ erDiagram
 ### 2.1 Registered Websites in Shared Database
 | Website Name | Website ID (`WEBSITE_ID`) | Default User Role ID (`DEFAULT_ROLE_ID`) | Primary Domain / Purpose |
 |---|---|---|---|
-| **Bili** | `65d4f86e-1829-417a-981f-bc7aad7bc953` | `02bf8818-b503-4f94-beac-6c45aa12e368` | Personal Wealth & Float Ledger |
+| **Tenvi** (formerly Bili) | `65d4f86e-1829-417a-981f-bc7aad7bc953` | `02bf8818-b503-4f94-beac-6c45aa12e368` | Personal Wealth & Float Ledger |
 | **Invoicer** | `e602fc2e-7b59-4ce2-a409-ef72f5955ff2` | `bb2e25be-9979-429a-a059-d15436165620` | Invoicing & Client Management |
 | **Orgy** | `e4a3b8d1-7c9f-42e5-a6b1-0f8d9c2e3b4a` | `22222222-2222-2222-2222-222222222222` | Tour & Travel Operations |
 | **Parmasi** | `552b43bd-0312-4de1-89de-a6bc77738717` | `eeadcb63-0c03-4dce-a83f-2d212465890a` | Pharmacy & Facility Admin |
@@ -199,8 +199,8 @@ sequenceDiagram
   - Remove all legacy auto-role creation code from login.
 - [x] **Task 2.3**: Update `registerAction` in `src/app/actions/auth.ts`:
   - Check for existing global account in `user_profiles`.
-  - If existing account is already enrolled in Bili, return `{ code: 'ALREADY_REGISTERED' }`.
-  - If existing account is not enrolled in Bili, verify credentials via `signInWithPassword()`. If valid, call `enroll_user_in_website()`, seed initial data, and grant access.
+  - If existing account is already enrolled in Tenvi, return `{ code: 'ALREADY_REGISTERED' }`.
+  - If existing account is not enrolled in Tenvi, verify credentials via `signInWithPassword()`. If valid, call `enroll_user_in_website()`, seed initial data, and grant access.
   - If brand new user, call `signUp()`, call `enroll_user_in_website()`, seed initial data, and grant access.
 - [x] **Task 2.4**: Implement robust RPC fallback to direct insertion in case of network or function timeout.
 
@@ -256,7 +256,7 @@ sequenceDiagram
 #### Tasks:
 - [x] **Task 5.1**: Run `npx tsc --noEmit` to verify type safety across all modified files.
 - [x] **Task 5.2**: Test Case 1: Attempt to log in with an email registered exclusively on another site (`Orgy` or `Invoicer`). Verify login is rejected and redirected with message.
-- [x] **Task 5.3**: Test Case 2: Register on Bili with that same cross-site email. Verify password verification succeeds, role is assigned, and dashboard loads.
+- [x] **Task 5.3**: Test Case 2: Register on Tenvi with that same cross-site email. Verify password verification succeeds, role is assigned, and dashboard loads.
 - [x] **Task 5.4**: Test Case 3: Verify the user can now log into both websites independently.
 
 #### Deliverables:
@@ -319,5 +319,5 @@ Because `auth.users` holds credentials globally, changing the password updates t
 Deleting a user from **Website 1** deletes only their `user_roles` row for Website 1 (and cascades domain tables linked by `website_id`). Their global account in `auth.users` and their membership in **Website 2** remain completely untouched.
 
 ### Q3: How are session cookies isolated if websites run on different domains?
-- **Distinct Domains** (`bili.app` vs `invoicer.app`): Standard browser cookie jar partitioning guarantees sessions never leak across distinct domain names.
-- **Shared Subdomains** (`bili.domain.com` vs `invoicer.domain.com`): Configure `@supabase/ssr` cookies without a wildcard `Domain=.domain.com` attribute so cookies are host-only.
+- **Distinct Domains** (`tenvi.app` vs `invoicer.app`): Standard browser cookie jar partitioning guarantees sessions never leak across distinct domain names.
+- **Shared Subdomains** (`tenvi.domain.com` vs `invoicer.domain.com`): Configure `@supabase/ssr` cookies without a wildcard `Domain=.domain.com` attribute so cookies are host-only.

@@ -178,7 +178,7 @@ export function LoanDetailsClient({
     amountDue: targetAmount,
     installmentInfo: installmentTermLabel,
     balanceRemaining: Number(loan.balance_remaining),
-    lenderName: 'Bili',
+    lenderName: 'Tenvi',
   });
 
   const handleOpenCustomizer = (channel: 'sms' | 'email') => {
