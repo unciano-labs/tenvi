@@ -52,11 +52,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from /login or /register, unless resolving an enrollment error
+  // Redirect logged-in users away from /login or /register, unless resolving an enrollment flow
   const hasEnrollmentError = request.nextUrl.searchParams.get('error') === 'not_enrolled';
+  const isEnrollingFlow = request.nextUrl.searchParams.get('enrolling') === 'true'
+    || Boolean(request.nextUrl.searchParams.get('email'));
   if (
     user &&
     !hasEnrollmentError &&
+    !isEnrollingFlow &&
     (request.nextUrl.pathname === '/login' ||
       request.nextUrl.pathname === '/register')
   ) {

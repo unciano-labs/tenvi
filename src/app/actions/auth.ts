@@ -4,7 +4,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { WEBSITE_ID, DEFAULT_ROLE_ID, DEFAULT_CATEGORIES } from '@/lib/constants';
 import { loginSchema, registerSchema } from '@/lib/validations/schemas';
-import { checkUserWebsiteMembership } from '@/lib/auth/guards';
+import { checkUserWebsiteMembership, verifyWebsiteMembership } from '@/lib/auth/guards';
 
 /**
  * Ensures initial default state exists for a user on this website:
@@ -92,68 +92,117 @@ async function seedInitialUserData(userId: string) {
 /**
  * Enrolls a user into Tenvi (WEBSITE_ID) by creating user_profile if needed
  * and linking to user_roles.
+ *
+ * Uses a layered strategy:
+ *   1. Admin client RPC (enroll_user_in_website) — primary path
+ *   2. Standard (session) client RPC — fallback if admin RPC fails
+ *   3. Direct table insertion via admin client — last resort
+ *
+ * After enrollment, verifies that the user actually has website access.
+ * Throws if enrollment ultimately fails so the caller can handle it.
  */
 async function enrollUserInTenvi(userId: string, email: string, fullName: string) {
-  const admin = createAdminClient();
-
-  // Try RPC function first
-  const { error: rpcErr } = await admin.rpc('enroll_user_in_website', {
+  const rpcParams = {
     p_website_id: WEBSITE_ID,
     p_user_id: userId,
     p_role_name: 'user',
     p_full_name: fullName || null,
-  });
+  };
 
-  if (!rpcErr) return;
+  // ── Strategy 1: Admin client RPC ──
+  try {
+    const admin = createAdminClient();
+    const { error: rpcErr } = await admin.rpc('enroll_user_in_website', rpcParams);
 
-  // Fallback to direct insertion if RPC fails
-  console.warn('Fallback to direct enrollment insertion:', rpcErr);
-
-  let { data: profile } = await admin
-    .from('user_profiles')
-    .select('id, full_name')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (!profile) {
-    const { data: newProfile, error: profileErr } = await admin
-      .from('user_profiles')
-      .insert({
-        user_id: userId,
-        email: email,
-        full_name: fullName || null,
-      })
-      .select('id, full_name')
-      .single();
-
-    if (profileErr) {
-      console.error('Error creating user profile:', profileErr);
+    if (!rpcErr) {
+      // Verify enrollment actually took effect
+      const verified = await verifyWebsiteMembership(userId, WEBSITE_ID);
+      if (verified) return;
+      console.warn('[enrollUserInTenvi] Admin RPC returned success but membership check failed — trying fallback');
     } else {
+      console.warn('[enrollUserInTenvi] Admin RPC error:', rpcErr.message, rpcErr.code);
+    }
+  } catch (adminRpcErr) {
+    console.warn('[enrollUserInTenvi] Admin client RPC threw:', adminRpcErr);
+  }
+
+  // ── Strategy 2: Standard (session-authenticated) client RPC ──
+  // The enroll_user_in_website function is SECURITY DEFINER, callable by authenticated users
+  try {
+    const supabase = await createClient();
+    const { error: stdRpcErr } = await supabase.rpc('enroll_user_in_website', rpcParams);
+
+    if (!stdRpcErr) {
+      const verified = await verifyWebsiteMembership(userId, WEBSITE_ID);
+      if (verified) return;
+      console.warn('[enrollUserInTenvi] Standard RPC returned success but membership check failed — trying direct insert');
+    } else {
+      console.warn('[enrollUserInTenvi] Standard RPC error:', stdRpcErr.message, stdRpcErr.code);
+    }
+  } catch (stdRpcErr) {
+    console.warn('[enrollUserInTenvi] Standard client RPC threw:', stdRpcErr);
+  }
+
+  // ── Strategy 3: Direct table insertion via admin client ──
+  try {
+    const admin = createAdminClient();
+
+    let { data: profile } = await admin
+      .from('user_profiles')
+      .select('id, full_name')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!profile) {
+      const { data: newProfile, error: profileErr } = await admin
+        .from('user_profiles')
+        .insert({
+          user_id: userId,
+          email: email,
+          full_name: fullName || null,
+        })
+        .select('id, full_name')
+        .single();
+
+      if (profileErr) {
+        console.error('[enrollUserInTenvi] Profile insert error:', profileErr.message, profileErr.code);
+        throw new Error(`Failed to create user profile: ${profileErr.message}`);
+      }
       profile = newProfile;
     }
+
+    if (profile) {
+      // If a new or edited fullName is provided, update user_profiles
+      if (fullName && profile.full_name !== fullName) {
+        await admin
+          .from('user_profiles')
+          .update({ full_name: fullName })
+          .eq('id', profile.id);
+      }
+
+      const { error: roleErr } = await admin.from('user_roles').upsert(
+        {
+          user_profile_id: profile.id,
+          website_role_id: DEFAULT_ROLE_ID,
+        },
+        { onConflict: 'user_profile_id,website_role_id' }
+      );
+
+      if (roleErr && roleErr.code !== '23505') {
+        console.error('[enrollUserInTenvi] Role insert error:', roleErr.message, roleErr.code);
+        throw new Error(`Failed to link user role: ${roleErr.message}`);
+      }
+
+      // Final verification
+      const verified = await verifyWebsiteMembership(userId, WEBSITE_ID);
+      if (verified) return;
+    }
+  } catch (directErr) {
+    console.error('[enrollUserInTenvi] Direct insert strategy failed:', directErr);
+    throw directErr;
   }
 
-  if (profile) {
-    // If a new or edited fullName is provided, update user_profiles
-    if (fullName && profile.full_name !== fullName) {
-      await admin
-        .from('user_profiles')
-        .update({ full_name: fullName })
-        .eq('id', profile.id);
-    }
-
-    const { error: roleErr } = await admin.from('user_roles').upsert(
-      {
-        user_profile_id: profile.id,
-        website_role_id: DEFAULT_ROLE_ID,
-      },
-      { onConflict: 'user_profile_id,website_role_id' }
-    );
-
-    if (roleErr && roleErr.code !== '23505') {
-      console.error('Error linking user role:', roleErr);
-    }
-  }
+  throw new Error(`Enrollment failed for user ${userId}: all strategies exhausted`);
 }
 
 /**
@@ -241,7 +290,13 @@ export async function registerAction(prevState: any, formData: FormData) {
     return { error: parsed.error.errors[0]?.message || 'Invalid input' };
   }
 
-  const admin = createAdminClient();
+  let admin: ReturnType<typeof createAdminClient>;
+  try {
+    admin = createAdminClient();
+  } catch (adminErr) {
+    console.error('[registerAction] Failed to create admin client:', adminErr);
+    return { error: 'Server configuration error. Please try again later.' };
+  }
   const supabase = await createClient();
 
   // 1. Check if email already exists globally in user_profiles
@@ -250,6 +305,24 @@ export async function registerAction(prevState: any, formData: FormData) {
     .select('id, user_id, full_name')
     .eq('email', email)
     .maybeSingle();
+
+  // 1b. Also check if user exists in auth.users but not in user_profiles
+  // (this can happen when a previous signup created the auth.users entry
+  //  but enrollment failed before the user_profiles row was created)
+  let authUserId: string | null = null;
+  if (!existingProfile) {
+    try {
+      const { data: authUserList } = await admin.auth.admin.listUsers();
+      const matchedUser = authUserList?.users?.find(
+        (u: { email?: string }) => u.email?.toLowerCase() === email
+      );
+      if (matchedUser) {
+        authUserId = matchedUser.id;
+      }
+    } catch {
+      // listUsers may fail in some configurations; fall through to signUp
+    }
+  }
 
   if (existingProfile) {
     // 2. Check if already enrolled in Tenvi
@@ -276,17 +349,53 @@ export async function registerAction(prevState: any, formData: FormData) {
     }
 
     // 4. Enroll existing user in Tenvi
-    await enrollUserInTenvi(
-      authData.user.id,
-      email,
-      fullName || existingProfile.full_name || ''
-    );
+    try {
+      await enrollUserInTenvi(
+        authData.user.id,
+        email,
+        fullName || existingProfile.full_name || ''
+      );
+      await seedInitialUserData(authData.user.id);
+    } catch (enrollErr) {
+      console.error('[registerAction] Enrollment failed for existing cross-site user:', enrollErr);
+      return {
+        error: 'Account activation failed. Please try again or contact support.',
+      };
+    }
 
-    await seedInitialUserData(authData.user.id);
     redirect('/dashboard');
   }
 
-  // 5. Brand New User: Sign up with Supabase Auth
+  // 5. Handle edge case: user exists in auth.users but NOT in user_profiles
+  // (orphaned auth entry from a previous failed registration)
+  if (authUserId) {
+    const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authErr || !authData.user) {
+      return {
+        error:
+          'Incorrect password for this account. Please enter your correct account password to activate Tenvi.',
+        code: 'EXISTING_ACCOUNT_PASSWORD_REQUIRED',
+      };
+    }
+
+    try {
+      await enrollUserInTenvi(authData.user.id, email, fullName);
+      await seedInitialUserData(authData.user.id);
+    } catch (enrollErr) {
+      console.error('[registerAction] Enrollment failed for orphaned auth user:', enrollErr);
+      return {
+        error: 'Account setup failed. Please try again or contact support.',
+      };
+    }
+
+    redirect('/dashboard');
+  }
+
+  // 6. Brand New User: Sign up with Supabase Auth
   const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
     email,
     password,
@@ -313,17 +422,55 @@ export async function registerAction(prevState: any, formData: FormData) {
         };
       }
 
-      await enrollUserInTenvi(authData.user.id, email, fullName);
-      await seedInitialUserData(authData.user.id);
+      try {
+        await enrollUserInTenvi(authData.user.id, email, fullName);
+        await seedInitialUserData(authData.user.id);
+      } catch (enrollErr) {
+        console.error('[registerAction] Enrollment failed for "already registered" edge case:', enrollErr);
+        return {
+          error: 'Account activation failed. Please try again or contact support.',
+        };
+      }
+
       redirect('/dashboard');
     }
 
     return { error: signUpErr.message };
   }
 
-  if (signUpData.user) {
+  // 7. Verify signUp returned a valid user
+  // Supabase can return user=null or user with empty identities[] in some configs
+  if (!signUpData.user) {
+    console.error('[registerAction] signUp succeeded but returned null user');
+    return {
+      error: 'Account creation failed. Please try again.',
+    };
+  }
+
+  // Check for "fake signup" response (identities is empty when user already exists
+  // and Supabase is configured with email confirmation + privacy protection)
+  const identities = signUpData.user.identities;
+  if (identities && identities.length === 0) {
+    // This means the email already exists — ask for password
+    return {
+      error:
+        'Incorrect password for this account. Please enter your correct account password to activate Tenvi.',
+      code: 'EXISTING_ACCOUNT_PASSWORD_REQUIRED',
+    };
+  }
+
+  // 8. Enroll the brand new user
+  try {
     await enrollUserInTenvi(signUpData.user.id, email, fullName);
     await seedInitialUserData(signUpData.user.id);
+  } catch (enrollErr) {
+    console.error('[registerAction] Enrollment failed for brand new user:', enrollErr);
+    // Don't leave the user in limbo — try to sign them out to prevent
+    // a redirect loop with the dashboard layout guard
+    try { await supabase.auth.signOut(); } catch {}
+    return {
+      error: 'Account was created but setup failed. Please try registering again.',
+    };
   }
 
   redirect('/dashboard');

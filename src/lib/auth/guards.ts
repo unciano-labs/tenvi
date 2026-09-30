@@ -19,6 +19,29 @@ export const getAuthenticatedUser = cache(async () => {
  */
 export const checkUserWebsiteMembership = cache(
   async (userId: string, websiteId: string = WEBSITE_ID): Promise<boolean> => {
+    return _checkWebsiteMembership(userId, websiteId);
+  }
+);
+
+/**
+ * Uncached version of checkUserWebsiteMembership.
+ * Use this when you need a fresh DB hit within the same request — e.g., after
+ * enrolling a user and verifying the enrollment actually took effect.
+ */
+export async function verifyWebsiteMembership(
+  userId: string,
+  websiteId: string = WEBSITE_ID
+): Promise<boolean> {
+  return _checkWebsiteMembership(userId, websiteId);
+}
+
+/**
+ * Internal implementation shared by both cached and uncached membership checks.
+ */
+async function _checkWebsiteMembership(
+  userId: string,
+  websiteId: string = WEBSITE_ID
+): Promise<boolean> {
     const targetWebsiteId = (websiteId || WEBSITE_ID)
       .trim()
       .replace(/^["']|["']$/g, '');
@@ -76,7 +99,7 @@ export const checkUserWebsiteMembership = cache(
   }
 
   return false;
-});
+}
 
 /**
  * Enforces that the current request is from an authenticated user who has an active
