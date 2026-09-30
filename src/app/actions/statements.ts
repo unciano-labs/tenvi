@@ -127,14 +127,14 @@ export async function parseStatementFileAction(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const apiKey = userGeminiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS } = await import('@/lib/ai/gemini');
+    const apiKey = getGeminiApiKey(userGeminiKey);
 
     // A. If Gemini API key is provided, try multimodal vision first
     if (apiKey) {
       const startTime = Date.now();
       try {
         const { GoogleGenAI } = await import('@google/genai');
-        const { recordGeminiUsage, GEMINI_CANDIDATE_MODELS } = await import('@/lib/ai/gemini');
         const ai = new GoogleGenAI({ apiKey });
 
         const base64Data = buffer.toString('base64');

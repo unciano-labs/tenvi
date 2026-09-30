@@ -46,6 +46,11 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_ADMIN_EMAIL: adminEmail,
     ADMIN_EMAIL: adminEmail,
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
 };
 
 export default nextConfig;

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Category, CreditCard, SavingsAccount, Property } from '@/types';
 import { PAYMENT_METHODS } from '@/lib/constants';
+import { optimizeImageForUpload } from '@/lib/ai/imageOptimizer';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -122,8 +123,11 @@ export function TransactionModal({
     setIsScanningReceipt(true);
 
     try {
+      // Scale down large camera photos (e.g. 12-48MP from phones) to prevent payload errors
+      const optimizedFile = await optimizeImageForUpload(file);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', optimizedFile);
 
       const res = await parseReceiptImageAction(formData);
 
@@ -164,7 +168,7 @@ export function TransactionModal({
       );
     } catch (err: any) {
       console.error('Receipt parse error:', err);
-      toast.error('An unexpected error occurred parsing the receipt.');
+      toast.error(err?.message || 'An unexpected error occurred parsing the receipt.');
     } finally {
       setIsScanningReceipt(false);
     }

@@ -5,13 +5,11 @@ import { GeminiUsageStats } from '@/types';
 
 // The verified active models for Google Gen AI Free Tier
 export const GEMINI_PRIMARY_MODEL = 'gemini-3.5-flash-lite';
-export const GEMINI_FALLBACK_MODEL = 'gemini-3.8-flash';
+export const GEMINI_FALLBACK_MODEL = 'gemini-flash-lite-latest';
 export const GEMINI_CANDIDATE_MODELS = [
   'gemini-3.5-flash-lite',
-  'gemini-3.8-flash',
-  'gemini-flash-latest',
   'gemini-flash-lite-latest',
-  'gemini-3.5-flash',
+  'gemini-3.8-flash',
 ];
 export const GEMINI_DAILY_LIMIT = 1500;
 export const GEMINI_RPM_LIMIT = 15;

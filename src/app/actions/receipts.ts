@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
 import { Category } from '@/types';
 import { matchCategoryForMerchant, normalizeDate } from '@/lib/ai/statementParser';
+import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS } from '@/lib/ai/gemini';
 
 export interface ReceiptParseResult {
   merchant: string;
@@ -56,13 +57,13 @@ export async function parseReceiptImageAction(
     const userCategories: Category[] = categories || [];
 
     // 2. Multimodal AI Vision Extraction (Primary)
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const apiKey = getGeminiApiKey();
+    let geminiFailureReason = '';
 
     if (apiKey) {
       const startTime = Date.now();
       try {
         const { GoogleGenAI } = await import('@google/genai');
-        const { recordGeminiUsage, GEMINI_CANDIDATE_MODELS } = await import('@/lib/ai/gemini');
         const ai = new GoogleGenAI({ apiKey });
 
         const base64Data = buffer.toString('base64');
@@ -138,7 +139,7 @@ Return a single JSON object with exact keys:
             }
           } catch (modelErr: any) {
             lastModelError = modelErr;
-            console.warn(`Gemini receipt model ${candidate} failed, trying next candidate...`);
+            console.warn(`Gemini receipt model ${candidate} failed: ${modelErr?.message || modelErr}, trying next candidate...`);
           }
         }
 
@@ -193,13 +194,18 @@ Return a single JSON object with exact keys:
               },
             };
           }
+        } else if (lastModelError) {
+          geminiFailureReason = lastModelError?.message || String(lastModelError);
         }
       } catch (geminiErr: any) {
+        geminiFailureReason = geminiErr?.message || String(geminiErr);
         console.warn('Gemini vision receipt parsing error, falling back to local OCR:', geminiErr);
       }
+    } else {
+      geminiFailureReason = 'GEMINI_API_KEY is not configured in environment variables.';
     }
 
-    // 3. Fallback: Local Tesseract OCR
+    // 3. Fallback: Local Tesseract OCR (works in local Node environments)
     try {
       const path = await import('path');
       const { createWorker } = await import('tesseract.js');
@@ -288,10 +294,12 @@ Return a single JSON object with exact keys:
         },
       };
     } catch (ocrErr: any) {
-      console.error('Tesseract fallback error on receipt:', ocrErr);
+      console.warn('Tesseract fallback unavailable or failed:', ocrErr?.message || ocrErr);
       return {
         success: false,
-        error: 'Failed to extract text from the receipt. Please enter details manually.',
+        error: geminiFailureReason
+          ? `Vision AI error: ${geminiFailureReason}`
+          : 'Unable to parse receipt. Please verify image clarity or enter details manually.',
       };
     }
   } catch (err: any) {

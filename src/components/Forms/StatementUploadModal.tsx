@@ -34,6 +34,7 @@ import {
 } from '@/lib/ai/statementParser';
 import { formatMoney } from '@/lib/finance/calculations';
 import { useRouter } from 'next/navigation';
+import { optimizeImageForUpload } from '@/lib/ai/imageOptimizer';
 
 interface StatementUploadModalProps {
   isOpen: boolean;
@@ -149,7 +150,8 @@ export function StatementUploadModal({
     try {
       const formData = new FormData();
       if (inputTab === 'file' && selectedFile) {
-        formData.append('file', selectedFile);
+        const optimizedFile = await optimizeImageForUpload(selectedFile);
+        formData.append('file', optimizedFile);
       } else {
         formData.append('pastedText', pastedText);
       }
