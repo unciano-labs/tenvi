@@ -227,3 +227,74 @@
 .bili-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8;
 }
+
+/* Slow, organic spring in & out animations for floating dialogs and drawers */
+@keyframes springInSlow {
+  0% {
+    opacity: 0;
+    transform: scale(0.82) translateY(28px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.03) translateY(-4px);
+  }
+  85% {
+    transform: scale(0.99) translateY(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes springOutSlow {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-3px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.78) translateY(32px);
+  }
+}
+
+@keyframes fadeInSlow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutSlow {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-spring-in-slow {
+  animation: springInSlow 650ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-spring-out-slow {
+  animation: springOutSlow 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-fade-in-slow {
+  animation: fadeInSlow 500ms ease-out forwards;
+}
+
+.animate-fade-out-slow {
+  animation: fadeOutSlow 400ms ease-in forwards;
+}
+

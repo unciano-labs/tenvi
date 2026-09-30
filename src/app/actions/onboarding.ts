@@ -93,6 +93,7 @@ export async function saveInitialSetupAction(payload: {
   accountType: 'cash' | 'digital_bank' | 'traditional_bank' | 'ewallet';
   initialBalance: number;
   preferredModules?: string[];
+  colorTheme?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const auth = await requireWebsiteUser();
   if (!auth.isAuthorized || !auth.user) {
@@ -111,6 +112,8 @@ export async function saveInitialSetupAction(payload: {
     .limit(1)
     .maybeSingle();
 
+  const chosenColor = payload.colorTheme || 'indigo';
+
   if (existingAccount) {
     await supabase
       .from('bili_savings')
@@ -119,6 +122,7 @@ export async function saveInitialSetupAction(payload: {
         institution_name: payload.institutionName || 'Wallet',
         account_type: payload.accountType || 'ewallet',
         current_balance: Math.max(0, Number(payload.initialBalance) || 0),
+        color_theme: chosenColor,
         updated_at: new Date().toISOString(),
       })
       .eq('id', existingAccount.id);
@@ -130,7 +134,7 @@ export async function saveInitialSetupAction(payload: {
       institution_name: payload.institutionName || 'Physical Wallet',
       account_type: payload.accountType || 'cash',
       current_balance: Math.max(0, Number(payload.initialBalance) || 0),
-      color_theme: 'indigo',
+      color_theme: chosenColor,
       is_active: true,
     });
   }
@@ -141,7 +145,7 @@ export async function saveInitialSetupAction(payload: {
       website_id: WEBSITE_ID,
       user_id: userId,
       completed: true,
-      step: 2,
+      step: 5,
       has_added_account: true,
       preferred_modules: payload.preferredModules || ['expenses', 'cards'],
       updated_at: new Date().toISOString(),

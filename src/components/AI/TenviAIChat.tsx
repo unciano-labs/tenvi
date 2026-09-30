@@ -338,6 +338,7 @@ const INITIAL_WELCOME_MESSAGE: AIChatMessage = {
 export function TenviAIChat() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [messages, setMessages] = useState<AIChatMessage[]>([INITIAL_WELCOME_MESSAGE]);
   const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -350,12 +351,35 @@ export function TenviAIChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load persistent chat history from localStorage on initial render
+  const handleOpenChat = () => {
+    setIsClosing(false);
+    setIsOpen(true);
+  };
+
+  const handleCloseChat = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+      setIsPromptsDrawerOpen(false);
+    }, 480);
+  };
+
+  // Listen for global open event and keyboard escape
   useEffect(() => {
-    const handleOpenChat = () => setIsOpen(true);
     window.addEventListener('open-tenvi-ai-chat', handleOpenChat);
-    return () => window.removeEventListener('open-tenvi-ai-chat', handleOpenChat);
-  }, []);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && !isClosing) {
+        handleCloseChat();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('open-tenvi-ai-chat', handleOpenChat);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, isClosing]);
 
   useEffect(() => {
     try {
@@ -689,14 +713,15 @@ export function TenviAIChat() {
 
   return (
     <>
-      {/* Floating Trigger Button (Compressed icon-only on mobile, full pill on desktop) */}
+      {/* Floating Trigger Button (Spring in-out slow) */}
       <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40">
-        {!isOpen && (
+        {(!isOpen || isClosing) && (
           <button
-            onClick={() => setIsOpen(true)}
+            data-tour="ai-button"
+            onClick={handleOpenChat}
             aria-label="Open Tenvi Assistant - Tap to ask questions"
             title="Open Tenvi Assistant"
-            className="group flex items-center justify-center sm:justify-start gap-3 bg-slate-800 text-white w-12 h-12 sm:w-auto sm:h-auto p-0 sm:pl-4 sm:pr-5 sm:py-3.5 rounded-full shadow-lg hover:shadow-xl hover:bg-slate-700 active:scale-95 transition-all duration-200 cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="group flex items-center justify-center sm:justify-start gap-3 bg-slate-800 text-white w-12 h-12 sm:w-auto sm:h-auto p-0 sm:pl-4 sm:pr-5 sm:py-3.5 rounded-full shadow-lg hover:shadow-xl hover:bg-slate-700 active:scale-95 cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-slate-400 origin-bottom-right animate-spring-in-slow"
           >
             <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors relative">
               <Sparkles className="w-5 h-5 sm:w-4 sm:h-4 text-emerald-300 group-hover:rotate-12 transition-transform duration-300" />
@@ -713,9 +738,15 @@ export function TenviAIChat() {
         )}
       </div>
 
-      {/* Floating Chat Modal */}
+      {/* Floating Chat Modal (Slow spring in-out) */}
       {isOpen && (
-        <div className="fixed bottom-20 sm:bottom-6 left-2 right-2 sm:left-auto sm:right-6 z-50 sm:w-[440px] max-w-[440px] h-[580px] max-h-[calc(100dvh-6.5rem)] sm:max-h-[86vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
+        <div
+          className={`fixed bottom-20 sm:bottom-6 left-2 right-2 sm:left-auto sm:right-6 z-50 sm:w-[440px] max-w-[440px] h-[580px] max-h-[calc(100dvh-6.5rem)] sm:max-h-[86vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden origin-bottom-right ${
+            isClosing
+              ? 'animate-spring-out-slow pointer-events-none'
+              : 'animate-spring-in-slow'
+          }`}
+        >
           {/* Header */}
           <div className="px-5 py-4 bg-slate-800 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
@@ -755,10 +786,7 @@ export function TenviAIChat() {
                 <RotateCcw className="w-4 h-4" />
               </button>
               <button
-                onClick={() => {
-                  setIsOpen(false);
-                  setIsPromptsDrawerOpen(false);
-                }}
+                onClick={handleCloseChat}
                 title="Close Assistant"
                 aria-label="Close Assistant"
                 className="w-9 h-9 rounded-xl hover:bg-white/15 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"

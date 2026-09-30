@@ -8,6 +8,7 @@ interface StatCardProps {
   icon: LucideIcon;
   variant?: 'neutral' | 'positive' | 'negative' | 'warning';
   className?: string;
+  dataTour?: string;
 }
 
 export function StatCard({
@@ -17,6 +18,7 @@ export function StatCard({
   icon: Icon,
   variant = 'neutral',
   className = '',
+  dataTour,
 }: StatCardProps) {
   const variantStyles = {
     neutral: {
@@ -44,7 +46,10 @@ export function StatCard({
   const style = variantStyles[variant];
 
   return (
-    <div className={`bg-white rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow min-w-0 overflow-hidden ${className}`}>
+    <div
+      data-tour={dataTour}
+      className={`bg-white rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow min-w-0 overflow-hidden ${className}`}
+    >
       <div className="flex items-start justify-between gap-2 mb-3">
         <span className="text-xs sm:text-xs font-bold text-slate-500 uppercase tracking-wide leading-snug">
           {label}

@@ -49,6 +49,7 @@ import {
 } from '@/types';
 import { OnboardingLaunchpad } from '@/components/Onboarding/OnboardingLaunchpad';
 import { WelcomeWizardModal } from '@/components/Onboarding/WelcomeWizardModal';
+import { DashboardTourSpotlight } from '@/components/Onboarding/DashboardTourSpotlight';
 
 interface DashboardOverviewClientProps {
   userName: string;
@@ -94,6 +95,7 @@ export function DashboardOverviewClient({
   const [isWizardOpen, setIsWizardOpen] = useState(
     Boolean(initialOnboarding && !initialOnboarding.completed)
   );
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
   const onboardingProgress = useMemo(() => {
     return {
@@ -354,6 +356,11 @@ export function DashboardOverviewClient({
           progress={onboardingProgress}
           onOpenWizard={() => setIsWizardOpen(true)}
           onOpenAi={handleOpenAi}
+          onRecordExpense={() => {
+            setSelectedCardForModal(undefined);
+            setIsModalOpen(true);
+          }}
+          onStartTour={() => setIsTourOpen(true)}
         />
       )}
 
@@ -362,6 +369,16 @@ export function DashboardOverviewClient({
         isOpen={isWizardOpen}
         onClose={() => setIsWizardOpen(false)}
         userName={userName}
+        onCompleteWithTour={() => {
+          setIsWizardOpen(false);
+          setIsTourOpen(true);
+        }}
+      />
+
+      {/* Interactive Guided Tour Spotlight */}
+      <DashboardTourSpotlight
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
       />
 
       {/* 1. Header with Timeframe Filter & Quick Action */}
@@ -417,6 +434,7 @@ export function DashboardOverviewClient({
           </div>
 
           <button
+            data-tour="record-button"
             onClick={() => {
               setSelectedCardForModal(undefined);
               setIsModalOpen(true);
@@ -475,6 +493,7 @@ export function DashboardOverviewClient({
       {/* 3. Primary Wealth & Cashflow Matrix (4 Borderless Tonal StatCards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
+          dataTour="savings-card"
           label="Total Liquid Savings"
           value={formatMoney(totalSavings)}
           subtext={`${savings.length} active cash vaults`}
@@ -499,6 +518,7 @@ export function DashboardOverviewClient({
         />
 
         <StatCard
+          dataTour="cashflow-card"
           label="Net Savings & Health"
           value={`${netSavings >= 0 ? '+' : ''}${formatMoney(netSavings)}`}
           subtext={`${savingsRate}% savings retention rate`}

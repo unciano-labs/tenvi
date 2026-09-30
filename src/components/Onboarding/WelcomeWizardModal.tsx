@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Smartphone,
   Building2,
@@ -13,87 +13,164 @@ import {
   Users,
   Home,
   Loader2,
-  HelpCircle,
   Sparkles,
+  Trophy,
+  Palette,
+  Compass,
 } from 'lucide-react';
 import { saveInitialSetupAction } from '@/app/actions/onboarding';
+import { formatMoney } from '@/lib/finance/calculations';
 
 interface WelcomeWizardModalProps {
   isOpen: boolean;
   onClose: () => void;
   userName: string;
+  onCompleteWithTour?: () => void;
 }
 
-const ACCOUNT_PRESETS = [
+interface AccountPreset {
+  id: string;
+  name: string;
+  defaultNickname: string;
+  subtitle: string;
+  institution: string;
+  type: 'ewallet' | 'digital_bank' | 'cash' | 'traditional_bank';
+  defaultColor: 'slate' | 'emerald' | 'blue' | 'amber' | 'stone';
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+}
+
+const ACCOUNT_PRESETS: AccountPreset[] = [
   {
     id: 'gcash',
     name: 'GCash',
-    subtitle: 'Mobile wallet on your phone',
+    defaultNickname: 'My Everyday GCash',
+    subtitle: 'Phone wallet for QR, loads & Foodpanda',
     institution: 'GCash',
-    type: 'ewallet' as const,
+    type: 'ewallet',
+    defaultColor: 'blue',
     icon: Smartphone,
-    iconBg: 'bg-blue-600 text-white',
+    iconBg: 'bg-slate-900 text-white',
   },
   {
     id: 'maya',
     name: 'Maya',
-    subtitle: 'Digital wallet & savings app',
+    defaultNickname: 'My Maya Wallet',
+    subtitle: 'Digital wallet with high-interest savings',
     institution: 'Maya Philippines',
-    type: 'digital_bank' as const,
+    type: 'digital_bank',
+    defaultColor: 'emerald',
     icon: Smartphone,
-    iconBg: 'bg-emerald-600 text-white',
+    iconBg: 'bg-emerald-900 text-white',
   },
   {
     id: 'cash',
     name: 'Cash on Hand',
-    subtitle: 'Paper bills & coins in your wallet',
+    defaultNickname: 'Wallet Cash',
+    subtitle: 'Paper bills & coins in your pocket or piggy bank',
     institution: 'Physical Wallet',
-    type: 'cash' as const,
+    type: 'cash',
+    defaultColor: 'amber',
     icon: Banknote,
-    iconBg: 'bg-amber-600 text-white',
+    iconBg: 'bg-amber-900 text-white',
   },
   {
     id: 'bank',
     name: 'Bank Account',
-    subtitle: 'BDO, BPI, Metrobank, etc.',
+    defaultNickname: 'Main Bank Account',
+    subtitle: 'BDO, BPI, UnionBank, Metrobank, etc.',
     institution: 'Traditional Bank',
-    type: 'traditional_bank' as const,
+    type: 'traditional_bank',
+    defaultColor: 'slate',
     icon: Building2,
-    iconBg: 'bg-slate-800 text-white',
+    iconBg: 'bg-slate-900 text-white',
   },
+];
+
+// Solid, eye-friendly color themes matching SavingsModal.tsx (ZERO gradients)
+const COLOR_THEMES = [
+  {
+    id: 'slate',
+    label: 'Charcoal Slate',
+    cardBg: 'bg-slate-900',
+    dotBg: 'bg-slate-900',
+  },
+  {
+    id: 'emerald',
+    label: 'Forest Emerald',
+    cardBg: 'bg-emerald-900',
+    dotBg: 'bg-emerald-900',
+  },
+  {
+    id: 'blue',
+    label: 'Ocean Navy',
+    cardBg: 'bg-blue-900',
+    dotBg: 'bg-blue-900',
+  },
+  {
+    id: 'amber',
+    label: 'Bronze Amber',
+    cardBg: 'bg-amber-900',
+    dotBg: 'bg-amber-900',
+  },
+  {
+    id: 'stone',
+    label: 'Warm Stone',
+    cardBg: 'bg-stone-800',
+    dotBg: 'bg-stone-800',
+  },
+];
+
+const QUICK_NICKNAMES = [
+  'Everyday Baon 🥪',
+  'Coffee & Snacks ☕',
+  'Pocket Cash 👛',
+  'Emergency Stash 🛡️',
+];
+
+const QUICK_BALANCES = [
+  { label: '₱0 (Fresh Start)', value: '0', desc: 'Starting empty' },
+  { label: '₱500', value: '500', desc: 'Snacks & baon' },
+  { label: '₱1,000', value: '1000', desc: 'Pocket money' },
+  { label: '₱5,000', value: '5000', desc: 'Payday stash' },
+  { label: '₱10,000', value: '10000', desc: 'Safe buffer' },
 ];
 
 const MODULE_OPTIONS = [
   {
     id: 'expenses',
-    label: 'Daily Expenses & Groceries',
-    desc: 'Keep track of food, bills, shopping, and everyday receipts.',
+    label: 'Daily Food & Expenses',
+    desc: 'See where all the snacks, meals, bills, and grocery money goes.',
     icon: Banknote,
-    iconBg: 'bg-slate-800 text-white',
+    iconBg: 'bg-slate-100 text-slate-800',
+    badge: 'Recommended',
     defaultChecked: true,
   },
   {
     id: 'cards',
-    label: 'Credit Cards & Due Dates',
-    desc: 'Get reminded before billing deadlines to avoid late fees.',
+    label: 'Credit Card & Bill Reminders',
+    desc: 'Get alerted before due dates so you never pay late penalties.',
     icon: CreditCard,
-    iconBg: 'bg-blue-700 text-white',
+    iconBg: 'bg-slate-100 text-slate-800',
+    badge: 'Recommended',
     defaultChecked: true,
   },
   {
     id: 'splits',
-    label: 'Borrowed & Lent Money',
-    desc: 'Remember who owes you money or what loans you are paying.',
+    label: 'Friends Who Borrowed (Splits)',
+    desc: 'Remember who owes you lunch or bill shares without awkwardness.',
     icon: Users,
-    iconBg: 'bg-emerald-700 text-white',
+    iconBg: 'bg-slate-100 text-slate-800',
+    badge: 'Popular',
     defaultChecked: false,
   },
   {
     id: 'properties',
-    label: 'House, Car & Properties',
-    desc: 'Keep track of your home value, vehicle, or rental properties.',
+    label: 'Big Dream Assets & Properties',
+    desc: 'Keep track of your house, car, or future financial milestones.',
     icon: Home,
-    iconBg: 'bg-purple-700 text-white',
+    iconBg: 'bg-slate-100 text-slate-800',
+    badge: 'Long-term',
     defaultChecked: false,
   },
 ];
@@ -102,16 +179,32 @@ export function WelcomeWizardModal({
   isOpen,
   onClose,
   userName,
+  onCompleteWithTour,
 }: WelcomeWizardModalProps) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [selectedPreset, setSelectedPreset] = useState(ACCOUNT_PRESETS[0]);
-  const [accountName, setAccountName] = useState(ACCOUNT_PRESETS[0].name);
+  // Steps: 1 (Pick Spot) -> 2 (Name & Color) -> 3 (Balance) -> 4 (Superpowers) -> 5 (Celebration)
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [selectedPreset, setSelectedPreset] = useState<AccountPreset>(ACCOUNT_PRESETS[0]);
+  const [accountName, setAccountName] = useState(ACCOUNT_PRESETS[0].defaultNickname);
+  const [selectedColor, setSelectedColor] = useState<string>(ACCOUNT_PRESETS[0].defaultColor);
   const [balance, setBalance] = useState('');
   const [selectedModules, setSelectedModules] = useState<string[]>([
     'expenses',
     'cards',
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Active theme solid styling
+  const activeTheme = useMemo(() => {
+    return (
+      COLOR_THEMES.find((c) => c.id === selectedColor) || COLOR_THEMES[0]
+    );
+  }, [selectedColor]);
+
+  // Clean numerical balance
+  const parsedNumericBalance = useMemo(() => {
+    const num = parseFloat(balance.replace(/[^0-9.]/g, ''));
+    return isNaN(num) ? 0 : num;
+  }, [balance]);
 
   if (!isOpen) return null;
 
@@ -121,22 +214,29 @@ export function WelcomeWizardModal({
     );
   };
 
-  const handleSelectPreset = (preset: typeof ACCOUNT_PRESETS[0]) => {
+  const handleSelectPreset = (preset: AccountPreset) => {
     setSelectedPreset(preset);
-    setAccountName(preset.name);
+    setAccountName(preset.defaultNickname);
+    setSelectedColor(preset.defaultColor);
   };
 
-  const handleSubmit = async () => {
+  const handleFinalSubmit = async (withTour: boolean = false) => {
     setIsSubmitting(true);
     try {
       await saveInitialSetupAction({
         accountName: accountName.trim() || selectedPreset.name,
         institutionName: selectedPreset.institution,
         accountType: selectedPreset.type,
-        initialBalance: parseFloat(balance.replace(/[^0-9.]/g, '')) || 0,
+        initialBalance: parsedNumericBalance,
         preferredModules: selectedModules,
+        colorTheme: selectedColor,
       });
-      onClose();
+
+      if (withTour && onCompleteWithTour) {
+        onCompleteWithTour();
+      } else {
+        onClose();
+      }
     } catch (err) {
       console.error('Failed to save initial setup:', err);
     } finally {
@@ -144,117 +244,301 @@ export function WelcomeWizardModal({
     }
   };
 
+  // STEP HEADINGS & BUDDY TIPS
+  const stepMeta = {
+    1: {
+      title: 'Where do you keep your everyday money? 👛',
+      subtitle:
+        'Pick the main place you use to buy food, groceries, or rides. You can add more pockets later!',
+      buddyTip:
+        'Tip: Most people start with GCash or Cash on hand. Pick whichever you used today!',
+    },
+    2: {
+      title: 'Name your pocket & pick a color! 🎨',
+      subtitle:
+        'Give it a friendly nickname so you can spot it quickly on your dashboard.',
+      buddyTip:
+        'Giving your money a specific purpose (like "Baon" or "Coffee") makes it much easier to save!',
+    },
+    3: {
+      title: 'How much is in this pocket today? 🪙',
+      subtitle:
+        'Rough guesses are 100% fine! You can also start at ₱0 and adjust anytime.',
+      buddyTip:
+        'No pressure to count exact coins! A rounded estimate gives you an instant starting point.',
+    },
+    4: {
+      title: 'What is your main money mission? 🎯',
+      subtitle:
+        'Tell Tenvi what to keep an eye on. Pick any that sound good to you:',
+      buddyTip:
+        'You can change or add more missions anytime with one tap.',
+    },
+    5: {
+      title: 'High Five! You Are All Set! 🎉',
+      subtitle:
+        'Your first money pocket has been created and your dashboard is ready to roll.',
+      buddyTip:
+        'You just took your first big step toward complete financial clarity. Awesome job!',
+    },
+  }[step];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-slate-200 animate-in zoom-in-95 duration-200">
-        
-        {/* Solid Accessible Header */}
-        <div className="bg-slate-900 p-6 sm:p-7 text-white relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-500">
+      <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-500 ease-out flex flex-col max-h-[92vh]">
+        {/* Top Header - Solid Slate 900 matching project theme */}
+        <div className="bg-slate-900 p-5 sm:p-6 text-white relative shrink-0">
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 text-slate-300 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition active:scale-95"
+            className="absolute top-5 right-5 text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition active:scale-95 cursor-pointer"
             aria-label="Close welcome setup"
           >
             <X className="w-5 h-5" />
           </button>
 
           {/* Step Pill */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-2.5">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 text-slate-200 text-xs font-bold border border-slate-700">
-              <span className={`w-2 h-2 rounded-full ${step === 1 ? 'bg-indigo-400 animate-pulse' : 'bg-emerald-400'}`} />
-              Step {step} of 2
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              Step {step} of 5
             </span>
-            <span className="text-xs text-slate-300 font-medium">
-              {step === 1 ? 'Everyday Money Pocket' : 'Your Main Focus'}
+            <span className="text-xs text-slate-400 font-medium hidden sm:inline">
+              Newbie Setup
             </span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
             Welcome, {userName}! 👋
           </h2>
-          <p className="text-sm text-slate-300 mt-1 leading-relaxed">
-            Let's get your account set up in two easy steps. No complicated financial terms!
+          <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
+            {stepMeta.subtitle}
           </p>
+
+          {/* Step Progress Bar - Solid Slate */}
+          <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4 overflow-hidden">
+            <div
+              className="bg-emerald-500 h-1.5 rounded-full transition-all duration-700 ease-out"
+              style={{ width: `${(step / 5) * 100}%` }}
+            />
+          </div>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto">
-          {step === 1 ? (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-200">
-              {/* Question 1: Account Selection */}
+        {/* Modal Scrollable Content Area */}
+        <div className="p-5 sm:p-7 space-y-6 overflow-y-auto flex-1">
+          {/* 🌟 VIRTUAL POCKET CARD PREVIEW (Solid surface, ZERO gradient) */}
+          {step !== 4 && (
+            <div className="relative">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-slate-700" />
+                  Your Live Pocket Card
+                </span>
+                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  Ready to Spend
+                </span>
+              </div>
+
+              {/* Solid Card Preview */}
+              <div
+                className={`relative w-full rounded-2xl p-5 sm:p-6 text-white shadow-md ${activeTheme.cardBg} overflow-hidden transition-colors duration-500 ease-out`}
+              >
+                {/* Card Top Row */}
+                <div className="flex items-center justify-between mb-4">
+                  {/* Metallic Gold Chip & Wave Accents */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-7 rounded-md bg-amber-400 border border-amber-500 shadow-xs flex items-center justify-center p-1">
+                      <div className="w-full h-full border border-amber-700/60 rounded-xs grid grid-cols-2 gap-0.5 opacity-60" />
+                    </div>
+                    {/* Contactless waves */}
+                    <div className="flex items-center gap-0.5 text-white/70">
+                      <span className="w-1 h-3 rounded-full border-r-2 border-white/60" />
+                      <span className="w-1.5 h-4 rounded-full border-r-2 border-white/75" />
+                    </div>
+                  </div>
+
+                  {/* Institution Badge */}
+                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-white/15 text-white border border-white/20 shadow-xs">
+                    {selectedPreset.name}
+                  </span>
+                </div>
+
+                {/* Pocket Nickname */}
+                <div className="mb-3">
+                  <p className="text-xs text-white/70 font-medium tracking-wide">
+                    Money Pocket Nickname
+                  </p>
+                  <p className="text-base sm:text-lg font-black tracking-tight text-white truncate">
+                    {accountName.trim() || selectedPreset.defaultNickname}
+                  </p>
+                </div>
+
+                {/* Card Bottom Row: Balance & User */}
+                <div className="flex items-end justify-between pt-2 border-t border-white/15">
+                  <div>
+                    <span className="text-[11px] text-white/70 uppercase tracking-wider block">
+                      Current Stash
+                    </span>
+                    <span className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                      {formatMoney(parsedNumericBalance)}
+                    </span>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[10px] text-white/60 uppercase tracking-widest block font-mono">
+                      Currency
+                    </span>
+                    <span className="text-xs font-bold text-white/90 font-mono">
+                      PHP • ₱
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 🌟 STEP 1: PICK STARTING WALLET */}
+          {step === 1 && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-500 ease-out">
               <div>
-                <label className="block text-sm sm:text-base font-bold text-slate-900 mb-1">
-                  1. Where do you keep your everyday spending money?
+                <label className="block text-sm font-bold text-slate-900 mb-1">
+                  1. Which wallet or account do you want to start with?
                 </label>
-                <p className="text-xs text-slate-600 mb-3.5">
-                  Pick the main place you use to pay for food, bills, or shopping.
+                <p className="text-xs text-slate-600">
+                  Tap your everyday money source below:
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {ACCOUNT_PRESETS.map((preset) => {
+                  const Icon = preset.icon;
+                  const isSelected = selectedPreset.id === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleSelectPreset(preset)}
+                      className={`p-4 rounded-2xl border-2 text-left flex items-center gap-3.5 transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+                        isSelected
+                          ? 'border-slate-900 bg-slate-50 text-slate-900 shadow-sm'
+                          : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <div
+                        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${preset.iconBg}`}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-bold text-slate-900 truncate">
+                            {preset.name}
+                          </p>
+                          {isSelected && (
+                            <div className="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-600 truncate mt-0.5">
+                          {preset.subtitle}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 🌟 STEP 2: NAME & SOLID COLOR THEME */}
+          {step === 2 && (
+            <div className="space-y-5 animate-in fade-in slide-in-from-right-3 duration-500 ease-out">
+              {/* Nickname Input */}
+              <div>
+                <label className="block text-sm font-bold text-slate-900 mb-1">
+                  Give this pocket a fun nickname:
+                </label>
+                <p className="text-xs text-slate-600 mb-2.5">
+                  Type your own or tap a quick suggestion below:
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {ACCOUNT_PRESETS.map((preset) => {
-                    const Icon = preset.icon;
-                    const isSelected = selectedPreset.id === preset.id;
+                <input
+                  type="text"
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
+                  placeholder="e.g. Everyday Baon, My GCash, Wallet Cash"
+                  className="w-full text-sm font-bold border-2 border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:border-slate-900 text-slate-900 bg-white transition shadow-xs"
+                />
+
+                {/* Quick Nickname Chips */}
+                <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                  {QUICK_NICKNAMES.map((nameChip) => (
+                    <button
+                      key={nameChip}
+                      type="button"
+                      onClick={() => setAccountName(nameChip)}
+                      className="text-xs font-semibold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl transition cursor-pointer active:scale-95"
+                    >
+                      {nameChip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Theme Selector - Solid project colors */}
+              <div>
+                <label className="block text-sm font-bold text-slate-900 mb-1 flex items-center gap-1.5">
+                  <Palette className="w-4 h-4 text-slate-700" />
+                  Pick a card color:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-2">
+                  {COLOR_THEMES.map((theme) => {
+                    const isPicked = selectedColor === theme.id;
                     return (
                       <button
-                        key={preset.id}
+                        key={theme.id}
                         type="button"
-                        onClick={() => handleSelectPreset(preset)}
-                        className={`p-4 rounded-2xl border-2 text-left flex items-center gap-3.5 transition-all duration-150 active:scale-[0.98] ${
-                          isSelected
-                            ? 'border-indigo-600 bg-indigo-50/70 shadow-sm'
-                            : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                        onClick={() => setSelectedColor(theme.id)}
+                        className={`p-2.5 rounded-2xl border-2 flex items-center gap-2.5 text-xs font-bold transition cursor-pointer active:scale-95 ${
+                          isPicked
+                            ? 'border-slate-900 bg-slate-100 text-slate-900 shadow-xs'
+                            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                       >
-                        <div
-                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${preset.iconBg}`}
-                        >
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-bold text-slate-900 truncate">
-                              {preset.name}
-                            </p>
-                            {isSelected && (
-                              <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 animate-in zoom-in-75 duration-150">
-                                <Check className="w-3 h-3 stroke-[3]" />
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-600 truncate mt-0.5">
-                            {preset.subtitle}
-                          </p>
-                        </div>
+                        <span
+                          className={`w-4 h-4 rounded-full ${theme.dotBg} shrink-0 ring-2 ring-white shadow-xs`}
+                        />
+                        <span className="truncate">{theme.label}</span>
+                        {isPicked && (
+                          <Check className="w-3.5 h-3.5 text-slate-900 ml-auto shrink-0 stroke-[3]" />
+                        )}
                       </button>
                     );
                   })}
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Question 2: Nickname */}
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-slate-900 mb-1">
-                  2. Give this money pocket a nickname:
-                </label>
-                <input
-                  type="text"
-                  value={accountName}
-                  onChange={(e) => setAccountName(e.target.value)}
-                  placeholder="e.g. My Main GCash, Wallet Cash, BDO Savings"
-                  className="w-full text-sm font-medium border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-600 text-slate-900 bg-white transition"
-                />
-              </div>
-
-              {/* Question 3: Balance */}
+          {/* 🌟 STEP 3: STARTING BALANCE */}
+          {step === 3 && (
+            <div className="space-y-5 animate-in fade-in slide-in-from-right-3 duration-500 ease-out">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs sm:text-sm font-bold text-slate-900">
-                    3. How much is in here right now? (Optional)
+                  <label className="block text-sm font-bold text-slate-900">
+                    How much money is in here right now?
                   </label>
-                  <span className="text-xs text-slate-500 font-medium">Rough estimate is fine</span>
+                  <span className="text-xs text-slate-500 font-medium">
+                    Rough estimate is great
+                  </span>
                 </div>
+                <p className="text-xs text-slate-600 mb-3">
+                  Type an amount or tap one of the quick starter chips below:
+                </p>
+
+                {/* Big Number Input */}
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-4 flex items-center font-bold text-xl text-slate-500">
+                  <span className="absolute inset-y-0 left-0 pl-4 flex items-center font-black text-2xl text-slate-400">
                     ₱
                   </span>
                   <input
@@ -263,44 +547,53 @@ export function WelcomeWizardModal({
                     value={balance}
                     onChange={(e) => setBalance(e.target.value)}
                     placeholder="0.00"
-                    className="w-full text-xl font-bold pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-600 text-slate-900 bg-white transition"
+                    className="w-full text-2xl sm:text-3xl font-black pl-11 pr-4 py-3.5 border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-slate-900 text-slate-900 bg-white transition shadow-xs"
                   />
                 </div>
 
-                {/* Quick tap buttons */}
-                <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => setBalance('0')}
-                    className="text-xs font-semibold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition active:scale-95"
-                  >
-                    ₱0 (Start with zero)
-                  </button>
-                  {['1000', '5000', '10000'].map((presetVal) => (
+                {/* Quick Coin Buttons */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+                  {QUICK_BALANCES.map((chip) => (
                     <button
-                      key={presetVal}
+                      key={chip.value}
                       type="button"
-                      onClick={() => setBalance(presetVal)}
-                      className="text-xs font-semibold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition active:scale-95"
+                      onClick={() => setBalance(chip.value)}
+                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer active:scale-95 ${
+                        balance === chip.value
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                      }`}
                     >
-                      ₱{Number(presetVal).toLocaleString()}
+                      <p className="text-xs font-black">{chip.label}</p>
+                      <p
+                        className={`text-[10px] truncate ${
+                          balance === chip.value
+                            ? 'text-slate-300'
+                            : 'text-slate-500'
+                        }`}
+                      >
+                        {chip.desc}
+                      </p>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-200">
+          )}
+
+          {/* 🌟 STEP 4: PICK FINANCIAL SUPERPOWERS / GOALS */}
+          {step === 4 && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-500 ease-out">
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">
-                  What would you like Tenvi to help you with?
+                  What would you like Tenvi to watch over for you?
                 </h3>
                 <p className="text-xs text-slate-600">
-                  Tap any that apply. You can change your choices at any time.
+                  Select your primary goals. You can change these anytime in Settings:
                 </p>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {MODULE_OPTIONS.map((mod) => {
                   const Icon = mod.icon;
                   const isChecked = selectedModules.includes(mod.id);
@@ -310,20 +603,25 @@ export function WelcomeWizardModal({
                       onClick={() => toggleModule(mod.id)}
                       className={`p-4 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition-all duration-150 active:scale-[0.98] ${
                         isChecked
-                          ? 'border-indigo-600 bg-indigo-50/70 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                          ? 'border-slate-900 bg-slate-50 text-slate-900 shadow-xs'
+                          : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
                       }`}
                     >
                       <div className="flex items-center gap-3.5 min-w-0 pr-3">
                         <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mod.iconBg}`}
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${mod.iconBg}`}
                         >
                           <Icon className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900">
-                            {mod.label}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold text-slate-900 truncate">
+                              {mod.label}
+                            </p>
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                              {mod.badge}
+                            </span>
+                          </div>
                           <p className="text-xs text-slate-600 leading-snug mt-0.5">
                             {mod.desc}
                           </p>
@@ -333,7 +631,7 @@ export function WelcomeWizardModal({
                       <div
                         className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 shrink-0 transition-colors ${
                           isChecked
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
+                            ? 'bg-slate-900 border-slate-900 text-white'
                             : 'border-slate-300 bg-white'
                         }`}
                       >
@@ -343,45 +641,140 @@ export function WelcomeWizardModal({
                   );
                 })}
               </div>
+
+              <div className="text-center pt-2">
+                <span className="text-xs font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                  {selectedModules.length} goals selected
+                </span>
+              </div>
             </div>
           )}
 
-          {/* Navigation Controls */}
-          <div className="flex items-center justify-between pt-5 border-t border-slate-200 gap-3">
-            {step === 2 ? (
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition py-2 px-3 rounded-xl hover:bg-slate-100 active:scale-95"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onClose}
-                className="text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 transition py-2 px-3 rounded-xl hover:bg-slate-100 active:scale-95"
-              >
-                Skip for now
-              </button>
-            )}
+          {/* 🌟 STEP 5: CELEBRATION & HIGH FIVE */}
+          {step === 5 && (
+            <div className="space-y-5 animate-in zoom-in-95 duration-600 ease-out">
+              <div className="relative py-2 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-amber-100 text-amber-800 shadow-xs mb-2">
+                  <Trophy className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900">
+                  Woohoo! You Did It, {userName}! 🌟
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-md mx-auto">
+                  Your starter money pocket is officially live. Here is what we prepared for you:
+                </p>
+              </div>
 
-            {step === 1 ? (
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-bold rounded-2xl shadow-sm transition active:scale-[0.98]"
-              >
-                Next Step
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            ) : (
+              {/* Summary Checklist */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                <div className="flex items-center gap-2.5 text-xs text-slate-800 font-semibold">
+                  <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  </div>
+                  <span>
+                    Money Pocket created:{' '}
+                    <strong className="font-bold text-slate-900">
+                      {accountName}
+                    </strong>{' '}
+                    ({formatMoney(parsedNumericBalance)})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2.5 text-xs text-slate-800 font-semibold">
+                  <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  </div>
+                  <span>
+                    Dashboard customized for{' '}
+                    <strong className="font-bold text-slate-900">
+                      {selectedModules.length} selected goals
+                    </strong>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2.5 text-xs text-slate-800 font-semibold">
+                  <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  </div>
+                  <span>
+                    Tenvi AI financial buddy is ready to answer questions
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tenvi Buddy Helper Tip - Solid Slate 100 */}
+          <div className="p-3.5 rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 flex items-start gap-2.5">
+            <Sparkles className="w-4 h-4 text-slate-700 shrink-0 mt-0.5" />
+            <p className="text-xs text-slate-700 leading-snug">
+              <span className="font-bold text-slate-900">Tenvi Buddy: </span>
+              {stepMeta.buddyTip}
+            </p>
+          </div>
+        </div>
+
+        {/* Modal Navigation Controls Footer - Solid buttons matching project theme */}
+        <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+          {/* Back / Skip Button */}
+          {step > 1 && step < 5 ? (
+            <button
+              type="button"
+              onClick={() => setStep((prev) => (prev - 1) as any)}
+              className="bili-btn-secondary py-2.5 px-4 text-xs sm:text-sm font-bold"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+          ) : step === 1 ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="bili-btn-secondary py-2.5 px-4 text-xs sm:text-sm font-bold text-slate-500"
+            >
+              Skip for now
+            </button>
+          ) : (
+            <div />
+          )}
+
+          {/* Forward / Finish Buttons */}
+          {step < 4 ? (
+            <button
+              type="button"
+              onClick={() => setStep((prev) => (prev + 1) as any)}
+              className="bili-btn-primary py-2.5 px-6 text-xs sm:text-sm font-bold"
+            >
+              Next Step
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : step === 4 ? (
+            <button
+              type="button"
+              onClick={() => setStep(5)}
+              className="bili-btn-primary py-2.5 px-6 text-xs sm:text-sm font-bold"
+            >
+              See My Pocket
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : (
+            /* STEP 5 ACTIONS */
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
               <button
                 type="button"
                 disabled={isSubmitting}
-                onClick={handleSubmit}
-                className="inline-flex items-center gap-2 px-7 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-bold rounded-2xl shadow-sm transition active:scale-[0.98] disabled:opacity-50"
+                onClick={() => handleFinalSubmit(true)}
+                className="bili-btn-secondary py-2.5 px-4 text-xs font-bold"
+              >
+                <Compass className="w-4 h-4 text-slate-700" />
+                Take 30s Tour
+              </button>
+
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => handleFinalSubmit(false)}
+                className="bili-btn-primary py-2.5 px-6 text-xs sm:text-sm font-bold disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
@@ -391,12 +784,12 @@ export function WelcomeWizardModal({
                 ) : (
                   <>
                     <Check className="w-4 h-4 stroke-[3]" />
-                    Finish & Open Dashboard
+                    Explore My Dashboard 🚀
                   </>
                 )}
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
