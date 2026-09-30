@@ -15,11 +15,21 @@ import { enrollUserInTenvi, seedInitialUserData } from '@/app/actions/auth';
  * 4. Redirects the user to /dashboard (or requested 'next' URL).
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const requestUrl = new URL(request.url);
+  const searchParams = requestUrl.searchParams;
   const code = searchParams.get('code');
   const next = searchParams.get('next') || '/dashboard';
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
+
+  // Robust origin resolution (handles Vercel reverse proxy and custom domains)
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+  const isLocal = requestUrl.hostname === 'localhost' || requestUrl.hostname === '127.0.0.1';
+
+  const origin = forwardedHost && !isLocal
+    ? `${forwardedProto}://${forwardedHost}`
+    : requestUrl.origin;
 
   if (error) {
     console.error('[OAuth Callback] Provider error:', error, errorDescription);
