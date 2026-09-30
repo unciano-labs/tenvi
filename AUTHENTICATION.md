@@ -2,7 +2,7 @@
 
 > **Scope**: Standardized specification and implementation blueprint for shared-database multi-website authentication across independent web applications (`Tenvi`, `Invoicer`, `Orgy`, `Parmasi`, `Denti`, etc.) using Supabase Auth and multi-tenant Role-Based Access Control (RBAC).  
 > **Status**: Implemented, Cloud-Hardened & Verified in Tenvi  
-> **Version**: 2.1 (Cross-Enrollment UX & Cloud-Resilient)  
+> **Version**: 2.2 (Google OAuth 2.0 & Cross-Enrollment Architecture)  
 > **Target Audience**: AI Agents, Backend/Full-Stack Engineers, DevOps
 
 ---
@@ -492,18 +492,167 @@ Copying and pasting UUIDs into cloud platform dashboards often introduces wrappi
 
 ---
 
-## 7. QA & Verification Test Matrix
+## 7. Google OAuth 2.0 Integration & Cross-Website Auto-Enrollment
+
+Google OAuth 2.0 provides a modern, 1-click authentication pathway for both sign-in and registration while strictly preserving the platform's multi-tenant relational authorization boundaries.
+
+### 7.1 Architecture & Identity Provider (IdP) Trust Model
+
+Supabase Auth acts as the OAuth 2.0 Client delegating identity verification to Google Identity Services:
+
+1. **Initiation**: The client invokes `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: callbackUrl } })` using the PKCE flow.
+2. **Provider Verification**: Google prompts the user to select their Google account, authenticate, and grant profile consent.
+3. **Supabase Ingestion**: Google redirects back to the central Supabase Auth service callback (`https://xhjkkrjnlorrayuaxbra.supabase.co/auth/v1/callback`). Supabase creates or looks up the global user record in `auth.users` and attaches Google user identities.
+4. **App Callback Hand-off**: Supabase forwards the browser back to Tenvi's Route Handler at `/auth/callback?code=...`.
+5. **Session & Tenant Provisioning**: Tenvi exchanges the authorization code for an active session, checks website authorization via `checkUserWebsiteMembership(user.id, WEBSITE_ID)`, and provisions roles and initial tenant assets if not yet enrolled.
+
+### 7.2 The Cross-Website Auto-Enrollment Mechanic: Password vs. OAuth
+
+A central challenge in a shared-database multi-website ecosystem is preventing impersonation across sites:
+
+| Authentication Method | Email Ownership Proof | Enrollment Policy | Rationale |
+|---|---|---|---|
+| **Email + Password** | ❌ None (anyone can type an email) | **Password Confirmation Required** | If User A registered on *Invoicer*, a third party visiting *Tenvi* cannot simply type User A's email to get access. The user is redirected to `/register?email=...&enrolling=true` and must supply the account's existing password to verify ownership. |
+| **Google OAuth 2.0** | ✅ **Cryptographic & Immediate** | **Direct Auto-Enrollment** | Google has already authenticated the physical user and proven absolute ownership of the email address (`email_verified = true`). There is zero impersonation risk. A user who originally joined through *Invoicer* or *Orgy* can click "Continue with Google" on *Tenvi* and be safely and instantly enrolled into Tenvi! |
+
+### 7.3 End-to-End OAuth Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Browser
+    participant GoogleBtn as GoogleAuthButton (Client)
+    participant Google as Google Identity Services
+    participant Supabase as Supabase Auth Engine
+    participant Callback as /auth/callback Route Handler
+    participant DB as Postgres (Tenvi RBAC)
+
+    User->>GoogleBtn: Clicks "Sign in with Google" / "Sign up with Google"
+    GoogleBtn->>Google: Redirect to accounts.google.com (OAuth 2.0 PKCE)
+    Google-->>User: Prompts account selection & consent
+    User->>Google: Grants consent
+    Google->>Supabase: Redirects to https://xhjkkrjnlorrayuaxbra.supabase.co/auth/v1/callback?code=...
+    Supabase->>Supabase: Upserts auth.users (email_verified = true)
+    Supabase-->>Browser: Redirects to http://localhost:3000/auth/callback?code=...
+    Browser->>Callback: GET /auth/callback?code=...
+    Callback->>Supabase: exchangeCodeForSession(code)
+    Supabase-->>Callback: Valid session & user payload
+
+    Callback->>DB: checkUserWebsiteMembership(user.id, WEBSITE_ID)
+    alt User is Already Enrolled in Tenvi
+        DB-->>Callback: true
+        Callback-->>Browser: Redirect directly to /dashboard
+    else User is NOT Enrolled in Tenvi (New or Cross-Site User)
+        DB-->>Callback: false
+        Callback->>DB: enrollUserInTenvi(user.id, email, fullName)
+        Note over Callback,DB: Creates user_profile if needed & links default user role
+        Callback->>DB: seedInitialUserData(user.id)
+        Note over Callback,DB: Seeds initial wallet ("Cash on Hand") & default categories
+        Callback-->>Browser: Set session cookies & redirect to /dashboard
+    end
+```
+
+### 7.4 Supabase Dashboard Configuration Guide
+
+To enable Google sign-in for the shared Supabase project:
+
+1. **Access Project**: Log in to [Supabase Dashboard](https://supabase.com/dashboard) and select project `xhjkkrjnlorrayuaxbra`.
+2. **Navigate to Providers**: Go to **Authentication** > **Providers** in the left sidebar.
+3. **Configure Google**:
+   - Scroll to **Google** and toggle it **ON**.
+   - Copy the **Callback URL (for OAuth)** shown in the panel:  
+     `https://xhjkkrjnlorrayuaxbra.supabase.co/auth/v1/callback`
+   - Paste the **Client ID** and **Client Secret** obtained from Google Cloud Console (see Section 7.5).
+   - Click **Save**.
+4. **Configure Redirect URLs**: Go to **Authentication** > **URL Configuration**:
+   - **Site URL**: `http://localhost:3000` (for local development) or your production domain (e.g. `https://tenvi.app`).
+   - **Redirect URLs**: Add the following allowlisted patterns:
+     - `http://localhost:3000/**`
+     - `http://localhost:3000/auth/callback`
+     - `https://*.vercel.app/auth/callback`
+     - `https://tenvi.app/auth/callback` (or custom production domain)
+
+### 7.5 Google Cloud Console Configuration Guide
+
+1. **Access Google Cloud Console**:
+   - Navigate to [https://console.cloud.google.com/](https://console.cloud.google.com/).
+   - Select your existing organization/project or create a new project named `Tenvi` (or `Unciano Labs`).
+2. **Configure OAuth Consent Screen**:
+   - Navigate to **APIs & Services** > **OAuth consent screen**.
+   - Choose **External** user type and click **Create**.
+   - **App Name**: `Tenvi`
+   - **User support email**: Select your developer email.
+   - **App logo** *(optional)*: Upload Tenvi icon.
+   - **Developer contact information**: Enter your email.
+   - **Scopes**: Click **Add or Remove Scopes** and select:
+     - `.../auth/userinfo.email`
+     - `.../auth/userinfo.profile`
+     - `openid`
+   - Save and proceed to summary.
+3. **Create OAuth 2.0 Client Credentials**:
+   - Navigate to **APIs & Services** > **Credentials**.
+   - Click **+ CREATE CREDENTIALS** > **OAuth client ID**.
+   - **Application type**: Select **Web application**.
+   - **Name**: `Tenvi Web Client` (or `Supabase Auth Client`).
+   - **Authorized JavaScript origins**:
+     - `http://localhost:3000`
+     - `https://xhjkkrjnlorrayuaxbra.supabase.co`
+     - `https://tenvi.app` (or your production domain)
+   - **Authorized redirect URIs**:
+     - `https://xhjkkrjnlorrayuaxbra.supabase.co/auth/v1/callback`  
+       *(CRITICAL: This points to your Supabase project URL callback, NOT localhost directly!)*
+   - Click **Create**.
+4. **Copy Credentials to Supabase**:
+   - Copy the generated **Client ID** (e.g. `xxxx-xxxx.apps.googleusercontent.com`).
+   - Copy the **Client Secret** (e.g. `GOCSPX-xxxx`).
+   - Paste them into Supabase under **Authentication** > **Providers** > **Google**.
+
+### 7.6 Implementation Components Reference
+
+#### 1. OAuth Trigger Button (`src/components/Auth/GoogleAuthButton.tsx`)
+- Client Component with solid, non-gradient styling matching the project's slate design system.
+- Official Google four-color SVG icon.
+- Modes: `'signin' | 'signup' | 'continue'`.
+- Calls `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: ... } })` with PKCE.
+- Includes inline loading spinner and error alert.
+
+#### 2. OAuth Callback Route (`src/app/auth/callback/route.ts`)
+- Next.js App Router Route Handler (`GET`).
+- Extracts `code` query parameter and executes `exchangeCodeForSession(code)` on the server client, securely writing session cookies.
+- Queries `checkUserWebsiteMembership(user.id, WEBSITE_ID)`:
+  - If member: forwards directly to `/dashboard`.
+  - If not member: safely calls `enrollUserInTenvi` and `seedInitialUserData`, ensuring instant access without secondary password prompts.
+- Catches errors and redirects gracefully to `/login?error=...`.
+
+#### 3. Core Enrollment & Seeding (`src/app/actions/auth.ts`)
+- `enrollUserInTenvi(userId, email, fullName)`: Executes `enroll_user_in_website` RPC with fallback strategies to guarantee role assignment in `public.user_roles`.
+- `seedInitialUserData(userId)`: Seeds default financial categories, "Cash on Hand" float account in `bili_savings`, and user onboarding state in `bili_user_onboarding`.
+
+### 7.7 Security, Error Handling & Session Hardening
+
+1. **PKCE Flow**: Proof Key for Code Exchange is enforced by default in `@supabase/ssr`, preventing authorization code interception attacks.
+2. **Open Redirect Mitigation**: The destination URL `next` query parameter is strictly validated (`forwardUrl.startsWith('/') && !forwardUrl.startsWith('//')`), preventing malicious external redirect loops.
+3. **Transient OAuth Errors**: If a user cancels Google login or permission is denied, Google sends `?error=access_denied`. The callback catches this and redirects cleanly to `/login?error=...` with user-friendly error banners.
+
+---
+
+## 8. QA & Verification Test Matrix
 
 When testing this auth system or rolling it out to a new website, run through these test scenarios:
 
 | # | Test Scenario | Steps | Expected Result |
 |---|---|---|---|
-| 1 | **Brand New User Registration** | Visit `/register` directly. Enter new email, name, password. | Form fields empty initially. User created in `auth.users`, `user_profiles`, and `user_roles` (for target `WEBSITE_ID`). Redirected to `/dashboard`. |
-| 2 | **Cross-Site User Login Attempt** | User registered on *Invoicer* attempts to log into *Tenvi* at `/login`. | Credentials match in `auth.users`. Tenvi role check returns `false`. Session revoked immediately. Auto-redirected to `/register?email=...&name=...&enrolling=true`. |
+| 1 | **Brand New User Registration (Password)** | Visit `/register` directly. Enter new email, name, password. | Form fields empty initially. User created in `auth.users`, `user_profiles`, and `user_roles` (for target `WEBSITE_ID`). Redirected to `/dashboard`. |
+| 2 | **Cross-Site User Login Attempt (Password)** | User registered on *Invoicer* attempts to log into *Tenvi* at `/login`. | Credentials match in `auth.users`. Tenvi role check returns `false`. Session revoked immediately. Auto-redirected to `/register?email=...&name=...&enrolling=true`. |
 | 3 | **Cross-Site Enrollment Form State** | Inspect `/register` after redirect from Test 2. | **Email** is pre-populated & `readOnly`. **Name** is pre-populated & editable. **Password** is empty with label "Confirm Account Password". "Connected Account Detected" alert is displayed. |
 | 4 | **Cross-Site Enrollment with Wrong Password** | On `/register` from Test 3, submit an incorrect password. | Error message: *"Incorrect password for this account. Please enter your correct account password to activate access."* User remains on registration page; no role created. |
 | 5 | **Cross-Site Enrollment with Correct Password** | On `/register` from Test 3, submit the correct platform password (and optionally change name). | Password verified via `signInWithPassword()`. New row inserted in `user_roles` linking user to target website. If name was edited, `user_profiles.full_name` is updated. Redirected to `/dashboard`. |
 | 6 | **Enrolled User Subsequent Login** | User from Test 5 logs out and logs back in via `/login`. | Login succeeds immediately. User role confirmed. Redirected directly to `/dashboard`. |
 | 7 | **Direct Access via URL manipulation** | Unenrolled authenticated user attempts to browse directly to `/dashboard`. | Intercepted by `dashboard/layout.tsx`. Role check fails. Session revoked. Redirected to `/register?email=...&name=...&enrolling=true`. |
 | 8 | **Quoted Environment Variables on Vercel** | Set `WEBSITE_ID="65d4f86e-1829-417a-981f-bc7aad7bc953"` with quotes. | `sanitizeUuid()` strips quotes. No PostgreSQL `22P02` syntax errors. |
+| 9 | **Google OAuth Sign In (Fresh User)** | Click "Sign up with Google" on `/register` or "Sign in with Google" on `/login` with an email never registered in Supabase. | Google OAuth prompt opens. On consent, user created in `auth.users`, auto-enrolled in `user_roles` for Tenvi, default wallet/categories seeded. Redirected to `/dashboard`. |
+| 10 | **Google OAuth Sign In (Cross-Site User)** | User registered on *Invoicer* clicks "Sign in with Google" on *Tenvi*. | Google confirms email identity. Callback identifies missing Tenvi membership. Automatically executes `enrollUserInTenvi` and seeds data. Redirected to `/dashboard` without password friction. |
+| 11 | **Google OAuth Sign In (Existing Enrolled User)** | Already enrolled Tenvi user clicks "Sign in with Google". | Callback detects active Tenvi role. No duplicate roles or data created. Redirected directly to `/dashboard`. |
+| 12 | **Google OAuth Cancellation / Rejection** | User clicks Google login but closes the popup or clicks "Cancel" on Google consent screen. | Google redirects with error. Callback intercepts error parameter and redirects to `/login?error=...` with clear error message. No broken page state. |
 

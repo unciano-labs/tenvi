@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { registerAction } from '@/app/actions/auth';
 import { TenviIcon } from '@/components/UI/TenviIcon';
+import { GoogleAuthButton } from '@/components/Auth/GoogleAuthButton';
 import {
   ArrowLeft,
   Lock,
@@ -72,6 +73,21 @@ function RegisterForm() {
           </p>
         </div>
       )}
+
+      {/* 1-Click Google Sign Up */}
+      <div className="mb-6">
+        <GoogleAuthButton mode={isEnrolling ? 'continue' : 'signup'} />
+      </div>
+
+      {/* Clean Divider */}
+      <div className="relative my-6 text-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-200" />
+        </div>
+        <span className="relative bg-white px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          {isEnrolling ? 'Or confirm with password' : 'Or register with email'}
+        </span>
+      </div>
 
       <form action={formAction} className="space-y-5">
         {/* Full Name (Populated & Editable) */}

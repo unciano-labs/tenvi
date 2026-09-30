@@ -12,7 +12,7 @@ import { checkUserWebsiteMembership, verifyWebsiteMembership } from '@/lib/auth/
  * 2. Default "Cash on Hand" float account in bili_savings
  * 3. Initial bili_user_onboarding record
  */
-async function seedInitialUserData(userId: string) {
+export async function seedInitialUserData(userId: string) {
   const admin = createAdminClient();
 
   // 1. Seed categories
@@ -101,7 +101,7 @@ async function seedInitialUserData(userId: string) {
  * After enrollment, verifies that the user actually has website access.
  * Throws if enrollment ultimately fails so the caller can handle it.
  */
-async function enrollUserInTenvi(userId: string, email: string, fullName: string) {
+export async function enrollUserInTenvi(userId: string, email: string, fullName: string) {
   const rpcParams = {
     p_website_id: WEBSITE_ID,
     p_user_id: userId,

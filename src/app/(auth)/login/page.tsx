@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { loginAction } from '@/app/actions/auth';
 import { ArrowLeft, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
 import { TenviIcon } from '@/components/UI/TenviIcon';
+import { GoogleAuthButton } from '@/components/Auth/GoogleAuthButton';
 
 function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
@@ -38,11 +39,26 @@ function LoginForm() {
             Register for Tenvi now →
           </Link>
         </div>
-      ) : state?.error ? (
+      ) : (state?.error || urlError) ? (
         <div className="mb-6 p-4 rounded-2xl bg-rose-50 text-rose-700 text-sm font-medium">
-          {state.error}
+          {state?.error || urlError}
         </div>
       ) : null}
+
+      {/* 1-Click Google Sign In */}
+      <div className="mb-6">
+        <GoogleAuthButton mode="signin" />
+      </div>
+
+      {/* Clean Divider */}
+      <div className="relative my-6 text-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-200" />
+        </div>
+        <span className="relative bg-white px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          Or continue with email
+        </span>
+      </div>
 
       <form action={formAction} className="space-y-5">
         <div>
