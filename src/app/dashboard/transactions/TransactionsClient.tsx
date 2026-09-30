@@ -15,6 +15,7 @@ import {
   HandCoins,
   PiggyBank,
   CreditCard as CardIcon,
+  Camera,
 } from 'lucide-react';
 import { TransactionModal } from '@/components/Forms/TransactionModal';
 import { EmptyState } from '@/components/UI/EmptyState';
@@ -36,6 +37,7 @@ export function TransactionsClient({
   savingsAccounts = [],
 }: TransactionsClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [autoScanReceipt, setAutoScanReceipt] = useState(false);
   const [kindFilter, setKindFilter] = useState<'all' | 'expense' | 'income'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -107,13 +109,29 @@ export function TransactionsClient({
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bili-btn-primary py-3 px-5 text-sm font-semibold shadow-sm self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Record Expense or Income
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          <button
+            onClick={() => {
+              setAutoScanReceipt(true);
+              setIsModalOpen(true);
+            }}
+            className="py-3 px-4 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-semibold transition-all flex items-center gap-2 shadow-xs cursor-pointer active:scale-95"
+          >
+            <Camera className="w-4 h-4 text-indigo-600" />
+            <span>Scan Receipt</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setAutoScanReceipt(false);
+              setIsModalOpen(true);
+            }}
+            className="bili-btn-primary py-3 px-5 text-sm font-semibold shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Record Expense or Income</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Controls (Pill buttons without borders) */}
@@ -322,10 +340,14 @@ export function TransactionsClient({
       {/* Transaction Modal */}
       <TransactionModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setAutoScanReceipt(false);
+        }}
         categories={categories}
         creditCards={creditCards}
         savingsAccounts={savingsAccounts}
+        autoTriggerScan={autoScanReceipt}
       />
     </div>
   );
