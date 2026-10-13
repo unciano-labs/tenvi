@@ -6,6 +6,8 @@ import {
   formatDate,
   formatMoney,
   calculateDocumentExpiryStatus,
+  getTodayManila,
+  getTodayManilaString,
 } from '@/lib/finance/calculations';
 import {
   DEFAULT_LOAN_SMS_TEMPLATE,
@@ -29,6 +31,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    // 0. Optional Bearer authentication for Vercel Cron
+    const authHeader = request.headers.get('authorization');
+    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const supabase = createAdminClient();
 
     // 1. Fetch all users notification settings
@@ -38,13 +46,20 @@ export async function GET(request: Request) {
       .eq('website_id', WEBSITE_ID);
 
     if (settingsError) {
-      return NextResponse.json({ error: settingsError.message }, { status: 500 });
+      console.error('Error querying notification settings in cron:', settingsError);
+      return NextResponse.json(
+        {
+          error: settingsError.message,
+          hint: 'Double check SUPABASE_SERVICE_ROLE_KEY in environment variables.',
+        },
+        { status: 500 }
+      );
     }
 
     const settingsByUser = new Map((allSettingsList || []).map((s) => [s.user_id, s]));
 
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const today = getTodayManila();
+    const todayStr = getTodayManilaString(today);
     let totalDispatched = 0;
     const results = [];
 
