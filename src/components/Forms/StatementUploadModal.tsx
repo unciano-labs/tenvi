@@ -2,10 +2,8 @@
 
 import React, { useState, useRef } from 'react';
 import {
-  X,
   UploadCloud,
   FileText,
-  Image as ImageIcon,
   Sparkles,
   Loader2,
   CheckCircle2,
@@ -13,13 +11,7 @@ import {
   AlertTriangle,
   Trash2,
   Plus,
-  ArrowRight,
   Receipt,
-  CreditCard as CreditCardIcon,
-  Filter,
-  CheckSquare,
-  Square,
-  Key,
   Camera,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -35,6 +27,21 @@ import {
 import { formatMoney } from '@/lib/finance/calculations';
 import { useRouter } from 'next/navigation';
 import { optimizeImageForUpload } from '@/lib/ai/imageOptimizer';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogBody,
+} from '@/components/ui/responsive-dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 
 interface StatementUploadModalProps {
   isOpen: boolean;
@@ -309,605 +316,602 @@ export function StatementUploadModal({
     .reduce((sum, t) => sum + (t.isPayment ? -t.amount : t.amount), 0);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto">
-      <div className="w-full max-w-4xl bg-white rounded-3xl p-6 sm:p-8 shadow-xl my-6 space-y-6 max-h-[92vh] flex flex-col">
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <ResponsiveDialogContent className="max-w-4xl max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between shrink-0">
+        <ResponsiveDialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
               <UploadCloud className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-bold tracking-tight text-slate-900">
-                  Upload Card Statement
-                </h3>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700">
+                <ResponsiveDialogTitle>Upload Card Statement</ResponsiveDialogTitle>
+                <Badge variant="outline" className="bg-indigo-50 text-indigo-700 font-bold">
                   {card.bank_name} •••• {card.last_4}
-                </span>
+                </Badge>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <ResponsiveDialogDescription>
                 Automatically extract swipe transactions, dates, merchants, and amounts from PDF or image bills.
-              </p>
+              </ResponsiveDialogDescription>
             </div>
           </div>
+        </ResponsiveDialogHeader>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-2xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Modal Body: STEP 1 (Upload) or STEP 2 (Review) */}
-        {!parseResult ? (
-          <div className="space-y-5 overflow-y-auto pr-1">
-            {/* Gemini AI Live Status & Quota Bar */}
-            {geminiStats?.hasKeyConfigured ? (
-              <div className="p-3.5 rounded-2xl bg-indigo-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-indigo-950">Tenvi AI Vision Active</span>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 uppercase">
-                        Tenvi Vision
-                      </span>
-                    </div>
-                    <p className="text-xs text-indigo-700">
-                      Key configured ({geminiStats.maskedKey}) • Free Tier Limit: 1,500 requests/day
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 self-end sm:self-center">
-                  <div className="text-right">
-                    <div className="font-extrabold text-indigo-950">
-                      {geminiStats.dailyRequestsUsed} / {geminiStats.dailyRequestsLimit}
-                      <span className="font-normal text-slate-500 text-xs ml-1">used today</span>
-                    </div>
-                    <span className="text-xs text-indigo-600 font-semibold block">
-                      {geminiStats.dailyRemainingRequests} requests remaining
-                    </span>
-                  </div>
-                  <div className="w-16 h-2 rounded-full bg-indigo-200 overflow-hidden shrink-0">
-                    <div
-                      className="h-full bg-indigo-600 rounded-full transition-all"
-                      style={{ width: `${Math.max(4, geminiStats.dailyPercentUsed)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 rounded-2xl bg-[#F6F7F9] flex items-center justify-between gap-2 text-xs text-slate-600">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-slate-400" />
-                  <span>Using built-in local PDF & OCR parser (100% free & offline).</span>
-                </div>
-                <span className="text-xs font-bold text-slate-400">Offline Parser</span>
-              </div>
-            )}
-
-            {/* Tab switch: File upload vs Paste text */}
-            <div className="flex p-1.5 rounded-2xl bg-[#F6F7F9] max-w-md mx-auto">
-              <button
-                type="button"
-                onClick={() => setInputTab('file')}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  inputTab === 'file'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <FileText className="w-4 h-4 text-indigo-600" />
-                Upload PDF / Image File
-              </button>
-              <button
-                type="button"
-                onClick={() => setInputTab('paste')}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  inputTab === 'paste'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Receipt className="w-4 h-4 text-indigo-600" />
-                Paste Statement Text
-              </button>
-            </div>
-
-            {inputTab === 'file' ? (
-              <div className="space-y-3">
-                {/* Hidden camera & file inputs */}
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,image/png,image/jpeg,image/jpg,image/webp,image/heic"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-
-                {/* Mobile / Quick Action Buttons */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => cameraInputRef.current?.click()}
-                    className="py-3 px-4 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-[0.98]"
-                  >
-                    <Camera className="w-4 h-4 text-indigo-600 shrink-0" />
-                    <span>Take Photo of SOA / Bill</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="py-3 px-4 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-[0.98]"
-                  >
-                    <UploadCloud className="w-4 h-4 text-slate-500 shrink-0" />
-                    <span>Upload PDF or Image File</span>
-                  </button>
-                </div>
-
-                {/* Selected File / Photo Preview or Drag-and-Drop Area */}
-                {selectedFile ? (
-                  <div className="p-4 sm:p-5 rounded-3xl bg-[#F6F7F9] border-2 border-indigo-600/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5 min-w-0 w-full sm:w-auto">
-                      {previewUrl ? (
-                        <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-900/5 border border-slate-200 shrink-0">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={previewUrl}
-                            alt="Statement Preview"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-14 h-14 rounded-2xl bg-white shadow-xs text-indigo-600 flex items-center justify-center shrink-0">
-                          <FileText className="w-7 h-7" />
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-slate-900 truncate">
-                          {selectedFile.name}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {(selectedFile.size / 1024).toFixed(1)} KB •{' '}
-                          {selectedFile.type.startsWith('image/')
-                            ? 'Camera / Image Scan'
-                            : 'PDF Document'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                      <button
-                        type="button"
-                        onClick={() => cameraInputRef.current?.click()}
-                        className="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-700 cursor-pointer flex items-center gap-1.5"
-                      >
-                        <Camera className="w-3.5 h-3.5" />
-                        <span>Retake</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRemoveFile}
-                        className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-xs font-semibold text-rose-700 cursor-pointer flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Remove</span>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-8 sm:p-10 rounded-3xl bg-[#F6F7F9] hover:bg-indigo-50/40 transition-colors text-center cursor-pointer flex flex-col items-center justify-center gap-2.5 border-2 border-dashed border-slate-200"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-white shadow-xs text-indigo-600 flex items-center justify-center">
-                      <UploadCloud className="w-6 h-6" />
+        <ResponsiveDialogBody className="space-y-5 overflow-y-auto pr-1">
+          {/* Modal Body: STEP 1 (Upload) or STEP 2 (Review) */}
+          {!parseResult ? (
+            <div className="space-y-5">
+              {/* Gemini AI Live Status & Quota Bar */}
+              {geminiStats?.hasKeyConfigured ? (
+                <div className="p-3.5 rounded-2xl bg-indigo-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Sparkles className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900">
-                        Drop statement file here or tap above
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Electronic PDF statements, e-bill screenshots, or paper camera photos (PDF, PNG, JPG, WEBP).
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-foreground">Tenvi AI Vision Active</span>
+                        <Badge variant="secondary" className="uppercase text-[10px]">
+                          Tenvi Vision
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-indigo-500">
+                        Key configured ({geminiStats.maskedKey}) • Free Tier Limit: 1,500 requests/day
                       </p>
                     </div>
                   </div>
-                )}
-              </div>
-            ) : (
-              /* Paste Statement Text */
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span>Paste raw transaction lines or statement text:</span>
-                  <span className="text-xs font-normal text-slate-400">
-                    From online banking / email bill
-                  </span>
-                </label>
-                <textarea
-                  rows={8}
-                  value={pastedText}
-                  onChange={(e) => setPastedText(e.target.value)}
-                  placeholder={`Example:\n08/15/2026 GRAB* TRIP MANILA PH 450.00\n08/18/2026 SHOPEE PHILIPPINES 1,250.00\n08/20/2026 PAYMENT - THANK YOU 15,000.00 CR\n08/22/2026 SHELL EDSA MAKATI 2,100.00`}
-                  className="w-full p-4 rounded-2xl bg-[#F6F7F9] font-mono text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 leading-relaxed"
-                />
-              </div>
-            )}
 
-            {/* Optional Gemini Key Accordion */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                {showApiKeyInput
-                  ? 'Hide Custom AI Vision Key'
-                  : 'Optional: Use Custom AI Vision Key for complex or scanned PDFs'}
-              </button>
-
-              {showApiKeyInput && (
-                <div className="mt-2.5 p-4 rounded-2xl bg-indigo-50/50 space-y-2 text-xs">
-                  <label className="font-bold text-indigo-950 block">AI Vision API Key</label>
-                  <input
-                    type="password"
-                    placeholder="AIzaSy..."
-                    value={geminiApiKey}
-                    onChange={(e) => setGeminiApiKey(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-white text-xs text-slate-900 focus:outline-none"
-                  />
-                  <p className="text-xs text-slate-500">
-                    If left blank, Tenvi uses its built-in local PDF and OCR parser with 100% privacy and zero API costs.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Parse Action Button */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isParsing}
-                className="px-5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleStartParsing}
-                disabled={isParsing || (inputTab === 'file' && !selectedFile) || (inputTab === 'paste' && !pastedText.trim())}
-                className="bili-btn-primary py-2.5 px-6 text-xs font-semibold shadow-sm flex items-center gap-2"
-              >
-                {isParsing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{parsingStep}</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    Parse Statement Transactions
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* STEP 2: STAGED TRANSACTION REVIEW & CUSTOMIZATION */
-          <div className="space-y-4 flex-1 flex flex-col min-h-0">
-            {/* Top Summary Bar */}
-            <div className="p-4 rounded-2xl bg-[#F6F7F9] flex flex-wrap items-center justify-between gap-4 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-slate-900 block">
-                    {stagedTransactions.length} Transactions Detected
-                  </span>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-slate-500">
-                      Source: {parseResult.source.replace('_', ' ').toUpperCase()} • Review and adjust categories or uncheck items before importing.
-                    </span>
-                    {duplicateCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
-                        <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
-                        {duplicateCount} duplicate{duplicateCount > 1 ? 's' : ''} detected & unchecked
+                  <div className="flex items-center gap-3 self-end sm:self-center">
+                    <div className="text-right">
+                      <div className="font-extrabold text-foreground">
+                        {geminiStats.dailyRequestsUsed} / {geminiStats.dailyRequestsLimit}
+                        <span className="font-normal text-muted-foreground text-xs ml-1">used today</span>
+                      </div>
+                      <span className="text-xs text-indigo-500 font-semibold block">
+                        {geminiStats.dailyRemainingRequests} requests remaining
                       </span>
-                    )}
+                    </div>
+                    <div className="w-16">
+                      <Progress value={Math.max(4, geminiStats.dailyPercentUsed)} className="h-2" />
+                    </div>
                   </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <span className="text-xs uppercase font-bold text-slate-400 block">
-                    Selected To Log
-                  </span>
-                  <span className="text-sm font-extrabold text-slate-900">
-                    {selectedCount} swipes ({formatMoney(selectedTotal)})
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={resetAll}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-xs font-semibold text-slate-600 transition-colors shadow-xs"
-                >
-                  Upload Another
-                </button>
-              </div>
-            </div>
-
-            {/* Filter Tabs & Bulk Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#F6F7F9] flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => setFilterTab('purchases')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    filterTab === 'purchases'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Purchases ({stagedTransactions.filter((t) => !t.isPayment).length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterTab('credits')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    filterTab === 'credits'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Payments / Credits ({stagedTransactions.filter((t) => t.isPayment).length})
-                </button>
-                {duplicateCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setFilterTab('duplicates')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      filterTab === 'duplicates'
-                        ? 'bg-white text-amber-800 shadow-xs'
-                        : 'text-amber-700 hover:text-amber-900'
-                    }`}
-                  >
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                    Duplicates ({duplicateCount})
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setFilterTab('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    filterTab === 'all'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  All ({stagedTransactions.length})
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleSelectAll(true)}
-                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-lg hover:bg-slate-100 transition-colors"
-                >
-                  Select All
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSelectAll(false)}
-                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-lg hover:bg-slate-100 transition-colors"
-                >
-                  Deselect All
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAddManualItem}
-                  className="text-xs font-bold text-indigo-700 hover:text-indigo-900 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Add Row
-                </button>
-              </div>
-            </div>
-
-            {/* Staged Items Table / List */}
-            <div className="flex-1 overflow-y-auto border border-slate-100 rounded-2xl divide-y divide-slate-100">
-              {visibleTransactions.length === 0 ? (
-                <div className="p-8 text-center text-xs text-slate-400">
-                  No transactions match the selected filter.
                 </div>
               ) : (
-                visibleTransactions.map((tx) => (
-                  <div
-                    key={tx.id}
-                    className={`p-3 sm:px-4 flex flex-col gap-2 text-xs transition-colors ${
-                      tx.isDuplicate
-                        ? 'bg-amber-50/20'
-                        : tx.selected
-                        ? 'bg-white hover:bg-slate-50/60'
-                        : 'bg-slate-50/40 opacity-60'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      {/* Checkbox */}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleSelect(tx.id)}
-                        className="text-slate-400 hover:text-indigo-600 shrink-0 cursor-pointer"
-                      >
-                        {tx.selected ? (
-                          <CheckSquare className="w-4 h-4 text-indigo-600" />
-                        ) : (
-                          <Square className="w-4 h-4" />
-                        )}
-                      </button>
-
-                      {/* Date */}
-                      <input
-                        type="date"
-                        value={tx.date}
-                        onChange={(e) => handleUpdateItem(tx.id, 'date', e.target.value)}
-                        className="px-2 py-1 rounded-lg bg-[#F6F7F9] font-medium text-slate-800 w-32 shrink-0 focus:outline-none focus:ring-1 focus:ring-slate-900"
-                      />
-
-                      {/* Description / Merchant */}
-                      <input
-                        type="text"
-                        value={tx.description}
-                        onChange={(e) => handleUpdateItem(tx.id, 'description', e.target.value)}
-                        placeholder="Merchant name"
-                        className="flex-1 px-3 py-1 rounded-lg bg-[#F6F7F9] font-semibold text-slate-900 min-w-[140px] focus:outline-none focus:ring-1 focus:ring-slate-900"
-                      />
-
-                      {/* Category Selector */}
-                      <select
-                        value={tx.categoryId || ''}
-                        onChange={(e) => handleUpdateItem(tx.id, 'categoryId', e.target.value)}
-                        className="px-2.5 py-1 rounded-lg bg-[#F6F7F9] text-slate-700 w-36 shrink-0 focus:outline-none focus:ring-1 focus:ring-slate-900"
-                      >
-                        <option value="">(No category)</option>
-                        {categories.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-
-                      {/* Amount */}
-                      <div className="relative w-28 shrink-0">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
-                          ₱
-                        </span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={tx.amount}
-                          onChange={(e) =>
-                            handleUpdateItem(tx.id, 'amount', parseFloat(e.target.value) || 0)
-                          }
-                          className={`w-full pl-6 pr-2 py-1 rounded-lg bg-[#F6F7F9] font-bold text-right focus:outline-none focus:ring-1 focus:ring-slate-900 ${
-                            tx.isPayment ? 'text-emerald-700' : 'text-slate-900'
-                          }`}
-                        />
-                      </div>
-
-                      {/* Duplicate Badge */}
-                      {tx.isDuplicate && (
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1 ${
-                            tx.duplicateType === 'loan_installment'
-                              ? 'bg-purple-50 text-purple-800'
-                              : 'bg-amber-50 text-amber-800'
-                          }`}
-                          title={tx.duplicateReason}
-                        >
-                          {tx.duplicateType === 'loan_installment' ? (
-                            <>
-                              <AlertCircle className="w-3 h-3 text-purple-600" />
-                              Installment Match
-                            </>
-                          ) : (
-                            <>
-                              <AlertTriangle className="w-3 h-3 text-amber-600" />
-                              Duplicate
-                            </>
-                          )}
-                        </span>
-                      )}
-
-                      {/* Payment vs Swipe Badge */}
-                      <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
-                          tx.isPayment
-                            ? 'bg-emerald-50 text-emerald-800'
-                            : 'bg-slate-100 text-slate-700'
-                        }`}
-                      >
-                        {tx.isPayment ? 'Payment' : 'Swipe'}
-                      </span>
-
-                      {/* Delete button */}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteItem(tx.id)}
-                        className="p-1 rounded-lg text-slate-300 hover:text-rose-600 transition-colors shrink-0"
-                        title="Remove row"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Duplicate Reason Subtext */}
-                    {tx.isDuplicate && tx.duplicateReason && (
-                      <div className="flex items-center gap-1.5 pl-7 text-xs font-medium text-amber-800/90 bg-amber-50/70 p-1.5 rounded-xl">
-                        <span className="font-bold">⚠️ Flagged:</span>
-                        <span className="truncate">{tx.duplicateReason}</span>
-                        <span className="text-xs text-slate-400 ml-auto shrink-0 font-normal">
-                          (Unchecked by default to prevent double counting)
-                        </span>
-                      </div>
-                    )}
+                <div className="p-3 rounded-2xl bg-muted/60 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-muted-foreground" />
+                    <span>Using built-in local PDF & OCR parser (100% free & offline).</span>
                   </div>
-                ))
+                  <span className="text-xs font-bold text-muted-foreground">Offline Parser</span>
+                </div>
               )}
-            </div>
 
-            {/* Bottom Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100 shrink-0">
-              <span className="text-xs text-slate-500">
-                {selectedCount} of {stagedTransactions.length} items will be imported as swipes on{' '}
-                <span className="font-bold text-slate-900">{card.name}</span>.
-              </span>
+              {/* Tabs for Upload vs Paste */}
+              <Tabs value={inputTab} onValueChange={(val) => setInputTab(val as 'file' | 'paste')} className="w-full">
+                <TabsList className="w-full max-w-md mx-auto grid grid-cols-2 bg-muted/60">
+                  <TabsTrigger value="file" className="gap-1.5 font-bold text-xs">
+                    <FileText className="w-4 h-4 text-indigo-600" />
+                    Upload PDF / Image File
+                  </TabsTrigger>
+                  <TabsTrigger value="paste" className="gap-1.5 font-bold text-xs">
+                    <Receipt className="w-4 h-4 text-indigo-600" />
+                    Paste Statement Text
+                  </TabsTrigger>
+                </TabsList>
 
-              <div className="flex items-center gap-3">
+                <TabsContent value="file" className="space-y-3 mt-4">
+                  {/* Hidden camera & file inputs */}
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,image/png,image/jpeg,image/jpg,image/webp,image/heic"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  {/* Mobile / Quick Action Buttons */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="rounded-2xl gap-2 font-bold text-xs shadow-xs"
+                    >
+                      <Camera className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>Take Photo of SOA / Bill</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="rounded-2xl gap-2 font-bold text-xs shadow-xs"
+                    >
+                      <UploadCloud className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span>Upload PDF or Image File</span>
+                    </Button>
+                  </div>
+
+                  {/* Selected File / Photo Preview or Drag-and-Drop Area */}
+                  {selectedFile ? (
+                    <div className="p-4 sm:p-5 rounded-3xl bg-muted/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="flex items-center gap-3.5 min-w-0 w-full sm:w-auto">
+                        {previewUrl ? (
+                          <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-900/5 shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={previewUrl}
+                              alt="Statement Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 rounded-2xl bg-card shadow-xs text-indigo-600 flex items-center justify-center shrink-0">
+                            <FileText className="w-7 h-7" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-foreground truncate">
+                            {selectedFile.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {(selectedFile.size / 1024).toFixed(1)} KB •{' '}
+                            {selectedFile.type.startsWith('image/')
+                              ? 'Camera / Image Scan'
+                              : 'PDF Document'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="rounded-xl gap-1.5"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          <span>Retake</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive-soft"
+                          size="sm"
+                          onClick={handleRemoveFile}
+                          className="rounded-xl gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Remove</span>
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-8 sm:p-10 rounded-3xl bg-muted/60 hover:bg-muted transition-colors text-center cursor-pointer flex flex-col items-center justify-center gap-2.5"
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-card shadow-xs text-indigo-600 flex items-center justify-center">
+                        <UploadCloud className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">
+                          Drop statement file here or tap above
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Electronic PDF statements, e-bill screenshots, or paper camera photos (PDF, PNG, JPG, WEBP).
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="paste" className="space-y-2 mt-4">
+                  <label className="text-xs font-bold text-foreground flex items-center justify-between">
+                    <span>Paste raw transaction lines or statement text:</span>
+                    <span className="text-xs font-normal text-muted-foreground">
+                      From online banking / email bill
+                    </span>
+                  </label>
+                  <textarea
+                    rows={8}
+                    value={pastedText}
+                    onChange={(e) => setPastedText(e.target.value)}
+                    placeholder={`Example:\n08/15/2026 GRAB* TRIP MANILA PH 450.00\n08/18/2026 SHOPEE PHILIPPINES 1,250.00\n08/20/2026 PAYMENT - THANK YOU 15,000.00 CR\n08/22/2026 SHELL EDSA MAKATI 2,100.00`}
+                    className="w-full p-4 rounded-2xl bg-muted/60 font-mono text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary leading-relaxed"
+                  />
+                </TabsContent>
+              </Tabs>
+
+              {/* Optional Gemini Key Accordion */}
+              <div className="pt-1">
                 <button
                   type="button"
+                  onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {showApiKeyInput
+                    ? 'Hide Custom AI Vision Key'
+                    : 'Optional: Use Custom AI Vision Key for complex or scanned PDFs'}
+                </button>
+
+                {showApiKeyInput && (
+                  <div className="mt-2.5 p-4 rounded-2xl bg-indigo-50/50 space-y-2 text-xs">
+                    <label className="font-bold text-indigo-950 block">AI Vision API Key</label>
+                    <Input
+                      type="password"
+                      placeholder="AIzaSy..."
+                      value={geminiApiKey}
+                      onChange={(e) => setGeminiApiKey(e.target.value)}
+                      className="w-full bg-card text-xs text-foreground"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      If left blank, Tenvi uses its built-in local PDF and OCR parser with 100% privacy and zero API costs.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Parsing Progress Bar */}
+              {isParsing && (
+                <div className="p-4 rounded-2xl bg-muted/60 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="flex items-center gap-2 text-primary">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      {parsingStep}
+                    </span>
+                  </div>
+                  <Progress value={null} className="h-1.5" />
+                </div>
+              )}
+
+              {/* Parse Action Button */}
+              <div className="flex items-center justify-end gap-3 pt-3">
+                <Button
+                  type="button"
+                  variant="secondary"
                   onClick={onClose}
-                  disabled={isImporting}
-                  className="px-4 py-2 rounded-2xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                  disabled={isParsing}
+                  className="rounded-2xl"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  onClick={handleImport}
-                  disabled={isImporting || selectedCount === 0}
-                  className="bili-btn-primary py-2.5 px-6 text-xs font-bold shadow-sm flex items-center gap-2"
+                  onClick={handleStartParsing}
+                  disabled={isParsing || (inputTab === 'file' && !selectedFile) || (inputTab === 'paste' && !pastedText.trim())}
+                  className="rounded-2xl gap-2 font-semibold shadow-sm"
                 >
-                  {isImporting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                  {isParsing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{parsingStep}</span>
+                    </>
                   ) : (
-                    <CheckCircle2 className="w-4 h-4" />
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Parse Statement Transactions
+                    </>
                   )}
-                  Import {selectedCount} Transactions ({formatMoney(selectedTotal)})
-                </button>
+                </Button>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </div>
+          ) : (
+            /* STEP 2: STAGED TRANSACTION REVIEW & CUSTOMIZATION */
+            <div className="space-y-4 flex-1 flex flex-col min-h-0">
+              {/* Top Summary Bar */}
+              <div className="p-4 rounded-2xl bg-muted/60 flex flex-wrap items-center justify-between gap-4 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-foreground block">
+                      {stagedTransactions.length} Transactions Detected
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-muted-foreground">
+                        Source: {parseResult.source.replace('_', ' ').toUpperCase()} • Review and adjust categories or uncheck items before importing.
+                      </span>
+                      {duplicateCount > 0 && (
+                        <Badge variant="warning" className="gap-1 font-bold">
+                          <AlertTriangle className="w-3 h-3 shrink-0" />
+                          {duplicateCount} duplicate{duplicateCount > 1 ? 's' : ''} detected & unchecked
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <span className="text-xs uppercase font-bold text-muted-foreground block">
+                      Selected To Log
+                    </span>
+                    <span className="text-sm font-extrabold text-foreground">
+                      {selectedCount} swipes ({formatMoney(selectedTotal)})
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={resetAll}
+                    className="rounded-xl shadow-xs"
+                  >
+                    Upload Another
+                  </Button>
+                </div>
+              </div>
+
+              {/* Filter Tabs & Bulk Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-muted/60 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setFilterTab('purchases')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filterTab === 'purchases'
+                        ? 'bg-card text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Purchases ({stagedTransactions.filter((t) => !t.isPayment).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterTab('credits')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filterTab === 'credits'
+                        ? 'bg-card text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Payments / Credits ({stagedTransactions.filter((t) => t.isPayment).length})
+                  </button>
+                  {duplicateCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setFilterTab('duplicates')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        filterTab === 'duplicates'
+                          ? 'bg-card text-amber-800 shadow-xs'
+                          : 'text-amber-700 hover:text-amber-900'
+                      }`}
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                      Duplicates ({duplicateCount})
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setFilterTab('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      filterTab === 'all'
+                        ? 'bg-card text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    All ({stagedTransactions.length})
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => handleSelectAll(true)}
+                    className="font-semibold text-muted-foreground hover:text-foreground"
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => handleSelectAll(false)}
+                    className="font-semibold text-muted-foreground hover:text-foreground"
+                  >
+                    Deselect All
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    onClick={handleAddManualItem}
+                    className="gap-1 font-bold rounded-lg"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Row
+                  </Button>
+                </div>
+              </div>
+
+              {/* Staged Items Table */}
+              <div className="flex-1 overflow-y-auto rounded-2xl bg-card shadow-card">
+                {visibleTransactions.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-muted-foreground">
+                    No transactions match the selected filter.
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10">Select</TableHead>
+                        <TableHead className="w-36">Date</TableHead>
+                        <TableHead>Merchant / Description</TableHead>
+                        <TableHead className="w-40">Category</TableHead>
+                        <TableHead className="w-32 text-right">Amount (₱)</TableHead>
+                        <TableHead className="w-24">Type</TableHead>
+                        <TableHead className="w-10"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {visibleTransactions.map((tx) => (
+                        <React.Fragment key={tx.id}>
+                          <TableRow
+                            className={`transition-colors ${
+                              tx.isDuplicate
+                                ? 'bg-amber-50/20'
+                                : tx.selected
+                                ? 'bg-card'
+                                : 'bg-muted/30 opacity-60'
+                            }`}
+                          >
+                            {/* Checkbox */}
+                            <TableCell>
+                              <Checkbox
+                                checked={tx.selected}
+                                onCheckedChange={() => handleToggleSelect(tx.id)}
+                                aria-label={`Select ${tx.description}`}
+                              />
+                            </TableCell>
+
+                            {/* Date */}
+                            <TableCell>
+                              <Input
+                                type="date"
+                                value={tx.date}
+                                onChange={(e) => handleUpdateItem(tx.id, 'date', e.target.value)}
+                                className="h-8 text-xs bg-muted/60"
+                              />
+                            </TableCell>
+
+                            {/* Description / Merchant */}
+                            <TableCell>
+                              <div className="space-y-1">
+                                <Input
+                                  type="text"
+                                  value={tx.description}
+                                  onChange={(e) => handleUpdateItem(tx.id, 'description', e.target.value)}
+                                  placeholder="Merchant name"
+                                  className="h-8 text-xs font-semibold bg-muted/60"
+                                />
+                                {tx.isDuplicate && (
+                                  <div className="flex items-center gap-1 text-[11px] font-medium text-amber-800">
+                                    <Badge variant="warning" className="h-5 px-1.5 text-[10px]">
+                                      {tx.duplicateType === 'loan_installment' ? 'Installment Match' : 'Duplicate'}
+                                    </Badge>
+                                    <span className="truncate">{tx.duplicateReason}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+
+                            {/* Category Selector */}
+                            <TableCell>
+                              <select
+                                value={tx.categoryId || ''}
+                                onChange={(e) => handleUpdateItem(tx.id, 'categoryId', e.target.value)}
+                                className="h-8 py-0 px-2 text-xs w-full rounded-lg bg-muted/60 text-foreground outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                              >
+                                <option value="">(No category)</option>
+                                {categories.map((c) => (
+                                  <option key={c.id} value={c.id}>
+                                    {c.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </TableCell>
+
+                            {/* Amount */}
+                            <TableCell className="text-right">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={tx.amount}
+                                onChange={(e) =>
+                                  handleUpdateItem(tx.id, 'amount', parseFloat(e.target.value) || 0)
+                                }
+                                className={`h-8 text-xs font-bold text-right bg-muted/60 ${
+                                  tx.isPayment ? 'text-emerald-700' : 'text-foreground'
+                                }`}
+                              />
+                            </TableCell>
+
+                            {/* Payment vs Swipe Badge */}
+                            <TableCell>
+                              <Badge
+                                variant={tx.isPayment ? 'success' : 'neutral'}
+                                className="uppercase text-[10px]"
+                              >
+                                {tx.isPayment ? 'Payment' : 'Swipe'}
+                              </Badge>
+                            </TableCell>
+
+                            {/* Delete button */}
+                            <TableCell>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-xs"
+                                onClick={() => handleDeleteItem(tx.id)}
+                                className="text-muted-foreground hover:text-rose-600"
+                                title="Remove row"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        </React.Fragment>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="flex items-center justify-between pt-3 shrink-0">
+                <span className="text-xs text-muted-foreground">
+                  {selectedCount} of {stagedTransactions.length} items will be imported as swipes on{' '}
+                  <span className="font-bold text-foreground">{card.name}</span>.
+                </span>
+
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={onClose}
+                    disabled={isImporting}
+                    className="rounded-2xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleImport}
+                    disabled={isImporting || selectedCount === 0}
+                    className="rounded-2xl gap-2 font-bold shadow-sm"
+                  >
+                    {isImporting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4" />
+                    )}
+                    Import {selectedCount} Transactions ({formatMoney(selectedTotal)})
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </ResponsiveDialogBody>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

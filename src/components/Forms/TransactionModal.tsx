@@ -22,6 +22,18 @@ import {
 import { Category, CreditCard, SavingsAccount, Property } from '@/types';
 import { PAYMENT_METHODS } from '@/lib/constants';
 import { optimizeImageForUpload } from '@/lib/ai/imageOptimizer';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogBody,
+} from '@/components/ui/responsive-dialog';
+import { Button } from '@/components/ui/button';
+import { MoneyInput } from '@/components/ui/money-input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -97,8 +109,6 @@ export function TransactionModal({
       }
     }
   }, [isOpen, defaultCreditCardId, defaultPropertyId, defaultPaymentMethod, autoTriggerScan]);
-
-  if (!isOpen) return null;
 
   const filteredCategories = categories.filter((c) => c.kind === kind);
 
@@ -217,18 +227,18 @@ export function TransactionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto bili-scrollbar">
-        <button
-          onClick={handleModalClose}
-          className="absolute top-6 right-6 w-9 h-9 rounded-full bg-slate-100 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <ResponsiveDialog open={isOpen} onOpenChange={(open) => !open && handleModalClose()}>
+      <ResponsiveDialogContent className="max-w-xl">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>
+            Record Transaction
+          </ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
+            Log cash flow, card spending, or scan receipts with Tenvi AI Vision.
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
-        <h2 className="text-xl font-bold text-slate-900 mb-4 pr-10 sm:pr-12">
-          Record Transaction
-        </h2>
+        <ResponsiveDialogBody className="space-y-5">
 
         {/* Hidden Camera & File Inputs for Receipt Scanning */}
         <input
@@ -248,39 +258,41 @@ export function TransactionModal({
         />
 
         {/* Receipt Quick Scan Actions */}
-        <div className="mb-5 space-y-2.5">
+        <div className="mb-2 space-y-2.5">
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => receiptCameraRef.current?.click()}
               disabled={isScanningReceipt}
-              className="flex-1 py-2.5 px-3.5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-60"
+              className="flex-1 py-2.5 px-3.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-60"
             >
               <Camera className="w-4 h-4 text-indigo-600 shrink-0" />
               <span>Snap Receipt Photo</span>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
               onClick={() => receiptFileRef.current?.click()}
               disabled={isScanningReceipt}
-              className="py-2.5 px-3.5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-60"
+              className="py-2.5 px-3.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-60"
               title="Upload receipt image from files or gallery"
             >
-              <UploadCloud className="w-4 h-4 text-slate-500 shrink-0" />
+              <UploadCloud className="w-4 h-4 text-muted-foreground shrink-0" />
               <span className="hidden sm:inline">Upload</span>
-            </button>
+            </Button>
           </div>
 
           {/* Scanning In-Progress Feedback */}
           {isScanningReceipt && (
-            <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200/70 text-indigo-950 flex items-center gap-3 animate-in fade-in duration-150">
+            <div className="p-3.5 rounded-2xl bg-indigo-50/80 text-indigo-950 flex items-center gap-3 animate-in fade-in duration-150">
               <Loader2 className="w-5 h-5 text-indigo-600 animate-spin shrink-0" />
               <div className="text-xs">
                 <p className="font-bold flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
                   Analyzing receipt with Tenvi AI Vision...
                 </p>
-                <p className="text-indigo-700 text-[11px] mt-0.5">
+                <p className="text-indigo-700 text-xs mt-0.5">
                   Extracting merchant, total amount, date, and matching category
                 </p>
               </div>
@@ -289,25 +301,25 @@ export function TransactionModal({
 
           {/* Parsed Receipt Confirmation Banner */}
           {parsedReceipt && !isScanningReceipt && (
-            <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
+            <div className="p-3 rounded-2xl bg-emerald-50/80 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
               <div className="flex items-center gap-2.5 min-w-0">
                 {receiptPreviewUrl && (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={receiptPreviewUrl}
                     alt="Receipt preview"
-                    className="w-10 h-10 rounded-xl object-cover border border-emerald-200 shrink-0"
+                    className="w-10 h-10 rounded-xl object-cover shrink-0"
                   />
                 )}
                 <div className="min-w-0">
                   <div className="font-bold text-emerald-950 flex items-center gap-1 truncate">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                     <span className="truncate">{parsedReceipt.merchant}</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 uppercase font-semibold">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase font-semibold">
                       Auto-filled
                     </span>
                   </div>
-                  <p className="text-emerald-700 text-[11px] truncate mt-0.5">
+                  <p className="text-emerald-700 text-xs truncate mt-0.5">
                     ₱{parsedReceipt.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} • {parsedReceipt.date}
                     {parsedReceipt.categoryName ? ` • ${parsedReceipt.categoryName}` : ''}
                   </p>
@@ -316,7 +328,7 @@ export function TransactionModal({
               <button
                 type="button"
                 onClick={clearReceipt}
-                className="text-slate-400 hover:text-rose-600 p-1 text-[11px] font-semibold underline shrink-0 cursor-pointer"
+                className="text-muted-foreground hover:text-rose-600 p-1 text-xs font-semibold underline shrink-0 cursor-pointer"
               >
                 Clear
               </button>
@@ -325,66 +337,51 @@ export function TransactionModal({
         </div>
 
         {/* Big Kind Switcher: Money Out (Expense) vs Money In (Income) */}
-        <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-100 mb-6">
-          <button
-            type="button"
-            onClick={() => {
-              setKind('expense');
-              setCategoryId('');
-            }}
-            className={`py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
-              kind === 'expense'
-                ? 'bg-white text-rose-700 shadow-sm'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <MinusCircle className="w-4 h-4" />
-            Money Out (Expense)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setKind('income');
-              setCategoryId('');
-            }}
-            className={`py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
-              kind === 'income'
-                ? 'bg-white text-emerald-700 shadow-sm'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <PlusCircle className="w-4 h-4" />
-            Money In (Income)
-          </button>
-        </div>
+        <Tabs
+          value={kind}
+          onValueChange={(val) => {
+            setKind(val as any);
+            setCategoryId('');
+          }}
+          className="w-full mb-2"
+        >
+          <TabsList className="w-full grid grid-cols-2 p-1 bg-muted">
+            <TabsTrigger
+              value="expense"
+              className="py-2.5 data-active:text-rose-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <MinusCircle className="w-4 h-4 text-rose-600" />
+              Money Out (Expense)
+            </TabsTrigger>
+            <TabsTrigger
+              value="income"
+              className="py-2.5 data-active:text-emerald-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4 text-emerald-600" />
+              Money In (Income)
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Amount Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Amount (PHP)
             </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-2xl font-bold text-slate-400">
-                ₱
-              </span>
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                required
-                autoFocus
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="bili-input w-full pl-10 text-2xl font-extrabold text-slate-900 h-14"
-              />
-            </div>
+            <MoneyInput
+              required
+              autoFocus
+              placeholder="0.00"
+              value={amount}
+              onChange={(val) => setAmount(val)}
+              className="text-2xl font-extrabold h-14"
+            />
           </div>
 
           {/* Category Picker */}
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Category
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-1">
@@ -393,10 +390,11 @@ export function TransactionModal({
                   key={cat.id}
                   type="button"
                   onClick={() => setCategoryId(cat.id)}
-                  className={`p-2.5 rounded-xl text-xs font-medium text-left truncate transition-all ${
+                  aria-pressed={categoryId === cat.id}
+                  className={`p-2.5 rounded-xl text-xs font-medium text-left truncate transition-all cursor-pointer ${
                     categoryId === cat.id
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
                   }`}
                 >
                   {cat.name}
@@ -407,7 +405,7 @@ export function TransactionModal({
 
           {/* Payment Method */}
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Payment Method
             </label>
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
@@ -416,10 +414,11 @@ export function TransactionModal({
                   key={pm.id}
                   type="button"
                   onClick={() => setPaymentMethod(pm.id)}
+                  aria-pressed={paymentMethod === pm.id}
                   className={`py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-xs font-semibold transition-all cursor-pointer text-center truncate ${
                     paymentMethod === pm.id
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
                   }`}
                 >
                   {pm.label}
@@ -443,7 +442,7 @@ export function TransactionModal({
                 <select
                   value={creditCardId}
                   onChange={(e) => setCreditCardId(e.target.value)}
-                  className="bili-input w-full bg-white text-slate-900 text-sm"
+                  className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <option value="">-- Choose card --</option>
                   {creditCards.map((card) => (
@@ -466,7 +465,7 @@ export function TransactionModal({
               <select
                 value={savingsId}
                 onChange={(e) => setSavingsId(e.target.value)}
-                className="bili-input w-full bg-white text-slate-900 text-sm"
+                className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="">-- None (General Cash Flow) --</option>
                 {savingsAccounts.map((acc) => (
@@ -496,7 +495,7 @@ export function TransactionModal({
               <select
                 value={propertyId}
                 onChange={(e) => setPropertyId(e.target.value)}
-                className="bili-input w-full bg-white text-slate-900 text-sm"
+                className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="">-- None (Personal / General) --</option>
                 {properties.map((p) => (
@@ -516,57 +515,59 @@ export function TransactionModal({
           {/* Date & Note */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" /> Date
               </label>
-              <input
+              <Input
                 type="date"
                 required
                 value={occurredOn}
                 onChange={(e) => setOccurredOn(e.target.value)}
-                className="bili-input w-full text-sm"
+                className="w-full text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5" /> Note (Optional)
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="e.g. Lunch with team"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className="bili-input w-full text-sm"
+                className="w-full text-sm"
               />
             </div>
           </div>
 
           <div className="pt-2 flex gap-3">
-            <button
+            <Button
               type="button"
-              onClick={onClose}
-              className="bili-btn-secondary flex-1 py-3 text-sm"
+              variant="outline"
+              onClick={handleModalClose}
+              className="flex-1 py-3 h-11 text-sm bg-muted/60 hover:bg-muted"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="bili-btn-primary flex-1 py-3 text-sm shadow-sm"
+              className="flex-1 py-3 h-11 text-sm shadow-sm"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   Saving...
                 </>
               ) : (
                 'Save Transaction'
               )}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
-  );
+      </ResponsiveDialogBody>
+    </ResponsiveDialogContent>
+  </ResponsiveDialog>
+);
 }

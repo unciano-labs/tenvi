@@ -7,7 +7,6 @@ import {
   FileText,
   FileCheck,
   Plus,
-  Calendar,
   AlertCircle,
   Clock,
   ExternalLink,
@@ -18,11 +17,7 @@ import {
   Car,
   Building,
   Bell,
-  Send,
   Loader2,
-  Download,
-  AlertTriangle,
-  Info,
 } from 'lucide-react';
 import { Property, PropertyDocument, PropertyDocumentType } from '@/types';
 import {
@@ -34,8 +29,9 @@ import {
   sendDocumentExpiryAlertAction,
 } from '@/app/actions/propertyDocuments';
 import { DOCUMENT_TYPE_PRESETS } from '@/lib/constants';
-import { confirmModal } from '@/components/UI/GlobalDialog';
-
+import { confirmModal } from '@/components/ui/GlobalDialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { PropertyDocumentModal } from '@/components/Forms/PropertyDocumentModal';
 
 interface PropertyDocumentsSectionProps {
@@ -149,44 +145,45 @@ export function PropertyDocumentsSection({
   };
 
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+    <div className="bg-card rounded-3xl p-6 sm:p-8 shadow-card space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-bold text-slate-900">Documents & Compliance Vault</h3>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+            <h3 className="text-lg font-bold text-foreground">Documents & Compliance Vault</h3>
+            <Badge variant="neutral">
               {documents.length}
-            </span>
+            </Badge>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Store proof of ownership, LTO OR/CR, LTFRB franchise, and policies with automated renewal alerts.
           </p>
         </div>
 
-        <button
+        <Button
           onClick={handleOpenAdd}
-          className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-all shadow-xs cursor-pointer self-start sm:self-auto shrink-0"
+          size="sm"
+          className="self-start sm:self-auto shrink-0"
         >
           <Plus className="w-4 h-4" />
           Add Document
-        </button>
+        </Button>
       </div>
 
       {/* Summary Pills */}
       {documents.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-muted/60 flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold uppercase text-slate-400 block tracking-wider">
+              <span className="text-xs font-bold uppercase text-muted-foreground block tracking-wider">
                 Total Files
               </span>
-              <span className="text-xl font-extrabold text-slate-900">{stats.total}</span>
+              <span className="text-xl font-extrabold text-foreground">{stats.total}</span>
             </div>
-            <FileText className="w-5 h-5 text-slate-400" />
+            <FileText className="w-5 h-5 text-muted-foreground" />
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-emerald-50/70 flex items-center justify-between">
             <div>
               <span className="text-xs font-bold uppercase text-emerald-800 block tracking-wider">
                 Valid & Compliant
@@ -196,7 +193,7 @@ export function PropertyDocumentsSection({
             <ShieldCheck className="w-5 h-5 text-emerald-600" />
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-100 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-amber-50/70 flex items-center justify-between">
             <div>
               <span className="text-xs font-bold uppercase text-amber-800 block tracking-wider">
                 Expiring Soon
@@ -206,7 +203,7 @@ export function PropertyDocumentsSection({
             <Clock className="w-5 h-5 text-amber-600" />
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-rose-50/60 border border-rose-100 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-rose-50/70 flex items-center justify-between">
             <div>
               <span className="text-xs font-bold uppercase text-rose-800 block tracking-wider">
                 Overdue / Expired
@@ -220,24 +217,25 @@ export function PropertyDocumentsSection({
 
       {/* Documents Grid / List */}
       {documents.length === 0 ? (
-        <div className="border border-dashed border-slate-200 rounded-2xl p-8 text-center space-y-4 bg-slate-50/40">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 mx-auto flex items-center justify-center">
+        <div className="rounded-2xl p-8 text-center space-y-4 bg-muted/40">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
             <FileCheck className="w-6 h-6" />
           </div>
           <div className="space-y-1 max-w-sm mx-auto">
-            <h4 className="text-sm font-bold text-slate-800">No Documents Attached Yet</h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h4 className="text-sm font-bold text-foreground">No Documents Attached Yet</h4>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Attach {property.name}&apos;s OR/CR, Insurance Policy, or Franchise to keep records centralized and receive SMS & Email reminders before expiration.
             </p>
           </div>
           <div className="pt-1">
-            <button
+            <Button
+              variant="secondary"
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold transition-colors cursor-pointer"
+              size="sm"
             >
               <Plus className="w-4 h-4" />
               Upload First Document
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -254,68 +252,77 @@ export function PropertyDocumentsSection({
             return (
               <div
                 key={doc.id}
-                className="p-5 rounded-2xl border border-slate-100 bg-[#FAFBFD] hover:bg-white hover:shadow-md transition-all space-y-4 group flex flex-col justify-between"
+                className="p-5 rounded-2xl bg-card hover:bg-muted/30 shadow-card hover:shadow-lift transition-all space-y-4 group flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   {/* Top Bar: Icon + Category + Expiry Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+                      <div className="w-10 h-10 rounded-xl bg-card text-primary flex items-center justify-center shrink-0 shadow-xs">
                         <TypeIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
                           {preset?.label.split('(')[0].trim() || doc.document_type}
                         </span>
-                        <h4 className="text-sm font-bold text-slate-900 line-clamp-1">
+                        <h4 className="text-sm font-bold text-foreground line-clamp-1">
                           {doc.title}
                         </h4>
                       </div>
                     </div>
 
                     {/* Expiry Pill */}
-                    <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-xl border shrink-0 ${expiryStatus.badgeClass}`}
+                    <Badge
+                      variant={
+                        expiryStatus.isExpired
+                          ? 'danger'
+                          : expiryStatus.isExpiringSoon
+                          ? 'warning'
+                          : expiryStatus.hasExpiry
+                          ? 'success'
+                          : 'neutral'
+                      }
+                      className="shrink-0"
                     >
                       {expiryStatus.label}
-                    </span>
+                    </Badge>
                   </div>
 
                   {/* Document Details Grid */}
                   <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                     {doc.document_number && (
                       <div className="space-y-0.5">
-                        <span className="text-xs font-medium text-slate-400 block uppercase">
+                        <span className="text-xs font-medium text-muted-foreground block uppercase">
                           Ref / Policy #
                         </span>
-                        <span className="font-semibold text-slate-800 font-mono text-xs">
+                        <span className="font-semibold text-foreground font-mono text-xs">
                           {doc.document_number}
                         </span>
                       </div>
                     )}
 
                     <div className="space-y-0.5">
-                      <span className="text-xs font-medium text-slate-400 block uppercase">
+                      <span className="text-xs font-medium text-muted-foreground block uppercase">
                         Expiry Date
                       </span>
-                      <span className="font-semibold text-slate-800">
+                      <span className="font-semibold text-foreground">
                         {doc.expiry_date ? formatDate(doc.expiry_date) : 'Permanent'}
                       </span>
                     </div>
 
                     {doc.issue_date && (
                       <div className="space-y-0.5">
-                        <span className="text-xs font-medium text-slate-400 block uppercase">
+                        <span className="text-xs font-medium text-muted-foreground block uppercase">
                           Issued On
                         </span>
-                        <span className="font-medium text-slate-600">
+                        <span className="font-medium text-muted-foreground">
                           {formatDate(doc.issue_date)}
                         </span>
                       </div>
                     )}
 
                     <div className="space-y-0.5">
-                      <span className="text-xs font-medium text-slate-400 block uppercase">
+                      <span className="text-xs font-medium text-muted-foreground block uppercase">
                         Alert Channels
                       </span>
                       <div className="flex items-center gap-1.5 pt-0.5">
@@ -330,7 +337,7 @@ export function PropertyDocumentsSection({
                           </span>
                         )}
                         {!doc.notify_email && !doc.notify_sms && (
-                          <span className="text-xs text-slate-400">Off</span>
+                          <span className="text-xs text-muted-foreground">Off</span>
                         )}
                       </div>
                     </div>
@@ -338,35 +345,35 @@ export function PropertyDocumentsSection({
 
                   {/* Notes / Instructions */}
                   {doc.notes && (
-                    <div className="p-2.5 rounded-xl bg-slate-100/70 text-xs text-slate-600 leading-relaxed">
+                    <div className="p-2.5 rounded-xl bg-muted/60 text-xs text-muted-foreground leading-relaxed">
                       {doc.notes}
                     </div>
                   )}
                 </div>
 
                 {/* Bottom Actions Bar */}
-                <div className="pt-3 border-t border-slate-100/80 flex items-center justify-between gap-2">
+                <div className="pt-3 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     {hasFile ? (
                       <a
                         href={doc.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 text-xs font-bold transition-colors cursor-pointer"
                         title="Open digital document copy"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         View File
                       </a>
                     ) : (
-                      <span className="text-xs text-slate-400 italic">No file scan attached</span>
+                      <span className="text-xs text-muted-foreground italic">No file scan attached</span>
                     )}
 
                     {doc.expiry_date && (
                       <button
                         onClick={() => handleSendTestAlert(doc)}
                         disabled={isSendingAlertId === doc.id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-muted/60 text-foreground hover:bg-muted text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
                         title="Send immediate test alert via Email / SMS"
                       >
                         {isSendingAlertId === doc.id ? (
@@ -382,7 +389,7 @@ export function PropertyDocumentsSection({
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenEdit(doc)}
-                      className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                       title="Edit Document Details"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -390,11 +397,11 @@ export function PropertyDocumentsSection({
                     <button
                       onClick={() => handleDelete(doc)}
                       disabled={isDeletingId === doc.id}
-                      className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
+                      className="p-1.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
                       title="Delete Document"
                     >
                       {isDeletingId === doc.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-destructive" />
                       ) : (
                         <Trash2 className="w-3.5 h-3.5" />
                       )}

@@ -48,10 +48,10 @@ export interface DueDateInfo {
 /**
  * Calculate the next due date given a card's day-of-month due day
  */
-export function calculateNextDueDate(dueDay: number, fromDate: Date = new Date()): DueDateInfo {
-  const year = fromDate.getFullYear();
-  const month = fromDate.getMonth();
-  const todayDate = fromDate.getDate();
+export function calculateNextDueDate(dueDay: number, fromDate: Date = getTodayManila()): DueDateInfo {
+  const year = fromDate.getUTCFullYear();
+  const month = fromDate.getUTCMonth();
+  const todayDate = fromDate.getUTCDate();
 
   // Determine target month/year
   let targetMonth = month;
@@ -67,13 +67,13 @@ export function calculateNextDueDate(dueDay: number, fromDate: Date = new Date()
   }
 
   // Handle month length (e.g. Feb 30 -> Feb 28/29)
-  const maxDaysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+  const maxDaysInMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
   const clampedDay = Math.min(dueDay, maxDaysInMonth);
 
-  const nextDueDate = new Date(targetYear, targetMonth, clampedDay);
+  const nextDueDate = new Date(Date.UTC(targetYear, targetMonth, clampedDay));
 
   // Normalize midnight for clean day subtraction
-  const todayMidnight = new Date(year, month, todayDate);
+  const todayMidnight = new Date(Date.UTC(year, month, todayDate));
   const diffTime = nextDueDate.getTime() - todayMidnight.getTime();
   const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -540,7 +540,7 @@ export function calculateOptimalCardToSwipe(
   cards: any[],
   transactions: any[] = [],
   linkedLoans: any[] = [],
-  referenceDate: Date = new Date()
+  referenceDate: Date = getTodayManila()
 ): OptimalCardResult {
   const activeCards = (cards || []).filter((c) => c && c.is_active !== false);
 
@@ -915,7 +915,7 @@ export function calculateDocumentExpiryStatus(
       isExpiringSoon: false,
       urgency: 'none',
       label: 'No Expiration',
-      badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
+      badgeClass: 'bg-muted text-muted-foreground',
     };
   }
 
@@ -930,7 +930,7 @@ export function calculateDocumentExpiryStatus(
       isExpiringSoon: false,
       urgency: 'none',
       label: 'Invalid Date',
-      badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
+      badgeClass: 'bg-muted text-muted-foreground',
     };
   }
 
@@ -956,7 +956,7 @@ export function calculateDocumentExpiryStatus(
       isExpiringSoon: true,
       urgency: 'expired',
       label: overdueDays === 1 ? 'Expired yesterday' : `Expired ${overdueDays} days ago`,
-      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      badgeClass: 'bg-rose-500/10 text-rose-500',
     };
   }
 
@@ -970,7 +970,7 @@ export function calculateDocumentExpiryStatus(
       isExpiringSoon: true,
       urgency: 'critical',
       label: 'Expires today!',
-      badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 animate-pulse',
+      badgeClass: 'bg-rose-500/10 text-rose-500 animate-pulse',
     };
   }
 
@@ -984,7 +984,7 @@ export function calculateDocumentExpiryStatus(
       isExpiringSoon: true,
       urgency: 'critical',
       label: daysRemaining === 1 ? 'Expires tomorrow' : `Expires in ${daysRemaining} days`,
-      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      badgeClass: 'bg-rose-500/10 text-rose-500',
     };
   }
 
@@ -999,7 +999,7 @@ export function calculateDocumentExpiryStatus(
       isExpiringSoon: true,
       urgency: 'warning',
       label: `Expires in ${daysRemaining} days`,
-      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+      badgeClass: 'bg-amber-500/10 text-amber-500',
     };
   }
 
@@ -1012,10 +1012,235 @@ export function calculateDocumentExpiryStatus(
     isExpiringSoon: false,
     urgency: 'valid',
     label: `Valid (${daysRemaining} days left)`,
-    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    badgeClass: 'bg-emerald-500/10 text-emerald-500',
   };
 }
 
+/**
+ * TNV-015: Single source of truth for "today" in Tenvi, strictly calculated in Asia/Manila timezone (UTC+8).
+ * Normalizes time to midnight (00:00:00.000 UTC).
+ */
+export function getTodayManila(refDate: Date = new Date()): Date {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  });
+  const parts = formatter.formatToParts(refDate);
+  const year = parseInt(parts.find((p) => p.type === 'year')!.value, 10);
+  const month = parseInt(parts.find((p) => p.type === 'month')!.value, 10) - 1;
+  const day = parseInt(parts.find((p) => p.type === 'day')!.value, 10);
 
+  return new Date(Date.UTC(year, month, day));
+}
 
+/**
+ * Returns today's ISO date string 'YYYY-MM-DD' in Asia/Manila timezone.
+ */
+export function getTodayManilaString(refDate: Date = new Date()): string {
+  const d = getTodayManila(refDate);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
+export interface CardUrgencyInfo {
+  urgency: 'none' | 'ok' | 'soon' | 'urgent' | 'overdue';
+  label: string;
+  daysRemaining: number;
+  variant: 'neutral' | 'success' | 'warning' | 'danger';
+}
+
+/**
+ * TNV-013: Calculate urgency based on billed balance and due date.
+ * - Owed nothing: 'none'
+ * - Overdue (past due with balance): 'overdue'
+ * - 3 days or fewer: 'urgent'
+ * - 7 days or fewer: 'soon'
+ * - More than 7 days: 'ok'
+ */
+export function getCardUrgency(
+  dueDateInput: Date | string,
+  billedAmount: number,
+  asOfDate: Date = getTodayManila()
+): CardUrgencyInfo {
+  if (billedAmount <= 0) {
+    return {
+      urgency: 'none',
+      label: 'Nothing to pay right now',
+      daysRemaining: 0,
+      variant: 'neutral',
+    };
+  }
+
+  const due = typeof dueDateInput === 'string' ? new Date(dueDateInput) : dueDateInput;
+  const dueMidnight = new Date(Date.UTC(due.getUTCFullYear(), due.getUTCMonth(), due.getUTCDate()));
+  const asOfMidnight = new Date(Date.UTC(asOfDate.getUTCFullYear(), asOfDate.getUTCMonth(), asOfDate.getUTCDate()));
+
+  const diffMs = dueMidnight.getTime() - asOfMidnight.getTime();
+  const daysRemaining = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (daysRemaining < 0) {
+    const overdueDays = Math.abs(daysRemaining);
+    return {
+      urgency: 'overdue',
+      label: `Overdue by ${overdueDays} day${overdueDays === 1 ? '' : 's'}`,
+      daysRemaining,
+      variant: 'danger',
+    };
+  }
+
+  if (daysRemaining <= 3) {
+    const label =
+      daysRemaining === 0
+        ? 'Due today'
+        : daysRemaining === 1
+          ? 'Due tomorrow'
+          : `Due in ${daysRemaining} days`;
+    return {
+      urgency: 'urgent',
+      label,
+      daysRemaining,
+      variant: 'danger',
+    };
+  }
+
+  if (daysRemaining <= 7) {
+    return {
+      urgency: 'soon',
+      label: `Due in ${daysRemaining} days`,
+      daysRemaining,
+      variant: 'warning',
+    };
+  }
+
+  return {
+    urgency: 'ok',
+    label: `Due in ${daysRemaining} days`,
+    daysRemaining,
+    variant: 'success',
+  };
+}
+
+export interface UsageLevelInfo {
+  level: 'healthy' | 'high' | 'maxed';
+  label: string;
+  variant: 'success' | 'warning' | 'danger';
+}
+
+/**
+ * TNV-014: Determine card credit usage level and color variant.
+ * - under 50%: 'healthy'
+ * - 50% to 79%: 'high'
+ * - 80% and above: 'maxed'
+ */
+export function getUsageLevel(pct: number): UsageLevelInfo {
+  const safePct = Math.max(0, pct);
+  if (safePct < 50) {
+    return {
+      level: 'healthy',
+      label: 'Healthy usage',
+      variant: 'success',
+    };
+  }
+  if (safePct < 80) {
+    return {
+      level: 'high',
+      label: 'High usage',
+      variant: 'warning',
+    };
+  }
+  return {
+    level: 'maxed',
+    label: 'Near limit',
+    variant: 'danger',
+  };
+}
+
+/**
+ * Helper to clamp day of month given year and month (0-indexed).
+ */
+export function clampDayOfMonth(year: number, month: number, day: number): number {
+  const maxDays = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return Math.min(day, maxDays);
+}
+
+export interface CardCycleDates {
+  cycleStart: Date;
+  cycleEnd: Date;
+  dueDate: Date;
+  daysToPay: number;
+  isCutoffToday: boolean;
+}
+
+/**
+ * TNV-016: Cycle and due date calculation with calendar month and leap year clamping.
+ */
+export function calculateCardCycleDates(
+  statementDay: number,
+  dueDay: number,
+  asOf: Date = getTodayManila()
+): CardCycleDates {
+  const currentYear = asOf.getUTCFullYear();
+  const currentMonth = asOf.getUTCMonth();
+  const todayDate = asOf.getUTCDate();
+
+  // Clamp statement day for current month
+  const clampedStatementDayCurrent = clampDayOfMonth(currentYear, currentMonth, statementDay);
+  const isCutoffToday = clampedStatementDayCurrent === todayDate;
+
+  // Determine which cycle we are in
+  let cycleEndYear = currentYear;
+  let cycleEndMonth = currentMonth;
+
+  if (todayDate > clampedStatementDayCurrent) {
+    // Statement has closed for current month, next cycle end is next month
+    cycleEndMonth += 1;
+    if (cycleEndMonth > 11) {
+      cycleEndMonth = 0;
+      cycleEndYear += 1;
+    }
+  }
+
+  const clampedCycleEndDay = clampDayOfMonth(cycleEndYear, cycleEndMonth, statementDay);
+  const cycleEnd = new Date(Date.UTC(cycleEndYear, cycleEndMonth, clampedCycleEndDay));
+
+  // Cycle start is previous month's statement day + 1
+  let cycleStartMonth = cycleEndMonth - 1;
+  let cycleStartYear = cycleEndYear;
+  if (cycleStartMonth < 0) {
+    cycleStartMonth = 11;
+    cycleStartYear -= 1;
+  }
+  const clampedCycleStartDay = clampDayOfMonth(cycleStartYear, cycleStartMonth, statementDay) + 1;
+  const cycleStart = new Date(Date.UTC(cycleStartYear, cycleStartMonth, clampedCycleStartDay));
+
+  // Determine due date
+  let dueYear = cycleEndYear;
+  let dueMonth = cycleEndMonth;
+
+  if (dueDay <= statementDay) {
+    // Due date falls in the following month after statement cutoff
+    dueMonth += 1;
+    if (dueMonth > 11) {
+      dueMonth = 0;
+      dueYear += 1;
+    }
+  }
+
+  const clampedDueDay = clampDayOfMonth(dueYear, dueMonth, dueDay);
+  const dueDate = new Date(Date.UTC(dueYear, dueMonth, clampedDueDay));
+
+  const diffMs = dueDate.getTime() - asOf.getTime();
+  const daysToPay = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+
+  return {
+    cycleStart,
+    cycleEnd,
+    dueDate,
+    daysToPay,
+    isCutoffToday,
+  };
+}

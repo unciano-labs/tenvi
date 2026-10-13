@@ -1,5 +1,5 @@
 import React from 'react';
-import { Skeleton, SkeletonAccountCard, SkeletonStatCard } from '@/components/UI/Skeleton';
+import { Skeleton, SkeletonAccountCard, SkeletonStatCard } from '@/components/ui/skeleton';
 
 export default function SavingsLoading() {
   return (

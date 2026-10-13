@@ -8,7 +8,7 @@ import {
   executeFallbackLocalChat,
 } from '@/lib/ai/financialContext';
 import { retrieveRagFinancialContext } from '@/lib/ai/ragRetriever';
-import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS } from '@/lib/ai/gemini';
+import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS, withTimeout } from '@/lib/ai/gemini';
 import {
   createJsonReplyStreamExtractor,
   simulateStreamText,
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
           'I am **Tenvi AI**, your dedicated personal finance copilot. I am only able to assist with questions about **Tenvi**, your transactions, credit cards, billing cut-offs, loans, receivables, and personal financial management.\n\nHow can I help you manage your finances today?';
 
         await simulateStreamText(deflectionReply, (delta) => {
-          sendEvent('delta', { text: delta });
+          sendEvent('delta', { text: delta, chunk: delta });
         }, 15);
 
         await sendEvent('done', {
@@ -122,17 +122,21 @@ export async function POST(request: Request) {
 
           for (const candidate of GEMINI_CANDIDATE_MODELS) {
             try {
-              const stream = await ai.models.generateContentStream({
-                model: candidate,
-                contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-                config: {
-                  responseMimeType: 'application/json',
-                },
-              });
+              const stream = await withTimeout(
+                ai.models.generateContentStream({
+                  model: candidate,
+                  contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+                  config: {
+                    responseMimeType: 'application/json',
+                  },
+                }),
+                8000,
+                `Candidate ${candidate} stream setup timed out after 8s`
+              );
 
               let fullRawText = '';
               const extractor = createJsonReplyStreamExtractor((delta) => {
-                sendEvent('delta', { text: delta });
+                sendEvent('delta', { text: delta, chunk: delta });
               });
 
               for await (const chunk of stream) {
@@ -171,7 +175,7 @@ export async function POST(request: Request) {
                   if (!extractor.isDone() && finalReply && extractor.getReply().length < finalReply.length) {
                     const remaining = finalReply.slice(extractor.getReply().length);
                     await simulateStreamText(remaining, (delta) => {
-                      sendEvent('delta', { text: delta });
+                      sendEvent('delta', { text: delta, chunk: delta });
                     }, 10);
                   }
 
@@ -303,7 +307,7 @@ export async function POST(request: Request) {
         });
 
         await simulateStreamText(localResult.reply, (delta) => {
-          sendEvent('delta', { text: delta });
+          sendEvent('delta', { text: delta, chunk: delta });
         }, 15);
 
         await sendEvent('done', {

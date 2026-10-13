@@ -1,20 +1,22 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { TenviIcon } from '@/components/UI/TenviIcon';
+import { TenviIcon } from '@/components/ui/TenviIcon';
 import {
   Wallet,
   CreditCard,
   HandCoins,
-  Receipt,
   ArrowRight,
   ShieldCheck,
-  CheckCircle2,
-  TrendingUp,
   Sparkles,
-  Layers,
   PiggyBank,
 } from 'lucide-react';
+
+import { ThemeQuickToggle } from '@/components/ui/theme-toggle';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -27,63 +29,64 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F8F9FA] text-slate-800">
+    <main className="min-h-screen bg-background text-foreground pb-20 sm:pb-32">
       {/* Top Navbar */}
       <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
-          <div>
-            <span className="text-xl font-bold tracking-tight text-slate-800">Tenvi</span>
-            <span className="hidden sm:inline-block ml-2 text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
+        <div className="flex items-center gap-3 min-w-0">
+          <TenviIcon className="size-10 rounded-2xl shrink-0 shadow-xs" />
+          <div className="min-w-0">
+            <span className="text-xl font-bold tracking-tight text-foreground">Tenvi</span>
+            <Badge variant="soft" className="hidden sm:inline-flex ml-2 text-2xs font-semibold">
               Personal Money Hub
-            </span>
+            </Badge>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
+          <ThemeQuickToggle />
           <Link
             href="/login"
-            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors"
+            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs font-semibold')}
           >
             Sign In
           </Link>
           <Link
             href="/register"
-            className="px-5 py-2.5 text-sm font-semibold bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-all shadow-xs flex items-center gap-1.5"
+            className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'text-xs font-semibold gap-1.5 shadow-xs')}
           >
             Get Started
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </header>
 
       {/* Hero Section */}
       <section className="max-w-4xl mx-auto px-6 pt-16 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold mb-6">
-          <Sparkles className="w-3.5 h-3.5 text-slate-500" />
+        <Badge variant="soft" className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-6">
+          <Sparkles className="w-3.5 h-3.5 text-primary" />
           Simple, safe, and easy-to-use personal money manager
-        </div>
+        </Badge>
 
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-800 leading-[1.18] mb-6">
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.18] mb-6">
           Manage your daily spending, bills &amp; savings{' '}
-          <span className="text-slate-600 font-semibold block sm:inline">with total peace of mind.</span>
+          <span className="text-muted-foreground font-semibold block sm:inline">with total peace of mind.</span>
         </h1>
 
-        <p className="text-base sm:text-lg text-slate-600 max-w-3xl mx-auto mb-10 leading-relaxed font-normal">
+        <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed font-normal">
           Tenvi helps you easily record everyday spending, keep track of upcoming card due dates, and monitor your emergency savings in one clear, simple screen — no confusing finance jargon.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/register"
-            className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold bg-slate-800 text-white rounded-2xl hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center gap-2"
+            className={cn(buttonVariants({ variant: 'default', size: 'lg' }), 'w-full sm:w-auto px-8 gap-2 font-semibold shadow-xs')}
           >
             Create Your Free Account
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/login"
-            className="w-full sm:w-auto px-8 py-3.5 text-base font-medium bg-white text-slate-700 rounded-2xl hover:bg-slate-100 transition-all shadow-sm"
+            className={cn(buttonVariants({ variant: 'soft', size: 'lg' }), 'w-full sm:w-auto px-8 font-medium')}
           >
             Sign In to Your Account
           </Link>
@@ -93,87 +96,95 @@ export default async function HomePage() {
       {/* 4 Core Pillars */}
       <section className="max-w-6xl mx-auto px-6 pb-24">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
             Everything in One Simple Place
           </h2>
-          <p className="text-sm text-slate-600 mt-2">
+          <p className="text-sm text-muted-foreground mt-2">
             Track daily expenses, see upcoming bills, and watch your savings grow comfortably.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 1. Daily Cash Flow */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-6">
-              <Wallet className="w-6 h-6" />
+          <Card className="p-8 shadow-xs hover:shadow-lift transition-shadow flex flex-col justify-between">
+            <div className="min-w-0">
+              <div className="size-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6">
+                <Wallet className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Daily Cash Flow Tracking</h3>
+              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                Effortlessly track every peso coming in and going out across cash, e-wallets, bank accounts, and credit cards with instant 1-tap categorizations.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Daily Cash Flow Tracking</h3>
-            <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
-              Effortlessly track every peso coming in and going out across cash, e-wallets, bank accounts, and credit cards with instant 1-tap categorizations.
-            </p>
-            <div className="mt-6 p-4 rounded-2xl bg-[#F6F7F9] flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-500">Real-time ledger</span>
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+            <div className="mt-6 p-4 rounded-2xl bg-muted/60 flex items-center justify-between gap-2 min-w-0">
+              <span className="text-xs font-medium text-muted-foreground truncate">Real-time ledger</span>
+              <Badge variant="success" className="text-2xs font-semibold shrink-0">
                 Liquid Cash Flow
-              </span>
+              </Badge>
             </div>
-          </div>
+          </Card>
 
           {/* 2. Credit Card & Debt Amortization */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center mb-6">
-              <CreditCard className="w-6 h-6" />
+          <Card className="p-8 shadow-xs hover:shadow-lift transition-shadow flex flex-col justify-between">
+            <div className="min-w-0">
+              <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6">
+                <CreditCard className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Credit &amp; Debt Amortization</h3>
+              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                Monitor total spending power across cards, statement cutoff cycles, and payment countdowns. Receive automated daily alerts via Gmail SMTP &amp; SMS before due dates.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Credit &amp; Debt Amortization</h3>
-            <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
-              Monitor total spending power across cards, statement cutoff cycles, and payment countdowns. Receive automated daily alerts via Gmail SMTP &amp; SMS before due dates.
-            </p>
-            <div className="mt-6 p-4 rounded-2xl bg-[#F6F7F9] flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-500">Debt payoff acceleration</span>
-              <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full">
+            <div className="mt-6 p-4 rounded-2xl bg-muted/60 flex items-center justify-between gap-2 min-w-0">
+              <span className="text-xs font-medium text-muted-foreground truncate">Debt payoff acceleration</span>
+              <Badge variant="soft" className="text-2xs font-semibold shrink-0">
                 Zero Late Fees
-              </span>
+              </Badge>
             </div>
-          </div>
+          </Card>
 
           {/* 3. Loans & Receivables */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center mb-6">
-              <HandCoins className="w-6 h-6" />
+          <Card className="p-8 shadow-xs hover:shadow-lift transition-shadow flex flex-col justify-between">
+            <div className="min-w-0">
+              <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6">
+                <HandCoins className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Friendly Loans &amp; Receivables</h3>
+              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                Manage money lent to friends, relatives, or partners. Full installment schedules (3 to 60 months), partial repayments, downpayments, and borrower notification alerts.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Friendly Loans &amp; Receivables</h3>
-            <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
-              Manage money lent to friends, relatives, or partners. Full installment schedules (3 to 60 months), partial repayments, downpayments, and borrower notification alerts.
-            </p>
-            <div className="mt-6 p-4 rounded-2xl bg-[#F6F7F9] flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-500">Complete payment schedules</span>
-              <span className="text-xs font-semibold text-blue-800 bg-blue-50 px-2.5 py-1 rounded-full">
+            <div className="mt-6 p-4 rounded-2xl bg-muted/60 flex items-center justify-between gap-2 min-w-0">
+              <span className="text-xs font-medium text-muted-foreground truncate">Complete payment schedules</span>
+              <Badge variant="soft" className="text-2xs font-semibold shrink-0">
                 Traceable Loans
-              </span>
+              </Badge>
             </div>
-          </div>
+          </Card>
 
           {/* 4. Automated Savings & Equity Targets */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center mb-6">
-              <PiggyBank className="w-6 h-6" />
+          <Card className="p-8 shadow-xs hover:shadow-lift transition-shadow flex flex-col justify-between">
+            <div className="min-w-0">
+              <div className="size-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-6">
+                <PiggyBank className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Automated Savings &amp; Asset Equity</h3>
+              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                Set dedicated vaults for emergency funds, investments, and long-term asset accumulation with automated deposit schedules and net worth progress.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Automated Savings &amp; Asset Equity</h3>
-            <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
-              Set dedicated vaults for emergency funds, investments, and long-term asset accumulation with automated deposit schedules and net worth progress.
-            </p>
-            <div className="mt-6 p-4 rounded-2xl bg-[#F6F7F9] flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-500">Long-term equity growth</span>
-              <span className="text-xs font-semibold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full">
+            <div className="mt-6 p-4 rounded-2xl bg-muted/60 flex items-center justify-between gap-2 min-w-0">
+              <span className="text-xs font-medium text-muted-foreground truncate">Long-term equity growth</span>
+              <Badge variant="warning" className="text-2xs font-semibold shrink-0">
                 Asset Building
-              </span>
+              </Badge>
             </div>
-          </div>
+          </Card>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="max-w-6xl mx-auto px-6 py-10 text-center text-xs text-slate-400">
+      <footer className="max-w-6xl mx-auto px-6 pt-16 pb-12 sm:pb-16 text-center text-xs text-muted-foreground">
         <p className="flex items-center justify-center gap-1.5 mb-2">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
           Encrypted &amp; Isolated. Built on enterprise cloud infrastructure.

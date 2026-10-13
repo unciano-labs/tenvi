@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { Toaster } from 'sonner';
-import { GlobalDialog } from '@/components/UI/GlobalDialog';
+import { Toaster } from '@/components/ui/sonner';
+import { GlobalDialog } from '@/components/ui/GlobalDialog';
+import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -38,24 +43,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-[#F8F9FA] text-slate-800 antialiased selection:bg-slate-200">
-        {children}
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: '#ffffff',
-              color: '#0f172a',
-              border: 'none',
-              borderRadius: '1rem',
-              boxShadow: '0 10px 30px -4px rgba(15, 23, 42, 0.1)',
-              padding: '0.875rem 1.25rem',
-              fontSize: '0.925rem',
-            },
-          }}
-        />
-        <GlobalDialog />
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
+      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-slate-200 dark:selection:bg-slate-700">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+          <Toaster />
+          <GlobalDialog />
+        </ThemeProvider>
       </body>
     </html>
   );

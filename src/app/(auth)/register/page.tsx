@@ -4,8 +4,12 @@ import { Suspense, useActionState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { registerAction } from '@/app/actions/auth';
-import { TenviIcon } from '@/components/UI/TenviIcon';
+import { TenviIcon } from '@/components/ui/TenviIcon';
 import { GoogleAuthButton } from '@/components/Auth/GoogleAuthButton';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft,
   Lock,
@@ -33,28 +37,28 @@ function RegisterForm() {
     state?.code === 'EXISTING_ACCOUNT_PASSWORD_REQUIRED' || isEnrolling;
 
   return (
-    <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-sm">
+    <div className="bg-card rounded-3xl p-8 sm:p-10 shadow-card">
       {/* Dynamic Alert Messages */}
       {state?.error && (
-        <div className="mb-6 p-4 rounded-2xl bg-rose-50 text-rose-700 text-sm font-medium flex items-center gap-2 border border-rose-200/60">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+        <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 text-rose-500 text-sm font-medium flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
           <span>{state.error}</span>
         </div>
       )}
 
       {isAlreadyRegistered && !state?.error && (
-        <div className="mb-6 p-4 rounded-2xl bg-indigo-50 text-indigo-900 border border-indigo-200/70 text-sm">
-          <div className="font-semibold flex items-center gap-1.5 mb-1 text-indigo-950">
-            <Info className="w-4 h-4 text-indigo-600 shrink-0" />
+        <div className="mb-6 p-4 rounded-2xl bg-indigo-500/10 text-indigo-500 text-sm">
+          <div className="font-semibold flex items-center gap-1.5 mb-1 text-foreground">
+            <Info className="w-4 h-4 text-indigo-500 shrink-0" />
             Account Already Enrolled
           </div>
-          <p className="text-xs text-indigo-800 leading-relaxed mb-3">
+          <p className="text-xs text-muted-foreground leading-relaxed mb-3">
             You already have an active Tenvi account with this email address. Please log in
             to access your dashboard.
           </p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-1 text-xs font-bold text-indigo-950 underline hover:text-indigo-800"
+            className="inline-flex items-center gap-1 text-xs font-bold text-indigo-500 underline hover:text-indigo-400"
           >
             Go to Log In →
           </Link>
@@ -62,12 +66,12 @@ function RegisterForm() {
       )}
 
       {isExistingAccount && !isAlreadyRegistered && !state?.error && (
-        <div className="mb-6 p-4 rounded-2xl bg-blue-50 text-blue-900 border border-blue-200/70 text-sm">
-          <div className="font-semibold flex items-center gap-1.5 mb-1 text-blue-950">
-            <ShieldAlert className="w-4 h-4 text-blue-600 shrink-0" />
+        <div className="mb-6 p-4 rounded-2xl bg-blue-500/10 text-blue-500 text-sm">
+          <div className="font-semibold flex items-center gap-1.5 mb-1 text-foreground">
+            <ShieldAlert className="w-4 h-4 text-blue-500 shrink-0" />
             Connected Account Detected
           </div>
-          <p className="text-xs text-blue-800 leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Your credentials belong to an account on our platform. Please confirm your account
             password below to link and activate your Tenvi access.
           </p>
@@ -82,9 +86,9 @@ function RegisterForm() {
       {/* Clean Divider */}
       <div className="relative my-6 text-center">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-200" />
+          <Separator />
         </div>
-        <span className="relative bg-white px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <span className="relative bg-card px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           {isEnrolling ? 'Or confirm with password' : 'Or register with email'}
         </span>
       </div>
@@ -95,32 +99,32 @@ function RegisterForm() {
           <div className="flex items-center justify-between mb-2">
             <label
               htmlFor="fullName"
-              className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+              className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider"
             >
               Your Full Name
             </label>
             {isEnrolling && (
-              <span className="text-xs font-medium text-slate-400">
+              <Badge variant="neutral">
                 Editable
-              </span>
+              </Badge>
             )}
           </div>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground z-10">
               <User className="w-4 h-4" />
             </div>
-            <input
+            <Input
               id="fullName"
               name="fullName"
               type="text"
               required
               defaultValue={urlName}
               placeholder="e.g. Freddie Unciano"
-              className="bili-input w-full pl-11"
+              className="pl-11"
             />
           </div>
           {isEnrolling && (
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Pre-filled from your profile. You can edit this name for Tenvi.
             </p>
           )}
@@ -131,22 +135,22 @@ function RegisterForm() {
           <div className="flex items-center justify-between mb-1.5">
             <label
               htmlFor="email"
-              className="block text-sm font-semibold text-slate-700"
+              className="block text-sm font-semibold text-foreground"
             >
               Email address
             </label>
             {isEnrolling && (
-              <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <Badge variant="neutral" className="flex items-center gap-1">
                 <Lock className="w-3 h-3" />
                 Linked Account
-              </span>
+              </Badge>
             )}
           </div>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground z-10">
               <Mail className="w-4 h-4" />
             </div>
-            <input
+            <Input
               id="email"
               name="email"
               type="email"
@@ -155,15 +159,15 @@ function RegisterForm() {
               readOnly={isEnrolling}
               defaultValue={urlEmail}
               placeholder="yourname@gmail.com"
-              className={`bili-input w-full pl-11 ${
+              className={`pl-11 ${
                 isEnrolling
-                  ? 'bg-slate-100 text-slate-600 font-medium cursor-not-allowed select-none'
+                  ? 'bg-muted text-muted-foreground font-medium cursor-not-allowed select-none'
                   : ''
               }`}
             />
           </div>
           {isEnrolling && (
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Connected to your verified account email.
             </p>
           )}
@@ -173,15 +177,15 @@ function RegisterForm() {
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-semibold text-slate-700 mb-1.5"
+            className="block text-sm font-semibold text-foreground mb-1.5"
           >
             {isEnrolling ? 'Confirm Account Password' : 'Password'}
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground z-10">
               <Lock className="w-4 h-4" />
             </div>
-            <input
+            <Input
               id="password"
               name="password"
               type="password"
@@ -192,20 +196,21 @@ function RegisterForm() {
                   ? 'Enter your existing account password'
                   : 'At least 6 characters'
               }
-              className="bili-input w-full pl-11"
+              className="pl-11"
             />
           </div>
           {isEnrolling && (
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Required: Enter your account password to confirm identity and activate Tenvi.
             </p>
           )}
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={isPending}
-          className="bili-btn-primary w-full py-3.5 text-base mt-4 shadow-sm"
+          size="lg"
+          className="w-full h-12 rounded-2xl text-base mt-4 shadow-card hover:shadow-lift"
         >
           {isPending ? (
             <>
@@ -223,14 +228,14 @@ function RegisterForm() {
               Create Free Account
             </>
           )}
-        </button>
+        </Button>
       </form>
 
-      <div className="mt-8 text-center text-sm text-slate-500">
+      <div className="mt-8 text-center text-sm text-muted-foreground">
         Already have an account?{' '}
         <Link
           href="/login"
-          className="font-semibold text-slate-800 hover:text-slate-950 underline underline-offset-4"
+          className="font-semibold text-foreground hover:text-primary underline underline-offset-4"
         >
           Sign in here
         </Link>
@@ -241,23 +246,23 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <main className="min-h-screen bg-[#F8F9FA] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
         </Link>
 
         <div className="flex items-center gap-3 mb-2">
-          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
-          <h1 className="text-2xl font-bold tracking-tight text-slate-800">
+          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-xs" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Create your Tenvi account
           </h1>
         </div>
-        <p className="text-sm text-slate-600 mb-8">
+        <p className="text-sm text-muted-foreground mb-8">
           Your simple, secure, and private personal money ledger.
         </p>
       </div>
@@ -265,7 +270,7 @@ export default function RegisterPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-6">
         <Suspense
           fallback={
-            <div className="bg-white rounded-3xl p-8 shadow-sm h-80 animate-pulse" />
+            <div className="bg-card rounded-3xl p-8 shadow-card h-80 animate-pulse" />
           }
         >
           <RegisterForm />

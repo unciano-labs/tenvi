@@ -1,5 +1,5 @@
 import React from 'react';
-import { Skeleton, SkeletonTableRow } from '@/components/UI/Skeleton';
+import { Skeleton, SkeletonTableRow } from '@/components/ui/skeleton';
 
 export default function TransactionsLoading() {
   return (
@@ -21,7 +21,7 @@ export default function TransactionsLoading() {
       </div>
 
       {/* Transactions List */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 border border-slate-100 space-y-3">
+      <div className="bg-card rounded-3xl p-6 sm:p-8 shadow-card overflow-hidden min-w-0 space-y-3">
         <SkeletonTableRow />
         <SkeletonTableRow />
         <SkeletonTableRow />

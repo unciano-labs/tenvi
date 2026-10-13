@@ -5,8 +5,11 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { loginAction } from '@/app/actions/auth';
 import { ArrowLeft, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
-import { TenviIcon } from '@/components/UI/TenviIcon';
+import { TenviIcon } from '@/components/ui/TenviIcon';
 import { GoogleAuthButton } from '@/components/Auth/GoogleAuthButton';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
@@ -21,26 +24,26 @@ function LoginForm() {
     : '/register';
 
   return (
-    <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-sm">
+    <div className="bg-card rounded-3xl p-8 sm:p-10 shadow-card">
       {isNotEnrolled ? (
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50 text-amber-900 border border-amber-200/70 text-sm">
-          <div className="font-semibold flex items-center gap-1.5 mb-1 text-amber-950">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+        <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 text-amber-500 text-sm">
+          <div className="font-semibold flex items-center gap-1.5 mb-1 text-foreground">
+            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
             No Tenvi Account Found
           </div>
-          <p className="text-xs text-amber-800 leading-relaxed mb-3">
+          <p className="text-xs text-muted-foreground leading-relaxed mb-3">
             Your credentials belong to an account on our platform, but it has not been
             registered for Tenvi yet. Please register to activate your Tenvi access.
           </p>
           <Link
             href={registerHref}
-            className="inline-flex items-center gap-1 text-xs font-bold text-amber-950 underline hover:text-amber-800"
+            className="inline-flex items-center gap-1 text-xs font-bold text-amber-500 underline hover:text-amber-400"
           >
             Register for Tenvi now →
           </Link>
         </div>
       ) : (state?.error || urlError) ? (
-        <div className="mb-6 p-4 rounded-2xl bg-rose-50 text-rose-700 text-sm font-medium">
+        <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 text-rose-500 text-sm font-medium">
           {state?.error || urlError}
         </div>
       ) : null}
@@ -53,9 +56,9 @@ function LoginForm() {
       {/* Clean Divider */}
       <div className="relative my-6 text-center">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-200" />
+          <Separator />
         </div>
-        <span className="relative bg-white px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <span className="relative bg-card px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Or continue with email
         </span>
       </div>
@@ -64,22 +67,22 @@ function LoginForm() {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-semibold text-slate-700 mb-1.5"
+            className="block text-sm font-semibold text-foreground mb-1.5"
           >
             Email address
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground z-10">
               <Mail className="w-4 h-4" />
             </div>
-            <input
+            <Input
               id="email"
               name="email"
               type="email"
               autoComplete="email"
               required
               placeholder="yourname@gmail.com"
-              className="bili-input w-full pl-11"
+              className="pl-11"
             />
           </div>
         </div>
@@ -87,30 +90,31 @@ function LoginForm() {
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-semibold text-slate-700 mb-1.5"
+            className="block text-sm font-semibold text-foreground mb-1.5"
           >
             Password
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground z-10">
               <Lock className="w-4 h-4" />
             </div>
-            <input
+            <Input
               id="password"
               name="password"
               type="password"
               autoComplete="current-password"
               required
               placeholder="••••••••"
-              className="bili-input w-full pl-11"
+              className="pl-11"
             />
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={isPending}
-          className="bili-btn-primary w-full py-3.5 text-base mt-4 shadow-sm"
+          size="lg"
+          className="w-full h-12 rounded-2xl text-base mt-4 shadow-card hover:shadow-lift"
         >
           {isPending ? (
             <>
@@ -120,14 +124,14 @@ function LoginForm() {
           ) : (
             'Sign In to Your Account'
           )}
-        </button>
+        </Button>
       </form>
 
-      <div className="mt-8 text-center text-sm text-slate-500">
+      <div className="mt-8 text-center text-sm text-muted-foreground">
         Don&apos;t have an account yet?{' '}
         <Link
           href="/register"
-          className="font-semibold text-slate-800 hover:text-slate-950 underline underline-offset-4"
+          className="font-semibold text-foreground hover:text-primary underline underline-offset-4"
         >
           Sign up for free
         </Link>
@@ -138,29 +142,29 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#F8F9FA] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
         </Link>
 
         <div className="flex items-center gap-3 mb-2">
-          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-sm" />
-          <h1 className="text-2xl font-bold tracking-tight text-slate-800">
+          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-xs" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Welcome back to Tenvi
           </h1>
         </div>
-        <p className="text-sm text-slate-600 mb-8">
+        <p className="text-sm text-muted-foreground mb-8">
           Sign in to view your daily spending, bills, and savings.
         </p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-6">
-        <Suspense fallback={<div className="bg-white rounded-3xl p-8 shadow-sm h-64 animate-pulse" />}>
+        <Suspense fallback={<div className="bg-card rounded-3xl p-8 shadow-card h-64 animate-pulse" />}>
           <LoginForm />
         </Suspense>
       </div>

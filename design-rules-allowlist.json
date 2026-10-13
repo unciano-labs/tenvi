@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Tenvi Design Rules Allowlist. Files listed here are documented WCAG 1.4.11 and third-party SVG / HTML email exceptions per ADR 0001.",
+  "allowlist": {
+    "src/components/ui/checkbox.tsx": {
+      "reason": "WCAG 1.4.11 Non-text Contrast exception: documented 3:1 outline boundary for unchecked controls in ADR 0001."
+    },
+    "src/components/ui/chart.tsx": {
+      "reason": "Recharts SVG chart axis and grid styling primitives."
+    },
+    "src/components/ui/calendar.tsx": {
+      "reason": "Calendar day focused boundary state."
+    },
+    "src/app/globals.css": {
+      "reason": "Design system token declarations, utility classes, and explicit zero-border overrides."
+    },
+    "src/lib/notifications/email.ts": {
+      "reason": "HTML email template inline CSS borders."
+    }
+  }
+}

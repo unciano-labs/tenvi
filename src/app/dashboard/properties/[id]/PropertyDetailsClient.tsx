@@ -41,10 +41,14 @@ import {
 import { PropertyModal } from '@/components/Forms/PropertyModal';
 import { PropertyTransactionModal } from '@/components/Forms/PropertyTransactionModal';
 import { PropertyDocumentsSection } from '@/components/Properties/PropertyDocumentsSection';
-import { StatCard } from '@/components/UI/StatCard';
+import { StatCard } from '@/components/ui/StatCard';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { deletePropertyAction } from '@/app/actions/properties';
 import { deleteTransactionAction } from '@/app/actions/transactions';
-import { confirmModal } from '@/components/UI/GlobalDialog';
+import { confirmModal } from '@/components/ui/GlobalDialog';
 
 interface PropertyDetailsClientProps {
   property: Property;
@@ -166,79 +170,88 @@ export function PropertyDetailsClient({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Link
           href="/dashboard/properties"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors w-fit"
+          className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors w-fit"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to All Properties & Fleet
         </Link>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <button
+          <Button
+            size="sm"
+            variant="soft"
             onClick={() => handleOpenTx('income')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition-colors cursor-pointer shadow-xs"
+            className="rounded-2xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold"
           >
             <ArrowDownRight className="w-4 h-4 text-emerald-600" />
             + Log Income
-          </button>
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            variant="soft"
             onClick={() => handleOpenTx('expense')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-rose-50 text-rose-800 hover:bg-rose-100 text-xs font-bold transition-colors cursor-pointer shadow-xs"
+            className="rounded-2xl bg-rose-50 text-rose-800 hover:bg-rose-100 font-bold"
           >
             <ArrowUpRight className="w-4 h-4 text-rose-600" />
             + Log Expense
-          </button>
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            variant="secondary"
             onClick={() => setIsEditModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold transition-colors cursor-pointer"
+            className="rounded-2xl font-bold"
           >
             <Edit2 className="w-3.5 h-3.5" />
             Edit
-          </button>
+          </Button>
 
-          <button
+          <Button
+            size="icon-sm"
+            variant="ghost"
             onClick={handleDeleteProperty}
-            className="p-2 rounded-2xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            className="rounded-2xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             title="Delete Property"
           >
             <Trash2 className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Property Header Banner */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-start sm:items-center gap-4">
+      <Card className="rounded-3xl p-6 sm:p-8 shadow-xs overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-start sm:items-center gap-4 min-w-0">
           <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
             <Icon className="w-7 h-7" />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground truncate">
                 {property.name}
               </h1>
-              <span
-                className={`text-xs font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider ${
+              <Badge
+                variant={
                   property.status === 'active'
-                    ? 'bg-emerald-50 text-emerald-800'
+                    ? 'success'
                     : property.status === 'maintenance'
-                    ? 'bg-amber-50 text-amber-800'
-                    : 'bg-slate-200 text-slate-700'
-                }`}
+                    ? 'warning'
+                    : 'neutral'
+                }
+                className="uppercase tracking-wider font-bold"
               >
                 {property.status}
-              </span>
+              </Badge>
             </div>
 
-            <div className="flex items-center gap-3 text-xs text-slate-500 font-medium flex-wrap">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium flex-wrap">
               <span className="capitalize">{property.property_type.replace('_', ' ')}</span>
               {property.identifier && (
                 <>
                   <span>•</span>
-                  <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md uppercase">
+                  <Badge variant="outline" className="font-bold uppercase text-[11px]">
                     {property.identifier}
-                  </span>
+                  </Badge>
                 </>
               )}
               {property.purchase_date && (
@@ -252,20 +265,20 @@ export function PropertyDetailsClient({
         </div>
 
         {/* Valuation display */}
-        <div className="p-4 rounded-2xl bg-[#F6F7F9] min-w-[200px] text-left md:text-right">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+        <div className="p-4 rounded-2xl bg-muted min-w-[200px] text-left md:text-right">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
             Current Valuation
           </span>
-          <span className="text-2xl font-extrabold text-slate-900 block">
+          <span className="text-2xl font-extrabold text-foreground block">
             {formatMoney(property.estimated_value)}
           </span>
           {Number(property.purchase_price || 0) > 0 && (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-muted-foreground">
               Purchased for {formatMoney(property.purchase_price)}
             </span>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Financial KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -309,24 +322,24 @@ export function PropertyDetailsClient({
       {/* Obligations & Schedule Profile Card */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Fixed Obligations (Amortization & Insurance) */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 text-xs uppercase font-bold text-slate-400 tracking-wider">
+        <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-4">
+          <div className="flex items-center gap-2 text-xs uppercase font-bold text-muted-foreground tracking-wider">
             <ShieldCheck className="w-4 h-4 text-blue-600" />
             Fixed Obligations & Schedule
           </div>
 
           <div className="space-y-3">
             {/* Monthly Amortization */}
-            <div className="p-4 rounded-2xl bg-blue-50/60 flex items-center justify-between gap-4">
+            <div className="p-4 rounded-2xl bg-blue-500/10 text-foreground flex items-center justify-between gap-4">
               <div className="space-y-1">
-                <span className="text-xs font-bold text-blue-950 block">
+                <span className="text-xs font-bold text-blue-900 dark:text-blue-300 block">
                   Monthly Loan Amortization
                 </span>
-                <span className="text-xl font-extrabold text-blue-950 block">
+                <span className="text-xl font-extrabold text-blue-950 dark:text-blue-200 block">
                   {formatMoney(property.monthly_amortization)}
-                  <span className="text-xs font-normal text-blue-700 ml-1">/ month</span>
+                  <span className="text-xs font-normal text-blue-700 dark:text-blue-400 ml-1">/ month</span>
                 </span>
-                <div className="text-xs text-blue-800">
+                <div className="text-xs text-blue-800 dark:text-blue-300">
                   {property.amortization_due_day ? (
                     <span>Due every {property.amortization_due_day}th of the month</span>
                   ) : (
@@ -340,21 +353,21 @@ export function PropertyDetailsClient({
                   <span
                     className={`text-xs font-bold px-3 py-1 rounded-xl inline-block ${
                       financials.amortizationDue.urgency === 'critical'
-                        ? 'bg-rose-100 text-rose-800'
+                        ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
                         : financials.amortizationDue.urgency === 'warning'
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-blue-100 text-blue-800'
+                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                        : 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300'
                     }`}
                   >
                     {financials.amortizationDue.label}
                   </span>
                 ) : (
-                  <span className="text-xs text-slate-400">N/A</span>
+                  <span className="text-xs text-muted-foreground">N/A</span>
                 )}
                 {Number(property.monthly_amortization || 0) > 0 && (
                   <button
                     onClick={() => handleOpenTx('expense')}
-                    className="block text-xs font-bold text-blue-700 hover:text-blue-900 underline mt-1.5 cursor-pointer"
+                    className="block text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline mt-1.5 cursor-pointer"
                   >
                     + Log Payment
                   </button>
@@ -363,16 +376,16 @@ export function PropertyDetailsClient({
             </div>
 
             {/* Annual Insurance Renewal */}
-            <div className="p-4 rounded-2xl bg-slate-50 flex items-center justify-between gap-4">
+            <div className="p-4 rounded-2xl bg-muted/60 flex items-center justify-between gap-4">
               <div className="space-y-1">
-                <span className="text-xs font-bold text-slate-900 block">
+                <span className="text-xs font-bold text-foreground block">
                   Annual Comprehensive Insurance
                 </span>
-                <span className="text-xl font-extrabold text-slate-900 block">
+                <span className="text-xl font-extrabold text-foreground block">
                   {formatMoney(property.annual_insurance_amount)}
-                  <span className="text-xs font-normal text-slate-500 ml-1">/ year</span>
+                  <span className="text-xs font-normal text-muted-foreground ml-1">/ year</span>
                 </span>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-muted-foreground">
                   {property.insurance_renewal_date ? (
                     <span>Next Renewal: {financials.insuranceRenewal.formattedDate}</span>
                   ) : (
@@ -386,21 +399,21 @@ export function PropertyDetailsClient({
                   <span
                     className={`text-xs font-bold px-3 py-1 rounded-xl inline-block ${
                       financials.insuranceRenewal.urgency === 'critical'
-                        ? 'bg-rose-100 text-rose-800'
+                        ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
                         : financials.insuranceRenewal.urgency === 'warning'
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-slate-200 text-slate-800'
+                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                        : 'bg-muted text-foreground'
                     }`}
                   >
                     {financials.insuranceRenewal.label}
                   </span>
                 ) : (
-                  <span className="text-xs text-slate-400">N/A</span>
+                  <span className="text-xs text-muted-foreground">N/A</span>
                 )}
                 {Number(property.annual_insurance_amount || 0) > 0 && (
                   <button
                     onClick={() => handleOpenTx('expense')}
-                    className="block text-xs font-bold text-indigo-700 hover:text-indigo-900 underline mt-1.5 cursor-pointer"
+                    className="block text-xs font-bold text-primary hover:underline mt-1.5 cursor-pointer"
                   >
                     + Log Renewal
                   </button>
@@ -411,8 +424,8 @@ export function PropertyDetailsClient({
         </div>
 
         {/* Right: Revenue Profile & Reminders */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 text-xs uppercase font-bold text-slate-400 tracking-wider">
+        <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-4">
+          <div className="flex items-center gap-2 text-xs uppercase font-bold text-muted-foreground tracking-wider">
             <Receipt className="w-4 h-4 text-emerald-600" />
             Revenue Targets & Notes
           </div>
@@ -434,20 +447,20 @@ export function PropertyDetailsClient({
                   <span className="text-xs font-semibold text-emerald-800 uppercase block">
                     Expected Monthly Rental
                   </span>
-                  <span className="text-base font-extrabold text-emerald-950">
+                  <span className="text-base font-extrabold text-foreground">
                     {formatMoney(property.expected_income_monthly || 0)}
                   </span>
-                  <span className="text-xs text-emerald-700 block">/ month</span>
+                  <span className="text-xs text-emerald-500 block">/ month</span>
                 </div>
               </div>
             </div>
 
             {/* Notes & Reminders */}
-            <div className="p-4 rounded-2xl bg-[#F6F7F9] space-y-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+            <div className="p-4 rounded-2xl bg-muted space-y-1">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
                 Operating Notes & Reminders
               </span>
-              <p className="text-xs text-slate-700 leading-relaxed">
+              <p className="text-xs text-foreground leading-relaxed">
                 {property.notes || 'No operational notes or maintenance instructions recorded.'}
               </p>
             </div>
@@ -462,12 +475,11 @@ export function PropertyDetailsClient({
       />
 
       {/* Transaction Ledger Section */}
-
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 space-y-6">
+      <Card className="rounded-3xl p-6 sm:p-8 shadow-xs overflow-hidden min-w-0 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Asset Transaction Ledger</h3>
-            <p className="text-xs text-slate-500">
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold text-foreground truncate">Asset Transaction Ledger</h3>
+            <p className="text-xs text-muted-foreground truncate">
               Complete history of income and expenses recorded for {property.name}.
             </p>
           </div>
@@ -475,48 +487,44 @@ export function PropertyDetailsClient({
           {/* Ledger Controls */}
           <div className="flex items-center gap-3 flex-wrap">
             {/* Filter Kind */}
-            <div className="flex p-1 rounded-2xl bg-[#F6F7F9]">
-              <button
+            <div className="flex p-1 rounded-2xl bg-muted/80">
+              <Button
+                size="xs"
+                variant={kindFilter === 'all' ? 'default' : 'ghost'}
                 onClick={() => setKindFilter('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  kindFilter === 'all'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                className="rounded-xl text-xs font-bold"
               >
                 All ({transactions.length})
-              </button>
-              <button
+              </Button>
+              <Button
+                size="xs"
+                variant={kindFilter === 'income' ? 'default' : 'ghost'}
                 onClick={() => setKindFilter('income')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  kindFilter === 'income'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                className={`rounded-xl text-xs font-bold ${
+                  kindFilter === 'income' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''
                 }`}
               >
                 Income ({financials.incomeCount})
-              </button>
-              <button
+              </Button>
+              <Button
+                size="xs"
+                variant={kindFilter === 'expense' ? 'default' : 'ghost'}
                 onClick={() => setKindFilter('expense')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  kindFilter === 'expense'
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                className="rounded-xl text-xs font-bold"
               >
                 Expenses ({financials.expenseCount})
-              </button>
+              </Button>
             </div>
 
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-              <input
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground z-10 pointer-events-none" />
+              <Input
                 type="text"
                 placeholder="Search note, category..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-1.5 rounded-2xl bg-[#F6F7F9] text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 w-44"
+                className="pl-9 pr-3 h-8 text-xs rounded-xl bg-muted w-44 min-w-0"
               />
             </div>
           </div>
@@ -525,45 +533,49 @@ export function PropertyDetailsClient({
         {/* Transactions Table / List */}
         {filteredTransactions.length === 0 ? (
           <div className="text-center py-12 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
               <FileText className="w-6 h-6" />
             </div>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-muted-foreground font-medium">
               {searchQuery
                 ? 'No transactions found matching your search.'
                 : 'No transactions recorded for this asset yet.'}
             </p>
             {!searchQuery && (
               <div className="flex items-center justify-center gap-2 pt-2">
-                <button
+                <Button
+                  size="sm"
+                  variant="soft"
                   onClick={() => handleOpenTx('income')}
-                  className="px-4 py-2 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition-colors"
+                  className="rounded-xl bg-emerald-500/10 text-emerald-500 font-bold hover:bg-emerald-500/20"
                 >
                   + Log First Income
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="sm"
+                  variant="soft"
                   onClick={() => handleOpenTx('expense')}
-                  className="px-4 py-2 rounded-2xl bg-rose-50 text-rose-800 text-xs font-bold hover:bg-rose-100 transition-colors"
+                  className="rounded-xl bg-rose-500/10 text-rose-500 font-bold hover:bg-rose-500/20"
                 >
                   + Log First Expense
-                </button>
+                </Button>
               </div>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="space-y-2">
             {filteredTransactions.map((tx) => (
               <div
                 key={tx.id}
-                className="py-4 flex items-center justify-between gap-4 hover:bg-slate-50/50 px-2 rounded-2xl transition-colors"
+                className="py-4 flex items-center justify-between gap-4 hover:bg-muted/50 px-2 rounded-2xl transition-colors"
               >
                 {/* Left: Date, Note, Category, Payment Channel */}
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div
                     className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
                       tx.kind === 'income'
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-rose-50 text-rose-700'
+                        ? 'bg-emerald-500/10 text-emerald-500'
+                        : 'bg-rose-500/10 text-rose-500'
                     }`}
                   >
                     {tx.kind === 'income' ? (
@@ -574,25 +586,25 @@ export function PropertyDetailsClient({
                   </div>
 
                   <div className="min-w-0">
-                    <span className="text-sm font-bold text-slate-900 block truncate">
+                    <span className="text-sm font-bold text-foreground block truncate">
                       {tx.note || (tx.kind === 'income' ? 'Property Income' : 'Property Expense')}
                     </span>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
                       <span>{formatDate(tx.occurred_on)}</span>
                       {tx.category && (
                         <>
                           <span>•</span>
-                          <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                          <span className="font-semibold text-foreground bg-muted px-2 py-0.5 rounded-md">
                             {tx.category.name}
                           </span>
                         </>
                       )}
                       <span>•</span>
-                      <span className="capitalize font-medium text-slate-600">
+                      <span className="capitalize font-medium text-muted-foreground">
                         {tx.payment_method.replace('_', ' ')}
                       </span>
                       {tx.credit_card && (
-                        <span className="font-semibold text-indigo-700">
+                        <span className="font-semibold text-primary">
                           (•••• {tx.credit_card.last_4})
                         </span>
                       )}
@@ -605,31 +617,33 @@ export function PropertyDetailsClient({
                   <div className="text-right">
                     <span
                       className={`text-base font-extrabold block ${
-                        tx.kind === 'income' ? 'text-emerald-700' : 'text-slate-900'
+                        tx.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'
                       }`}
                     >
                       {tx.kind === 'income' ? '+' : '-'}
                       {formatMoney(tx.amount)}
                     </span>
-                    <span className="text-xs text-slate-400 capitalize block">
+                    <span className="text-xs text-muted-foreground capitalize block">
                       {tx.kind}
                     </span>
                   </div>
 
-                  <button
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
                     onClick={() => handleDeleteTransaction(tx.id)}
                     disabled={isDeletingTxId === tx.id}
-                    className="p-2 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     title="Delete Transaction"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Edit Property Modal */}
       <PropertyModal

@@ -33,7 +33,21 @@ import { Loan, BillSplit, Contact, CreditCard } from '@/types';
 import { formatMoney, formatDate } from '@/lib/finance/calculations';
 import { toggleLoanInstallmentPaidAction, sendLoanBorrowerReminderAction } from '@/app/actions/loans';
 import { toggleParticipantPaidAction, sendSplitParticipantReminderAction } from '@/app/actions/splits';
+import { cn } from '@/lib/utils';
 import { LoanModal } from '@/components/Forms/LoanModal';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogBody,
+} from '@/components/ui/responsive-dialog';
 
 interface ReceivablesClientProps {
   initialLoans: Loan[];
@@ -615,51 +629,52 @@ export function ReceivablesClient({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold">
               <HandCoins className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
               Receivables Hub
             </h1>
           </div>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Complete command center for all money owed to you — friendly personal loans, installment plans, and shared bill splits.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
           <Link
             href="/dashboard/splits"
-            className="bili-btn-secondary py-2.5 px-4 text-xs font-semibold shadow-sm flex items-center gap-1.5"
+            className={buttonVariants({ variant: 'secondary', size: 'sm' })}
           >
-            <Receipt className="w-4 h-4 text-slate-500" />
+            <Receipt className="w-4 h-4 text-muted-foreground" />
             Split a Bill
           </Link>
 
-          <button
+          <Button
+            size="sm"
             onClick={() => {
               setSelectedContactIdForLoan('');
               setIsLoanModalOpen(true);
             }}
-            className="bili-btn-primary py-2.5 px-4 text-xs font-semibold shadow-sm flex items-center gap-1.5"
+            className="gap-1.5"
           >
             <Plus className="w-4 h-4" />
             Record Receivable / Loan
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* 1. Executive Top Metrics Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Total Outstanding */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 col-span-2 sm:col-span-1 overflow-hidden min-w-0">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card space-y-1 col-span-2 sm:col-span-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
             Total Receivables
           </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 truncate">
+          <div className="text-2xl sm:text-3xl font-extrabold text-foreground truncate">
             {formatMoney(metrics.totalOutstanding)}
           </div>
-          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5 flex-wrap">
+          <div className="text-xs text-muted-foreground flex items-center gap-1 pt-0.5 flex-wrap">
             <span>Loans: {formatMoney(metrics.loansOutstanding)}</span>
             <span>•</span>
             <span>Splits: {formatMoney(metrics.splitsOutstanding)}</span>
@@ -667,39 +682,39 @@ export function ReceivablesClient({
         </div>
 
         {/* Due This Month */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 overflow-hidden min-w-0">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card space-y-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
             Due This Month
           </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-blue-700 truncate">
+          <div className="text-2xl sm:text-3xl font-extrabold text-blue-500 truncate">
             {formatMoney(metrics.dueThisMonth)}
           </div>
-          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1 pt-0.5">
             <Clock className="w-3 h-3 text-blue-500" />
             <span>Scheduled collections</span>
           </div>
         </div>
 
         {/* Overdue / Action Needed */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 overflow-hidden min-w-0">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card space-y-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
             Overdue / At Risk
           </span>
           <div
             className={`text-2xl sm:text-3xl font-extrabold ${
-              metrics.overdueAmount > 0 ? 'text-rose-600' : 'text-slate-900'
+              metrics.overdueAmount > 0 ? 'text-rose-500' : 'text-foreground'
             }`}
           >
             {formatMoney(metrics.overdueAmount)}
           </div>
-          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1 pt-0.5">
             {metrics.overdueCount > 0 ? (
-              <span className="text-rose-600 font-semibold flex items-center gap-1">
+              <span className="text-rose-500 font-semibold flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
                 {metrics.overdueCount} items past due
               </span>
             ) : (
-              <span className="text-emerald-700 font-medium flex items-center gap-1">
+              <span className="text-emerald-500 font-medium flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
                 Zero overdue
               </span>
@@ -708,28 +723,28 @@ export function ReceivablesClient({
         </div>
 
         {/* Collected This Month */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 overflow-hidden min-w-0">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card space-y-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
             Collected This Month
           </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 truncate">
+          <div className="text-2xl sm:text-3xl font-extrabold text-emerald-500 truncate">
             {formatMoney(metrics.collectedThisMonth)}
           </div>
-          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5">
-            <TrendingUp className="w-3 h-3 text-emerald-600" />
+          <div className="text-xs text-muted-foreground flex items-center gap-1 pt-0.5">
+            <TrendingUp className="w-3 h-3 text-emerald-500" />
             <span>Recovered capital</span>
           </div>
         </div>
 
         {/* Total Interest Yield */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-1 overflow-hidden min-w-0">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card space-y-1 overflow-hidden min-w-0">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
             Interest Accrued
           </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-indigo-700 truncate">
+          <div className="text-2xl sm:text-3xl font-extrabold text-indigo-500 truncate">
             {formatMoney(metrics.totalInterestYield)}
           </div>
-          <div className="text-xs text-slate-500 flex items-center gap-1 pt-0.5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1 pt-0.5">
             <Percent className="w-3 h-3 text-indigo-500" />
             <span>Yield on loans</span>
           </div>
@@ -738,24 +753,24 @@ export function ReceivablesClient({
 
       {/* 2. Visual Aging Runway */}
       {metrics.totalOutstanding > 0 && (
-        <div className="bg-white rounded-3xl p-6 shadow-sm space-y-3">
+        <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h2 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <Clock className="w-4 h-4 text-blue-600" />
+              <h2 className="text-sm font-bold text-foreground tracking-tight flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-500" />
                 Receivables Aging & Cash Flow Inflow Runway
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 Categorization of money owed based on payment urgency and scheduled return dates.
               </p>
             </div>
-            <span className="text-xs font-bold text-slate-700 bg-[#F6F7F9] px-3 py-1 rounded-full self-start sm:self-auto">
+            <span className="text-xs font-bold text-foreground bg-muted px-3 py-1 rounded-full self-start sm:self-auto">
               {debtorRollups.filter((d) => d.totalOwed > 0).length} People Currently Owe You
             </span>
           </div>
 
           {/* Segmented Visual Bar */}
-          <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden flex">
+          <div className="w-full h-3 rounded-full bg-muted overflow-hidden flex">
             {metrics.overdueAmount > 0 && (
               <div
                 className="h-full bg-rose-500 transition-all"
@@ -770,7 +785,7 @@ export function ReceivablesClient({
             )}
             {metrics.dueThisMonth > 0 && (
               <div
-                className="h-full bg-blue-600 transition-all"
+                className="h-full bg-blue-500 transition-all"
                 style={{
                   width: `${Math.max(
                     5,
@@ -781,7 +796,7 @@ export function ReceivablesClient({
               />
             )}
             <div
-              className="h-full bg-slate-300 transition-all flex-1"
+              className="h-full bg-muted-foreground/30 transition-all flex-1"
               title="Future Amortizations & Open Balances"
             />
           </div>
@@ -790,18 +805,18 @@ export function ReceivablesClient({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-xs">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-              <span className="text-slate-600 font-medium">Overdue:</span>
-              <strong className="text-rose-700">{formatMoney(metrics.overdueAmount)}</strong>
+              <span className="text-muted-foreground font-medium">Overdue:</span>
+              <strong className="text-rose-500">{formatMoney(metrics.overdueAmount)}</strong>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shrink-0" />
-              <span className="text-slate-600 font-medium">Due This Month:</span>
-              <strong className="text-blue-700">{formatMoney(metrics.dueThisMonth)}</strong>
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+              <span className="text-muted-foreground font-medium">Due This Month:</span>
+              <strong className="text-blue-500">{formatMoney(metrics.dueThisMonth)}</strong>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0" />
-              <span className="text-slate-600 font-medium">Future Amortizations:</span>
-              <strong className="text-slate-800">
+              <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/50 shrink-0" />
+              <span className="text-muted-foreground font-medium">Future Amortizations:</span>
+              <strong className="text-foreground">
                 {formatMoney(
                   Math.max(0, metrics.totalOutstanding - metrics.dueThisMonth - metrics.overdueAmount)
                 )}
@@ -809,8 +824,8 @@ export function ReceivablesClient({
             </div>
             <div className="flex items-center gap-2 sm:justify-end">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <span className="text-slate-600 font-medium">Recovered:</span>
-              <strong className="text-emerald-700">{formatMoney(metrics.collectedThisMonth)}</strong>
+              <span className="text-muted-foreground font-medium">Recovered:</span>
+              <strong className="text-emerald-500">{formatMoney(metrics.collectedThisMonth)}</strong>
             </div>
           </div>
         </div>
@@ -820,13 +835,13 @@ export function ReceivablesClient({
       <div className="space-y-4">
         {/* Main Tabs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 p-1 bg-[#F6F7F9] rounded-2xl self-start overflow-x-auto no-scrollbar max-w-full shrink-0">
+          <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl self-start overflow-x-auto no-scrollbar max-w-full shrink-0">
             <button
               onClick={() => setActiveTab('debtors')}
               className={`py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'debtors'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Users className="w-3.5 h-3.5" />
@@ -837,8 +852,8 @@ export function ReceivablesClient({
               onClick={() => setActiveTab('all')}
               className={`py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'all'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               All Line Items ({unifiedItems.length})
@@ -848,8 +863,8 @@ export function ReceivablesClient({
               onClick={() => setActiveTab('loans')}
               className={`py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'loans'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <HandCoins className="w-3.5 h-3.5" />
@@ -860,8 +875,8 @@ export function ReceivablesClient({
               onClick={() => setActiveTab('splits')}
               className={`py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'splits'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Receipt className="w-3.5 h-3.5" />
@@ -871,18 +886,18 @@ export function ReceivablesClient({
 
           {/* Search Box */}
           <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
+            <Input
               type="text"
               placeholder="Search person or item..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bili-input w-full pl-9 pr-8 text-xs bg-white"
+              className="pl-9 pr-8 text-xs h-10 min-h-0 bg-muted rounded-xl"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer z-10"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -892,7 +907,7 @@ export function ReceivablesClient({
 
         {/* Status Filter Chips */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
-          <span className="text-slate-400 font-medium text-xs uppercase tracking-wider shrink-0 flex items-center gap-1">
+          <span className="text-muted-foreground font-medium text-xs uppercase tracking-wider shrink-0 flex items-center gap-1">
             <Filter className="w-3 h-3" /> Status:
           </span>
 
@@ -908,8 +923,8 @@ export function ReceivablesClient({
               onClick={() => setStatusFilter(s.key as StatusFilter)}
               className={`px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
                 statusFilter === s.key
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 shadow-xs'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground shadow-xs'
               }`}
             >
               {s.label}
@@ -922,12 +937,12 @@ export function ReceivablesClient({
       {activeTab === 'debtors' && (
         <div className="space-y-4">
           {filteredDebtors.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center space-y-3 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <div className="bg-card text-card-foreground rounded-3xl p-12 text-center space-y-3 shadow-card">
+              <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
                 <Users className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-800">No debtors match your filter</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              <h3 className="text-base font-bold text-foreground">No debtors match your filter</h3>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                 Try selecting &quot;All Records&quot; or clearing your search query.
               </p>
             </div>
@@ -943,26 +958,26 @@ export function ReceivablesClient({
                 return (
                   <div
                     key={debtor.contactId}
-                    className="bg-white rounded-3xl p-6 shadow-sm space-y-4 transition-all hover:shadow-md overflow-hidden"
+                    className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-4 transition-all hover:shadow-md overflow-hidden"
                   >
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-extrabold text-base shrink-0">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-extrabold text-base shrink-0">
                           {debtor.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <h3 className="text-base font-bold text-slate-900 truncate">{debtor.name}</h3>
-                          <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5 flex-wrap">
+                          <h3 className="text-base font-bold text-foreground truncate">{debtor.name}</h3>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
                             {debtor.phone && (
                               <span className="flex items-center gap-1">
-                                <Phone className="w-3 h-3 text-slate-400" />
+                                <Phone className="w-3 h-3 text-muted-foreground" />
                                 {debtor.phone}
                               </span>
                             )}
                             {debtor.email && (
                               <span className="flex items-center gap-1 truncate">
-                                <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                                <Mail className="w-3 h-3 text-muted-foreground shrink-0" />
                                 <span className="truncate">{debtor.email}</span>
                               </span>
                             )}
@@ -973,8 +988,8 @@ export function ReceivablesClient({
                       <span
                         className={`text-xs font-bold px-3 py-1 rounded-full shrink-0 ${
                           isFullySettled
-                            ? 'bg-emerald-50 text-emerald-800'
-                            : 'bg-indigo-50 text-indigo-700'
+                            ? 'bg-emerald-500/10 text-emerald-500'
+                            : 'bg-indigo-500/10 text-indigo-500'
                         }`}
                       >
                         {isFullySettled ? 'All Settled ✅' : `${formatMoney(debtor.totalOwed)} Owed`}
@@ -982,18 +997,18 @@ export function ReceivablesClient({
                     </div>
 
                     {/* Balance & Progress */}
-                    <div className="p-4 rounded-2xl bg-[#F6F7F9] space-y-2">
+                    <div className="p-4 rounded-2xl bg-muted/60 space-y-2">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-500 font-medium">Repayment Progress:</span>
-                        <span className="font-bold text-slate-800">
+                        <span className="text-muted-foreground font-medium">Repayment Progress:</span>
+                        <span className="font-bold text-foreground">
                           {percentPaid}% ({formatMoney(debtor.totalPaid)} of{' '}
                           {formatMoney(debtor.totalOriginated)})
                         </span>
                       </div>
 
-                      <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                      <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                         <div
-                          className="h-full bg-emerald-600 rounded-full transition-all duration-300"
+                          className="h-full bg-emerald-500 rounded-full transition-all duration-300"
                           style={{ width: `${percentPaid}%` }}
                         />
                       </div>
@@ -1001,12 +1016,12 @@ export function ReceivablesClient({
                       {/* Items breakdown pills */}
                       <div className="pt-1 flex flex-wrap items-center gap-2 text-xs">
                         {debtor.loans.length > 0 && (
-                          <span className="text-slate-600 font-medium bg-white px-2.5 py-1 rounded-lg shadow-xs">
+                          <span className="text-muted-foreground font-medium bg-card px-2.5 py-1 rounded-lg shadow-xs">
                             {debtor.loans.length} Loan{debtor.loans.length === 1 ? '' : 's'}
                           </span>
                         )}
                         {debtor.splitShares.length > 0 && (
-                          <span className="text-slate-600 font-medium bg-white px-2.5 py-1 rounded-lg shadow-xs">
+                          <span className="text-muted-foreground font-medium bg-card px-2.5 py-1 rounded-lg shadow-xs">
                             {debtor.splitShares.length} Bill Split{debtor.splitShares.length === 1 ? '' : 's'}
                           </span>
                         )}
@@ -1021,28 +1036,28 @@ export function ReceivablesClient({
                       {debtor.loans.map((l) => (
                         <div
                           key={l.id}
-                          className="flex items-center justify-between text-xs p-3 rounded-2xl bg-white hover:bg-slate-50 transition-colors border border-slate-100 shadow-2xs"
+                          className="flex items-center justify-between text-xs p-3 rounded-2xl bg-muted/60 hover:bg-muted/80 transition-colors shadow-2xs"
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
                             <span
                               className={`font-bold px-2 py-0.5 rounded-md text-xs uppercase tracking-wider shrink-0 ${
                                 l.status === 'paid'
-                                  ? 'bg-emerald-50 text-emerald-700'
-                                  : 'bg-indigo-50 text-indigo-700'
+                                  ? 'bg-emerald-500/10 text-emerald-500'
+                                  : 'bg-indigo-500/10 text-indigo-500'
                               }`}
                             >
                               {l.status === 'paid' ? 'Paid' : 'Advance'}
                             </span>
                             <div className="min-w-0">
-                              <span className="font-bold text-slate-900 truncate block">
+                              <span className="font-bold text-foreground truncate block">
                                 {l.reason || 'Receivable Advance'}
                               </span>
-                              <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                              <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
                                 <span>
                                   {l.due_date ? `Due ${formatDate(l.due_date)}` : `Lent ${formatDate(l.loaned_on)}`}
                                 </span>
                                 {Number(l.monthly_interest_rate || 0) > 0 && (
-                                  <span className="text-indigo-600 font-semibold">
+                                  <span className="text-indigo-500 font-semibold">
                                     • {l.monthly_interest_rate}%/mo
                                   </span>
                                 )}
@@ -1054,20 +1069,20 @@ export function ReceivablesClient({
                             <div>
                               <span
                                 className={`font-extrabold text-sm block ${
-                                  l.status === 'paid' ? 'text-emerald-600' : 'text-slate-900'
+                                  l.status === 'paid' ? 'text-emerald-500' : 'text-foreground'
                                 }`}
                               >
                                 {formatMoney(l.balance_remaining)}
                               </span>
                               {Number(l.amount) > Number(l.balance_remaining) && l.status !== 'paid' && (
-                                <span className="text-xs text-slate-400 block">
+                                <span className="text-xs text-muted-foreground block">
                                   of {formatMoney(Number(l.amount))}
                                 </span>
                               )}
                             </div>
                             <Link
                               href={`/dashboard/loans/${l.id}`}
-                              className="p-1.5 rounded-xl text-blue-600 hover:bg-blue-50 transition-colors"
+                              className="p-1.5 rounded-xl text-blue-500 hover:bg-muted transition-colors"
                               title="View Details"
                             >
                               <ExternalLink className="w-4 h-4" />
@@ -1079,23 +1094,23 @@ export function ReceivablesClient({
                       {debtor.splitShares.map((s) => (
                         <div
                           key={s.participantId}
-                          className="flex items-center justify-between text-xs p-3 rounded-2xl bg-white hover:bg-slate-50 transition-colors border border-slate-100 shadow-2xs"
+                          className="flex items-center justify-between text-xs p-3 rounded-2xl bg-muted/60 hover:bg-muted/80 transition-colors shadow-2xs"
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
                             <span
                               className={`font-bold px-2 py-0.5 rounded-md text-xs uppercase tracking-wider shrink-0 ${
                                 s.isPaid
-                                  ? 'bg-emerald-50 text-emerald-700'
-                                  : 'bg-amber-50 text-amber-800'
+                                  ? 'bg-emerald-500/10 text-emerald-500'
+                                  : 'bg-amber-500/10 text-amber-500'
                               }`}
                             >
                               {s.isPaid ? 'Paid' : 'Split'}
                             </span>
                             <div className="min-w-0">
-                              <span className="font-bold text-slate-900 truncate block">
+                              <span className="font-bold text-foreground truncate block">
                                 {s.split.title}
                               </span>
-                              <span className="text-xs text-slate-400 block mt-0.5">
+                              <span className="text-xs text-muted-foreground block mt-0.5">
                                 {formatDate(s.split.occurred_on)}
                               </span>
                             </div>
@@ -1104,14 +1119,14 @@ export function ReceivablesClient({
                           <div className="flex items-center gap-3 shrink-0 text-right">
                             <span
                               className={`font-extrabold text-sm block ${
-                                s.isPaid ? 'text-emerald-700' : 'text-slate-900'
+                                s.isPaid ? 'text-emerald-500' : 'text-foreground'
                               }`}
                             >
                               {s.isPaid ? 'Paid' : formatMoney(s.shareAmount)}
                             </span>
                             <Link
                               href="/dashboard/splits"
-                              className="p-1.5 rounded-xl text-blue-600 hover:bg-blue-50 transition-colors"
+                              className="p-1.5 rounded-xl text-blue-500 hover:bg-muted transition-colors"
                               title="View Split Details"
                             >
                               <ExternalLink className="w-4 h-4" />
@@ -1122,22 +1137,26 @@ export function ReceivablesClient({
                     </div>
 
                     {/* Action Row */}
-                    <div className="pt-1 flex items-center justify-end gap-2">
-                      <button
+                    <div className="pt-1 flex items-center justify-end gap-2 flex-wrap">
+                      <Button
                         type="button"
+                        size="xs"
+                        variant="soft"
                         onClick={() => {
                           setSelectedContactIdForLoan(debtor.contactId);
                           setIsLoanModalOpen(true);
                         }}
-                        className="bili-btn-secondary text-xs py-2 px-3 font-semibold flex items-center gap-1.5 shadow-xs text-indigo-700 hover:text-indigo-900 bg-indigo-50/70"
+                        className="text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 font-semibold gap-1.5"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         Add Advance
-                      </button>
+                      </Button>
 
                       {!isFullySettled && (debtor.phone || debtor.email) && (
-                        <button
+                        <Button
                           type="button"
+                          size="xs"
+                          variant="secondary"
                           onClick={() =>
                             handleOpenReminderModal({
                               contactName: debtor.name,
@@ -1149,11 +1168,11 @@ export function ReceivablesClient({
                               participantId: debtor.splitShares.find((s) => !s.isPaid)?.participantId,
                             })
                           }
-                          className="bili-btn-secondary text-xs py-2 px-3.5 font-semibold flex items-center gap-1.5 shadow-xs"
+                          className="font-semibold gap-1.5"
                         >
-                          <Send className="w-3.5 h-3.5 text-blue-600" />
+                          <Send className="w-3.5 h-3.5 text-blue-500" />
                           Send Reminder
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -1165,14 +1184,15 @@ export function ReceivablesClient({
           {/* Lazy Load Debtors Button */}
           {filteredDebtors.length > debtorsVisibleCount && (
             <div className="pt-3 text-center">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => setDebtorsVisibleCount((prev) => prev + 10)}
-                className="bili-btn-secondary px-6 py-2.5 text-xs font-semibold text-slate-700 hover:text-slate-900 cursor-pointer"
               >
                 Load More Debtors ({filteredDebtors.length - debtorsVisibleCount} remaining)
-              </button>
-              <p className="text-xs text-slate-400 mt-2">
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
                 Showing {Math.min(debtorsVisibleCount, filteredDebtors.length)} of {filteredDebtors.length} debtors
               </p>
             </div>
@@ -1184,21 +1204,21 @@ export function ReceivablesClient({
       {activeTab !== 'debtors' && (
         <div className="space-y-4">
           {filteredItems.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center space-y-3 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <div className="bg-card text-card-foreground rounded-3xl p-12 text-center space-y-3 shadow-card">
+              <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
                 <HandCoins className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-800">No receivables found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              <h3 className="text-base font-bold text-foreground">No receivables found</h3>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                 {statusFilter !== 'all'
                   ? 'Try selecting a different status filter above to view more items.'
                   : 'Start tracking money owed by recording a loan or splitting a bill.'}
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-sm space-y-3">
+            <div className="bg-card text-card-foreground rounded-3xl p-4 sm:p-6 shadow-card space-y-3">
               {/* Header row */}
-              <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <div className="col-span-4">Debtor & Title</div>
                 <div className="col-span-3">Due / Date</div>
                 <div className="col-span-3">Amount & Balance</div>
@@ -1215,10 +1235,10 @@ export function ReceivablesClient({
                       key={item.id}
                       className={`rounded-2xl p-4 sm:px-4 sm:py-3.5 transition-all flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 items-start sm:items-center ${
                         item.isPaid
-                          ? 'bg-[#F6F7F9]/70'
+                          ? 'bg-muted/40'
                           : item.isOverdue
-                          ? 'bg-rose-50/50'
-                          : 'bg-[#F6F7F9]'
+                          ? 'bg-rose-500/10'
+                          : 'bg-muted/70'
                       }`}
                     >
                       {/* Debtor & Title */}
@@ -1226,8 +1246,8 @@ export function ReceivablesClient({
                         <div
                           className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
                             item.kind === 'loan'
-                              ? 'bg-indigo-100 text-indigo-800'
-                              : 'bg-amber-100 text-amber-800'
+                              ? 'bg-indigo-500/10 text-indigo-500'
+                              : 'bg-amber-500/10 text-amber-500'
                           }`}
                         >
                           {item.kind === 'loan' ? (
@@ -1239,25 +1259,25 @@ export function ReceivablesClient({
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-bold text-slate-900 truncate">
+                            <span className="text-sm font-bold text-foreground truncate">
                               {item.debtorName}
                             </span>
                             <span
                               className={`text-xs font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                                 item.kind === 'loan'
-                                  ? 'bg-indigo-50 text-indigo-700'
-                                  : 'bg-amber-50 text-amber-800'
+                                  ? 'bg-indigo-500/10 text-indigo-500'
+                                  : 'bg-amber-500/10 text-amber-500'
                               }`}
                             >
                               {item.kind === 'loan' ? 'Loan' : 'Bill Split'}
                             </span>
                           </div>
 
-                          <div className="text-xs text-slate-500 truncate flex items-center gap-2 mt-0.5">
+                          <div className="text-xs text-muted-foreground truncate flex items-center gap-2 mt-0.5">
                             <span>{item.title}</span>
                             {item.creditCard && (
-                              <span className="text-slate-400 flex items-center gap-1 text-xs">
-                                • <CreditCardIcon className="w-3 h-3 text-slate-400" />
+                              <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                                • <CreditCardIcon className="w-3 h-3 text-muted-foreground" />
                                 {item.creditCard.name}
                               </span>
                             )}
@@ -1267,16 +1287,16 @@ export function ReceivablesClient({
 
                       {/* Due / Date */}
                       <div className="col-span-3">
-                        <div className="text-xs font-semibold text-slate-800">
+                        <div className="text-xs font-semibold text-foreground">
                           {formatDate(item.dueDate || item.occurredOn)}
                         </div>
                         <span
                           className={`text-xs font-medium block mt-0.5 ${
                             item.isPaid
-                              ? 'text-emerald-700 font-bold'
+                              ? 'text-emerald-500 font-bold'
                               : item.isOverdue
-                              ? 'text-rose-600 font-bold'
-                              : 'text-slate-400'
+                              ? 'text-rose-500 font-bold'
+                              : 'text-muted-foreground'
                           }`}
                         >
                           {item.dueText}
@@ -1286,18 +1306,18 @@ export function ReceivablesClient({
                       {/* Amount & Balance */}
                       <div className="col-span-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-sm font-extrabold text-slate-900">
+                          <span className="text-sm font-extrabold text-foreground">
                             {formatMoney(item.balanceRemaining)}
                           </span>
                           {!item.isPaid && item.balanceRemaining !== item.amount && (
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-muted-foreground">
                               of {formatMoney(item.amount)}
                             </span>
                           )}
                         </div>
 
                         {item.rawLoan && Number(item.rawLoan.monthly_interest_rate || 0) > 0 && (
-                          <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded mt-0.5 inline-block">
+                          <span className="text-xs font-semibold text-indigo-500 bg-indigo-500/10 px-1.5 py-0.2 rounded mt-0.5 inline-block">
                             {item.rawLoan.monthly_interest_rate}% / mo Interest
                           </span>
                         )}
@@ -1306,15 +1326,13 @@ export function ReceivablesClient({
                       {/* Action */}
                       <div className="col-span-2 w-full sm:w-auto flex items-center sm:justify-end gap-2">
                         {item.kind === 'split' ? (
-                          <button
+                          <Button
                             type="button"
+                            size="xs"
+                            variant={item.isPaid ? 'secondary' : 'default'}
                             disabled={isLoading}
                             onClick={() => handleQuickSettleItem(item)}
-                            className={`text-xs py-1.5 px-3 rounded-xl font-semibold transition-all flex items-center gap-1 w-full sm:w-auto justify-center ${
-                              item.isPaid
-                                ? 'bg-white hover:bg-slate-100 text-slate-600 shadow-xs'
-                                : 'bili-btn-primary shadow-xs'
-                            }`}
+                            className="w-full sm:w-auto gap-1"
                           >
                             {isLoading ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1326,14 +1344,14 @@ export function ReceivablesClient({
                                 Settle Share
                               </>
                             )}
-                          </button>
+                          </Button>
                         ) : (
                           <Link
                             href={`/dashboard/loans/${item.rawLoan?.id}`}
-                            className="bili-btn-secondary text-xs py-1.5 px-3 rounded-xl font-semibold transition-all flex items-center gap-1 w-full sm:w-auto justify-center shadow-xs"
+                            className={cn(buttonVariants({ variant: 'secondary', size: 'xs' }), "w-full sm:w-auto gap-1")}
                           >
                             Manage
-                            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
                           </Link>
                         )}
 
@@ -1351,7 +1369,7 @@ export function ReceivablesClient({
                                 participantId: item.rawParticipantId,
                               })
                             }
-                            className="p-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-500 hover:text-blue-600 shadow-xs transition-colors shrink-0"
+                            className="p-1.5 rounded-xl bg-card hover:bg-accent text-muted-foreground hover:text-foreground shadow-xs transition-colors shrink-0"
                             title="Send Payment Reminder"
                           >
                             <Send className="w-3.5 h-3.5" />
@@ -1365,15 +1383,15 @@ export function ReceivablesClient({
 
               {/* Lazy Load Records Button */}
               {filteredItems.length > itemsVisibleCount && (
-                <div className="pt-3 text-center border-t border-slate-100">
-                  <button
+                <div className="pt-3 text-center">
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={() => setItemsVisibleCount((prev) => prev + 15)}
-                    className="bili-btn-secondary px-6 py-2.5 text-xs font-semibold text-slate-700 hover:text-slate-900 cursor-pointer"
                   >
                     Load More Records ({filteredItems.length - itemsVisibleCount} remaining)
-                  </button>
-                  <p className="text-xs text-slate-400 mt-2">
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">
                     Showing {Math.min(itemsVisibleCount, filteredItems.length)} of {filteredItems.length} records
                   </p>
                 </div>
@@ -1384,97 +1402,95 @@ export function ReceivablesClient({
       )}
 
       {/* Quick Reminder Modal */}
-      {reminderModalData && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative space-y-4">
-            <button
-              onClick={() => setReminderModalData(null)}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-3 pr-10">
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+      <ResponsiveDialog
+        open={Boolean(reminderModalData)}
+        onOpenChange={(open) => {
+          if (!open) setReminderModalData(null);
+        }}
+      >
+        <ResponsiveDialogContent className="max-w-md">
+          <ResponsiveDialogHeader className="pr-10 sm:pr-12">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                 <Send className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-base font-bold text-slate-900 truncate">
+                <ResponsiveDialogTitle className="truncate">
                   Send Friendly Reminder
-                </h3>
-                <p className="text-xs text-slate-500 truncate">
-                  To {reminderModalData.contactName} ({formatMoney(reminderModalData.amount)})
-                </p>
+                </ResponsiveDialogTitle>
+                <ResponsiveDialogDescription className="truncate">
+                  To {reminderModalData?.contactName} ({reminderModalData ? formatMoney(reminderModalData.amount) : ''})
+                </ResponsiveDialogDescription>
               </div>
             </div>
+          </ResponsiveDialogHeader>
 
+          <ResponsiveDialogBody className="space-y-4">
             {/* Channel Switcher */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-[#F6F7F9] rounded-2xl">
-              <button
+            <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-2xl">
+              <Button
                 type="button"
+                size="sm"
+                variant={reminderChannel === 'sms' ? 'default' : 'ghost'}
                 onClick={() => setReminderChannel('sms')}
-                className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                  reminderChannel === 'sms'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
+                className="gap-1.5 rounded-xl font-semibold"
               >
                 <Phone className="w-3.5 h-3.5" /> SMS Text
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                size="sm"
+                variant={reminderChannel === 'email' ? 'default' : 'ghost'}
                 onClick={() => setReminderChannel('email')}
-                className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                  reminderChannel === 'email'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
+                className="gap-1.5 rounded-xl font-semibold"
               >
                 <Mail className="w-3.5 h-3.5" /> Email
-              </button>
+              </Button>
             </div>
 
             {/* Recipient Notice */}
-            <div className="text-xs text-slate-600 bg-[#F6F7F9] p-3 rounded-xl">
+            <div className="text-xs text-muted-foreground bg-muted/60 p-3 rounded-xl">
               <span>Sending to: </span>
-              <strong className="text-slate-900">
+              <strong className="text-foreground">
                 {reminderChannel === 'sms'
-                  ? reminderModalData.phone || 'No phone set'
-                  : reminderModalData.email || 'No email set'}
+                  ? reminderModalData?.phone || 'No phone set'
+                  : reminderModalData?.email || 'No email set'}
               </strong>
             </div>
 
             {/* Message Box */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-muted-foreground">
                 Customize Message:
               </label>
-              <textarea
+              <Textarea
                 rows={3}
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
-                className="bili-input w-full text-xs bg-white leading-relaxed resize-y"
+                className="text-xs bg-muted/40 min-h-20"
               />
             </div>
 
             {/* Modal Actions */}
-            <div className="flex justify-end gap-2 pt-1">
-              <button
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setReminderModalData(null)}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-800 px-3.5 py-2 rounded-xl"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                size="sm"
                 disabled={
                   isSendingReminder ||
-                  (reminderChannel === 'sms' && !reminderModalData.phone) ||
-                  (reminderChannel === 'email' && !reminderModalData.email)
+                  (reminderChannel === 'sms' && !reminderModalData?.phone) ||
+                  (reminderChannel === 'email' && !reminderModalData?.email)
                 }
                 onClick={handleSendReminder}
-                className="bili-btn-primary py-2 px-5 text-xs font-semibold shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+                className="gap-1.5"
               >
                 {isSendingReminder ? (
                   <>
@@ -1485,11 +1501,11 @@ export function ReceivablesClient({
                     <Send className="w-3.5 h-3.5" /> Dispatch Reminder
                   </>
                 )}
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </ResponsiveDialogBody>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Record Loan Modal */}
       <LoanModal

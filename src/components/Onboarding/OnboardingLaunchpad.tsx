@@ -17,6 +17,7 @@ import {
   Trophy,
 } from 'lucide-react';
 import { dismissOnboardingChecklistAction } from '@/app/actions/onboarding';
+import { Badge } from '@/components/ui/badge';
 
 interface LaunchpadProps {
   progress: {
@@ -48,7 +49,7 @@ export function OnboardingLaunchpad({
       desc: 'GCash, Maya, Bank, or Cash',
       proTip: 'Where your daily spending money lives',
       icon: Wallet,
-      iconBg: 'bg-slate-900 text-white',
+      iconBg: 'bg-primary text-primary-foreground',
       done: progress.accountAdded,
       onClick: onOpenWizard,
       actionLabel: 'Setup Wallet',
@@ -59,41 +60,38 @@ export function OnboardingLaunchpad({
       desc: 'Bought coffee, lunch, or a snack?',
       proTip: 'Tap to log an expense in 5 seconds',
       icon: Receipt,
-      iconBg: 'bg-slate-800 text-white',
+      iconBg: 'bg-emerald-500 text-white',
       done: progress.firstTransaction,
       onClick: onRecordExpense,
-      href: onRecordExpense ? undefined : '/dashboard/transactions',
       actionLabel: 'Log Expense',
     },
     {
-      id: 'card',
-      title: '3. Add a Card or Loan',
-      desc: 'Never miss a bill due date',
-      proTip: 'Track credit cards or money lent out',
+      id: 'cardOrLoan',
+      title: '3. Add Credit Card / Debt',
+      desc: 'BPI, BDO, UnionBank, Spay, Loan',
+      proTip: 'Track limits, statement cutoffs, and due dates',
       icon: CreditCardIcon,
-      iconBg: 'bg-slate-800 text-white',
+      iconBg: 'bg-indigo-500 text-white',
       done: progress.cardOrLoanAdded,
       href: '/dashboard/cards',
-      actionLabel: 'Add Card',
+      actionLabel: 'Open Cards',
     },
     {
       id: 'ai',
-      title: '4. Ask Tenvi AI Buddy',
-      desc: 'Ask: "How do I save ₱5k this month?"',
-      proTip: 'Friendly answers with zero judgment',
+      title: '4. Ask Tenvi AI',
+      desc: 'Ask: "How can I budget this month?"',
+      proTip: 'Get instant insights on your spending',
       icon: Bot,
-      iconBg: 'bg-slate-800 text-white',
+      iconBg: 'bg-amber-500 text-white',
       done: progress.aiConsulted,
       onClick: onOpenAi,
-      actionLabel: 'Chat with AI',
+      actionLabel: 'Ask AI Copilot',
     },
   ];
 
   const completedCount = missions.filter((m) => m.done).length;
   const percent = Math.round((completedCount / missions.length) * 100);
   const allCompleted = completedCount === missions.length;
-
-  // Find the first unfinished mission to highlight as "Next Mission"
   const nextMission = missions.find((m) => !m.done);
 
   if (dismissed) {
@@ -105,10 +103,10 @@ export function OnboardingLaunchpad({
     await dismissOnboardingChecklistAction();
   };
 
-  // Solid Celebration banner when all missions are complete (ZERO gradient)
+  // Solid Celebration banner when all missions are complete (Solid tone)
   if (allCompleted) {
     return (
-      <div className="mb-6 p-5 sm:p-6 bg-slate-900 text-white rounded-3xl shadow-sm border border-slate-800 animate-in fade-in duration-600 ease-out relative overflow-hidden">
+      <div className="mb-6 p-5 sm:p-6 bg-slate-900 text-white rounded-3xl shadow-card animate-in fade-in duration-600 ease-out relative overflow-hidden">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
@@ -119,7 +117,7 @@ export function OnboardingLaunchpad({
                 <h3 className="text-base sm:text-lg font-black tracking-tight">
                   All 4 Starter Missions Completed! 🏆
                 </h3>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
                   100% Mastered
                 </span>
               </div>
@@ -154,26 +152,26 @@ export function OnboardingLaunchpad({
   }
 
   return (
-    <div className="mb-6 p-5 sm:p-6 bg-white text-slate-900 rounded-3xl shadow-sm border border-slate-200 transition-all duration-200">
+    <div className="mb-6 p-5 sm:p-6 bg-card text-foreground rounded-3xl shadow-card transition-all duration-200">
       {/* Top Header */}
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center shrink-0 shadow-xs">
-            <Sparkles className="w-5 h-5 text-slate-700" />
+          <div className="w-11 h-11 rounded-2xl bg-muted/60 text-foreground flex items-center justify-center shrink-0 shadow-xs">
+            <Sparkles className="w-5 h-5 text-muted-foreground" />
           </div>
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+              <h3 className="text-base sm:text-lg font-black text-foreground tracking-tight">
                 Starter Missions 🚀
               </h3>
-              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+              <Badge variant="neutral">
                 Mission {completedCount} of {missions.length} Done ({percent}%)
-              </span>
+              </Badge>
             </div>
-            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 font-medium">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 font-medium">
               {nextMission ? (
                 <>
-                  <span className="text-slate-900 font-bold">Next Mission: </span>
+                  <span className="text-foreground font-bold">Next Mission: </span>
                   {nextMission.desc}
                 </>
               ) : (
@@ -188,9 +186,9 @@ export function OnboardingLaunchpad({
           {onStartTour && (
             <button
               onClick={onStartTour}
-              className="hidden md:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer active:scale-95"
+              className="hidden md:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl bg-muted/60 hover:bg-muted text-foreground transition cursor-pointer active:scale-95"
             >
-              <Compass className="w-3.5 h-3.5 text-slate-700" />
+              <Compass className="w-3.5 h-3.5 text-muted-foreground" />
               Take 30s Tour
             </button>
           )}
@@ -198,7 +196,7 @@ export function OnboardingLaunchpad({
           {onOpenWizard && (
             <button
               onClick={onOpenWizard}
-              className="hidden sm:inline-flex text-xs font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer active:scale-95"
+              className="hidden sm:inline-flex text-xs font-bold px-3 py-2 rounded-xl bg-muted/60 hover:bg-muted text-foreground transition cursor-pointer active:scale-95"
             >
               Setup Wizard
             </button>
@@ -207,7 +205,7 @@ export function OnboardingLaunchpad({
           <button
             onClick={() => setCollapsed(!collapsed)}
             aria-label="Toggle missions"
-            className="p-2 text-slate-500 hover:text-slate-800 transition rounded-xl hover:bg-slate-100 active:scale-95 cursor-pointer"
+            className="p-2 text-muted-foreground hover:text-foreground transition rounded-xl hover:bg-muted active:scale-95 cursor-pointer"
           >
             {collapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
           </button>
@@ -215,7 +213,7 @@ export function OnboardingLaunchpad({
           <button
             onClick={handleDismiss}
             aria-label="Dismiss missions"
-            className="p-2 text-slate-400 hover:text-slate-700 transition rounded-xl hover:bg-slate-100 active:scale-95 cursor-pointer"
+            className="p-2 text-muted-foreground hover:text-foreground transition rounded-xl hover:bg-muted active:scale-95 cursor-pointer"
             title="Dismiss checklist"
           >
             <X className="w-5 h-5" />
@@ -224,9 +222,9 @@ export function OnboardingLaunchpad({
       </div>
 
       {/* Progress Bar - Solid Slate */}
-      <div className="w-full bg-slate-100 rounded-full h-2 mb-4 overflow-hidden border border-slate-200/60">
+      <div className="w-full bg-muted/60 rounded-full h-2 mb-4 overflow-hidden">
         <div
-          className="bg-slate-900 h-2 rounded-full transition-all duration-700 ease-out"
+          className="bg-primary h-2 rounded-full transition-all duration-700 ease-out"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -240,12 +238,12 @@ export function OnboardingLaunchpad({
 
             const cardContent = (
               <div
-                className={`p-4 rounded-2xl border-2 flex items-center justify-between text-xs transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+                className={`p-4 rounded-2xl flex items-center justify-between text-xs transition-all duration-150 cursor-pointer active:scale-[0.98] ${
                   mission.done
-                    ? 'bg-emerald-50/70 border-emerald-300 text-emerald-950 shadow-none'
+                    ? 'bg-emerald-50/70 text-emerald-950 shadow-none'
                     : isNext
-                    ? 'bg-slate-50 border-slate-900 ring-2 ring-slate-900/10 shadow-xs'
-                    : 'bg-slate-50 hover:bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs'
+                    ? 'bg-card ring-2 ring-primary shadow-card'
+                    : 'bg-muted/60 hover:bg-muted/80 shadow-xs'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0 pr-2">
@@ -261,19 +259,19 @@ export function OnboardingLaunchpad({
                       <p
                         className={`text-sm font-bold truncate ${
                           mission.done
-                            ? 'line-through text-slate-500 font-medium'
-                            : 'text-slate-900 font-extrabold'
+                            ? 'line-through text-muted-foreground font-medium'
+                            : 'text-foreground font-extrabold'
                         }`}
                       >
                         {mission.title}
                       </p>
                       {isNext && (
-                        <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-slate-900 text-white shrink-0">
+                        <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-primary text-primary-foreground shrink-0">
                           DO NEXT
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-600 truncate mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
                       {mission.desc}
                     </p>
                   </div>
@@ -286,10 +284,10 @@ export function OnboardingLaunchpad({
                     </div>
                   ) : (
                     <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
                         isNext
-                          ? 'border-slate-900 text-slate-900 bg-white shadow-xs'
-                          : 'border-slate-300 text-slate-400 group-hover:border-slate-900'
+                          ? 'text-primary bg-primary/10'
+                          : 'text-muted-foreground bg-muted'
                       }`}
                     >
                       <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -308,9 +306,14 @@ export function OnboardingLaunchpad({
             }
 
             return (
-              <div key={mission.id} onClick={mission.onClick}>
+              <button
+                key={mission.id}
+                type="button"
+                onClick={mission.onClick}
+                className="w-full text-left"
+              >
                 {cardContent}
-              </div>
+              </button>
             );
           })}
         </div>

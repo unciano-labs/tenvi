@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
 import { Category } from '@/types';
 import { matchCategoryForMerchant, normalizeDate } from '@/lib/ai/statementParser';
-import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS } from '@/lib/ai/gemini';
+import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS, withTimeout } from '@/lib/ai/gemini';
 
 export interface ReceiptParseResult {
   merchant: string;
@@ -113,26 +113,30 @@ Return a single JSON object with exact keys:
         for (const candidate of GEMINI_CANDIDATE_MODELS) {
           try {
             activeModel = candidate;
-            response = await ai.models.generateContent({
-              model: activeModel,
-              contents: [
-                {
-                  role: 'user',
-                  parts: [
-                    {
-                      inlineData: {
-                        mimeType,
-                        data: base64Data,
+            response = await withTimeout(
+              ai.models.generateContent({
+                model: activeModel,
+                contents: [
+                  {
+                    role: 'user',
+                    parts: [
+                      {
+                        inlineData: {
+                          mimeType,
+                          data: base64Data,
+                        },
                       },
-                    },
-                    { text: prompt },
-                  ],
+                      { text: prompt },
+                    ],
+                  },
+                ],
+                config: {
+                  responseMimeType: 'application/json',
                 },
-              ],
-              config: {
-                responseMimeType: 'application/json',
-              },
-            });
+              }),
+              12000,
+              `Receipt model ${activeModel} timed out after 12s`
+            );
 
             if (response && response.text) {
               break;

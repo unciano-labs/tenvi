@@ -21,7 +21,6 @@ import {
   Banknote,
   Smartphone,
   PieChart,
-  ShieldCheck,
   Edit3,
   Car,
   Layers,
@@ -36,6 +35,16 @@ import { ParsedFinancialIntent } from '@/lib/ai/financialParser';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { MarkdownMessage } from './MarkdownMessage';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export interface SamplePromptItem {
   id: string;
@@ -99,9 +108,9 @@ export const SAMPLE_PROMPTS_DATA: SamplePromptItem[] = [
     categoryLabel: 'Credit Cards',
     title: 'Next Payment Due Check',
     prompt: 'When is my next credit card due date?',
-    description: 'Checks upcoming statement cutoffs and payment deadlines',
+    description: 'Checks upcoming cutoff deadlines and payment due days',
     badge: 'Due Dates',
-    badgeColor: 'bg-indigo-50 text-indigo-700',
+    badgeColor: 'bg-amber-50 text-amber-700',
     iconName: 'credit-card',
   },
 
@@ -110,10 +119,10 @@ export const SAMPLE_PROMPTS_DATA: SamplePromptItem[] = [
     id: 'p-ewallet-1',
     category: 'ewallets',
     categoryLabel: 'E-Wallets',
-    title: 'Coffee via GCash',
-    prompt: 'Paid 195 for coffee via GCash today',
-    description: 'Instant food & beverage logging via mobile wallet',
-    badge: 'GCash',
+    title: 'Electric Bill via GCash',
+    prompt: 'Paid Meralco 3,450 through GCash',
+    description: 'Logs utility bill payment with GCash payment method',
+    badge: 'Utilities',
     badgeColor: 'bg-blue-50 text-blue-700',
     iconName: 'smartphone',
   },
@@ -121,10 +130,10 @@ export const SAMPLE_PROMPTS_DATA: SamplePromptItem[] = [
     id: 'p-ewallet-2',
     category: 'ewallets',
     categoryLabel: 'E-Wallets',
-    title: 'Electric Bill via GCash',
-    prompt: 'Paid 3,400 electric bill via GCash',
-    description: 'Auto-categorizes as Utilities & Bills with GCash payment',
-    badge: 'Utilities',
+    title: 'Food Delivery via Maya',
+    prompt: 'Ordered GrabFood 650 via Maya',
+    description: 'Records food delivery expense charged to Maya wallet',
+    badge: 'Food Delivery',
     badgeColor: 'bg-blue-50 text-blue-700',
     iconName: 'smartphone',
   },
@@ -132,68 +141,57 @@ export const SAMPLE_PROMPTS_DATA: SamplePromptItem[] = [
     id: 'p-ewallet-3',
     category: 'ewallets',
     categoryLabel: 'E-Wallets',
-    title: 'Meralco Bill via Maya',
-    prompt: 'Paid 4,200 Meralco bill using Maya',
-    description: 'Logs utility expense with Maya transaction method',
-    badge: 'Maya',
-    badgeColor: 'bg-blue-50 text-blue-700',
-    iconName: 'smartphone',
-  },
-  {
-    id: 'p-ewallet-4',
-    category: 'ewallets',
-    categoryLabel: 'E-Wallets',
-    title: 'Internet Broadband Bill',
-    prompt: 'Paid 1,899 internet bill via GCash',
-    description: 'Logs broadband/phone bill directly into ledger',
-    badge: 'GCash',
+    title: 'Internet Bill via GCash',
+    prompt: 'Paid PLDT internet bill 1,899 via GCash',
+    description: 'Tracks monthly internet subscription payment',
+    badge: 'Subscriptions',
     badgeColor: 'bg-blue-50 text-blue-700',
     iconName: 'smartphone',
   },
 
-  // 3. Daily Cash
+  // 3. Cash
   {
     id: 'p-cash-1',
     category: 'cash',
     categoryLabel: 'Cash',
-    title: 'Cash Groceries Yesterday',
-    prompt: 'Bought food worth 1120, yesterday using cash',
-    description: 'Multi-attribute entry: category, amount, past date, and cash',
-    badge: 'Cash',
-    badgeColor: 'bg-amber-50 text-amber-700',
+    title: 'Coffee in Cash',
+    prompt: 'Bought coffee 185 in cash',
+    description: 'Fast single-tap daily expense recording',
+    badge: 'Daily Spending',
+    badgeColor: 'bg-emerald-50 text-emerald-700',
     iconName: 'banknote',
   },
   {
     id: 'p-cash-2',
     category: 'cash',
     categoryLabel: 'Cash',
-    title: 'Grab Ride (Taglish)',
-    prompt: 'Paid 340 for Grab car kanina in cash',
-    description: 'Recognizes Filipino slang "kanina" and logs commute',
-    badge: 'Commute',
-    badgeColor: 'bg-amber-50 text-amber-700',
+    title: 'Supermarket Groceries',
+    prompt: 'Groceries worth 2,400 paid in cash yesterday',
+    description: 'Supports retroactive dates like "yesterday" or "last Friday"',
+    badge: 'Groceries',
+    badgeColor: 'bg-emerald-50 text-emerald-700',
     iconName: 'banknote',
   },
   {
     id: 'p-cash-3',
     category: 'cash',
     categoryLabel: 'Cash',
-    title: 'Pharmacy & Medicine',
-    prompt: 'Spent 850 at Mercury Drug using cash',
-    description: 'Auto-maps to Health & Medical category',
-    badge: 'Health',
-    badgeColor: 'bg-amber-50 text-amber-700',
+    title: 'Transport Fare',
+    prompt: 'Taxi fare 320 in cash',
+    description: 'Categorizes commute or transportation expenses',
+    badge: 'Transport',
+    badgeColor: 'bg-emerald-50 text-emerald-700',
     iconName: 'banknote',
   },
   {
     id: 'p-cash-4',
     category: 'cash',
     categoryLabel: 'Cash',
-    title: 'Parking Micro-Spend',
-    prompt: 'Paid 150 parking fee cash',
-    description: 'Quick micro-expense tracking for accurate daily budgeting',
-    badge: 'Cash',
-    badgeColor: 'bg-amber-50 text-amber-700',
+    title: 'Pharmacy Medicine',
+    prompt: 'Bought vitamins and medicine 850 in cash',
+    description: 'Tracks healthcare and prescription costs',
+    badge: 'Healthcare',
+    badgeColor: 'bg-emerald-50 text-emerald-700',
     iconName: 'banknote',
   },
 
@@ -202,9 +200,9 @@ export const SAMPLE_PROMPTS_DATA: SamplePromptItem[] = [
     id: 'p-inc-1',
     category: 'income',
     categoryLabel: 'Income',
-    title: 'Monthly Salary Deposit',
-    prompt: 'Received 35,000 monthly salary to BPI',
-    description: 'Logs Money In (Income) and links directly to savings stash',
+    title: 'Monthly Salary',
+    prompt: 'Received salary 45,000 in BPI account',
+    description: 'Logs income directly into your primary bank account',
     badge: 'Salary',
     badgeColor: 'bg-emerald-50 text-emerald-700',
     iconName: 'trending-up',
@@ -213,10 +211,10 @@ export const SAMPLE_PROMPTS_DATA: SamplePromptItem[] = [
     id: 'p-inc-2',
     category: 'income',
     categoryLabel: 'Income',
-    title: 'Freelance Gig Payout',
-    prompt: 'Received 8,500 freelance client payment via GCash',
-    description: 'Records extra gig income directly into digital ledger',
-    badge: 'Freelance',
+    title: 'Freelance Side Income',
+    prompt: 'Received 12,000 freelance design project payment via bank transfer',
+    description: 'Categorizes side-hustle revenue to keep business income separate',
+    badge: 'Side Hustle',
     badgeColor: 'bg-emerald-50 text-emerald-700',
     iconName: 'trending-up',
   },
@@ -224,55 +222,22 @@ export const SAMPLE_PROMPTS_DATA: SamplePromptItem[] = [
     id: 'p-inc-3',
     category: 'income',
     categoryLabel: 'Income',
-    title: 'Emergency Vault Deposit',
-    prompt: 'Deposited 10,000 to Emergency Fund vault',
-    description: 'Updates linked savings account balance automatically',
-    badge: 'Savings',
-    badgeColor: 'bg-emerald-50 text-emerald-700',
-    iconName: 'trending-up',
-  },
-  {
-    id: 'p-inc-4',
-    category: 'income',
-    categoryLabel: 'Income',
-    title: 'Total Savings Inquiry',
-    prompt: 'How much are my total savings across accounts?',
-    description: 'Summarizes balances from all active savings vaults',
-    badge: 'Vaults',
-    badgeColor: 'bg-emerald-50 text-emerald-700',
-    iconName: 'trending-up',
-  },
-  {
-    id: 'p-inc-vios-1',
-    category: 'income',
-    categoryLabel: 'Income',
-    title: 'Toyota Vios Boundary (Range)',
-    prompt: 'log income of toyota vios, from lastweek until yesterday',
-    description: 'Auto-logs daily boundary for Toyota Vios (₱1,000/day) across date range',
-    badge: 'Multi-Log',
-    badgeColor: 'bg-emerald-50 text-emerald-700',
-    iconName: 'trending-up',
-  },
-  {
-    id: 'p-inc-vios-2',
-    category: 'income',
-    categoryLabel: 'Income',
-    title: 'Vios Boundary (Past 5 Days)',
-    prompt: 'log income of toyota vios, last 5 days',
-    description: 'Logs 5 daily boundary income entries linked directly to vehicle ledger',
-    badge: 'Multi-Log',
+    title: 'Deposit to Emergency Fund',
+    prompt: 'Deposited 5,000 to Emergency Fund',
+    description: 'Increases balance in your designated savings vault',
+    badge: 'Vault Deposit',
     badgeColor: 'bg-emerald-50 text-emerald-700',
     iconName: 'trending-up',
   },
 
-  // 5. Wealth & Runway
+  // 5. Wealth & Analytics
   {
     id: 'p-wlth-1',
     category: 'wealth',
     categoryLabel: 'Wealth',
-    title: 'Monthly Spend Summary',
-    prompt: 'How much did I spend this month?',
-    description: 'Real-time overview of current month outflow and categories',
+    title: 'Monthly Spending Breakdown',
+    prompt: 'How much have I spent this month?',
+    description: 'Summarizes expenses by category and payment methods',
     badge: 'Analytics',
     badgeColor: 'bg-purple-50 text-purple-700',
     iconName: 'pie-chart',
@@ -283,8 +248,8 @@ export const SAMPLE_PROMPTS_DATA: SamplePromptItem[] = [
     categoryLabel: 'Wealth',
     title: 'Emergency Living Runway',
     prompt: 'What is my emergency living runway in months?',
-    description: 'Calculates how many months your liquid savings can sustain you',
-    badge: 'Health',
+    description: 'Compares total liquid cash against average monthly burn rate',
+    badge: 'Runway',
     badgeColor: 'bg-purple-50 text-purple-700',
     iconName: 'pie-chart',
   },
@@ -338,7 +303,6 @@ const INITIAL_WELCOME_MESSAGE: AIChatMessage = {
 export function TenviAIChat() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const [messages, setMessages] = useState<AIChatMessage[]>([INITIAL_WELCOME_MESSAGE]);
   const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -350,27 +314,33 @@ export function TenviAIChat() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleOpenChat = () => {
-    setIsClosing(false);
     setIsOpen(true);
   };
 
   const handleCloseChat = () => {
-    if (isClosing) return;
-    setIsClosing(true);
-    setTimeout(() => {
-      setIsOpen(false);
-      setIsClosing(false);
-      setIsPromptsDrawerOpen(false);
-    }, 480);
+    setIsOpen(false);
+    setIsPromptsDrawerOpen(false);
   };
+
+  // Focus management: move focus into chat on open, return to trigger on close
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 150);
+    } else {
+      triggerButtonRef.current?.focus();
+    }
+  }, [isOpen]);
 
   // Listen for global open event and keyboard escape
   useEffect(() => {
     window.addEventListener('open-tenvi-ai-chat', handleOpenChat);
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen && !isClosing) {
+      if (e.key === 'Escape' && isOpen) {
         handleCloseChat();
       }
     };
@@ -379,7 +349,7 @@ export function TenviAIChat() {
       window.removeEventListener('open-tenvi-ai-chat', handleOpenChat);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, isClosing]);
+  }, [isOpen]);
 
   useEffect(() => {
     try {
@@ -412,34 +382,16 @@ export function TenviAIChat() {
     if (isOpen && !isPromptsDrawerOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOpen, isProcessing, isPromptsDrawerOpen]);
-
-  // Focus input when opened
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 150);
-    }
-  }, [isOpen]);
+  }, [messages, isOpen, isPromptsDrawerOpen]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
     if (!text || isProcessing) return;
 
-    // Close prompts drawer if open
-    setIsPromptsDrawerOpen(false);
+    if (isPromptsDrawerOpen) {
+      setIsPromptsDrawerOpen(false);
+    }
 
-    // Extract up to 10 previous conversation turns for multi-turn memory
-    const history = messages
-      .filter((m) => m.text && m.text.trim().length > 0 && m.id !== 'welcome')
-      .slice(-10)
-      .map((m) => ({
-        sender: m.sender,
-        text: m.text.trim(),
-      }));
-
-    // 1. Append user message and streaming assistant placeholder
     const userMsg: AIChatMessage = {
       id: `user-${Date.now()}`,
       sender: 'user',
@@ -447,7 +399,7 @@ export function TenviAIChat() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    const assistantMsgId = `ai-${Date.now()}`;
+    const assistantMsgId = `assistant-${Date.now()}`;
     const initialAssistantMsg: AIChatMessage = {
       id: assistantMsgId,
       sender: 'assistant',
@@ -460,16 +412,23 @@ export function TenviAIChat() {
     setInputText('');
     setIsProcessing(true);
 
+    const history = messages
+      .slice(-6)
+      .map((m) => ({ sender: m.sender, text: m.text }));
+
     try {
-      // 2. Fetch streaming chat response via SSE with multi-turn history
-      const response = await fetch('/api/ai/chat', {
+      const response = await fetch('/api/ai/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, pendingState, history }),
+        body: JSON.stringify({
+          message: text,
+          pendingState,
+          history,
+        }),
       });
 
       if (!response.ok || !response.body) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('Streaming not supported or failed');
       }
 
       const reader = response.body.getReader();
@@ -477,25 +436,23 @@ export function TenviAIChat() {
       let buffer = '';
 
       while (true) {
-        const { done, value } = await reader.read();
+        const { value, done } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
         const events = buffer.split('\n\n');
         buffer = events.pop() || '';
 
-        for (const eventStr of events) {
-          if (!eventStr.trim()) continue;
-
+        for (const evt of events) {
+          const lines = evt.split('\n');
           let eventType = 'message';
           let dataStr = '';
-          const lines = eventStr.split('\n');
 
           for (const line of lines) {
-            if (line.startsWith('event:')) {
-              eventType = line.slice(6).trim();
-            } else if (line.startsWith('data:')) {
-              dataStr += line.slice(5).trim();
+            if (line.startsWith('event: ')) {
+              eventType = line.replace('event: ', '').trim();
+            } else if (line.startsWith('data: ')) {
+              dataStr = line.replace('data: ', '').trim();
             }
           }
 
@@ -504,14 +461,18 @@ export function TenviAIChat() {
           try {
             const data = JSON.parse(dataStr);
 
-            if (eventType === 'delta') {
-              if (data.text) {
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantMsgId ? { ...m, text: m.text + data.text } : m
-                  )
-                );
-              }
+            if (eventType === 'delta' || eventType === 'chunk') {
+              const deltaText = data.text !== undefined ? data.text : (data.chunk || '');
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId
+                    ? {
+                        ...m,
+                        text: (m.text || '') + deltaText,
+                      }
+                    : m
+                )
+              );
             } else if (eventType === 'done') {
               setMessages((prev) =>
                 prev.map((m) =>
@@ -713,19 +674,20 @@ export function TenviAIChat() {
 
   return (
     <>
-      {/* Floating Trigger Button (Spring in-out slow) */}
+      {/* Floating Trigger Button */}
       <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40">
-        {(!isOpen || isClosing) && (
+        {!isOpen && (
           <button
+            ref={triggerButtonRef}
             data-tour="ai-button"
             onClick={handleOpenChat}
             aria-label="Open Tenvi Assistant - Tap to ask questions"
             title="Open Tenvi Assistant"
-            className="group flex items-center justify-center sm:justify-start gap-3 bg-slate-800 text-white w-12 h-12 sm:w-auto sm:h-auto p-0 sm:pl-4 sm:pr-5 sm:py-3.5 rounded-full shadow-lg hover:shadow-xl hover:bg-slate-700 active:scale-95 cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-slate-400 origin-bottom-right animate-spring-in-slow"
+            className="group flex items-center justify-center sm:justify-start gap-3 bg-slate-800 text-white w-12 h-12 sm:w-auto sm:h-auto p-0 sm:pl-4 sm:pr-5 sm:py-3.5 rounded-full shadow-lg hover:shadow-xl hover:bg-slate-700 active:scale-95 cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-slate-400 origin-bottom-right"
           >
             <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors relative">
               <Sparkles className="w-5 h-5 sm:w-4 sm:h-4 text-emerald-300 group-hover:rotate-12 transition-transform duration-300" />
-              <span className="sm:hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-800 animate-pulse" />
+              <span className="sm:hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
             </div>
             <div className="hidden sm:block text-left">
               <div className="text-xs font-bold tracking-wide flex items-center gap-1.5">
@@ -738,37 +700,36 @@ export function TenviAIChat() {
         )}
       </div>
 
-      {/* Floating Chat Modal (Slow spring in-out) */}
-      {isOpen && (
-        <div
-          className={`fixed bottom-20 sm:bottom-6 left-2 right-2 sm:left-auto sm:right-6 z-50 sm:w-[440px] max-w-[440px] h-[580px] max-h-[calc(100dvh-6.5rem)] sm:max-h-[86vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden origin-bottom-right ${
-            isClosing
-              ? 'animate-spring-out-slow pointer-events-none'
-              : 'animate-spring-in-slow'
-          }`}
-        >
+      {/* Chat Window Sheet */}
+      <Sheet open={isOpen} onOpenChange={(open) => { if (open) handleOpenChat(); else handleCloseChat(); }}>
+        <SheetContent side="right" showCloseButton={false} className="p-0 flex flex-col h-full w-full sm:max-w-md bg-card shadow-lift">
           {/* Header */}
-          <div className="px-5 py-4 bg-slate-800 text-white flex items-center justify-between shrink-0">
+          <SheetHeader className="px-5 py-4 bg-slate-800 text-white flex flex-row items-center justify-between shrink-0 space-y-0">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-white/15 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-emerald-300" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <h3 className="text-sm font-bold tracking-tight">Tenvi Assistant</h3>
-                  <span className="text-xs bg-emerald-600/30 text-emerald-200 px-2 py-0.5 rounded-full font-semibold">
+                  <SheetTitle className="text-sm font-bold tracking-tight text-white">Tenvi Assistant</SheetTitle>
+                  <Badge variant="success" className="h-5 px-1.5 text-[10px]">
                     Ready to Help
-                  </span>
+                  </Badge>
                 </div>
-                <p className="text-xs text-slate-300">Ask any question or record money easily</p>
+                <SheetDescription className="text-xs text-slate-300">
+                  Ask any question or record money easily
+                </SheetDescription>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5">
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
                 onClick={() => setIsPromptsDrawerOpen((prev) => !prev)}
                 title="Common Questions & Examples"
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl cursor-pointer ${
                   isPromptsDrawerOpen
                     ? 'bg-amber-300 text-slate-900 font-bold shadow-xs'
                     : 'bg-white/15 hover:bg-white/25 text-slate-200'
@@ -776,52 +737,62 @@ export function TenviAIChat() {
               >
                 <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
                 <span className="hidden xs:inline">Examples</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
                 onClick={handleResetChat}
                 title="Start a new chat"
-                className="w-9 h-9 rounded-xl hover:bg-white/15 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white"
               >
                 <RotateCcw className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
                 onClick={handleCloseChat}
                 title="Close Assistant"
                 aria-label="Close Assistant"
-                className="w-9 h-9 rounded-xl hover:bg-white/15 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
-          </div>
+          </SheetHeader>
 
           {/* Interactive Sample Prompts Drawer (Slide Overlay) */}
           {isPromptsDrawerOpen ? (
-            <div className="flex-1 bg-[#F8F9FA] flex flex-col overflow-hidden animate-in fade-in duration-150">
+            <div className="flex-1 bg-muted/40 flex flex-col overflow-hidden animate-in fade-in duration-150">
               {/* Category Pills Header */}
-              <div className="p-3 bg-white shadow-sm shrink-0 border-b border-slate-100">
+              <div className="p-3 bg-card shadow-xs shrink-0">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                     <Lightbulb className="w-4 h-4 text-amber-500" />
                     <span>Sample Prompt Library</span>
                   </div>
-                  <button
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
                     onClick={() => setIsPromptsDrawerOpen(false)}
-                    className="text-xs text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
+                    className="text-xs text-muted-foreground hover:text-foreground font-semibold"
                   >
                     Back to Chat
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
                   {SAMPLE_PROMPT_CATEGORIES.map((cat) => (
                     <button
                       key={cat.id}
+                      type="button"
                       onClick={() => setSelectedPromptCategory(cat.id)}
                       className={`text-xs whitespace-nowrap px-3 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
                         selectedPromptCategory === cat.id
-                          ? 'bg-slate-900 text-white shadow-sm'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'bg-muted text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       {cat.label}
@@ -831,153 +802,164 @@ export function TenviAIChat() {
               </div>
 
               {/* Prompts Cards List */}
-              <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5">
-                {filteredPrompts.map((p) => (
-                  <div
-                    key={p.id}
-                    className="bg-white rounded-2xl p-3.5 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between"
-                  >
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-800">{p.title}</span>
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.badgeColor}`}
-                        >
-                          {p.badge}
-                        </span>
+              <ScrollArea className="flex-1 p-3.5 space-y-2.5">
+                <div className="space-y-2.5">
+                  {filteredPrompts.map((p) => (
+                    <div
+                      key={p.id}
+                      className="bg-card rounded-2xl p-3.5 shadow-card hover:shadow-lift transition-shadow flex flex-col justify-between"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-foreground">{p.title}</span>
+                          <span
+                            className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.badgeColor}`}
+                          >
+                            {p.badge}
+                          </span>
+                        </div>
+                        <p className="text-xs text-foreground font-semibold bg-muted/60 p-2 rounded-xl italic">
+                          &quot;{p.prompt}&quot;
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-snug">{p.description}</p>
                       </div>
-                      <p className="text-xs text-slate-900 font-semibold bg-slate-50 p-2 rounded-xl italic">
-                        "{p.prompt}"
-                      </p>
-                      <p className="text-xs text-slate-500 leading-snug">{p.description}</p>
-                    </div>
 
-                    <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t border-slate-100">
-                      <button
-                        onClick={() => handleSelectPrompt(p.prompt, false)}
-                        className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-lg hover:bg-slate-100 flex items-center gap-1 transition-colors cursor-pointer"
-                        title="Copy to text box so you can adjust amount or merchant"
-                      >
-                        <Edit3 className="w-3 h-3" />
-                        Edit First
-                      </button>
-                      <button
-                        onClick={() => handleSelectPrompt(p.prompt, true)}
-                        className="text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white px-3 py-1 rounded-xl shadow-sm flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                      >
-                        <Zap className="w-3 h-3 text-emerald-400" />
-                        Send Now
-                      </button>
+                      <div className="flex items-center justify-end gap-2 mt-3 pt-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => handleSelectPrompt(p.prompt, false)}
+                          className="text-xs font-semibold text-muted-foreground hover:text-foreground rounded-lg gap-1"
+                          title="Copy to text box so you can adjust amount or merchant"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          Edit First
+                        </Button>
+                        <Button
+                          type="button"
+                          size="xs"
+                          onClick={() => handleSelectPrompt(p.prompt, true)}
+                          className="text-xs font-bold rounded-xl shadow-sm gap-1 active:scale-95"
+                        >
+                          <Zap className="w-3 h-3 text-emerald-400" />
+                          Send Now
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
           ) : (
             /* Standard Messages Body */
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F8F9FA]">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${
-                    msg.sender === 'user' ? 'items-end' : 'items-start'
-                  }`}
-                >
-                  {/* Bubble */}
+            <ScrollArea className="flex-1 p-4 bg-muted/30">
+              <div className="space-y-4">
+                {messages.map((msg) => (
                   <div
-                    className={`max-w-[88%] rounded-2xl p-3.5 text-sm leading-relaxed ${
-                      msg.sender === 'user'
-                        ? 'bg-slate-800 text-white rounded-tr-none shadow-xs'
-                        : 'bg-white text-slate-800 shadow-xs rounded-tl-none'
+                    key={msg.id}
+                    className={`flex flex-col ${
+                      msg.sender === 'user' ? 'items-end' : 'items-start'
                     }`}
                   >
-                    {msg.sender === 'assistant' && !msg.text && msg.isStreaming ? (
-                      <div className="flex items-center gap-2 py-1 text-xs text-slate-500 font-medium">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
-                        <span>Tenvi is thinking...</span>
-                      </div>
-                    ) : (
-                      <div>
-                        <MarkdownMessage content={msg.text} isUser={msg.sender === 'user'} />
-                        {msg.isStreaming && (
-                          <span className="inline-block w-1.5 h-3.5 ml-1 bg-emerald-600 animate-pulse rounded-full align-middle" />
-                        )}
-                      </div>
-                    )}
+                    {/* Bubble */}
+                    <div
+                      className={`max-w-[88%] rounded-2xl p-3.5 text-sm leading-relaxed ${
+                        msg.sender === 'user'
+                          ? 'bg-slate-800 text-white rounded-tr-none shadow-xs'
+                          : 'bg-card text-foreground shadow-card rounded-tl-none'
+                      }`}
+                    >
+                      {msg.sender === 'assistant' && !msg.text && msg.isStreaming ? (
+                        <div className="flex items-center gap-2 py-1 text-xs text-muted-foreground font-medium">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                          <span>Tenvi is thinking...</span>
+                        </div>
+                      ) : (
+                        <div>
+                          <MarkdownMessage content={msg.text} isUser={msg.sender === 'user'} />
+                          {msg.isStreaming && (
+                            <span className="inline-block w-1.5 h-3.5 ml-1 bg-emerald-600 animate-pulse rounded-full align-middle" />
+                          )}
+                        </div>
+                      )}
 
-                    {/* Rich Transaction Card */}
-                    {msg.transaction && (
-                      <div className="mt-3 p-3.5 rounded-2xl bg-[#F6F7F9] space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span
-                            className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                              msg.transaction.kind === 'expense'
-                                ? 'bg-rose-50 text-rose-700'
-                                : 'bg-emerald-50 text-emerald-700'
-                            }`}
-                          >
-                            {msg.transaction.kind === 'expense' ? (
-                              <>
-                                <ArrowDownLeft className="w-3 h-3" />
-                                Money Out (Expense)
-                              </>
+                      {/* Rich Transaction Card */}
+                      {msg.transaction && (
+                        <div className="mt-3 p-3.5 rounded-2xl bg-muted/60 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span
+                              className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                                msg.transaction.kind === 'expense'
+                                  ? 'bg-rose-50 text-rose-700'
+                                  : 'bg-emerald-50 text-emerald-700'
+                              }`}
+                            >
+                              {msg.transaction.kind === 'expense' ? (
+                                <>
+                                  <ArrowDownLeft className="w-3 h-3" />
+                                  Money Out (Expense)
+                                </>
+                              ) : (
+                                <>
+                                  <ArrowUpRight className="w-3 h-3" />
+                                  Money In (Income)
+                                </>
+                              )}
+                            </span>
+
+                            <span className="text-xs font-extrabold text-foreground">
+                              ₱
+                              {msg.transaction.amount.toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+
+                          <div className="space-y-1 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1.5">
+                              <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span className="font-semibold text-foreground">
+                                {msg.transaction.categoryName || 'General'}
+                              </span>
+                              <span className="text-muted-foreground">•</span>
+                              <span className="text-muted-foreground">{msg.transaction.note}</span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span className="capitalize">
+                                {msg.transaction.paymentMethod.replace('_', ' ')}
+                                {msg.transaction.creditCardName && ` • Card: ${msg.transaction.creditCardName}`}
+                                {msg.transaction.savingsName && ` • Vault: ${msg.transaction.savingsName}`}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span>{msg.transaction.occurredOn}</span>
+                            </div>
+                          </div>
+
+                          {/* Undo / Status Bar */}
+                          <div className="pt-2 flex items-center justify-between">
+                            {msg.isUndone ? (
+                              <span className="text-xs font-bold text-muted-foreground italic">
+                                Transaction Undone & Removed
+                              </span>
                             ) : (
                               <>
-                                <ArrowUpRight className="w-3 h-3" />
-                                Money In (Income)
-                              </>
-                            )}
-                          </span>
-
-                          <span className="text-xs font-extrabold text-slate-900">
-                            ₱
-                            {msg.transaction.amount.toLocaleString('en-US', {
-                              minimumFractionDigits: 2,
-                            })}
-                          </span>
-                        </div>
-
-                        <div className="space-y-1 text-xs text-slate-600">
-                          <div className="flex items-center gap-1.5">
-                            <Tag className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="font-semibold text-slate-800">
-                              {msg.transaction.categoryName || 'General'}
-                            </span>
-                            <span className="text-slate-400">•</span>
-                            <span className="text-slate-500">{msg.transaction.note}</span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            <Wallet className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="capitalize">
-                              {msg.transaction.paymentMethod.replace('_', ' ')}
-                              {msg.transaction.creditCardName && ` • Card: ${msg.transaction.creditCardName}`}
-                              {msg.transaction.savingsName && ` • Vault: ${msg.transaction.savingsName}`}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{msg.transaction.occurredOn}</span>
-                          </div>
-                        </div>
-
-                        {/* Undo / Status Bar */}
-                        <div className="pt-2 flex items-center justify-between border-t border-slate-200/60">
-                          {msg.isUndone ? (
-                            <span className="text-xs font-bold text-slate-400 italic">
-                              Transaction Undone & Removed
-                            </span>
-                          ) : (
-                            <>
-                              <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                                <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                 Saved to Digital Ledger
                               </span>
-                              <button
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="xs"
                                 onClick={() => handleUndo(msg.transaction!.id, msg.id)}
                                 disabled={undoingTxId === msg.transaction.id}
-                                className="text-xs font-semibold text-slate-500 hover:text-rose-600 bg-white hover:bg-rose-50 px-2.5 py-1 rounded-xl shadow-sm transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                className="rounded-xl shadow-xs gap-1"
                               >
                                 {undoingTxId === msg.transaction.id ? (
                                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -985,7 +967,7 @@ export function TenviAIChat() {
                                   <Undo2 className="w-3 h-3" />
                                 )}
                                 Undo
-                              </button>
+                              </Button>
                             </>
                           )}
                         </div>
@@ -994,14 +976,14 @@ export function TenviAIChat() {
 
                     {/* Rich Multi-Log Batch Card */}
                     {msg.transactions && msg.transactions.length > 0 && (
-                      <div className="mt-3 p-3.5 rounded-2xl bg-[#F6F7F9] space-y-2.5 border border-slate-200/70">
+                      <div className="mt-3 p-3.5 rounded-2xl bg-muted/60 space-y-2.5">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 bg-emerald-50 text-emerald-700">
                             <Layers className="w-3 h-3 text-emerald-600" />
                             Multi-Day Batch ({msg.transactions.length} entries)
                           </span>
 
-                          <span className="text-xs font-extrabold text-slate-900">
+                          <span className="text-xs font-extrabold text-foreground">
                             ₱
                             {msg.transactions
                               .reduce((sum, t) => sum + Number(t.amount || 0), 0)
@@ -1009,20 +991,20 @@ export function TenviAIChat() {
                           </span>
                         </div>
 
-                        <div className="space-y-1.5 text-xs text-slate-600">
+                        <div className="space-y-1.5 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1.5">
-                            <Car className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="font-semibold text-slate-800">
+                            <Car className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="font-semibold text-foreground">
                               {msg.transactions[0].propertyName || 'Registered Property'}
                             </span>
-                            <span className="text-slate-400">•</span>
+                            <span className="text-muted-foreground">•</span>
                             <span className="text-emerald-700 font-medium">
                               ₱{Number(msg.transactions[0].amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} / day
                             </span>
                           </div>
 
                           <div className="flex items-center gap-1.5">
-                            <Wallet className="w-3.5 h-3.5 text-slate-400" />
+                            <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
                             <span className="capitalize">
                               Payment: {msg.transactions[0].paymentMethod.replace('_', ' ')}
                             </span>
@@ -1030,15 +1012,15 @@ export function TenviAIChat() {
 
                           {/* Date list pill badges */}
                           <div className="pt-1">
-                            <div className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
-                              <Calendar className="w-3 h-3 text-slate-400" />
+                            <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground mb-1">
+                              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                               <span>Dates Logged ({msg.transactions.length} days):</span>
                             </div>
                             <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
                               {msg.transactions.map((tx) => (
                                 <span
                                   key={tx.id}
-                                  className="text-xs font-medium bg-white px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 shadow-2xs"
+                                  className="text-xs font-medium bg-card px-2 py-0.5 rounded-md text-foreground shadow-2xs"
                                 >
                                   {tx.occurredOn}
                                 </span>
@@ -1048,9 +1030,9 @@ export function TenviAIChat() {
                         </div>
 
                         {/* Undo / Status Bar */}
-                        <div className="pt-2 flex items-center justify-between border-t border-slate-200/60">
+                        <div className="pt-2 flex items-center justify-between">
                           {msg.isUndone ? (
-                            <span className="text-xs font-bold text-slate-400 italic">
+                            <span className="text-xs font-bold text-muted-foreground italic">
                               All {msg.transactions.length} Entries Undone & Removed
                             </span>
                           ) : (
@@ -1059,7 +1041,10 @@ export function TenviAIChat() {
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                 Saved to Property Ledger
                               </span>
-                              <button
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="xs"
                                 onClick={() =>
                                   handleUndoMultiple(
                                     msg.transactions!.map((t) => t.id),
@@ -1067,7 +1052,7 @@ export function TenviAIChat() {
                                   )
                                 }
                                 disabled={undoingBatchMsgId === msg.id}
-                                className="text-xs font-semibold text-slate-500 hover:text-rose-600 bg-white hover:bg-rose-50 px-2.5 py-1 rounded-xl shadow-sm transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                className="rounded-xl shadow-xs gap-1"
                               >
                                 {undoingBatchMsgId === msg.id ? (
                                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -1075,7 +1060,7 @@ export function TenviAIChat() {
                                   <Undo2 className="w-3 h-3" />
                                 )}
                                 Undo All ({msg.transactions.length})
-                              </button>
+                              </Button>
                             </>
                           )}
                         </div>
@@ -1085,7 +1070,7 @@ export function TenviAIChat() {
                     {/* Timestamp */}
                     <div
                       className={`text-xs mt-1.5 text-right ${
-                        msg.sender === 'user' ? 'text-slate-300' : 'text-slate-400'
+                        msg.sender === 'user' ? 'text-slate-300' : 'text-muted-foreground'
                       }`}
                     >
                       {msg.timestamp}
@@ -1101,9 +1086,10 @@ export function TenviAIChat() {
                       {msg.quickReplies.map((reply, idx) => (
                         <button
                           key={idx}
+                          type="button"
                           onClick={() => handleQuickReply(reply)}
                           disabled={isProcessing}
-                          className="text-xs font-semibold bg-white hover:bg-slate-900 hover:text-white text-slate-700 px-3 py-1.5 rounded-xl shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-50 text-left"
+                          className="text-xs font-semibold bg-card hover:bg-primary hover:text-primary-foreground text-foreground px-3 py-1.5 rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           {reply}
                         </button>
@@ -1113,76 +1099,83 @@ export function TenviAIChat() {
                 </div>
               ))}
 
-
               <div ref={messagesEndRef} />
             </div>
-          )}
+          </ScrollArea>
+        )}
 
-          {/* Quick-Prompt Chips Bar (Above Input) */}
-          {!isPromptsDrawerOpen && (
-            <div className="px-3 pt-2 pb-1 bg-white border-t border-slate-100/80 shrink-0">
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        {/* Quick-Prompt Chips Bar (Above Input) */}
+        {!isPromptsDrawerOpen && (
+          <div className="px-3 pt-2 pb-1 bg-card shrink-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+              <button
+                type="button"
+                onClick={() => setIsPromptsDrawerOpen(true)}
+                className="flex items-center gap-1 text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors cursor-pointer shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Lightbulb className="w-3 h-3 text-amber-600" />
+                <span>Prompt Ideas</span>
+              </button>
+              {QUICK_STARTER_PILLS.map((pill, idx) => (
                 <button
-                  onClick={() => setIsPromptsDrawerOpen(true)}
-                  className="flex items-center gap-1 text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors cursor-pointer shrink-0"
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSendMessage(pill.prompt)}
+                  disabled={isProcessing}
+                  className="text-xs font-medium bg-muted/60 hover:bg-primary hover:text-primary-foreground text-foreground px-2.5 py-1 rounded-full whitespace-nowrap transition-colors cursor-pointer shrink-0 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <Lightbulb className="w-3 h-3 text-amber-600" />
-                  <span>Prompt Ideas</span>
+                  {pill.label}
                 </button>
-                {QUICK_STARTER_PILLS.map((pill, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSendMessage(pill.prompt)}
-                    disabled={isProcessing}
-                    className="text-xs font-medium bg-[#F1F3F6] hover:bg-slate-900 hover:text-white text-slate-700 px-2.5 py-1 rounded-full whitespace-nowrap transition-all duration-150 cursor-pointer shrink-0 disabled:opacity-50"
-                  >
-                    {pill.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Footer Input */}
-          <div className="p-3 bg-white shrink-0">
-            <div className="bg-[#F1F3F6] rounded-2xl p-2 flex items-end gap-2">
-              <textarea
-                ref={inputRef}
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type a question or expense (e.g. 'paid 350 for groceries in cash')..."
-                rows={1}
-                disabled={isProcessing}
-                className="flex-1 bg-transparent text-base sm:text-sm text-slate-800 placeholder:text-slate-400 resize-none outline-none max-h-24 py-1.5 px-2 font-medium"
-              />
-              <button
-                onClick={() => setIsPromptsDrawerOpen((prev) => !prev)}
-                title="Common question examples"
-                className="w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-slate-200/80 hover:bg-slate-300 text-slate-700 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
-              >
-                <Lightbulb className="w-4 h-4 text-amber-600" />
-              </button>
-              <button
-                onClick={() => handleSendMessage()}
-                disabled={!inputText.trim() || isProcessing}
-                aria-label="Send message"
-                className="w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-slate-800 text-white flex items-center justify-center shrink-0 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
-              >
-                {isProcessing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-3.5 h-3.5" />
-                )}
-              </button>
-            </div>
-            <div className="mt-1.5 px-2 flex items-center justify-between text-xs text-slate-500">
-              <span>Press Enter or tap Send</span>
-              <span className="font-medium text-slate-500">Safe & Private</span>
+              ))}
             </div>
           </div>
+        )}
+
+        {/* Footer Input */}
+        <div className="p-3 bg-card shrink-0">
+          <div className="bg-muted/60 rounded-2xl p-2 flex items-end gap-2">
+            <textarea
+              ref={inputRef}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a question or expense (e.g. 'paid 350 for groceries in cash')..."
+              rows={1}
+              disabled={isProcessing}
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none max-h-24 py-1.5 px-2 font-medium border-0"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setIsPromptsDrawerOpen((prev) => !prev)}
+              title="Common question examples"
+              className="rounded-xl text-muted-foreground hover:text-foreground"
+            >
+              <Lightbulb className="w-4 h-4 text-amber-600" />
+            </Button>
+            <Button
+              type="button"
+              size="icon-xs"
+              onClick={() => handleSendMessage()}
+              disabled={!inputText.trim() || isProcessing}
+              aria-label="Send message"
+              className="rounded-xl shadow-xs"
+            >
+              {isProcessing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5" />
+              )}
+            </Button>
+          </div>
+          <div className="mt-1.5 px-2 flex items-center justify-between text-xs text-muted-foreground">
+            <span>Press Enter or tap Send</span>
+            <span className="font-medium">Safe & Private</span>
+          </div>
         </div>
-      )}
-    </>
-  );
+      </SheetContent>
+    </Sheet>
+  </>
+);
 }

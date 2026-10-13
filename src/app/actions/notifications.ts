@@ -126,11 +126,11 @@ export async function getNotificationSettingsAction(): Promise<{
  * Save / Update notification preferences, message templates, and optional Gmail SMTP settings
  */
 export async function saveNotificationSettingsAction(formData: {
-  notifyEmail: boolean;
+  notifyEmail?: boolean;
   emailAddress?: string | null;
-  notifySms: boolean;
+  notifySms?: boolean;
   phoneNumber?: string | null;
-  daysBefore: number;
+  daysBefore?: number;
   loanSmsTemplate?: string | null;
   loanEmailSubject?: string | null;
   loanEmailBody?: string | null;
@@ -228,7 +228,7 @@ export async function saveNotificationSettingsAction(formData: {
  */
 export async function verifyGmailSmtpAction(
   email: string,
-  appPassword: string
+  appPassword?: string
 ): Promise<{
   success: boolean;
   message?: string;
@@ -243,14 +243,25 @@ export async function verifyGmailSmtpAction(
     return { success: false, error: 'Unauthorized' };
   }
 
-  if (!email || !appPassword) {
+  let passToUse = appPassword?.trim();
+  if (!passToUse) {
+    const { data: currentSettings } = await supabase
+      .from('bili_notification_settings')
+      .select('smtp_app_password')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    passToUse = currentSettings?.smtp_app_password || '';
+  }
+
+  if (!email || !passToUse) {
     return {
       success: false,
       error: 'Please provide both your Gmail address and 16-character App Password.',
     };
   }
 
-  const result = await verifyGmailConnection(email, appPassword);
+  const result = await verifyGmailConnection(email, passToUse);
   if (result.success) {
     return {
       success: true,
@@ -267,7 +278,7 @@ export async function verifyGmailSmtpAction(
  * Verify httpSMS API Key handshake and account validity on demand
  */
 export async function verifyHttpSmsAction(
-  apiKey: string,
+  apiKey?: string,
   fromNumber?: string
 ): Promise<{
   success: boolean;
@@ -283,14 +294,27 @@ export async function verifyHttpSmsAction(
     return { success: false, error: 'Unauthorized' };
   }
 
-  if (!apiKey) {
+  let keyToUse = apiKey?.trim();
+  let fromToUse = fromNumber?.trim();
+  if (!keyToUse || !fromToUse) {
+    const { data: currentSettings } = await supabase
+      .from('bili_notification_settings')
+      .select('httpsms_api_key, httpsms_from_number')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (!keyToUse) keyToUse = currentSettings?.httpsms_api_key || '';
+    if (!fromToUse) fromToUse = currentSettings?.httpsms_from_number || undefined;
+  }
+
+  if (!keyToUse) {
     return {
       success: false,
       error: 'Please enter your httpSMS API key.',
     };
   }
 
-  const result = await verifyHttpSmsConnection(apiKey, fromNumber);
+  const result = await verifyHttpSmsConnection(keyToUse, fromToUse);
   return result;
 }
 

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { Sidebar } from '@/components/Navigation/Sidebar';
 import { MobileNav } from '@/components/Navigation/MobileNav';
 import { MobileHeader } from '@/components/Navigation/MobileHeader';
@@ -41,27 +42,27 @@ export default async function DashboardLayout({
   const userName = (user.user_metadata?.full_name as string) || userEmail.split('@')[0];
 
   return (
-    <div className="h-[100dvh] w-full bg-[#F8F9FA] flex flex-col md:flex-row overflow-hidden">
-      {/* Desktop Sidebar (Menu always visible) */}
-      <div className="hidden md:flex shrink-0 h-full">
+    <SidebarProvider defaultOpen={true} className="h-dvh max-h-dvh w-full overflow-hidden">
+      <div className="h-full w-full bg-background flex flex-col md:flex-row overflow-hidden">
+        {/* Desktop Sidebar (Pinned & collapsible via shadcn) */}
         <Sidebar userEmail={userEmail} userName={userName} />
+
+        {/* Main Content Area (Only scrollable container) */}
+        <main className="flex-1 h-full min-h-0 overflow-y-auto overscroll-contain flex flex-col">
+          {/* Sticky Mobile Top Header */}
+          <MobileHeader userName={userName} userEmail={userEmail} />
+
+          <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 py-5 sm:py-8 pb-44 sm:pb-36 md:pb-28 lg:pb-32 flex-1 min-h-0">
+            {children}
+          </div>
+        </main>
+
+        {/* Mobile Bottom Nav (5 primary destinations) */}
+        <MobileNav />
+
+        {/* Floating Tenvi AI Natural Language Ledger */}
+        <TenviAIChat />
       </div>
-
-      {/* Main Content Area (Only scrollable container) */}
-      <main className="flex-1 h-full overflow-y-auto overscroll-contain flex flex-col">
-        {/* Sticky Mobile Top Header */}
-        <MobileHeader userName={userName} userEmail={userEmail} />
-
-        <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 py-5 sm:py-8 pb-36 md:pb-12 flex-1">
-          {children}
-        </div>
-      </main>
-
-      {/* Mobile Bottom Nav */}
-      <MobileNav />
-
-      {/* Floating Tenvi AI Natural Language Ledger */}
-      <TenviAIChat />
-    </div>
+    </SidebarProvider>
   );
 }

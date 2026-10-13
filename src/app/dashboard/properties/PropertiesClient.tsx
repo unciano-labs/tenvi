@@ -2,76 +2,84 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { deletePropertyAction } from '@/app/actions/properties';
+import { toast } from 'sonner';
 import {
   Building2,
   Car,
   Plus,
-  Search,
-  Filter,
-  ShieldCheck,
-  Calendar,
-  DollarSign,
+  Trash2,
+  Edit2,
   TrendingUp,
   TrendingDown,
+  ShieldCheck,
+  Clock,
+  ChevronRight,
+  Receipt,
+  FileText,
+  Search,
+  AlertCircle,
+  Sparkles,
   ArrowUpRight,
   ArrowDownRight,
-  Receipt,
-  AlertCircle,
-  Clock,
-  Sparkles,
-  ChevronRight,
-  Edit2,
-  Trash2,
-  Layers,
   Store,
   Trees,
   Wrench,
-  CheckCircle2,
-  FileText,
+  Layers,
 } from 'lucide-react';
-import { Property, Transaction, Category, CreditCard, PropertyType, PropertyDocument } from '@/types';
-import {
-  formatMoney,
-  formatDate,
-  calculatePropertyFinancials,
-  calculateInsuranceRenewal,
-  calculateNextDueDate,
-  calculateDocumentExpiryStatus,
-} from '@/lib/finance/calculations';
 import { PropertyModal } from '@/components/Forms/PropertyModal';
 import { PropertyTransactionModal } from '@/components/Forms/PropertyTransactionModal';
-import { StatCard } from '@/components/UI/StatCard';
-import { deletePropertyAction } from '@/app/actions/properties';
-import { toast } from 'sonner';
-import { confirmModal } from '@/components/UI/GlobalDialog';
+import { StatCard } from '@/components/ui/StatCard';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { confirmModal } from '@/components/ui/GlobalDialog';
+import {
+  formatMoney,
+  calculatePropertyFinancials,
+  calculateDocumentExpiryStatus,
+} from '@/lib/finance/calculations';
+import {
+  Property,
+  PropertyType,
+  Transaction,
+  Category,
+  CreditCard,
+  PropertyDocument,
+} from '@/types';
 
 interface PropertiesClientProps {
-  properties: Property[];
+  initialProperties?: Property[];
+  properties?: Property[];
   transactions: Transaction[];
   categories: Category[];
-  creditCards: CreditCard[];
+  creditCards?: CreditCard[];
   documents?: PropertyDocument[];
 }
 
 export function PropertiesClient({
-  properties,
+  initialProperties,
+  properties: propProperties,
   transactions,
   categories,
-  creditCards,
+  creditCards = [],
   documents = [],
 }: PropertiesClientProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<string>('all');
-
+  const [properties] = useState<Property[]>(initialProperties || propProperties || []);
   const [isAddPropertyModalOpen, setIsAddPropertyModalOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 
-  // Quick transaction modal states
+  // Quick Action Modal state (Property Transactions)
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
-  const [txModalPropertyId, setTxModalPropertyId] = useState<string | undefined>(undefined);
+  const [txModalPropertyId, setTxModalPropertyId] = useState<string | undefined>();
   const [txModalKind, setTxModalKind] = useState<'income' | 'expense'>('income');
 
-  // Open transaction modal for specific property
+  // Search and filter
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState<PropertyType | 'all'>('all');
+
+  // Open property-specific transaction modal
   const handleOpenTxModal = (propertyId: string, kind: 'income' | 'expense') => {
     setTxModalPropertyId(propertyId);
     setTxModalKind(kind);
@@ -144,39 +152,34 @@ export function PropertiesClient({
         totalMonthlyAmortization += fin.monthlyAmortization;
         totalAnnualInsurance += fin.annualInsurance;
 
-        // Check amortization urgency (due within 7 days)
-        if (fin.amortizationDue && fin.amortizationDue.daysRemaining <= 7) {
+        if (fin.amortizationDue && (fin.amortizationDue.urgency === 'critical' || fin.amortizationDue.urgency === 'warning')) {
           urgentObligations.push({
             property: p,
             type: 'amortization',
-            amount: fin.monthlyAmortization,
+            amount: p.monthly_amortization || 0,
             label: fin.amortizationDue.label,
             urgency: fin.amortizationDue.urgency,
             daysRemaining: fin.amortizationDue.daysRemaining,
           });
         }
 
-        // Check insurance urgency (due within 30 days)
-        if (
-          fin.insuranceRenewal.daysRemaining !== null &&
-          fin.insuranceRenewal.daysRemaining <= 30
-        ) {
+        if (fin.insuranceRenewal.urgency !== 'normal') {
           urgentObligations.push({
             property: p,
             type: 'insurance',
-            amount: fin.annualInsurance,
+            amount: p.annual_insurance_amount || 0,
             label: fin.insuranceRenewal.label,
             urgency: fin.insuranceRenewal.urgency,
-            daysRemaining: fin.insuranceRenewal.daysRemaining,
+            daysRemaining: fin.insuranceRenewal.daysRemaining ?? 30,
           });
         }
       }
     });
 
-    const netCashFlow = totalIncome - totalExpense;
-    const monthlyCommitments = totalMonthlyAmortization + totalAnnualInsurance / 12;
-
     urgentObligations.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+    const monthlyCommitments = totalMonthlyAmortization + totalAnnualInsurance / 12;
+    const netCashFlow = totalIncome - totalExpense;
 
     return {
       totalValuation,
@@ -191,7 +194,7 @@ export function PropertiesClient({
     };
   }, [properties, propertyFinancialsMap]);
 
-  // Documents grouped by property and expiring documents
+  // Document insights
   const documentInsights = useMemo(() => {
     const docsByProp = new Map<string, PropertyDocument[]>();
     const attentionDocs: Array<{
@@ -264,59 +267,53 @@ export function PropertiesClient({
     }
   };
 
-  const getAssetBadgeColor = (type: PropertyType) => {
-    switch (type) {
-      case 'vehicle':
-        return 'bg-blue-50 text-blue-800';
-      case 'real_estate':
-        return 'bg-purple-50 text-purple-800';
-      case 'commercial':
-        return 'bg-amber-50 text-amber-800';
-      default:
-        return 'bg-slate-100 text-slate-800';
-    }
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-150">
-      {/* Page Title & Main Action Controls */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Properties & Asset Fleet
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground truncate">
+            Property & Asset Portfolio
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Manage vehicles, real estate, income-generating units, daily boundaries, and loan/insurance renewals.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          <button
+          <Button
+            type="button"
+            variant="soft"
+            size="sm"
             onClick={() => handleOpenGeneralTx('income')}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition-colors cursor-pointer shadow-xs"
+            className="rounded-xl gap-1.5 font-bold text-xs"
           >
-            <ArrowDownRight className="w-4 h-4 text-emerald-600" />
+            <ArrowDownRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             + Log Income
-          </button>
+          </Button>
 
-          <button
+          <Button
+            type="button"
+            variant="soft"
+            size="sm"
             onClick={() => handleOpenGeneralTx('expense')}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-rose-50 text-rose-800 hover:bg-rose-100 text-xs font-bold transition-colors cursor-pointer shadow-xs"
+            className="rounded-xl gap-1.5 font-bold text-xs"
           >
-            <ArrowUpRight className="w-4 h-4 text-rose-600" />
+            <ArrowUpRight className="w-4 h-4 text-rose-600 dark:text-rose-400" />
             + Log Expense
-          </button>
+          </Button>
 
-          <button
+          <Button
+            type="button"
             onClick={() => {
               setEditingProperty(null);
               setIsAddPropertyModalOpen(true);
             }}
-            className="bili-btn-primary py-2.5 px-5 text-xs font-bold shadow-sm flex items-center gap-2"
+            className="rounded-xl gap-2 font-bold text-xs shadow-xs"
           >
             <Plus className="w-4 h-4" />
             Add Property / Vehicle
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -360,49 +357,49 @@ export function PropertiesClient({
       </div>
 
       {/* Monthly Commitments Quick Bar */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs uppercase font-bold text-slate-400 tracking-wider">
-            <ShieldCheck className="w-4 h-4 text-indigo-600" />
+      <Card className="p-6 shadow-xs overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-2 text-xs uppercase font-bold text-muted-foreground tracking-wider">
+            <ShieldCheck className="w-4 h-4 text-primary" />
             Monthly Run-Rate Commitments
           </div>
-          <div className="text-2xl font-extrabold text-slate-900">
+          <div className="text-2xl font-extrabold text-foreground truncate">
             {formatMoney(portfolioSummary.monthlyCommitments)}
-            <span className="text-xs font-normal text-slate-500 ml-1.5">/ month required</span>
+            <span className="text-xs font-normal text-muted-foreground ml-1.5">/ month required</span>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             Includes {formatMoney(portfolioSummary.totalMonthlyAmortization)} in monthly loan amortizations +{' '}
             {formatMoney(portfolioSummary.totalAnnualInsurance / 12)} /mo annual insurance reserve.
           </p>
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
-          <div className="p-3.5 rounded-2xl bg-[#F6F7F9] min-w-[140px]">
-            <span className="text-xs font-bold text-slate-500 block uppercase">
+          <div className="p-3.5 rounded-2xl bg-muted/60 min-w-[140px]">
+            <span className="text-xs font-bold text-muted-foreground block uppercase">
               Total Monthly Loans
             </span>
-            <span className="text-base font-extrabold text-slate-900">
+            <span className="text-base font-extrabold text-foreground">
               {formatMoney(portfolioSummary.totalMonthlyAmortization)}
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#F6F7F9] min-w-[140px]">
-            <span className="text-xs font-bold text-slate-500 block uppercase">
+          <div className="p-3.5 rounded-2xl bg-muted/60 min-w-[140px]">
+            <span className="text-xs font-bold text-muted-foreground block uppercase">
               Annual Insurance Total
             </span>
-            <span className="text-base font-extrabold text-slate-900">
+            <span className="text-base font-extrabold text-foreground">
               {formatMoney(portfolioSummary.totalAnnualInsurance)}
             </span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Urgent Asset Obligations Alert Banner */}
       {portfolioSummary.urgentObligations.length > 0 && (
-        <div className="p-5 rounded-3xl bg-amber-50/80 space-y-3">
+        <Card className="p-5 rounded-3xl bg-amber-500/10 space-y-3 min-w-0">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-amber-700 shrink-0" />
-            <h4 className="text-sm font-bold text-amber-950">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <h4 className="text-sm font-bold text-amber-950 dark:text-amber-200">
               Upcoming Fixed Obligations ({portfolioSummary.urgentObligations.length} due soon)
             </h4>
           </div>
@@ -411,15 +408,15 @@ export function PropertiesClient({
             {portfolioSummary.urgentObligations.map((item, idx) => (
               <div
                 key={idx}
-                className="bg-white rounded-2xl p-3.5 shadow-xs flex items-center justify-between gap-3"
+                className="bg-card rounded-2xl p-3.5 shadow-xs flex items-center justify-between gap-3 min-w-0"
               >
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-slate-900 block truncate">
+                <div className="min-w-0 flex-1">
+                  <span className="text-xs font-bold text-foreground block truncate">
                     {item.property.name}
                   </span>
-                  <div className="flex items-center gap-1.5 text-xs text-amber-800 font-semibold mt-0.5">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>
+                  <div className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-semibold mt-0.5 truncate">
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">
                       {item.type === 'amortization' ? 'Amortization' : 'Insurance'}:{' '}
                       {item.label}
                     </span>
@@ -427,33 +424,36 @@ export function PropertiesClient({
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-xs font-extrabold text-slate-900 block">
+                  <span className="text-xs font-extrabold text-foreground block">
                     {formatMoney(item.amount)}
                   </span>
-                  <button
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="xs"
                     onClick={() => handleOpenTxModal(item.property.id, 'expense')}
-                    className="text-xs font-bold text-indigo-700 hover:text-indigo-900 underline mt-0.5 cursor-pointer"
+                    className="text-xs font-bold p-0 h-auto"
                   >
                     Pay / Log
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Document Renewal & Compliance Alerts Banner */}
       {documentInsights.attentionDocs.length > 0 && (
-        <div className="p-5 rounded-3xl bg-amber-50/80 border border-amber-200/70 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-amber-700 shrink-0" />
-              <h4 className="text-sm font-bold text-amber-950">
+        <Card className="p-5 rounded-3xl bg-amber-500/10 space-y-3 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+              <h4 className="text-sm font-bold text-amber-950 dark:text-amber-200 truncate">
                 Asset Document Expirations & Renewals ({documentInsights.attentionDocs.length} requiring attention)
               </h4>
             </div>
-            <span className="text-xs font-semibold text-amber-800">
+            <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 shrink-0">
               LTO OR/CR, Insurance Policies, LTFRB Franchises
             </span>
           </div>
@@ -462,21 +462,29 @@ export function PropertiesClient({
             {documentInsights.attentionDocs.map((item, idx) => (
               <div
                 key={idx}
-                className="bg-white rounded-2xl p-3.5 shadow-xs flex items-center justify-between gap-3 border border-amber-200/60"
+                className="bg-card rounded-2xl p-3.5 shadow-xs flex items-center justify-between gap-3 min-w-0"
               >
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-slate-900 block truncate">
+                <div className="min-w-0 flex-1">
+                  <span className="text-xs font-bold text-foreground block truncate">
                     {item.propertyName}
                   </span>
-                  <p className="text-xs text-slate-600 font-medium truncate mt-0.5">
+                  <p className="text-xs text-muted-foreground font-medium truncate mt-0.5">
                     {item.document.title}
                   </p>
-                  <div className="flex items-center gap-1.5 text-xs font-bold mt-1">
-                    <span className={`px-2 py-0.5 rounded-md text-xs ${item.status.badgeClass}`}>
+                  <div className="flex items-center gap-1.5 text-xs font-bold mt-1 flex-wrap">
+                    <Badge
+                      variant={
+                        item.status.isExpired
+                          ? 'destructive'
+                          : item.status.isExpiringSoon
+                          ? 'warning'
+                          : 'soft'
+                      }
+                    >
                       {item.status.label}
-                    </span>
+                    </Badge>
                     {item.document.document_number && (
-                      <span className="text-xs text-slate-400 font-mono">
+                      <span className="text-xs text-muted-foreground font-mono">
                         #{item.document.document_number}
                       </span>
                     )}
@@ -485,47 +493,50 @@ export function PropertiesClient({
 
                 <Link
                   href={`/dashboard/properties/${item.document.property_id}`}
-                  className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold shrink-0 transition-colors"
+                  className="px-2.5 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shrink-0 transition-colors"
                 >
                   Manage
                 </Link>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
         {/* Type tabs */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F6F7F9] overflow-x-auto">
-          <button
+        <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar shrink-0">
+          <Button
+            type="button"
+            variant={selectedType === 'all' ? 'default' : 'ghost'}
+            size="sm"
             onClick={() => setSelectedType('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-              selectedType === 'all'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+            className={`rounded-xl text-xs font-bold whitespace-nowrap ${
+              selectedType === 'all' ? 'shadow-xs' : 'text-muted-foreground'
             }`}
           >
             All Assets ({properties.length})
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant={selectedType === 'vehicle' ? 'default' : 'ghost'}
+            size="sm"
             onClick={() => setSelectedType('vehicle')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              selectedType === 'vehicle'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+            className={`rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 ${
+              selectedType === 'vehicle' ? 'shadow-xs' : 'text-muted-foreground'
             }`}
           >
             <Car className="w-3.5 h-3.5" />
             Vehicles ({properties.filter((p) => p.property_type === 'vehicle').length})
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant={selectedType === 'real_estate' ? 'default' : 'ghost'}
+            size="sm"
             onClick={() => setSelectedType('real_estate')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              selectedType === 'real_estate'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+            className={`rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 ${
+              selectedType === 'real_estate' ? 'shadow-xs' : 'text-muted-foreground'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
@@ -539,51 +550,51 @@ export function PropertiesClient({
               ).length
             }
             )
-          </button>
+          </Button>
         </div>
 
         {/* Search */}
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
             type="text"
-            placeholder="Search assets, plates..."
+            placeholder="Search assets, identifiers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-2xl bg-white text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 shadow-sm"
+            className="pl-9 h-10 text-xs rounded-xl"
           />
         </div>
-      </div>
+      </Card>
 
       {/* Property Cards Grid */}
       {filteredProperties.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center shadow-sm space-y-4 max-w-md mx-auto">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center mx-auto">
+        <Card className="p-12 text-center shadow-xs space-y-4 max-w-md mx-auto">
+          <div className="size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
             <Building2 className="w-7 h-7" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-lg font-bold text-slate-900">
+            <h3 className="text-lg font-bold text-foreground">
               {searchQuery ? 'No matching properties found' : 'No properties or assets yet'}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {searchQuery
                 ? 'Try adjusting your search keyword or filters.'
                 : 'Add your cars, Grab/taxi vehicles, or rental condos to track daily boundaries, amortizations, and annual insurance.'}
             </p>
           </div>
           {!searchQuery && (
-            <button
+            <Button
               onClick={() => {
                 setEditingProperty(null);
                 setIsAddPropertyModalOpen(true);
               }}
-              className="bili-btn-primary py-2.5 px-5 text-xs font-semibold shadow-sm inline-flex items-center gap-2"
+              className="rounded-xl gap-2 text-xs font-semibold"
             >
               <Plus className="w-4 h-4" />
               Add First Property / Vehicle
-            </button>
+            </Button>
           )}
-        </div>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProperties.map((property) => {
@@ -593,111 +604,112 @@ export function PropertiesClient({
             const Icon = getAssetIcon(property.property_type);
 
             return (
-              <div
+              <Card
                 key={property.id}
-                className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-shadow flex flex-col justify-between space-y-5"
+                className="p-6 shadow-xs overflow-hidden min-w-0 flex flex-col justify-between space-y-5"
               >
                 {/* Header: Icon, Name, Identifier, Status */}
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+                <div className="min-w-0">
+                  <div className="flex items-start justify-between gap-3 mb-3 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                         <Icon className="w-6 h-6" />
                       </div>
-                      <div>
-                        <h3 className="text-base font-bold text-slate-900 leading-tight">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base font-bold text-foreground leading-tight truncate">
                           {property.name}
                         </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span
-                            className={`text-xs font-bold px-2 py-0.5 rounded-lg uppercase tracking-wider ${getAssetBadgeColor(
-                              property.property_type
-                            )}`}
-                          >
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <Badge variant="soft" className="text-2xs font-bold uppercase tracking-wider shrink-0">
                             {property.property_type.replace('_', ' ')}
-                          </span>
+                          </Badge>
                           {property.identifier && (
-                            <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg uppercase tracking-wide">
+                            <Badge variant="outline" className="text-2xs font-bold uppercase tracking-wide shrink-0">
                               {property.identifier}
-                            </span>
+                            </Badge>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      <button
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
                         onClick={() => {
                           setEditingProperty(property);
                           setIsAddPropertyModalOpen(true);
                         }}
-                        className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                        className="text-muted-foreground hover:text-foreground"
                         title="Edit Property"
                       >
                         <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
                         onClick={(e) => handleDeleteProperty(property, e)}
-                        className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="text-muted-foreground hover:text-destructive"
                         title="Delete Property"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
                   {/* Valuation */}
-                  <div className="p-3.5 rounded-2xl bg-[#F6F7F9] mb-4 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                  <div className="p-3.5 rounded-2xl bg-muted/60 mb-4 flex items-center justify-between gap-2 min-w-0">
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
                         Estimated Market Valuation
                       </span>
-                      <span className="text-lg font-extrabold text-slate-900">
+                      <span className="text-lg font-extrabold text-foreground truncate block">
                         {formatMoney(property.estimated_value)}
                       </span>
                     </div>
 
                     {property.status && (
-                      <span
-                        className={`text-xs font-bold px-2.5 py-1 rounded-xl uppercase tracking-wider ${
+                      <Badge
+                        variant={
                           property.status === 'active'
-                            ? 'bg-emerald-50 text-emerald-800'
+                            ? 'success'
                             : property.status === 'maintenance'
-                            ? 'bg-amber-50 text-amber-800'
-                            : 'bg-slate-200 text-slate-700'
-                        }`}
+                            ? 'warning'
+                            : 'soft'
+                        }
+                        className="uppercase tracking-wider shrink-0"
                       >
                         {property.status}
-                      </span>
+                      </Badge>
                     )}
                   </div>
 
                   {/* Financial Flow: In vs Out vs Net */}
                   {financials && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center p-3 rounded-2xl bg-slate-50/70 mb-4">
-                      <div>
-                        <span className="text-xs font-bold text-slate-400 uppercase block">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center p-3 rounded-2xl bg-muted/40 mb-4 min-w-0">
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-muted-foreground uppercase block">
                           Income
                         </span>
-                        <span className="text-xs font-bold text-emerald-700 block truncate">
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block truncate">
                           +{formatMoney(financials.totalIncome)}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-xs font-bold text-slate-400 uppercase block">
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-muted-foreground uppercase block">
                           Expense
                         </span>
-                        <span className="text-xs font-bold text-rose-700 block truncate">
+                        <span className="text-xs font-bold text-rose-600 dark:text-rose-400 block truncate">
                           -{formatMoney(financials.totalExpense)}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-xs font-bold text-slate-400 uppercase block">
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-muted-foreground uppercase block">
                           Net Cash
                         </span>
                         <span
                           className={`text-xs font-extrabold block truncate ${
-                            financials.netCashFlow >= 0 ? 'text-emerald-800' : 'text-rose-800'
+                            financials.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                           }`}
                         >
                           {formatMoney(financials.netCashFlow)}
@@ -706,76 +718,78 @@ export function PropertiesClient({
                     </div>
                   )}
 
-                  {/* Commitments & Targets: Amortization, Insurance, Boundary */}
-                  <div className="space-y-2 text-xs">
+                  {/* Commitments & Targets */}
+                  <div className="space-y-2 text-xs min-w-0">
                     {/* Monthly Amortization */}
                     {Number(property.monthly_amortization || 0) > 0 && (
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/50">
-                        <div className="flex items-center gap-1.5 text-blue-950 font-medium">
-                          <Receipt className="w-3.5 h-3.5 text-blue-700" />
-                          <span>Monthly Amort:</span>
-                          <span className="font-bold">{formatMoney(property.monthly_amortization)}</span>
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary/5 min-w-0 gap-2">
+                        <div className="flex items-center gap-1.5 font-medium truncate min-w-0">
+                          <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span className="shrink-0">Monthly Amort:</span>
+                          <span className="font-bold truncate">{formatMoney(property.monthly_amortization)}</span>
                         </div>
                         {financials?.amortizationDue && (
-                          <span
-                            className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                          <Badge
+                            variant={
                               financials.amortizationDue.urgency === 'critical'
-                                ? 'bg-rose-100 text-rose-800'
+                                ? 'destructive'
                                 : financials.amortizationDue.urgency === 'warning'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-blue-100 text-blue-800'
-                            }`}
+                                ? 'warning'
+                                : 'soft'
+                            }
+                            className="shrink-0"
                           >
                             {financials.amortizationDue.label}
-                          </span>
+                          </Badge>
                         )}
                       </div>
                     )}
 
                     {/* Annual Insurance Renewal */}
                     {Number(property.annual_insurance_amount || 0) > 0 && (
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-100/70">
-                        <div className="flex items-center gap-1.5 text-slate-800 font-medium">
-                          <ShieldCheck className="w-3.5 h-3.5 text-slate-600" />
-                          <span>Yearly Insurance:</span>
-                          <span className="font-bold">{formatMoney(property.annual_insurance_amount)}</span>
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/60 min-w-0 gap-2">
+                        <div className="flex items-center gap-1.5 font-medium truncate min-w-0">
+                          <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <span className="shrink-0">Yearly Insurance:</span>
+                          <span className="font-bold truncate">{formatMoney(property.annual_insurance_amount)}</span>
                         </div>
                         {financials?.insuranceRenewal.daysRemaining !== null && (
-                          <span
-                            className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                          <Badge
+                            variant={
                               financials.insuranceRenewal.urgency === 'critical'
-                                ? 'bg-rose-100 text-rose-800'
+                                ? 'destructive'
                                 : financials.insuranceRenewal.urgency === 'warning'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-slate-200 text-slate-800'
-                            }`}
+                                ? 'warning'
+                                : 'soft'
+                            }
+                            className="shrink-0"
                           >
                             {financials.insuranceRenewal.label}
-                          </span>
+                          </Badge>
                         )}
                       </div>
                     )}
 
                     {/* Daily Boundary or Expected Rental */}
                     {Number(property.expected_income_daily || 0) > 0 && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/40 text-xs text-emerald-950">
-                        <span>Expected Daily Boundary:</span>
-                        <span className="font-bold text-emerald-800">
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 text-xs min-w-0 gap-2">
+                        <span className="truncate">Expected Daily Boundary:</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
                           {formatMoney(property.expected_income_daily)} / day
                         </span>
                       </div>
                     )}
 
                     {Number(property.expected_income_monthly || 0) > 0 && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/40 text-xs text-emerald-950">
-                        <span>Expected Monthly Rent:</span>
-                        <span className="font-bold text-emerald-800">
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 text-xs min-w-0 gap-2">
+                        <span className="truncate">Expected Monthly Rent:</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
                           {formatMoney(property.expected_income_monthly)} / mo
                         </span>
                       </div>
                     )}
 
-                    {/* Documents & Vault Status */}
+                    {/* Documents Vault Status */}
                     {(() => {
                       const propDocs = documentInsights.docsByProp.get(property.id) || [];
                       const expiringCount = propDocs.filter((d) => {
@@ -785,25 +799,25 @@ export function PropertiesClient({
                       }).length;
 
                       return (
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/60 text-xs">
-                          <div className="flex items-center gap-1.5 text-slate-700 font-medium">
-                            <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                            <span>Documents Vault:</span>
-                            <span className="font-bold text-slate-900">
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/60 text-xs min-w-0 gap-2">
+                          <div className="flex items-center gap-1.5 font-medium truncate min-w-0">
+                            <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="shrink-0">Documents:</span>
+                            <span className="font-bold truncate">
                               {propDocs.length} {propDocs.length === 1 ? 'doc' : 'docs'}
                             </span>
                           </div>
                           {expiringCount > 0 ? (
-                            <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 flex items-center gap-1">
-                              <AlertCircle className="w-3 h-3 text-amber-700" />
-                              {expiringCount} renewal alert
-                            </span>
+                            <Badge variant="warning" className="gap-1 shrink-0">
+                              <AlertCircle className="w-3 h-3" />
+                              {expiringCount} alert
+                            </Badge>
                           ) : propDocs.length > 0 ? (
-                            <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
+                            <Badge variant="success" className="shrink-0">
                               Compliant
-                            </span>
+                            </Badge>
                           ) : (
-                            <span className="text-xs text-slate-400">None attached</span>
+                            <span className="text-xs text-muted-foreground shrink-0">None</span>
                           )}
                         </div>
                       );
@@ -812,31 +826,37 @@ export function PropertiesClient({
                 </div>
 
                 {/* Footer Actions */}
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <button
+                <div className="pt-4 flex items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="soft"
                       onClick={() => handleOpenTxModal(property.id, 'income')}
-                      className="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition-colors cursor-pointer"
+                      className="text-emerald-600 dark:text-emerald-400 font-bold"
                     >
                       + Income
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="soft"
                       onClick={() => handleOpenTxModal(property.id, 'expense')}
-                      className="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-800 hover:bg-rose-100 text-xs font-bold transition-colors cursor-pointer"
+                      className="text-rose-600 dark:text-rose-400 font-bold"
                     >
                       + Expense
-                    </button>
+                    </Button>
                   </div>
 
                   <Link
                     href={`/dashboard/properties/${property.id}`}
-                    className="flex items-center gap-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 group"
+                    className="flex items-center gap-1 text-xs font-bold text-primary group shrink-0"
                   >
-                    Details & Ledger
+                    Details &amp; Ledger
                     <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>

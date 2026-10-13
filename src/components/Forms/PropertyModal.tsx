@@ -4,20 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { createPropertyAction, updatePropertyAction } from '@/app/actions/properties';
 import { toast } from 'sonner';
 import {
-  X,
   Building2,
   Car,
-  KeyRound,
   ShieldCheck,
-  Calendar,
-  DollarSign,
-  FileText,
   Loader2,
-  Tag,
-  Wrench,
-  Percent,
 } from 'lucide-react';
 import { Property, PropertyType, PropertyStatus } from '@/types';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogBody,
+} from '@/components/ui/responsive-dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface PropertyModalProps {
   isOpen: boolean;
@@ -108,8 +111,6 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
     }
   }, [property, isOpen]);
 
-  if (!isOpen) return null;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -118,19 +119,26 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
     }
 
     setIsSubmitting(true);
+
+    const parseNum = (val: string) => {
+      const clean = val.replace(/,/g, '');
+      const parsed = parseFloat(clean);
+      return isNaN(parsed) ? null : parsed;
+    };
+
     const payload = {
       name: name.trim(),
       propertyType,
       identifier: identifier.trim() || null,
-      estimatedValue: estimatedValue ? parseFloat(estimatedValue) : 0,
-      purchasePrice: purchasePrice ? parseFloat(purchasePrice) : null,
+      estimatedValue: parseNum(estimatedValue) ?? 0,
+      purchasePrice: parseNum(purchasePrice),
       purchaseDate: purchaseDate || null,
-      monthlyAmortization: monthlyAmortization ? parseFloat(monthlyAmortization) : null,
+      monthlyAmortization: parseNum(monthlyAmortization),
       amortizationDueDay: amortizationDueDay ? parseInt(amortizationDueDay, 10) : null,
-      annualInsuranceAmount: annualInsuranceAmount ? parseFloat(annualInsuranceAmount) : null,
+      annualInsuranceAmount: parseNum(annualInsuranceAmount),
       insuranceRenewalDate: insuranceRenewalDate || null,
-      expectedIncomeDaily: expectedIncomeDaily ? parseFloat(expectedIncomeDaily) : null,
-      expectedIncomeMonthly: expectedIncomeMonthly ? parseFloat(expectedIncomeMonthly) : null,
+      expectedIncomeDaily: parseNum(expectedIncomeDaily),
+      expectedIncomeMonthly: parseNum(expectedIncomeMonthly),
       colorTheme,
       status,
       notes: notes.trim() || null,
@@ -151,293 +159,270 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto">
-      <div className="w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-xl my-8 space-y-6 max-h-[90vh] overflow-y-auto bili-scrollbar">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <ResponsiveDialogContent className="max-w-2xl">
+        <ResponsiveDialogHeader className="pr-10 sm:pr-12">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               {propertyType === 'vehicle' ? (
                 <Car className="w-5 h-5" />
               ) : (
                 <Building2 className="w-5 h-5" />
               )}
             </div>
-            <div>
-              <h3 className="text-xl font-bold tracking-tight text-slate-900">
+            <div className="min-w-0">
+              <ResponsiveDialogTitle className="truncate">
                 {isEditing ? 'Edit Property / Asset' : 'Add Property or Asset'}
-              </h3>
-              <p className="text-xs text-slate-500">
-                Track revenue, daily boundary/income, amortization, and annual renewals.
-              </p>
+              </ResponsiveDialogTitle>
+              <ResponsiveDialogDescription className="truncate">
+                Track revenue, boundary/rentals, amortization, and renewals
+              </ResponsiveDialogDescription>
             </div>
           </div>
+        </ResponsiveDialogHeader>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-2xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-bold text-slate-700">Property / Asset Name</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Toyota Vios Grab #1, BGC One Maridien Studio"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-[#F6F7F9] text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Asset Type</label>
-              <select
-                value={propertyType}
-                onChange={(e) => setPropertyType(e.target.value as PropertyType)}
-                className="w-full px-4 py-3 rounded-2xl bg-[#F6F7F9] text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-              >
-                {PROPERTY_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">
-                {propertyType === 'vehicle' ? 'Plate Number / VIN' : 'Unit / Identifier'}
-              </label>
-              <input
-                type="text"
-                placeholder={propertyType === 'vehicle' ? 'e.g. NBT-1234' : 'e.g. Unit 24B, Tower 1'}
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-[#F6F7F9] text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 uppercase"
-              />
-            </div>
-          </div>
-
-          {/* Valuation & Acquisition */}
-          <div className="p-4 rounded-3xl bg-[#F6F7F9] space-y-4">
-            <h4 className="text-xs uppercase font-bold text-slate-500 tracking-wider">
-              Asset Valuation & Pricing
-            </h4>
+        <ResponsiveDialogBody>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Basic Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">
-                  Current Market Valuation (₱)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="e.g. 750000"
-                  value={estimatedValue}
-                  onChange={(e) => setEstimatedValue(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-xs font-bold text-foreground">Property / Asset Name</label>
+                <Input
+                  type="text"
+                  required
+                  placeholder="e.g. Toyota Vios Grab #1, BGC One Maridien Studio"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="text-sm"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Purchase / Acquisition Price (₱)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="e.g. 850000"
-                  value={purchasePrice}
-                  onChange={(e) => setPurchasePrice(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                <label className="text-xs font-bold text-foreground">Asset Type</label>
+                <select
+                  value={propertyType}
+                  onChange={(e) => setPropertyType(e.target.value as PropertyType)}
+                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-all focus:ring-2 focus:ring-ring"
+                >
+                  {PROPERTY_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">
+                  {propertyType === 'vehicle' ? 'Plate Number / VIN' : 'Unit / Identifier'}
+                </label>
+                <Input
+                  type="text"
+                  placeholder={propertyType === 'vehicle' ? 'e.g. NBT-1234' : 'e.g. Unit 24B, Tower 1'}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  className="text-sm uppercase"
                 />
               </div>
             </div>
-          </div>
 
-          {/* Fixed Commitments: Monthly Amortization & Yearly Insurance */}
-          <div className="p-4 rounded-3xl bg-blue-50/60 space-y-4">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-blue-700" />
-              <h4 className="text-xs uppercase font-bold text-blue-950 tracking-wider">
-                Fixed Obligations (Amortization & Insurance)
+            {/* Valuation & Acquisition */}
+            <div className="p-4 rounded-3xl bg-muted/60 space-y-4">
+              <h4 className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
+                Asset Valuation & Pricing
               </h4>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-blue-950">
-                  Monthly Amortization / Loan (₱)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="e.g. 16500"
-                  value={monthlyAmortization}
-                  onChange={(e) => setMonthlyAmortization(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-blue-950">
-                  Amortization Due Day (Day of Month)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="31"
-                  placeholder="e.g. 15"
-                  value={amortizationDueDay}
-                  onChange={(e) => setAmortizationDueDay(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-blue-950">
-                  Annual Insurance Cost (₱)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="e.g. 18500"
-                  value={annualInsuranceAmount}
-                  onChange={(e) => setAnnualInsuranceAmount(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-blue-950">
-                  Insurance Renewal Date
-                </label>
-                <input
-                  type="date"
-                  value={insuranceRenewalDate}
-                  onChange={(e) => setInsuranceRenewalDate(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Expected Revenue Targets (Daily & Monthly) */}
-          <div className="p-4 rounded-3xl bg-emerald-50/60 space-y-4">
-            <h4 className="text-xs uppercase font-bold text-emerald-950 tracking-wider">
-              Expected Revenue Targets
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-emerald-950">
-                  Expected Daily Boundary / Income (₱)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="e.g. 1200 for taxi/Grab"
-                  value={expectedIncomeDaily}
-                  onChange={(e) => setExpectedIncomeDaily(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-emerald-950">
-                  Expected Monthly Rental (₱)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="e.g. 35000 for condo"
-                  value={expectedIncomeMonthly}
-                  onChange={(e) => setExpectedIncomeMonthly(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Color & Status */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Theme Color</label>
-              <div className="flex items-center gap-2 pt-1">
-                {THEME_OPTIONS.map((theme) => (
-                  <button
-                    key={theme.value}
-                    type="button"
-                    onClick={() => setColorTheme(theme.value)}
-                    className={`w-8 h-8 rounded-full transition-transform cursor-pointer ${
-                      colorTheme === theme.value
-                        ? 'scale-110 ring-2 ring-offset-2 ring-slate-900'
-                        : 'hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: theme.bg }}
-                    title={theme.label}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Current Market Valuation (₱)
+                  </label>
+                  <MoneyInput
+                    placeholder="e.g. 750,000"
+                    value={estimatedValue}
+                    onChange={(val) => setEstimatedValue(val)}
                   />
-                ))}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Purchase / Acquisition Price (₱)
+                  </label>
+                  <MoneyInput
+                    placeholder="e.g. 850,000"
+                    value={purchasePrice}
+                    onChange={(val) => setPurchasePrice(val)}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Operational Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as PropertyStatus)}
-                className="w-full px-4 py-2.5 rounded-2xl bg-[#F6F7F9] text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-              >
-                <option value="active">Active & Generating Income</option>
-                <option value="maintenance">Under Maintenance / Repair</option>
-                <option value="inactive">Inactive / Vacant</option>
-                <option value="sold">Sold / Disposed</option>
-              </select>
+            {/* Fixed Commitments */}
+            <div className="p-4 rounded-3xl bg-primary/5 space-y-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                <h4 className="text-xs uppercase font-bold text-foreground tracking-wider">
+                  Fixed Obligations (Amortization & Insurance)
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Monthly Amortization / Loan (₱)
+                  </label>
+                  <MoneyInput
+                    placeholder="e.g. 16,500"
+                    value={monthlyAmortization}
+                    onChange={(val) => setMonthlyAmortization(val)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Amortization Due Day (Day of Month)
+                  </label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="31"
+                    placeholder="e.g. 15"
+                    value={amortizationDueDay}
+                    onChange={(e) => setAmortizationDueDay(e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Annual Insurance Cost (₱)
+                  </label>
+                  <MoneyInput
+                    placeholder="e.g. 18,500"
+                    value={annualInsuranceAmount}
+                    onChange={(val) => setAnnualInsuranceAmount(val)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Insurance Renewal Date
+                  </label>
+                  <Input
+                    type="date"
+                    value={insuranceRenewalDate}
+                    onChange={(e) => setInsuranceRenewalDate(e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Notes */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">Notes / Reminders (Optional)</label>
-            <input
-              type="text"
-              placeholder="e.g. Driver: Kuya Jun (0917...), Oil change every 10k km, LTO renewal July"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-2xl bg-[#F6F7F9] text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-            />
-          </div>
+            {/* Expected Revenue Targets */}
+            <div className="p-4 rounded-3xl bg-emerald-500/10 space-y-4">
+              <h4 className="text-xs uppercase font-bold text-emerald-800 dark:text-emerald-300 tracking-wider">
+                Expected Revenue Targets
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Expected Daily Boundary / Income (₱)
+                  </label>
+                  <MoneyInput
+                    placeholder="e.g. 1,200 for taxi/Grab"
+                    value={expectedIncomeDaily}
+                    onChange={(val) => setExpectedIncomeDaily(val)}
+                  />
+                </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bili-btn-primary py-2.5 px-6 text-xs font-semibold shadow-sm flex items-center gap-2"
-            >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isEditing ? 'Save Changes' : 'Add Property'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Expected Monthly Rental (₱)
+                  </label>
+                  <MoneyInput
+                    placeholder="e.g. 35,000 for condo"
+                    value={expectedIncomeMonthly}
+                    onChange={(val) => setExpectedIncomeMonthly(val)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Color & Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">Theme Color</label>
+                <div className="flex items-center gap-2 pt-1">
+                  {THEME_OPTIONS.map((theme) => (
+                    <button
+                      key={theme.value}
+                      type="button"
+                      onClick={() => setColorTheme(theme.value)}
+                      className={`size-8 rounded-full transition-transform cursor-pointer ${
+                        colorTheme === theme.value
+                          ? 'scale-110 ring-2 ring-offset-2 ring-primary'
+                          : 'hover:scale-105 opacity-80 hover:opacity-100'
+                      }`}
+                      style={{ backgroundColor: theme.bg }}
+                      title={theme.label}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">Operational Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as PropertyStatus)}
+                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-all focus:ring-2 focus:ring-ring"
+                >
+                  <option value="active">Active & Generating Income</option>
+                  <option value="maintenance">Under Maintenance / Repair</option>
+                  <option value="inactive">Inactive / Vacant</option>
+                  <option value="sold">Sold / Disposed</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-foreground">Notes / Reminders (Optional)</label>
+              <Input
+                type="text"
+                placeholder="e.g. Driver: Kuya Jun, Oil change every 10k km"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3">
+              <Button
+                type="button"
+                variant="soft"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="gap-2"
+              >
+                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isEditing ? 'Save Changes' : 'Add Property'}
+              </Button>
+            </div>
+          </form>
+        </ResponsiveDialogBody>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

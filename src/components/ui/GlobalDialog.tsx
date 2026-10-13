@@ -147,26 +147,26 @@ export function GlobalDialog() {
     switch (dialog.variant) {
       case 'danger':
         return (
-          <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 mb-4 ring-8 ring-rose-50/50">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 mb-4 ring-8 ring-rose-500/10">
             <AlertTriangle className="w-6 h-6" />
           </div>
         );
       case 'warning':
         return (
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mb-4 ring-8 ring-amber-50/50">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mb-4 ring-8 ring-amber-500/10">
             <AlertCircle className="w-6 h-6" />
           </div>
         );
       case 'success':
         return (
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mb-4 ring-8 ring-emerald-50/50">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mb-4 ring-8 ring-emerald-500/10">
             <CheckCircle2 className="w-6 h-6" />
           </div>
         );
       case 'info':
       default:
         return (
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mb-4 ring-8 ring-blue-50/50">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mb-4 ring-8 ring-blue-500/10">
             <Info className="w-6 h-6" />
           </div>
         );
@@ -176,31 +176,31 @@ export function GlobalDialog() {
   const getConfirmBtnClasses = () => {
     switch (dialog.variant) {
       case 'danger':
-        return 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-200/50';
+        return 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-900/20';
       case 'warning':
-        return 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-200/50';
+        return 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-900/20';
       case 'success':
-        return 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50';
+        return 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-900/20';
       case 'info':
       default:
-        return 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-200/50';
+        return 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs';
     }
   };
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-md animate-in fade-in duration-150"
       onClick={() => dialog.resolve(false)}
     >
       <div
-        className="bg-white w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl relative border border-slate-100 animate-in zoom-in-95 duration-150"
+        className="bg-card text-card-foreground w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-lift relative animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         <button
           onClick={() => dialog.resolve(false)}
-          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-800 hover:bg-slate-200 flex items-center justify-center transition-colors"
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 flex items-center justify-center transition-colors cursor-pointer"
           title="Close"
         >
           <X className="w-4 h-4" />
@@ -208,11 +208,11 @@ export function GlobalDialog() {
 
         {getIcon()}
 
-        <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">
+        <h3 className="text-lg font-extrabold text-foreground tracking-tight">
           {dialog.title}
         </h3>
 
-        <div className="mt-2 text-sm text-slate-500 leading-relaxed whitespace-pre-wrap">
+        <div className="mt-2 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
           {dialog.description}
         </div>
 
@@ -222,7 +222,7 @@ export function GlobalDialog() {
               <button
                 type="button"
                 onClick={() => dialog.resolve(false)}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 transition-colors"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-sm text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
               >
                 {dialog.cancelText}
               </button>
@@ -230,7 +230,7 @@ export function GlobalDialog() {
                 ref={confirmBtnRef}
                 type="button"
                 onClick={() => dialog.resolve(true)}
-                className={`w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all ${getConfirmBtnClasses()}`}
+                className={`w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all cursor-pointer ${getConfirmBtnClasses()}`}
               >
                 {dialog.confirmText}
               </button>
@@ -240,7 +240,7 @@ export function GlobalDialog() {
               ref={confirmBtnRef}
               type="button"
               onClick={() => dialog.resolve(true)}
-              className="w-full px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-slate-900 hover:bg-slate-800 shadow-sm transition-all"
+              className="w-full px-5 py-2.5 rounded-xl font-semibold text-sm text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm transition-all cursor-pointer"
             >
               {dialog.buttonText}
             </button>

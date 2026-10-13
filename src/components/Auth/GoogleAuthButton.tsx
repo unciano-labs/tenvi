@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface GoogleAuthButtonProps {
   mode?: 'signin' | 'signup' | 'continue';
@@ -60,20 +61,21 @@ export function GoogleAuthButton({
   return (
     <div className="w-full">
       {errorMsg && (
-        <div className="mb-3 p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold border border-rose-200">
+        <div className="mb-3 p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold">
           {errorMsg}
         </div>
       )}
 
-      <button
+      <Button
         type="button"
+        variant="secondary"
         onClick={handleGoogleSignIn}
         disabled={isLoading}
-        className={`w-full py-3.5 px-4 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm sm:text-base flex items-center justify-center gap-3 transition-all duration-200 active:scale-[0.98] shadow-xs hover:shadow-sm cursor-pointer disabled:opacity-60 disabled:pointer-events-none ${className}`}
+        className={`w-full h-12 rounded-2xl text-foreground font-bold text-sm sm:text-base flex items-center justify-center gap-3 transition-all duration-200 active:scale-[0.98] shadow-card hover:shadow-lift cursor-pointer disabled:opacity-60 disabled:pointer-events-none ${className}`}
       >
         {isLoading ? (
           <>
-            <Loader2 className="w-5 h-5 animate-spin text-slate-600" />
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             <span>Connecting to Google...</span>
           </>
         ) : (
@@ -104,7 +106,7 @@ export function GoogleAuthButton({
             <span>{label}</span>
           </>
         )}
-      </button>
+      </Button>
     </div>
   );
 }

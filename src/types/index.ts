@@ -62,6 +62,26 @@ export interface Category {
   created_at: string;
 }
 
+export type CardUrgency = 'none' | 'ok' | 'soon' | 'urgent' | 'overdue';
+export type UsageLevel = 'healthy' | 'high' | 'maxed';
+
+export interface CardStatement {
+  id: string;
+  website_id: string;
+  user_id: string;
+  credit_card_id: string;
+  cycle_start?: string | null;
+  cycle_end: string;
+  due_date: string;
+  billed_amount: number;
+  minimum_due: number;
+  paid_amount: number;
+  paid_on?: string | null;
+  status: 'unpaid' | 'partially_paid' | 'paid' | 'overdue';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CreditCard {
   id: string;
   website_id: string;
@@ -74,7 +94,9 @@ export interface CreditCard {
   due_day: number;
   color_theme: string;
   is_active: boolean;
+  reminders_enabled?: boolean;
   created_at: string;
+  latest_statement?: CardStatement | null;
 }
 
 export interface Transaction {

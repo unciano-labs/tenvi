@@ -1,6 +1,10 @@
 import { WEBSITE_ID } from '@/lib/constants';
 import { UserFinancialContext } from '@/lib/ai/financialContext';
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export interface RagQueryFilters {
   needsRetrieval: boolean;
   timeframeLabel: string;
@@ -173,10 +177,26 @@ export function analyzeRagIntent(
     }
 
     // Significant token match (e.g. "bdo", "bpi", "security bank", "unionbank", "metrobank", "eastwest", "rcbc")
-    const bankTokens = bName.split(/\s+/).filter(w => w.length >= 3 && !['bank', 'the', 'and', 'card', 'unibank'].includes(w));
-    const cardTokens = cName.split(/\s+/).filter(w => w.length >= 3 && !['bank', 'card', 'gold', 'visa', 'mastercard', 'classic', 'platinum'].includes(w));
+    const sanitizeWord = (w: string) => w.replace(/[^\w]/g, '').toLowerCase().trim();
+    const bankTokens = bName
+      .split(/\s+/)
+      .map(sanitizeWord)
+      .filter(w => w.length >= 3 && !['bank', 'the', 'and', 'card', 'unibank'].includes(w));
+    const cardTokens = cName
+      .split(/\s+/)
+      .map(sanitizeWord)
+      .filter(w => w.length >= 3 && !['bank', 'card', 'gold', 'visa', 'mastercard', 'classic', 'platinum'].includes(w));
     const allTokens = [...bankTokens, ...cardTokens];
-    if (allTokens.some(t => new RegExp(`\\b${t}\\b`, 'i').test(lower))) {
+    if (
+      allTokens.some(t => {
+        if (!t) return false;
+        try {
+          return new RegExp(`\\b${escapeRegex(t)}\\b`, 'i').test(lower);
+        } catch {
+          return false;
+        }
+      })
+    ) {
       matchedCardId = c.id;
       matchedCardName = c.name;
       break;

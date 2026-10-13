@@ -4,15 +4,35 @@ import { WEBSITE_ID } from '@/lib/constants';
 import { GeminiUsageStats } from '@/types';
 
 // The verified active models for Google Gen AI Free Tier
-export const GEMINI_PRIMARY_MODEL = 'gemini-3.5-flash-lite';
-export const GEMINI_FALLBACK_MODEL = 'gemini-flash-lite-latest';
+export const GEMINI_PRIMARY_MODEL = 'gemini-3-flash-preview';
+export const GEMINI_FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 export const GEMINI_CANDIDATE_MODELS = [
+  'gemini-3-flash-preview',
+  'gemini-3.1-flash-lite',
   'gemini-3.5-flash-lite',
-  'gemini-flash-lite-latest',
   'gemini-3.8-flash',
 ];
 export const GEMINI_DAILY_LIMIT = 1500;
 export const GEMINI_RPM_LIMIT = 15;
+
+/**
+ * Executes a promise with a hard timeout to prevent hanging API calls
+ */
+export async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs = 8000,
+  errorMsg = 'Operation timed out'
+): Promise<T> {
+  let timer: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(errorMsg)), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
 
 /**
  * Returns configured API key or empty string
@@ -164,10 +184,14 @@ export async function testGeminiConnection(customKey?: string): Promise<{
   const startTime = Date.now();
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: GEMINI_PRIMARY_MODEL,
-      contents: 'Respond with the word PONG only.',
-    });
+    const response = await withTimeout(
+      ai.models.generateContent({
+        model: GEMINI_PRIMARY_MODEL,
+        contents: 'Respond with the word PONG only.',
+      }),
+      6000,
+      `Primary model ${GEMINI_PRIMARY_MODEL} timed out after 6s`
+    );
 
     const latencyMs = Date.now() - startTime;
     const text = response.text?.trim() || '';
@@ -190,10 +214,14 @@ export async function testGeminiConnection(customKey?: string): Promise<{
     // Try fallback model
     try {
       const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
-        model: GEMINI_FALLBACK_MODEL,
-        contents: 'Respond with PONG only.',
-      });
+      const response = await withTimeout(
+        ai.models.generateContent({
+          model: GEMINI_FALLBACK_MODEL,
+          contents: 'Respond with PONG only.',
+        }),
+        6000,
+        `Fallback model ${GEMINI_FALLBACK_MODEL} timed out after 6s`
+      );
       const latencyMs = Date.now() - startTime;
       return {
         success: true,

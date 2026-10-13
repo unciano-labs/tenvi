@@ -13,6 +13,8 @@ import {
   Bot,
   Lightbulb,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export interface TourStep {
   id: string;
@@ -176,7 +178,7 @@ export function DashboardTourSpotlight({
             width: targetRect.width + 16,
             height: targetRect.height + 16,
           }}
-          className="fixed pointer-events-none rounded-3xl border-4 border-slate-900 bg-white/5 shadow-[0_0_0_9999px_rgba(15,23,42,0.75)] z-50 transition-all duration-600 ease-out"
+          className="fixed pointer-events-none rounded-3xl ring-4 ring-slate-900 bg-white/5 shadow-[0_0_0_9999px_rgba(15,23,42,0.75)] z-50 transition-all duration-600 ease-out"
         />
       )}
 
@@ -184,14 +186,14 @@ export function DashboardTourSpotlight({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
           ref={cardRef}
-          className="pointer-events-auto w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-500 ease-out"
+          className="pointer-events-auto w-full max-w-md bg-card rounded-3xl shadow-lift overflow-hidden animate-in zoom-in-95 duration-500 ease-out"
         >
           {/* Top Progress & Close Bar - Solid Slate 900 */}
           <div className="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-200 border border-slate-700">
+              <Badge variant="neutral" className="bg-slate-800 text-slate-200">
                 Step {currentStepIndex + 1} of {TOUR_STEPS.length}
-              </span>
+              </Badge>
               <span className="text-xs text-slate-300 font-medium">Quick Tour</span>
             </div>
 
@@ -216,26 +218,26 @@ export function DashboardTourSpotlight({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-base">{step.emoji}</span>
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                  <h3 className="text-lg font-black text-foreground tracking-tight">
                     {step.title}
                   </h3>
                 </div>
-                <p className="text-xs font-bold text-slate-600 mt-0.5">
+                <p className="text-xs font-bold text-muted-foreground mt-0.5">
                   {step.tagline}
                 </p>
               </div>
             </div>
 
             {/* Description */}
-            <p className="text-sm text-slate-600 leading-relaxed font-normal">
+            <p className="text-sm text-muted-foreground leading-relaxed font-normal">
               {step.description}
             </p>
 
-            {/* Pro Tip Box - Solid Slate 100 */}
-            <div className="p-3.5 rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 flex items-start gap-2.5">
-              <Lightbulb className="w-4 h-4 text-slate-700 shrink-0 mt-0.5" />
-              <p className="text-xs text-slate-700 leading-snug">
-                <span className="font-bold text-slate-900">Pro Tip: </span>
+            {/* Pro Tip Box - Soft tonal well */}
+            <div className="p-3.5 rounded-2xl bg-muted/60 text-foreground flex items-start gap-2.5">
+              <Lightbulb className="w-4 h-4 text-foreground shrink-0 mt-0.5" />
+              <p className="text-xs text-foreground leading-snug">
+                <span className="font-bold">Pro Tip: </span>
                 {step.proTip}
               </p>
             </div>
@@ -248,44 +250,46 @@ export function DashboardTourSpotlight({
                   onClick={() => setCurrentStepIndex(idx)}
                   className={`h-2 rounded-full transition-all duration-500 ease-out ${
                     idx === currentStepIndex
-                      ? 'w-7 bg-slate-900'
-                      : 'w-2 bg-slate-200 hover:bg-slate-300'
+                      ? 'w-7 bg-primary'
+                      : 'w-2 bg-muted hover:bg-muted-foreground/30'
                   }`}
                   aria-label={`Go to step ${idx + 1}`}
                 />
               ))}
             </div>
 
-            {/* Navigation Buttons - Solid bili-btn styles */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100 gap-3">
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-between pt-4 gap-3">
               {isFirstStep ? (
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={onClose}
-                  className="bili-btn-secondary py-2.5 px-4 text-xs font-bold"
+                  size="sm"
                 >
                   Skip Tour
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={handlePrev}
-                  className="bili-btn-secondary py-2.5 px-4 text-xs font-bold flex items-center gap-1.5"
+                  size="sm"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
-                </button>
+                </Button>
               )}
 
-              <button
+              <Button
                 type="button"
                 onClick={handleNext}
-                className="bili-btn-primary py-2.5 px-5 text-xs sm:text-sm font-bold flex items-center gap-2"
+                size="sm"
               >
                 {isLastStep ? (
                   <>
                     <Check className="w-4 h-4 stroke-[3]" />
-                    Got It, Let's Go! 🚀
+                    Got It, Let&apos;s Go! 🚀
                   </>
                 ) : (
                   <>
@@ -293,7 +297,7 @@ export function DashboardTourSpotlight({
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

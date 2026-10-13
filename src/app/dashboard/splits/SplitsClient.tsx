@@ -1,27 +1,26 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  toggleParticipantPaidAction,
-  deleteBillSplitAction,
-} from '@/app/actions/splits';
+import { deleteBillSplitAction, toggleParticipantPaidAction } from '@/app/actions/splits';
 import { toast } from 'sonner';
 import {
   Receipt,
   Plus,
   Trash2,
-  CheckCircle2,
-  Clock,
-  CreditCard as CardIcon,
   Users,
+  CreditCard as CardIcon,
   Search,
 } from 'lucide-react';
 import { BillSplitModal } from '@/components/Forms/BillSplitModal';
-import { EmptyState } from '@/components/UI/EmptyState';
-import { StatCard } from '@/components/UI/StatCard';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { StatCard } from '@/components/ui/StatCard';
 import { formatMoney, formatDate } from '@/lib/finance/calculations';
-import { Contact, CreditCard, BillSplit } from '@/types';
-import { confirmModal } from '@/components/UI/GlobalDialog';
+import { BillSplit, Contact, CreditCard } from '@/types';
+import { confirmModal } from '@/components/ui/GlobalDialog';
 
 interface SplitsClientProps {
   initialSplits: BillSplit[];
@@ -35,25 +34,28 @@ export function SplitsClient({
   creditCards,
 }: SplitsClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'settled'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState<number>(8);
 
-  const filteredSplits = initialSplits.filter((split) => {
-    const participants = split.participants || [];
-    const allPaid = participants.length > 0 && participants.every((p) => p.is_paid);
-    if (statusFilter === 'pending' && allPaid) return false;
-    if (statusFilter === 'settled' && !allPaid) return false;
+  const filteredSplits = initialSplits.filter((s) => {
+    const participants = s.participants || [];
+    const isSettled = participants.length > 0 && participants.every((p) => p.is_paid);
+
+    if (statusFilter === 'pending' && isSettled) return false;
+    if (statusFilter === 'settled' && !isSettled) return false;
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchTitle = split.title?.toLowerCase().includes(q);
-      const matchNote = split.note?.toLowerCase().includes(q);
-      const matchParticipant = participants.some((p) =>
-        p.contact?.name?.toLowerCase().includes(q)
+      const matchTitle = s.title.toLowerCase().includes(q);
+      const matchNote = s.note?.toLowerCase().includes(q);
+      const matchCard = s.credit_card?.bank_name.toLowerCase().includes(q);
+      const matchFriend = participants.some((p) =>
+        p.contact?.name.toLowerCase().includes(q)
       );
-      const matchBank = split.credit_card?.bank_name?.toLowerCase().includes(q);
-      if (!matchTitle && !matchNote && !matchParticipant && !matchBank) return false;
+      if (!matchTitle && !matchNote && !matchCard && !matchFriend) return false;
     }
+
     return true;
   });
 
@@ -106,22 +108,22 @@ export function SplitsClient({
     <div className="space-y-8 animate-in fade-in duration-150">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground truncate">
             Chipping In & Bill Splits
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Easily split shared credit card or group purchases and track who has paid.
           </p>
         </div>
 
-        <button
+        <Button
           onClick={() => setIsModalOpen(true)}
-          className="bili-btn-primary py-3 px-5 text-sm font-semibold shadow-sm self-start sm:self-auto"
+          className="rounded-xl gap-2 font-semibold shadow-xs self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           Split a Bill
-        </button>
+        </Button>
       </div>
 
       {/* Metrics Row */}
@@ -155,55 +157,58 @@ export function SplitsClient({
       ) : (
         <div className="space-y-6">
           {/* Search and Status Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-3xl shadow-sm">
+          <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
             {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl overflow-x-auto no-scrollbar max-w-full shrink-0">
-              <button
+            <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar max-w-full shrink-0">
+              <Button
+                type="button"
+                variant={statusFilter === 'all' ? 'default' : 'ghost'}
+                size="sm"
                 onClick={() => {
                   setStatusFilter('all');
                   setVisibleCount(8);
                 }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                  statusFilter === 'all'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
+                  statusFilter === 'all' ? 'shadow-xs' : 'text-muted-foreground'
                 }`}
               >
                 All ({initialSplits.length})
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant={statusFilter === 'pending' ? 'default' : 'ghost'}
+                size="sm"
                 onClick={() => {
                   setStatusFilter('pending');
                   setVisibleCount(8);
                 }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                  statusFilter === 'pending'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
+                  statusFilter === 'pending' ? 'shadow-xs' : 'text-muted-foreground'
                 }`}
               >
                 Pending ({initialSplits.filter((s) => (s.participants || []).some((p) => !p.is_paid)).length})
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant={statusFilter === 'settled' ? 'default' : 'ghost'}
+                size="sm"
                 onClick={() => {
                   setStatusFilter('settled');
                   setVisibleCount(8);
                 }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                  statusFilter === 'settled'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
+                  statusFilter === 'settled' ? 'shadow-xs' : 'text-muted-foreground'
                 }`}
               >
                 Settled ({initialSplits.filter((s) => (s.participants || []).length > 0 && (s.participants || []).every((p) => p.is_paid)).length})
-              </button>
+              </Button>
             </div>
 
             {/* Search Input and Counter */}
             <div className="flex items-center gap-3">
               <div className="relative flex-1 sm:w-64">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
+                <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Input
                   type="text"
                   placeholder="Search bill, friend, bank..."
                   value={searchQuery}
@@ -211,173 +216,182 @@ export function SplitsClient({
                     setSearchQuery(e.target.value);
                     setVisibleCount(8);
                   }}
-                  className="bili-input w-full pl-9 py-2 text-xs"
+                  className="pl-9 h-10 text-xs rounded-xl"
                 />
               </div>
 
-              <span className="text-xs text-slate-400 font-medium whitespace-nowrap hidden sm:inline">
+              <span className="text-xs text-muted-foreground font-medium whitespace-nowrap hidden sm:inline">
                 {filteredSplits.length} {filteredSplits.length === 1 ? 'split' : 'splits'}
               </span>
             </div>
-          </div>
+          </Card>
 
           {filteredSplits.length === 0 ? (
-            <div className="bg-white rounded-3xl p-10 text-center shadow-sm space-y-2">
-              <p className="text-sm font-bold text-slate-700">No bill splits matched "{searchQuery}"</p>
-              <p className="text-xs text-slate-400">Try adjusting your keywords or clearing filters.</p>
-              <button
+            <Card className="p-10 text-center shadow-xs space-y-2">
+              <p className="text-sm font-bold text-foreground">No bill splits matched "{searchQuery}"</p>
+              <p className="text-xs text-muted-foreground">Try adjusting your keywords or clearing filters.</p>
+              <Button
                 type="button"
+                variant="link"
+                size="sm"
                 onClick={() => {
                   setSearchQuery('');
                   setStatusFilter('all');
                 }}
-                className="text-xs font-semibold text-indigo-600 hover:underline pt-1 cursor-pointer"
+                className="text-xs font-semibold"
               >
                 Clear Search & Filters
-              </button>
-            </div>
+              </Button>
+            </Card>
           ) : (
             <div className="space-y-6">
               {displayedSplits.map((split) => {
-            const participants = split.participants || [];
-            const paidCount = participants.filter((p) => p.is_paid).length;
-            const allPaid = participants.length > 0 && paidCount === participants.length;
-            const remainingBalance = participants
-              .filter((p) => !p.is_paid)
-              .reduce((sum, p) => sum + Number(p.share_amount), 0);
+                const participants = split.participants || [];
+                const paidCount = participants.filter((p) => p.is_paid).length;
+                const allPaid = participants.length > 0 && paidCount === participants.length;
+                const remainingBalance = participants
+                  .filter((p) => !p.is_paid)
+                  .reduce((sum, p) => sum + Number(p.share_amount), 0);
 
-            return (
-              <div
-                key={split.id}
-                className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-shadow space-y-5"
-              >
-                {/* Header row */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-bold text-slate-900">
-                        {split.title}
-                      </h3>
-                      {allPaid && (
-                        <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                          All Settled ✅
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-1">
-                      <span>{formatDate(split.occurred_on)}</span>
-                      {split.credit_card && (
-                        <span className="inline-flex items-center gap-1 font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
-                          <CardIcon className="w-3 h-3" />
-                          {split.credit_card.bank_name} (••{split.credit_card.last_4})
-                        </span>
-                      )}
-                      {split.note && <span>• {split.note}</span>}
-                    </div>
-                  </div>
-
-                  <div className="sm:text-right">
-                    <span className="text-xs text-slate-400 block">Total Bill</span>
-                    <span className="text-2xl font-extrabold text-slate-900">
-                      {formatMoney(split.total_amount)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Progress banner */}
-                <div className="p-3.5 rounded-2xl bg-[#F6F7F9] flex items-center justify-between text-xs font-semibold">
-                  <span className="text-slate-600">
-                    {paidCount} of {participants.length} friends have chipped in
-                  </span>
-                  <span
-                    className={
-                      remainingBalance > 0 ? 'text-amber-800' : 'text-emerald-700'
-                    }
+                return (
+                  <Card
+                    key={split.id}
+                    className="p-6 sm:p-7 shadow-xs overflow-hidden min-w-0 space-y-5"
                   >
-                    {remainingBalance > 0
-                      ? `${formatMoney(remainingBalance)} remaining`
-                      : 'Zero remaining'}
-                  </span>
-                </div>
-
-                {/* Participants List */}
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Participants
-                  </p>
-                  <div className="max-h-56 overflow-y-auto pr-1.5 bili-scrollbar">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {participants.map((p) => (
-                        <div
-                          key={p.id}
-                          className={`p-3.5 rounded-2xl flex items-center justify-between transition-all ${
-                            p.is_paid
-                              ? 'bg-emerald-50/60'
-                              : 'bg-[#F6F7F9] hover:bg-slate-100'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">
-                              {p.contact?.name || 'Friend'}
-                            </p>
-                            <p className="text-xs font-extrabold text-slate-600">
-                              {formatMoney(p.share_amount)}
-                            </p>
-                          </div>
-
-                          {/* 1-Tap Toggle */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleTogglePaid(split.id, p.id, p.is_paid)
-                            }
-                            className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition-all shadow-sm ${
-                              p.is_paid
-                                ? 'bg-emerald-700 text-white'
-                               : 'bg-white text-slate-700 hover:bg-slate-200'
-                            }`}
-                          >
-                            {p.is_paid ? 'Paid ✅' : 'Tap when paid'}
-                          </button>
+                    {/* Header row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          <h3 className="text-lg font-bold text-foreground truncate max-w-[280px] sm:max-w-none">
+                            {split.title}
+                          </h3>
+                          {allPaid && (
+                            <Badge variant="success" className="text-xs font-bold gap-1 shrink-0">
+                              All Settled ✅
+                            </Badge>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
 
-                {/* Footer action */}
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={() => handleDelete(split.id)}
-                    className="text-xs font-medium text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors p-1"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Remove split
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1 min-w-0">
+                          <span>{formatDate(split.occurred_on)}</span>
+                          {split.credit_card && (
+                            <Badge variant="soft" className="gap-1 font-medium shrink-0">
+                              <CardIcon className="w-3 h-3 text-primary" />
+                              {split.credit_card.bank_name} (••{split.credit_card.last_4})
+                            </Badge>
+                          )}
+                          {split.note && <span className="truncate max-w-[200px]">• {split.note}</span>}
+                        </div>
+                      </div>
+
+                      <div className="sm:text-right shrink-0">
+                        <span className="text-xs text-muted-foreground block">Total Bill</span>
+                        <span className="text-2xl font-extrabold text-foreground">
+                          {formatMoney(split.total_amount)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Progress banner */}
+                    <div className="p-3.5 rounded-2xl bg-muted/60 flex items-center justify-between text-xs font-semibold gap-2 min-w-0">
+                      <span className="text-muted-foreground truncate">
+                        {paidCount} of {participants.length} friends have chipped in
+                      </span>
+                      <span
+                        className={`shrink-0 ${
+                          remainingBalance > 0 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-emerald-600 dark:text-emerald-400 font-bold'
+                        }`}
+                      >
+                        {remainingBalance > 0
+                          ? `${formatMoney(remainingBalance)} remaining`
+                          : 'Zero remaining'}
+                      </span>
+                    </div>
+
+                    {/* Participants List */}
+                    <div className="space-y-2 min-w-0">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        Participants
+                      </p>
+                      <div className="max-h-56 overflow-y-auto pr-1.5 bili-scrollbar">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {participants.map((p) => (
+                            <div
+                              key={p.id}
+                              className={`p-3.5 rounded-2xl flex items-center justify-between transition-all gap-2 min-w-0 ${
+                                p.is_paid
+                                  ? 'bg-emerald-500/10'
+                                  : 'bg-muted/50 hover:bg-muted'
+                              }`}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-foreground truncate">
+                                  {p.contact?.name || 'Friend'}
+                                </p>
+                                <p className="text-xs font-extrabold text-muted-foreground truncate">
+                                  {formatMoney(p.share_amount)}
+                                </p>
+                              </div>
+
+                              {/* 1-Tap Toggle */}
+                              <Button
+                                type="button"
+                                size="xs"
+                                variant={p.is_paid ? 'default' : 'soft'}
+                                onClick={() =>
+                                  handleTogglePaid(split.id, p.id, p.is_paid)
+                                }
+                                className={`text-xs font-semibold rounded-xl shrink-0 ${
+                                  p.is_paid
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                    : ''
+                                }`}
+                              >
+                                {p.is_paid ? 'Paid ✅' : 'Tap when paid'}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer action */}
+                    <div className="pt-2 flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => handleDelete(split.id)}
+                        className="text-muted-foreground hover:text-destructive gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Remove split
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Lazy Load Button */}
+          {filteredSplits.length > visibleCount && (
+            <div className="pt-2 text-center">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setVisibleCount((prev) => prev + 8)}
+                className="px-6 py-2.5 text-xs font-semibold rounded-xl"
+              >
+                Load More Splits ({filteredSplits.length - visibleCount} remaining)
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Showing {Math.min(visibleCount, filteredSplits.length)} of {filteredSplits.length} splits
+              </p>
+            </div>
+          )}
         </div>
       )}
-
-        {/* Lazy Load Button */}
-        {filteredSplits.length > visibleCount && (
-          <div className="pt-2 text-center">
-            <button
-              type="button"
-              onClick={() => setVisibleCount((prev) => prev + 8)}
-              className="bili-btn-secondary px-6 py-2.5 text-xs font-semibold text-slate-700 hover:text-slate-900 cursor-pointer"
-            >
-              Load More Splits ({filteredSplits.length - visibleCount} remaining)
-            </button>
-            <p className="text-xs text-slate-400 mt-2">
-              Showing {Math.min(visibleCount, filteredSplits.length)} of {filteredSplits.length} splits
-            </p>
-          </div>
-        )}
-      </div>
-    )}
 
       {/* Bill Split Modal */}
       <BillSplitModal

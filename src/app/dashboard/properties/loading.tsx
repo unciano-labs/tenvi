@@ -1,5 +1,5 @@
 import React from 'react';
-import { Skeleton, SkeletonStatCard } from '@/components/UI/Skeleton';
+import { Skeleton, SkeletonStatCard } from '@/components/ui/skeleton';
 
 export default function PropertiesLoading() {
   return (
@@ -19,12 +19,12 @@ export default function PropertiesLoading() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+        <div className="bg-card rounded-3xl p-6 shadow-card space-y-4">
           <Skeleton className="h-48 w-full rounded-2xl" />
           <Skeleton className="h-6 w-48 rounded-lg" />
           <Skeleton className="h-4 w-32 rounded-md" />
         </div>
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+        <div className="bg-card rounded-3xl p-6 shadow-card space-y-4">
           <Skeleton className="h-48 w-full rounded-2xl" />
           <Skeleton className="h-6 w-48 rounded-lg" />
           <Skeleton className="h-4 w-32 rounded-md" />

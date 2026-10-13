@@ -49,6 +49,7 @@ export const creditCardSchema = z.object({
     .min(1, 'Day must be between 1 and 31')
     .max(31, 'Day must be between 1 and 31'),
   colorTheme: z.string().default('slate'),
+  remindersEnabled: z.boolean().default(true).optional(),
 });
 
 export const loanSchema = z.object({
@@ -150,6 +151,22 @@ export const propertySchema = z.object({
   colorTheme: z.string().default('indigo'),
   status: z.enum(['active', 'maintenance', 'inactive', 'sold']).default('active'),
   notes: z.string().max(500).optional().nullable(),
+});
+
+export const markStatementPaidSchema = z.object({
+  statementId: z.string().uuid('Please provide a valid statement ID'),
+  amountPaid: z.coerce.number().positive('Payment amount must be greater than ₱0'),
+  paidOn: z.string().optional().nullable(),
+  isFullPayment: z.boolean().default(true),
+});
+
+export const cardStatementSchema = z.object({
+  creditCardId: z.string().uuid('Please select a valid credit card'),
+  cycleStart: z.string().optional().nullable(),
+  cycleEnd: z.string().min(1, 'Please provide the billing cycle end date'),
+  dueDate: z.string().min(1, 'Please provide the payment due date'),
+  billedAmount: z.coerce.number().min(0, 'Billed amount cannot be negative'),
+  minimumDue: z.coerce.number().min(0, 'Minimum due cannot be negative').default(0),
 });
 
 

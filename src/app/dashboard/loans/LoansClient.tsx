@@ -2,34 +2,39 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { deleteLoanAction } from '@/app/actions/loans';
 import { toast } from 'sonner';
 import {
   HandCoins,
   Plus,
   Trash2,
-  Calendar,
   CheckCircle2,
-  Clock,
-  ArrowRight,
-  ChevronRight,
-  CreditCard as CreditCardIcon,
   Search,
-  Users,
-  LayoutGrid,
   ExternalLink,
+  ChevronRight,
+  Clock,
+  CreditCard as CreditCardIcon,
   Phone,
   Mail,
-  Building2,
+  Users,
+  LayoutGrid,
 } from 'lucide-react';
 import { LoanModal } from '@/components/Forms/LoanModal';
 import { LoanPaymentModal } from '@/components/Forms/LoanPaymentModal';
-import { EmptyState } from '@/components/UI/EmptyState';
-import { StatCard } from '@/components/UI/StatCard';
-import { formatMoney, formatDate, calculateLoanStatus } from '@/lib/finance/calculations';
-import { Contact, CreditCard, Loan } from '@/types';
-import { confirmModal } from '@/components/UI/GlobalDialog';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { StatCard } from '@/components/ui/StatCard';
+import {
+  formatMoney,
+  formatDate,
+  calculateLoanStatus,
+} from '@/lib/finance/calculations';
+import { Loan, Contact, CreditCard } from '@/types';
+import { confirmModal } from '@/components/ui/GlobalDialog';
 
 interface LoansClientProps {
   initialLoans: Loan[];
@@ -37,36 +42,29 @@ interface LoansClientProps {
   creditCards?: CreditCard[];
 }
 
-interface EntityLoanGroup {
-  contactId: string;
-  name: string;
-  phone?: string | null;
-  email?: string | null;
-  totalOwed: number;
-  totalOriginal: number;
-  totalPaid: number;
-  activeLoansCount: number;
-  loans: Loan[];
-}
-
-export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansClientProps) {
+export function LoansClient({
+  initialLoans,
+  contacts,
+  creditCards = [],
+}: LoansClientProps) {
   const router = useRouter();
   const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
-  const [selectedContactIdForLoan, setSelectedContactIdForLoan] = useState<string>('');
-  const [selectedLoanForPayment, setSelectedLoanForPayment] = useState<Loan | null>(null);
-  const [viewMode, setViewMode] = useState<'entity' | 'flat'>('entity');
+  const [selectedLoanForPayment, setSelectedLoanForPayment] =
+    useState<Loan | null>(null);
+  const [selectedContactIdForLoan, setSelectedContactIdForLoan] =
+    useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paid'>('active');
+  const [viewMode, setViewMode] = useState<'entity' | 'flat'>('entity');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState<number>(8);
   const [entityVisibleCount, setEntityVisibleCount] = useState<number>(8);
 
-  const totalOwed = initialLoans.reduce(
-    (sum, l) => sum + Number(l.balance_remaining),
+  const totalOriginal = initialLoans.reduce(
+    (sum, l) => sum + Number(l.amount || 0) + Number(l.total_interest || 0),
     0
   );
-
-  const totalOriginal = initialLoans.reduce(
-    (sum, l) => sum + Number(l.amount),
+  const totalOwed = initialLoans.reduce(
+    (sum, l) => sum + Number(l.balance_remaining || 0),
     0
   );
 
@@ -77,22 +75,35 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
       const q = searchQuery.toLowerCase();
       const matchName = l.contact?.name?.toLowerCase().includes(q);
       const matchReason = l.reason?.toLowerCase().includes(q);
-      const matchPhone = l.contact?.phone?.toLowerCase().includes(q);
-      const matchBank = l.credit_card?.bank_name?.toLowerCase().includes(q);
-      if (!matchName && !matchReason && !matchPhone && !matchBank) return false;
+      const matchCard = l.credit_card?.bank_name.toLowerCase().includes(q);
+      const matchAmount = String(l.amount).includes(q);
+      if (!matchName && !matchReason && !matchCard && !matchAmount) return false;
     }
     return true;
   });
 
-  // Group filtered loans by debtor / entity
+  // Group filtered loans by Contact/Entity
   const groupedEntities = useMemo(() => {
-    const map = new Map<string, EntityLoanGroup>();
+    const map = new Map<
+      string,
+      {
+        contactId: string;
+        name: string;
+        phone?: string | null;
+        email?: string | null;
+        totalOwed: number;
+        totalOriginal: number;
+        totalPaid: number;
+        activeLoansCount: number;
+        loans: Loan[];
+      }
+    >();
 
     filteredLoans.forEach((loan) => {
-      const contactId = loan.contact_id || loan.contact?.id || 'unknown';
-      const name = loan.contact?.name || 'Borrower / Entity';
-      const phone = loan.borrower_phone || loan.contact?.phone;
-      const email = loan.borrower_email || loan.contact?.email;
+      const contactId = loan.contact_id || 'unknown';
+      const name = loan.contact?.name || 'Unknown Borrower';
+      const phone = loan.contact?.phone;
+      const email = loan.contact?.email;
 
       if (!map.has(contactId)) {
         map.set(contactId, {
@@ -156,25 +167,25 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
     <div className="space-y-8 animate-in fade-in duration-150">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground truncate">
             People Who Owe You
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Track money lent to friends, family, and business operations with monthly installments or flexible advances.
+          <p className="text-sm text-muted-foreground mt-1">
+            Track money lent to friends, family, and business operations with monthly installments or advances.
           </p>
         </div>
 
-        <button
+        <Button
           onClick={() => {
             setSelectedContactIdForLoan('');
             setIsLoanModalOpen(true);
           }}
-          className="bili-btn-primary py-3 px-5 text-sm font-semibold shadow-sm self-start sm:self-auto cursor-pointer"
+          className="rounded-xl gap-2 font-semibold shadow-xs self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           Record a Loan / Advance
-        </button>
+        </Button>
       </div>
 
       {/* Metrics Row */}
@@ -205,95 +216,98 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
       </div>
 
       {/* Filter Tabs, View Mode Switcher, and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-3xl shadow-sm">
+      <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
         {/* View Mode & Status Filter Tabs */}
         <div className="flex flex-wrap items-center gap-2">
           {/* View Mode Switcher */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-2xl max-w-full overflow-x-auto no-scrollbar shrink-0">
-            <button
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar shrink-0">
+            <Button
               type="button"
+              variant={viewMode === 'entity' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setViewMode('entity');
                 setEntityVisibleCount(8);
               }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                viewMode === 'entity'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
+              className={`rounded-xl text-xs font-bold gap-1.5 whitespace-nowrap ${
+                viewMode === 'entity' ? 'shadow-xs' : 'text-muted-foreground'
               }`}
             >
-              <Users className="w-3.5 h-3.5 text-indigo-600" />
+              <Users className="w-3.5 h-3.5 text-primary" />
               Group by Entity ({groupedEntities.length})
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant={viewMode === 'flat' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setViewMode('flat');
                 setVisibleCount(8);
               }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                viewMode === 'flat'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
+              className={`rounded-xl text-xs font-bold gap-1.5 whitespace-nowrap ${
+                viewMode === 'flat' ? 'shadow-xs' : 'text-muted-foreground'
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               Individual Loans ({filteredLoans.length})
-            </button>
+            </Button>
           </div>
 
           {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-2xl max-w-full overflow-x-auto no-scrollbar shrink-0">
-            <button
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar shrink-0">
+            <Button
+              type="button"
+              variant={statusFilter === 'active' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setStatusFilter('active');
                 setVisibleCount(8);
                 setEntityVisibleCount(8);
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'active'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
+              className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
+                statusFilter === 'active' ? 'shadow-xs' : 'text-muted-foreground'
               }`}
             >
               Active ({initialLoans.filter((l) => l.status !== 'paid').length})
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant={statusFilter === 'paid' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setStatusFilter('paid');
                 setVisibleCount(8);
                 setEntityVisibleCount(8);
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'paid'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
+              className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
+                statusFilter === 'paid' ? 'shadow-xs' : 'text-muted-foreground'
               }`}
             >
               Paid ({initialLoans.filter((l) => l.status === 'paid').length})
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant={statusFilter === 'all' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => {
                 setStatusFilter('all');
                 setVisibleCount(8);
                 setEntityVisibleCount(8);
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'all'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
+              className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
+                statusFilter === 'all' ? 'shadow-xs' : 'text-muted-foreground'
               }`}
             >
               All ({initialLoans.length})
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Search input and counter */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Input
               type="text"
               placeholder="Search entity, note, bank..."
               value={searchQuery}
@@ -302,35 +316,37 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                 setVisibleCount(8);
                 setEntityVisibleCount(8);
               }}
-              className="bili-input w-full pl-9 py-2 text-xs"
+              className="pl-9 h-10 text-xs rounded-xl"
             />
           </div>
 
-          <span className="text-xs text-slate-400 font-medium whitespace-nowrap hidden sm:inline">
+          <span className="text-xs text-muted-foreground font-medium whitespace-nowrap hidden sm:inline">
             {viewMode === 'entity'
               ? `${groupedEntities.length} ${groupedEntities.length === 1 ? 'entity' : 'entities'}`
               : `${filteredLoans.length} ${filteredLoans.length === 1 ? 'loan' : 'loans'}`}
           </span>
         </div>
-      </div>
+      </Card>
 
       {/* Content Section */}
       {filteredLoans.length === 0 ? (
         searchQuery ? (
-          <div className="bg-white rounded-3xl p-10 text-center shadow-sm space-y-2">
-            <p className="text-sm font-bold text-slate-700">No records matched "{searchQuery}"</p>
-            <p className="text-xs text-slate-400">Try adjusting your keywords or clearing filters.</p>
-            <button
+          <Card className="p-10 text-center shadow-xs space-y-2">
+            <p className="text-sm font-bold text-foreground">No records matched "{searchQuery}"</p>
+            <p className="text-xs text-muted-foreground">Try adjusting your keywords or clearing filters.</p>
+            <Button
               type="button"
+              variant="link"
+              size="sm"
               onClick={() => {
                 setSearchQuery('');
                 setStatusFilter('all');
               }}
-              className="text-xs font-semibold text-blue-600 hover:underline pt-1 cursor-pointer"
+              className="text-xs font-semibold"
             >
               Clear Search & Filters
-            </button>
-          </div>
+            </Button>
+          </Card>
         ) : (
           <EmptyState
             icon={HandCoins}
@@ -361,31 +377,31 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
               const isFullySettled = group.totalOwed <= 0;
 
               return (
-                <div
+                <Card
                   key={group.contactId}
-                  className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-all flex flex-col justify-between space-y-5"
+                  className="p-6 sm:p-7 shadow-xs overflow-hidden min-w-0 flex flex-col justify-between space-y-5"
                 >
-                  <div className="space-y-4">
+                  <div className="space-y-4 min-w-0">
                     {/* Entity Card Header */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-extrabold text-base shrink-0 shadow-2xs">
+                    <div className="flex items-start justify-between gap-3 min-w-0">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-extrabold text-base shrink-0 shadow-2xs">
                           {group.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="min-w-0">
-                          <h3 className="text-lg font-bold text-slate-900 truncate">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg font-bold text-foreground truncate">
                             {group.name}
                           </h3>
-                          <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5 flex-wrap">
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
                             {group.phone && (
-                              <span className="flex items-center gap-1">
-                                <Phone className="w-3 h-3 text-slate-400" />
+                              <span className="flex items-center gap-1 shrink-0">
+                                <Phone className="w-3 h-3 text-muted-foreground" />
                                 {group.phone}
                               </span>
                             )}
                             {group.email && (
-                              <span className="flex items-center gap-1">
-                                <Mail className="w-3 h-3 text-slate-400" />
+                              <span className="flex items-center gap-1 shrink-0">
+                                <Mail className="w-3 h-3 text-muted-foreground" />
                                 {group.email}
                               </span>
                             )}
@@ -393,53 +409,45 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                         </div>
                       </div>
 
-                      <span
-                        className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap shrink-0 ${
-                          isFullySettled
-                            ? 'bg-emerald-50 text-emerald-800'
-                            : 'bg-indigo-50 text-indigo-700'
-                        }`}
+                      <Badge
+                        variant={isFullySettled ? 'success' : 'warning'}
+                        className="font-bold text-xs shrink-0 whitespace-nowrap"
                       >
                         {isFullySettled ? 'All Settled ✅' : `${formatMoney(group.totalOwed)} Owed`}
-                      </span>
+                      </Badge>
                     </div>
 
                     {/* Balance & Repayment Progress Bar */}
-                    <div className="p-4 rounded-2xl bg-[#F6F7F9] space-y-2.5">
-                      <div className="flex justify-between items-end">
-                        <div>
-                          <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">
+                    <div className="p-4 rounded-2xl bg-muted/60 space-y-2.5 min-w-0">
+                      <div className="flex justify-between items-end gap-2 min-w-0">
+                        <div className="min-w-0">
+                          <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider block">
                             Total Outstanding
                           </span>
-                          <span className="text-2xl font-extrabold text-slate-900">
+                          <span className="text-2xl font-extrabold text-foreground truncate block">
                             {formatMoney(group.totalOwed)}
                           </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-500">
+                        <span className="text-xs font-bold text-muted-foreground shrink-0">
                           of {formatMoney(group.totalOriginal)} lent
                         </span>
                       </div>
 
-                      <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
-                        <div
-                          className="h-full bg-emerald-600 rounded-full transition-all duration-300"
-                          style={{ width: `${percentPaid}%` }}
-                        />
-                      </div>
+                      <Progress value={percentPaid} className="h-2.5" />
 
-                      <div className="flex justify-between items-center text-xs text-slate-500 font-medium pt-0.5">
+                      <div className="flex justify-between items-center text-xs text-muted-foreground font-medium pt-0.5">
                         <span>{formatMoney(group.totalPaid)} repaid ({percentPaid}%)</span>
-                        <span className="bg-white px-2 py-0.5 rounded-md font-semibold text-slate-700 shadow-2xs">
+                        <Badge variant="soft" className="text-2xs font-semibold">
                           {group.loans.length} {group.loans.length === 1 ? 'Advance / Loan' : 'Advances / Loans'}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
 
                     {/* Itemized Advances List under this Entity */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-600 px-1">
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex items-center justify-between text-xs font-bold text-muted-foreground px-1">
                         <span>Recorded Advances & Schedules</span>
-                        <span className="text-slate-400 font-normal">
+                        <span className="font-normal">
                           {group.activeLoansCount} active
                         </span>
                       </div>
@@ -455,40 +463,41 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                             <div
                               key={loan.id}
                               onClick={() => router.push(`/dashboard/loans/${loan.id}`)}
-                              className="group p-3 rounded-2xl bg-white hover:bg-slate-50 transition-colors border border-slate-100 shadow-2xs cursor-pointer flex flex-col gap-2"
+                              className="group p-3 rounded-2xl bg-card hover:bg-muted/50 transition-colors shadow-2xs cursor-pointer flex flex-col gap-2 min-w-0"
                             >
-                              <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-start justify-between gap-2 min-w-0">
                                 <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span
-                                      className={`text-xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                                  <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                    <Badge
+                                      variant={
                                         loan.status === 'paid'
-                                          ? 'bg-emerald-50 text-emerald-700'
+                                          ? 'success'
                                           : loan.is_installment
-                                          ? 'bg-blue-50 text-blue-700'
-                                          : 'bg-indigo-50 text-indigo-700'
-                                      }`}
+                                          ? 'default'
+                                          : 'warning'
+                                      }
+                                      className="text-2xs font-bold uppercase tracking-wider shrink-0"
                                     >
                                       {loan.status === 'paid'
                                         ? 'Paid'
                                         : loan.is_installment
                                         ? `${loan.installment_months}M Installment`
                                         : 'Advance'}
-                                    </span>
+                                    </Badge>
 
                                     {loan.credit_card && (
-                                      <span className="text-xs font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                        <CreditCardIcon className="w-3 h-3 text-slate-400" />
+                                      <Badge variant="soft" className="text-2xs gap-1 shrink-0">
+                                        <CreditCardIcon className="w-3 h-3 text-muted-foreground" />
                                         {loan.credit_card.bank_name} •••• {loan.credit_card.last_4}
-                                      </span>
+                                      </Badge>
                                     )}
                                   </div>
 
-                                  <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors text-xs truncate block mt-1">
+                                  <span className="font-bold text-foreground group-hover:text-primary transition-colors text-xs truncate block mt-1">
                                     {loan.reason || 'Personal Advance'}
                                   </span>
 
-                                  <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5 flex-wrap">
+                                  <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5 flex-wrap">
                                     <span>Lent {formatDate(loan.loaned_on)}</span>
                                     {loan.is_installment && loan.monthly_due_day && (
                                       <span>• Due day {loan.monthly_due_day}</span>
@@ -502,13 +511,13 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                                 <div className="text-right shrink-0">
                                   <span
                                     className={`font-extrabold text-sm block ${
-                                      loan.status === 'paid' ? 'text-emerald-600' : 'text-slate-900'
+                                      loan.status === 'paid' ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'
                                     }`}
                                   >
                                     {formatMoney(loan.balance_remaining)}
                                   </span>
                                   {Number(loan.amount) > Number(loan.balance_remaining) && loan.status !== 'paid' && (
-                                    <span className="text-xs text-slate-400 block">
+                                    <span className="text-xs text-muted-foreground block">
                                       of {formatMoney(Number(loan.amount))}
                                     </span>
                                   )}
@@ -516,38 +525,39 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                               </div>
 
                               {/* Progress bar inside line item */}
-                              <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-50">
-                                <div className="w-28 sm:w-36 h-1.5 rounded-full bg-slate-100 overflow-hidden shrink-0">
-                                  <div
-                                    className="h-full bg-emerald-500 rounded-full transition-all"
-                                    style={{ width: `${math.percentPaid}%` }}
-                                  />
+                              <div className="flex items-center justify-between gap-3 pt-1">
+                                <div className="w-28 sm:w-36 shrink-0">
+                                  <Progress value={math.percentPaid} className="h-1.5" />
                                 </div>
 
                                 <div className="flex items-center gap-2 text-xs">
                                   {loan.status !== 'paid' && (
-                                    <button
+                                    <Button
                                       type="button"
+                                      variant="link"
+                                      size="xs"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setSelectedLoanForPayment(loan);
                                       }}
-                                      className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                      className="font-semibold"
                                     >
                                       + Settle
-                                    </button>
+                                    </Button>
                                   )}
 
-                                  <button
+                                  <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon-xs"
                                     onClick={(e) => handleDelete(e, loan.id)}
-                                    className="text-slate-400 hover:text-rose-600 transition-colors p-1"
+                                    className="text-muted-foreground hover:text-destructive"
                                     title="Delete loan"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
+                                  </Button>
 
-                                  <span className="text-blue-600 p-0.5 group-hover:translate-x-0.5 transition-transform">
+                                  <span className="text-primary p-0.5 group-hover:translate-x-0.5 transition-transform">
                                     <ExternalLink className="w-3.5 h-3.5" />
                                   </span>
                                 </div>
@@ -560,37 +570,40 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
                   </div>
 
                   {/* Entity Card Footer Actions */}
-                  <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-                    <button
+                  <div className="pt-2 flex items-center justify-between gap-2">
+                    <Button
                       type="button"
+                      variant="soft"
+                      size="sm"
                       onClick={() => {
                         setSelectedContactIdForLoan(group.contactId !== 'unknown' ? group.contactId : '');
                         setIsLoanModalOpen(true);
                       }}
-                      className="bili-btn-secondary text-xs py-2 px-3.5 font-semibold flex items-center gap-1.5 shadow-xs text-indigo-700 hover:text-indigo-900 bg-indigo-50/70 cursor-pointer"
+                      className="text-xs font-semibold gap-1.5 rounded-xl"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       Add Advance
-                    </button>
+                    </Button>
 
                     {group.totalOwed > 0 && group.loans.find((l) => l.status !== 'paid') ? (
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
                         onClick={() => {
                           const firstUnpaid = group.loans.find((l) => l.status !== 'paid');
                           if (firstUnpaid) setSelectedLoanForPayment(firstUnpaid);
                         }}
-                        className="bili-btn-primary text-xs py-2 px-3.5 font-semibold shadow-xs cursor-pointer flex items-center gap-1"
+                        className="text-xs font-semibold gap-1 rounded-xl shadow-xs"
                       >
                         + Record Repayment
-                      </button>
+                      </Button>
                     ) : (
-                      <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                         <CheckCircle2 className="w-4 h-4" /> All Clear
                       </span>
                     )}
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -598,14 +611,16 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
           {/* Lazy Load Button for Entities */}
           {groupedEntities.length > entityVisibleCount && (
             <div className="pt-2 text-center">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => setEntityVisibleCount((prev) => prev + 8)}
-                className="bili-btn-secondary px-6 py-2.5 text-xs font-semibold text-slate-700 hover:text-slate-900 cursor-pointer"
+                className="px-6 py-2.5 text-xs font-semibold rounded-xl"
               >
                 Load More Entities ({groupedEntities.length - entityVisibleCount} remaining)
-              </button>
-              <p className="text-xs text-slate-400 mt-2">
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
                 Showing {Math.min(entityVisibleCount, groupedEntities.length)} of {groupedEntities.length} entities
               </p>
             </div>
@@ -621,137 +636,137 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
               const math = calculateLoanStatus(loan.amount, loan.balance_remaining);
 
               return (
-                <div
+                <Card
                   key={loan.id}
                   onClick={() => router.push(`/dashboard/loans/${loan.id}`)}
-                  className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden min-w-0 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between space-y-5 group"
+                  className="p-6 sm:p-7 shadow-xs overflow-hidden min-w-0 transition-all cursor-pointer flex flex-col justify-between space-y-5 group"
                 >
-                  <div>
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                  <div className="min-w-0">
+                    <div className="flex items-start justify-between gap-3 mb-2 min-w-0">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors truncate">
                             {loan.contact?.name || 'Borrower'}
                           </h3>
                           {loan.is_installment && (
-                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 inline-flex items-center gap-1">
+                            <Badge variant="soft" className="gap-1 font-semibold text-xs shrink-0">
                               <Clock className="w-3 h-3" />
                               {loan.installment_months} Mos Installment
-                            </span>
+                            </Badge>
                           )}
                           {loan.credit_card && (
-                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 inline-flex items-center gap-1">
-                              <CreditCardIcon className="w-3 h-3 text-slate-500" />
+                            <Badge variant="soft" className="gap-1 font-semibold text-xs shrink-0">
+                              <CreditCardIcon className="w-3 h-3 text-muted-foreground" />
                               {loan.credit_card.bank_name} •••• {loan.credit_card.last_4}
-                            </span>
+                            </Badge>
                           )}
                           {loan.downpayment_amount && loan.downpayment_amount > 0 ? (
-                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 inline-flex items-center gap-1">
+                            <Badge variant="success" className="gap-1 font-semibold text-xs shrink-0">
                               ₱{Number(loan.downpayment_amount).toLocaleString()} Downpayment
-                            </span>
+                            </Badge>
                           ) : null}
                         </div>
                         {loan.reason && (
-                          <p className="text-xs text-slate-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
                             {loan.reason}
                           </p>
                         )}
                       </div>
 
-                      <span
-                        className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${
+                      <Badge
+                        variant={
                           loan.status === 'paid'
-                            ? 'bg-emerald-50 text-emerald-800'
+                            ? 'success'
                             : loan.status === 'partial'
-                            ? 'bg-blue-50 text-blue-800'
-                            : 'bg-amber-50 text-amber-900'
-                        }`}
+                            ? 'default'
+                            : 'warning'
+                        }
+                        className="font-bold text-xs shrink-0 whitespace-nowrap"
                       >
                         {loan.status === 'paid'
                           ? 'All Paid Up ✅'
                           : loan.status === 'partial'
                           ? 'Partially Paid'
                           : 'Unpaid'}
-                      </span>
+                      </Badge>
                     </div>
 
                     {/* Balance Display */}
-                    <div className="mt-4 p-4 rounded-2xl bg-[#F6F7F9]">
-                      <div className="flex justify-between items-end mb-2">
-                        <div>
-                          <span className="text-xs text-slate-400 font-medium block">
+                    <div className="mt-4 p-4 rounded-2xl bg-muted/60 min-w-0">
+                      <div className="flex justify-between items-end mb-2 gap-2 min-w-0">
+                        <div className="min-w-0">
+                          <span className="text-xs text-muted-foreground font-medium block">
                             Remaining Balance
                           </span>
-                          <span className="text-2xl font-extrabold text-slate-900">
+                          <span className="text-2xl font-extrabold text-foreground truncate block">
                             {formatMoney(loan.balance_remaining)}
                           </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-500">
+                        <span className="text-xs font-bold text-muted-foreground shrink-0">
                           of {formatMoney(loan.amount)}
                         </span>
                       </div>
 
                       {/* Progress Bar */}
-                      <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
-                        <div
-                          className="h-full bg-emerald-600 rounded-full transition-all duration-300"
-                          style={{ width: `${math.percentPaid}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between text-xs text-slate-400 font-medium mt-1.5">
+                      <Progress value={math.percentPaid} className="h-2.5" />
+                      <div className="flex justify-between text-xs text-muted-foreground font-medium mt-1.5">
                         <span>{formatMoney(math.paidAmount)} repaid</span>
                         <span>{math.percentPaid}% complete</span>
                       </div>
                     </div>
 
                     {/* Installment / Due Date info banner */}
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span>Lent: {formatDate(loan.loaned_on)}</span>
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground min-w-0">
+                      <div className="flex items-center gap-3 flex-wrap min-w-0">
+                        <span className="shrink-0">Lent: {formatDate(loan.loaned_on)}</span>
                         {loan.is_installment && loan.monthly_due_day && (
-                          <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg">
+                          <Badge variant="soft" className="shrink-0">
                             Due day {loan.monthly_due_day} of month
-                          </span>
+                          </Badge>
                         )}
                         {!loan.is_installment && loan.due_date && (
-                          <span className="font-semibold text-slate-600">
+                          <span className="font-semibold text-foreground shrink-0">
                             Target return: {formatDate(loan.due_date)}
                           </span>
                         )}
                       </div>
 
-                      <span className="text-xs font-bold text-blue-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                      <span className="text-xs font-bold text-primary flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform shrink-0">
                         {loan.is_installment ? 'View Schedule' : 'View Details'} <ChevronRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="pt-2 flex items-center justify-between">
+                  <div className="pt-2 flex items-center justify-between gap-2">
                     {loan.status !== 'paid' ? (
-                      <button
+                      <Button
+                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedLoanForPayment(loan);
                         }}
-                        className="bili-btn-primary py-2 px-4 text-xs font-semibold shadow-sm cursor-pointer"
+                        className="rounded-xl text-xs font-semibold shadow-xs"
                       >
                         + Record Repayment
-                      </button>
+                      </Button>
                     ) : (
-                      <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                         <CheckCircle2 className="w-4 h-4" /> Settled
                       </span>
                     )}
 
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={(e) => handleDelete(e, loan.id)}
-                      className="text-xs font-medium text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors p-1 cursor-pointer"
+                      className="text-muted-foreground hover:text-destructive"
+                      title="Delete loan"
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> Remove
-                    </button>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -759,14 +774,16 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
           {/* Lazy Load Button */}
           {filteredLoans.length > visibleCount && (
             <div className="pt-2 text-center">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => setVisibleCount((prev) => prev + 8)}
-                className="bili-btn-secondary px-6 py-2.5 text-xs font-semibold text-slate-700 hover:text-slate-900 cursor-pointer"
+                className="px-6 py-2.5 text-xs font-semibold rounded-xl"
               >
                 Load More Loans ({filteredLoans.length - visibleCount} remaining)
-              </button>
-              <p className="text-xs text-slate-400 mt-2">
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
                 Showing {Math.min(visibleCount, filteredLoans.length)} of {filteredLoans.length} loans
               </p>
             </div>
@@ -794,4 +811,3 @@ export function LoansClient({ initialLoans, contacts, creditCards = [] }: LoansC
     </div>
   );
 }
-

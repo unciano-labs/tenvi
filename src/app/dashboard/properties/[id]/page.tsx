@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { ArrowLeft, Building2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { PropertyDetailsClient } from './PropertyDetailsClient';
 
 interface PropertyDetailPageProps {
@@ -35,23 +37,23 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
       <div className="space-y-6 max-w-lg mx-auto pt-8">
         <Link
           href="/dashboard/properties"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Properties & Assets
         </Link>
-        <div className="bg-white rounded-3xl p-12 text-center shadow-sm space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 mx-auto flex items-center justify-center">
+        <div className="bg-card text-card-foreground rounded-3xl p-12 text-center shadow-card space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground mx-auto flex items-center justify-center">
             <Building2 className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900">Property or Asset Not Found</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-xl font-bold text-foreground">Property or Asset Not Found</h2>
+          <p className="text-sm text-muted-foreground">
             This asset may have been removed or you do not have permission to view it.
           </p>
           <div className="pt-2">
             <Link
               href="/dashboard/properties"
-              className="bili-btn-primary inline-flex py-2.5 px-5 text-sm font-semibold shadow-sm"
+              className={cn(buttonVariants({ variant: 'default' }), 'shadow-xs')}
             >
               Return to Properties
             </Link>

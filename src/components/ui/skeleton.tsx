@@ -1,16 +1,18 @@
 import React from 'react';
+import { cn } from "@/lib/utils";
 
 /**
- * Base accessible Skeleton primitive.
+ * Base accessible Skeleton primitive (shadcn compatible).
  * Zero-gradient, solid neutral pulse for maximum contrast and low visual fatigue.
  */
 export function Skeleton({
-  className = '',
+  className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: React.ComponentProps<"div">) {
   return (
     <div
-      className={`bg-slate-200/80 animate-pulse rounded-xl ${className}`}
+      data-slot="skeleton"
+      className={cn("animate-pulse rounded-md bg-muted", className)}
       {...props}
     />
   );
@@ -22,7 +24,7 @@ export function Skeleton({
  */
 export function SkeletonStatCard() {
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between min-h-[140px]">
+    <div className="bg-card rounded-3xl p-5 sm:p-6 shadow-card flex flex-col justify-between min-h-[140px]">
       <div className="flex items-start justify-between gap-2 mb-3">
         <Skeleton className="h-4 w-24 rounded-lg" />
         <Skeleton className="w-10 h-10 rounded-2xl shrink-0" />
@@ -41,7 +43,7 @@ export function SkeletonStatCard() {
  */
 export function SkeletonTableRow() {
   return (
-    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-4">
+    <div className="p-4 rounded-2xl bg-muted/60 flex items-center justify-between gap-4">
       <div className="flex items-center gap-3.5 min-w-0">
         <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
         <div className="space-y-1.5">
@@ -63,7 +65,7 @@ export function SkeletonTableRow() {
  */
 export function SkeletonCreditCard() {
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm border-2 border-slate-200 flex flex-col justify-between min-h-[220px]">
+    <div className="bg-card rounded-3xl p-6 shadow-card flex flex-col justify-between min-h-[220px]">
       <div className="flex items-center justify-between">
         <div className="space-y-1.5">
           <Skeleton className="h-5 w-28 rounded-lg" />
@@ -80,7 +82,7 @@ export function SkeletonCreditCard() {
         <Skeleton className="h-3 w-full rounded-full" />
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+      <div className="flex items-center justify-between pt-3">
         <Skeleton className="h-4 w-24 rounded-md" />
         <Skeleton className="h-4 w-20 rounded-md" />
       </div>
@@ -93,7 +95,7 @@ export function SkeletonCreditCard() {
  */
 export function SkeletonAccountCard() {
   return (
-    <div className="bg-white rounded-3xl p-5 shadow-sm border-2 border-slate-200 flex items-center justify-between gap-4">
+    <div className="bg-card rounded-3xl p-5 shadow-card flex items-center justify-between gap-4">
       <div className="flex items-center gap-3.5 min-w-0">
         <Skeleton className="w-12 h-12 rounded-2xl shrink-0" />
         <div className="space-y-1.5">

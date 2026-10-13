@@ -127,7 +127,7 @@ export async function parseStatementFileAction(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS } = await import('@/lib/ai/gemini');
+    const { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS, withTimeout } = await import('@/lib/ai/gemini');
     const apiKey = getGeminiApiKey(userGeminiKey);
 
     // A. If Gemini API key is provided, try multimodal vision first
@@ -176,26 +176,30 @@ If no transactions are found, return an empty array [].`;
         for (const candidate of GEMINI_CANDIDATE_MODELS) {
           try {
             activeModel = candidate;
-            response = await ai.models.generateContent({
-              model: activeModel,
-              contents: [
-                {
-                  role: 'user',
-                  parts: [
-                    {
-                      inlineData: {
-                        mimeType,
-                        data: base64Data,
+            response = await withTimeout(
+              ai.models.generateContent({
+                model: activeModel,
+                contents: [
+                  {
+                    role: 'user',
+                    parts: [
+                      {
+                        inlineData: {
+                          mimeType,
+                          data: base64Data,
+                        },
                       },
-                    },
-                    { text: prompt },
-                  ],
+                      { text: prompt },
+                    ],
+                  },
+                ],
+                config: {
+                  responseMimeType: 'application/json',
                 },
-              ],
-              config: {
-                responseMimeType: 'application/json',
-              },
-            });
+              }),
+              12000,
+              `Statement model ${activeModel} timed out after 12s`
+            );
 
             if (response && response.text) {
               break;

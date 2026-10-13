@@ -12,7 +12,7 @@ import {
   ChatHistoryItem,
 } from '@/lib/ai/financialContext';
 import { retrieveRagFinancialContext } from '@/lib/ai/ragRetriever';
-import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS } from '@/lib/ai/gemini';
+import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS, withTimeout } from '@/lib/ai/gemini';
 import { isClearlyOffTopic, hasFinancialOrTenviRelevance } from '@/lib/ai/guardrails';
 import { revalidatePath } from 'next/cache';
 
@@ -125,13 +125,17 @@ export async function processAIChatMessageAction(
       for (const candidate of GEMINI_CANDIDATE_MODELS) {
         try {
           activeModel = candidate;
-          const resp = await ai.models.generateContent({
-            model: candidate,
-            contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-            config: {
-              responseMimeType: 'application/json',
-            },
-          });
+          const resp = await withTimeout(
+            ai.models.generateContent({
+              model: candidate,
+              contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+              config: {
+                responseMimeType: 'application/json',
+              },
+            }),
+            8000,
+            `Model ${candidate} timed out after 8s`
+          );
           geminiRespText = resp.text?.trim() || '';
           if (geminiRespText) break;
         } catch (mErr: any) {

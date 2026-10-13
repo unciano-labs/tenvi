@@ -39,6 +39,12 @@ import { formatMoney, formatDate, calculateLoanStatus } from '@/lib/finance/calc
 import { LoanPaymentModal } from '@/components/Forms/LoanPaymentModal';
 import { EditLoanModal } from '@/components/Forms/EditLoanModal';
 import { INSTALLMENT_MONTHS_OPTIONS } from '@/lib/constants';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   LOAN_TEMPLATE_VARIABLES,
   DEFAULT_LOAN_SMS_TEMPLATE,
@@ -360,66 +366,69 @@ export function LoanDetailsClient({
       <div className="flex items-center justify-between">
         <Link
           href="/dashboard/loans"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to All Loans
         </Link>
 
-        <div className="flex items-center gap-2.5">
-          <button
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Button
             type="button"
+            size="sm"
+            variant="secondary"
             onClick={() => setIsEditLoanModalOpen(true)}
-            className="bili-btn-secondary py-2.5 px-4 text-xs font-semibold shadow-sm flex items-center gap-1.5"
+            className="gap-1.5"
           >
-            <Edit2 className="w-4 h-4 text-slate-500" />
+            <Edit2 className="w-4 h-4 text-muted-foreground" />
             Edit Loan Details
-          </button>
+          </Button>
 
           {loan.status !== 'paid' && (
-            <button
+            <Button
+              size="sm"
               onClick={() => setIsPaymentModalOpen(true)}
-              className="bili-btn-primary py-2.5 px-4 text-xs font-semibold shadow-sm"
+              className="gap-1.5"
             >
               <Plus className="w-4 h-4" />
               Record Repayment
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {/* Main Loan Overview Card */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 space-y-6">
+      <div className="bg-card text-card-foreground rounded-3xl p-6 sm:p-8 shadow-card overflow-hidden min-w-0 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <HandCoins className="w-7 h-7" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground">
                   {loan.contact?.name || 'Borrower'}
                 </h1>
                 {loan.is_installment && (
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 inline-flex items-center gap-1.5">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 inline-flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
                     {loan.installment_months} Months Installment
                   </span>
                 )}
                 {Number(loan.monthly_interest_rate || 0) > 0 && (
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 inline-flex items-center gap-1.5">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 inline-flex items-center gap-1.5">
                     <Percent className="w-3.5 h-3.5" />
                     {loan.monthly_interest_rate}% / mo Interest
                   </span>
                 )}
                 {loan.credit_card && (
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700 inline-flex items-center gap-1.5">
-                    <CreditCard className="w-3.5 h-3.5 text-indigo-600" />
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-muted text-foreground inline-flex items-center gap-1.5">
+                    <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
                     Card Cycle Synced
                   </span>
                 )}
               </div>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {loan.reason || 'Personal loan record'}
               </p>
             </div>
@@ -429,10 +438,10 @@ export function LoanDetailsClient({
           <span
             className={`text-xs font-bold px-3.5 py-1.5 rounded-full self-start whitespace-nowrap ${
               loan.status === 'paid'
-                ? 'bg-emerald-50 text-emerald-800'
+                ? 'bg-emerald-500/10 text-emerald-500'
                 : loan.status === 'partial'
-                ? 'bg-blue-50 text-blue-800'
-                : 'bg-amber-50 text-amber-900'
+                ? 'bg-blue-500/10 text-blue-500'
+                : 'bg-amber-500/10 text-amber-500'
             }`}
           >
             {loan.status === 'paid'
@@ -444,51 +453,51 @@ export function LoanDetailsClient({
         </div>
 
         {/* Balance Metrics Card */}
-        <div className="p-6 rounded-2xl bg-[#F6F7F9] space-y-5">
+        <div className="p-6 rounded-2xl bg-muted/60 space-y-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             <div>
-              <span className="text-xs text-slate-400 font-medium block">
+              <span className="text-xs text-muted-foreground font-medium block">
                 Remaining Balance
               </span>
-              <span className="text-3xl font-extrabold text-slate-900">
+              <span className="text-3xl font-extrabold text-foreground">
                 {formatMoney(loan.balance_remaining)}
               </span>
             </div>
 
             <div>
-              <span className="text-xs text-slate-400 font-medium block">
+              <span className="text-xs text-muted-foreground font-medium block">
                 Total Purchase / Amount
               </span>
-              <span className="text-2xl font-bold text-slate-700">
+              <span className="text-2xl font-bold text-foreground">
                 {formatMoney(loan.amount)}
               </span>
             </div>
 
             {loan.downpayment_amount && loan.downpayment_amount > 0 ? (
               <div>
-                <span className="text-xs text-slate-400 font-medium block">
+                <span className="text-xs text-muted-foreground font-medium block">
                   Downpayment Paid
                 </span>
-                <span className="text-2xl font-bold text-emerald-700">
+                <span className="text-2xl font-bold text-emerald-500">
                   {formatMoney(loan.downpayment_amount)}
                 </span>
               </div>
             ) : (
               <div>
-                <span className="text-xs text-slate-400 font-medium block">
+                <span className="text-xs text-muted-foreground font-medium block">
                   Financed Principal
                 </span>
-                <span className="text-2xl font-bold text-slate-700">
+                <span className="text-2xl font-bold text-foreground">
                   {formatMoney(loan.amount)}
                 </span>
               </div>
             )}
 
             <div>
-              <span className="text-xs text-slate-400 font-medium block">
+              <span className="text-xs text-muted-foreground font-medium block">
                 Total Repaid So Far
               </span>
-              <span className="text-2xl font-bold text-emerald-700">
+              <span className="text-2xl font-bold text-emerald-500">
                 {formatMoney(math.paidAmount)}
               </span>
             </div>
@@ -496,22 +505,22 @@ export function LoanDetailsClient({
 
           {/* Interest Breakdown row if loan has monthly interest */}
           {Number(loan.monthly_interest_rate || 0) > 0 && (
-            <div className="pt-3 border-t border-slate-200/60 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-white shadow-xs flex items-center justify-between">
-                <span className="text-xs text-slate-500 font-medium">Monthly Interest Rate</span>
-                <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
+            <div className="pt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3 rounded-xl bg-card shadow-xs flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-medium">Monthly Interest Rate</span>
+                <span className="text-xs font-bold text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full">
                   {loan.monthly_interest_rate}% / month
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-white shadow-xs flex items-center justify-between">
-                <span className="text-xs text-slate-500 font-medium">Total Interest</span>
-                <span className="text-xs font-bold text-slate-900">
+              <div className="p-3 rounded-xl bg-card shadow-xs flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-medium">Total Interest</span>
+                <span className="text-xs font-bold text-foreground">
                   {formatMoney(loan.total_interest || 0)}
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-white shadow-xs flex items-center justify-between">
-                <span className="text-xs text-slate-500 font-medium">Total Repayable (Principal + Interest)</span>
-                <span className="text-xs font-extrabold text-blue-700">
+              <div className="p-3 rounded-xl bg-card shadow-xs flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-medium">Total Repayable (Principal + Interest)</span>
+                <span className="text-xs font-extrabold text-blue-500">
                   {formatMoney(
                     (Number(loan.amount) - Number(loan.downpayment_amount || 0)) +
                     Number(loan.total_interest || 0) +
@@ -524,13 +533,13 @@ export function LoanDetailsClient({
 
           {/* Progress Bar (no gradients, solid emerald/slate) */}
           <div className="space-y-1.5">
-            <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
+            <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full bg-emerald-600 rounded-full transition-all duration-300"
+                className="h-full bg-emerald-500 rounded-full transition-all duration-300"
                 style={{ width: `${math.percentPaid}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs text-slate-500 font-medium">
+            <div className="flex justify-between text-xs text-muted-foreground font-medium">
               <span>{math.percentPaid}% of total loan repaid</span>
               {loan.is_installment && (
                 <span>
@@ -543,49 +552,49 @@ export function LoanDetailsClient({
 
         {/* Loan Meta details row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 pt-2">
-          <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+          <div className="p-4 rounded-2xl bg-muted/60">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
               Date Lent
             </span>
-            <span className="text-sm font-bold text-slate-900 mt-1 block">
+            <span className="text-sm font-bold text-foreground mt-1 block">
               {formatDate(loan.loaned_on)}
             </span>
           </div>
 
           {loan.is_installment ? (
             <>
-              <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              <div className="p-4 rounded-2xl bg-muted/60">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                   Monthly Due Day
                 </span>
-                <span className="text-sm font-bold text-slate-900 mt-1 block">
+                <span className="text-sm font-bold text-foreground mt-1 block">
                   Every {getOrdinalSuffix(loan.monthly_due_day || 15)}
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              <div className="p-4 rounded-2xl bg-muted/60">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                   Monthly Due Amount
                 </span>
-                <span className="text-sm font-bold text-blue-700 mt-1 block">
+                <span className="text-sm font-bold text-blue-500 mt-1 block">
                   {loan.monthly_amount ? formatMoney(loan.monthly_amount) : 'Calculated'}
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              <div className="p-4 rounded-2xl bg-muted/60">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                   Installment Term
                 </span>
-                <span className="text-sm font-bold text-slate-900 mt-1 block">
+                <span className="text-sm font-bold text-foreground mt-1 block">
                   {loan.installment_months} Months
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              <div className="p-4 rounded-2xl bg-muted/60">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                   Interest Rate
                 </span>
-                <span className="text-sm font-bold text-slate-900 mt-1 block">
+                <span className="text-sm font-bold text-foreground mt-1 block">
                   {Number(loan.monthly_interest_rate || 0) > 0
                     ? `${loan.monthly_interest_rate}% / month`
                     : '0% (No Interest)'}
@@ -593,11 +602,11 @@ export function LoanDetailsClient({
               </div>
             </>
           ) : (
-            <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+            <div className="p-4 rounded-2xl bg-muted/60">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                 Target Return Date
               </span>
-              <span className="text-sm font-bold text-slate-900 mt-1 block">
+              <span className="text-sm font-bold text-foreground mt-1 block">
                 {loan.due_date ? formatDate(loan.due_date) : 'Flexible (No set date)'}
               </span>
             </div>
@@ -609,38 +618,38 @@ export function LoanDetailsClient({
       {(loan.credit_card || (loan.downpayment_amount && loan.downpayment_amount > 0)) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {loan.credit_card && (
-            <div className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card overflow-hidden min-w-0 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
                 <CreditCard className="w-6 h-6" />
               </div>
               <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                     Purchased via Credit Card
                   </span>
-                  <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full">
                     Cycle Synchronized ⚡
                   </span>
                 </div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-foreground">
                   {loan.credit_card.bank_name} - {loan.credit_card.name}
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Card ending in <span className="font-semibold text-slate-700">•••• {loan.credit_card.last_4}</span>
+                <p className="text-xs text-muted-foreground">
+                  Card ending in <span className="font-semibold text-foreground">•••• {loan.credit_card.last_4}</span>
                 </p>
                 <div className="pt-2 flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-indigo-500 bg-indigo-500/10 px-2.5 py-0.5 rounded-full">
                     Swiped: {formatMoney(loan.amount)}
                   </span>
-                  <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full">
                     Statement Cutoff: Every {getOrdinalSuffix(loan.credit_card.statement_day)}
                   </span>
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
                     Payment Due: Every {getOrdinalSuffix(loan.credit_card.due_day)}
                   </span>
                   <Link
                     href="/dashboard/cards"
-                    className="text-xs font-semibold text-blue-600 hover:underline ml-auto"
+                    className="text-xs font-semibold text-blue-500 hover:underline ml-auto"
                   >
                     View Card Statements →
                   </Link>
@@ -650,24 +659,24 @@ export function LoanDetailsClient({
           )}
 
           {loan.downpayment_amount && loan.downpayment_amount > 0 ? (
-            <div className="bg-white rounded-3xl p-6 shadow-sm overflow-hidden min-w-0 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card overflow-hidden min-w-0 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                     Initial Downpayment
                   </span>
-                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                     Settled Upfront ✅
                   </span>
                 </div>
-                <div className="text-xl font-extrabold text-slate-900">
+                <div className="text-xl font-extrabold text-foreground">
                   {formatMoney(loan.downpayment_amount)}
                 </div>
-                <p className="text-xs text-slate-500">
-                  Paid on {formatDate(loan.loaned_on)}. Net financed balance: <span className="font-semibold text-slate-800">{formatMoney(loan.amount - loan.downpayment_amount)}</span>.
+                <p className="text-xs text-muted-foreground">
+                  Paid on {formatDate(loan.loaned_on)}. Net financed balance: <span className="font-semibold text-foreground">{formatMoney(loan.amount - loan.downpayment_amount)}</span>.
                 </p>
               </div>
             </div>
@@ -676,22 +685,22 @@ export function LoanDetailsClient({
       )}
 
       {/* Borrower Contact & Automated Reminders Card */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 space-y-6">
+      <div className="bg-card text-card-foreground rounded-3xl p-6 sm:p-8 shadow-card overflow-hidden min-w-0 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
               <Bell className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-bold text-slate-900">
+                <h2 className="text-lg font-bold text-foreground">
                   Borrower Contact & Automated Reminders
                 </h2>
                 <span
                   className={`text-xs font-bold px-3 py-1 rounded-full ${
                     loan.notify_borrower !== false
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'bg-slate-100 text-slate-500'
+                      ? 'bg-blue-500/10 text-blue-500'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {loan.notify_borrower !== false
@@ -699,61 +708,63 @@ export function LoanDetailsClient({
                     : '🔕 Reminders Paused'}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Automated notification sent once a day 3 days before payment due date to keep repayments on time.
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              size="xs"
+              variant="secondary"
               onClick={() => setIsEditingContact(!isEditingContact)}
-              className="bili-btn-secondary py-2 px-3.5 text-xs font-semibold flex items-center gap-1.5"
+              className="gap-1.5"
             >
-              <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+              <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
               {isEditingContact ? 'Cancel Edit' : 'Edit Contact'}
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Inline Contact Editor */}
         {isEditingContact ? (
-          <div className="p-5 rounded-2xl bg-[#F6F7F9] space-y-4 animate-in fade-in duration-150">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+          <div className="p-5 rounded-2xl bg-muted/60 space-y-4 animate-in fade-in duration-150">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
               Update Borrower Notification Details
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-slate-400" /> Borrower Mobile Number (SMS)
+                <label className="block text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-muted-foreground" /> Borrower Mobile Number (SMS)
                 </label>
-                <input
+                <Input
                   type="tel"
                   placeholder="0917 123 4567"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
-                  className="bili-input w-full text-sm bg-white"
+                  className="h-10 min-h-0 bg-card text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-slate-400" /> Borrower Email Address
+                <label className="block text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-muted-foreground" /> Borrower Email Address
                 </label>
-                <input
+                <Input
                   type="email"
                   placeholder="borrower@example.com"
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  className="bili-input w-full text-sm bg-white"
+                  className="h-10 min-h-0 bg-card text-sm"
                 />
               </div>
             </div>
 
-            <div className="pt-1 flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+            <div className="pt-1 flex items-center justify-between flex-wrap gap-3">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-foreground">
                 <input
                   type="checkbox"
                   checked={editNotify}
@@ -764,18 +775,19 @@ export function LoanDetailsClient({
               </label>
 
               <div className="flex items-center gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setIsEditingContact(false)}
-                  className="text-xs font-semibold text-slate-500 px-3.5 py-2 rounded-xl hover:bg-slate-200 transition-colors"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  size="sm"
                   disabled={isSavingContact}
                   onClick={handleSaveContact}
-                  className="bili-btn-primary py-2 px-5 text-xs font-semibold shadow-sm"
                 >
                   {isSavingContact ? (
                     <>
@@ -784,7 +796,7 @@ export function LoanDetailsClient({
                   ) : (
                     'Save Contact'
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -792,35 +804,35 @@ export function LoanDetailsClient({
           /* Contact Details View */
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-slate-500" /> Mobile Number
+              <div className="p-4 rounded-2xl bg-muted/60">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-muted-foreground" /> Mobile Number
                 </span>
-                <span className="text-sm font-bold text-slate-900 mt-1 block">
+                <span className="text-sm font-bold text-foreground mt-1 block">
                   {loan.borrower_phone || (loan as any).contact?.phone || (
-                    <span className="text-slate-400 font-normal italic">None nominated</span>
+                    <span className="text-muted-foreground font-normal italic">None nominated</span>
                   )}
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-slate-500" /> Email Address
+              <div className="p-4 rounded-2xl bg-muted/60">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-muted-foreground" /> Email Address
                 </span>
-                <span className="text-sm font-bold text-slate-900 mt-1 block truncate">
+                <span className="text-sm font-bold text-foreground mt-1 block truncate">
                   {loan.borrower_email || (loan as any).contact?.email || (
-                    <span className="text-slate-400 font-normal italic">None nominated</span>
+                    <span className="text-muted-foreground font-normal italic">None nominated</span>
                   )}
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#F6F7F9]">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-slate-500" /> Next Scheduled Alert
+              <div className="p-4 rounded-2xl bg-muted/60">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Next Scheduled Alert
                 </span>
-                <span className="text-sm font-bold text-slate-900 mt-1 block">
+                <span className="text-sm font-bold text-foreground mt-1 block">
                   {loan.status === 'paid' ? (
-                    <span className="text-emerald-700 font-semibold">Loan fully paid</span>
+                    <span className="text-emerald-500 font-semibold">Loan fully paid</span>
                   ) : loan.is_installment && installments.find((i) => !i.is_paid) ? (
                     (() => {
                       const next = installments.find((i) => !i.is_paid)!;
@@ -838,43 +850,49 @@ export function LoanDetailsClient({
             {/* Test / Manual Dispatch Controls */}
             {loan.status !== 'paid' && (
               <div className="space-y-3">
-                <div className="p-4 rounded-2xl bg-[#F6F7F9] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="text-xs text-slate-500">
-                    <span className="font-semibold text-slate-700">Quick Alert Dispatch:</span>{' '}
+                <div className="p-4 rounded-2xl bg-muted/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">Quick Alert Dispatch:</span>{' '}
                     Send reminder now or customize the message with live variables before sending.
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    <button
+                    <Button
                       type="button"
+                      size="xs"
+                      variant="secondary"
                       disabled={isSendingReminder !== null || !(loan.borrower_phone || (loan as any).contact?.phone)}
                       onClick={() => handleSendReminder('sms')}
-                      className="bili-btn-secondary py-2 px-3.5 text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                      className="gap-1.5 font-semibold"
                     >
                       {isSendingReminder === 'sms' ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <Send className="w-3.5 h-3.5 text-blue-600" />
+                        <Send className="w-3.5 h-3.5 text-blue-500" />
                       )}
                       Send SMS Now
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                       type="button"
+                      size="xs"
+                      variant="secondary"
                       disabled={isSendingReminder !== null || !(loan.borrower_email || (loan as any).contact?.email)}
                       onClick={() => handleSendReminder('email')}
-                      className="bili-btn-secondary py-2 px-3.5 text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                      className="gap-1.5 font-semibold"
                     >
                       {isSendingReminder === 'email' ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <Send className="w-3.5 h-3.5 text-indigo-600" />
+                        <Send className="w-3.5 h-3.5 text-indigo-500" />
                       )}
                       Send Email Now
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                       type="button"
+                      size="xs"
+                      variant="ghost"
                       onClick={() => {
                         if (isCustomizingMessage) {
                           setIsCustomizingMessage(false);
@@ -882,31 +900,31 @@ export function LoanDetailsClient({
                           handleOpenCustomizer('sms');
                         }
                       }}
-                      className="text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 py-2 px-3.5 rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+                      className="bg-card hover:bg-muted shadow-xs gap-1.5 font-semibold text-foreground"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
+                      <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                       {isCustomizingMessage ? 'Close Customizer' : 'Customize & Preview'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
                 {/* Inline Message Customizer Drawer */}
                 {isCustomizingMessage && (
-                  <div className="p-5 rounded-2xl bg-[#F6F7F9] space-y-4 animate-in fade-in duration-150">
+                  <div className="p-5 rounded-2xl bg-muted/60 space-y-4 animate-in fade-in duration-150">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                          <MessageSquare className="w-4 h-4 text-blue-600" />
+                        <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                          <MessageSquare className="w-4 h-4 text-blue-500" />
                           Customize Message for {loan.contact?.name || 'Borrower'}
                         </span>
-                        <div className="flex items-center gap-1 p-0.5 bg-white rounded-lg shadow-sm">
+                        <div className="flex items-center gap-1 p-0.5 bg-card rounded-lg shadow-xs">
                           <button
                             type="button"
                             onClick={() => handleSwitchCustomChannel('sms')}
-                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
+                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                               customChannel === 'sms'
-                                ? 'bg-blue-600 text-white'
-                                : 'text-slate-500 hover:text-slate-900'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
                             SMS Text
@@ -914,10 +932,10 @@ export function LoanDetailsClient({
                           <button
                             type="button"
                             onClick={() => handleSwitchCustomChannel('email')}
-                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
+                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                               customChannel === 'email'
-                                ? 'bg-indigo-600 text-white'
-                                : 'text-slate-500 hover:text-slate-900'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
                             Email
@@ -928,16 +946,16 @@ export function LoanDetailsClient({
                       <button
                         type="button"
                         onClick={handleResetCustomText}
-                        className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1 self-start sm:self-auto"
+                        className="text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 self-start sm:self-auto cursor-pointer"
                       >
-                        <RotateCcw className="w-3 h-3 text-slate-400" />
+                        <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
                         Reset to Default
                       </button>
                     </div>
 
                     {/* Variable Inserter Chips */}
                     <div className="space-y-1.5">
-                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                         Tap to Insert Dynamic Variable Value:
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -946,13 +964,13 @@ export function LoanDetailsClient({
                             key={v.key}
                             type="button"
                             onClick={() => handleInsertLoanVar(v.key)}
-                            className="bg-white hover:bg-blue-50 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 hover:text-blue-700 shadow-sm transition-all"
+                            className="bg-card hover:bg-muted px-2.5 py-1 rounded-lg text-xs font-medium text-foreground shadow-xs transition-all cursor-pointer"
                             title={`Insert ${currentLoanVariables[v.key]}`}
                           >
-                            <span className="font-mono text-blue-600 font-bold text-xs">
+                            <span className="font-mono text-primary font-bold text-xs">
                               {v.label}:
                             </span>{' '}
-                            <span className="text-slate-600 text-xs">
+                            <span className="text-muted-foreground text-xs">
                               {currentLoanVariables[v.key] || v.sample}
                             </span>
                           </button>
@@ -962,17 +980,17 @@ export function LoanDetailsClient({
 
                     {/* Editable Message Textarea */}
                     <div>
-                      <textarea
+                      <Textarea
                         rows={4}
                         value={customMessageText}
                         onChange={(e) => setCustomMessageText(e.target.value)}
                         placeholder="Write reminder message..."
-                        className="bili-input w-full text-sm font-sans bg-white leading-relaxed resize-y"
+                        className="bg-card text-sm font-sans leading-relaxed resize-y"
                       />
-                      <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                         <span>
                           Sending to:{' '}
-                          <strong className="text-slate-700">
+                          <strong className="text-foreground">
                             {customChannel === 'sms'
                               ? loan.borrower_phone || (loan as any).contact?.phone || 'No phone set'
                               : loan.borrower_email || (loan as any).contact?.email || 'No email set'}
@@ -984,16 +1002,18 @@ export function LoanDetailsClient({
 
                     {/* Action Row */}
                     <div className="flex justify-end gap-2 pt-1">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setIsCustomizingMessage(false)}
-                        className="text-xs font-semibold text-slate-500 hover:text-slate-800 px-3.5 py-2 rounded-xl hover:bg-slate-200 transition-colors"
                       >
                         Cancel
-                      </button>
+                      </Button>
 
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
                         disabled={
                           isSendingReminder !== null ||
                           !customMessageText.trim() ||
@@ -1002,7 +1022,7 @@ export function LoanDetailsClient({
                             : !(loan.borrower_email || (loan as any).contact?.email))
                         }
                         onClick={() => handleSendReminder(customChannel, customMessageText)}
-                        className="bili-btn-primary py-2 px-5 text-xs font-semibold shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                        className="gap-1.5 font-semibold"
                       >
                         {isSendingReminder ? (
                           <>
@@ -1015,7 +1035,7 @@ export function LoanDetailsClient({
                             Dispatch Custom {customChannel.toUpperCase()}
                           </>
                         )}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -1032,49 +1052,51 @@ export function LoanDetailsClient({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                <h2 className="text-xl font-extrabold text-foreground tracking-tight">
                   Monthly Payment Schedule
                 </h2>
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700">
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-500/10 text-blue-500">
                   {totalInstallmentsCount} Months • {totalInstallmentsCount} Records
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Complete breakdown of all {totalInstallmentsCount} monthly records until end of loan. Tap &quot;Mark as Paid&quot; when settled.
               </p>
             </div>
 
             <div className="flex items-center gap-2 self-start sm:self-auto">
-              <button
+              <Button
                 type="button"
-                onClick={() => setIsConfiguringSchedule(!isConfiguringSchedule)}
-                className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 px-3.5 py-2 rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsConfiguringSchedule(true)}
+                className="gap-1.5 font-semibold text-xs rounded-xl"
               >
-                <Settings2 className="w-3.5 h-3.5 text-slate-500" />
-                {isConfiguringSchedule ? 'Close Editor' : 'Change Term / Plan'}
-              </button>
-              <div className="text-xs font-semibold text-slate-600 bg-white px-3.5 py-2 rounded-xl shadow-sm">
-                Progress: <span className="text-emerald-700 font-bold">{paidInstallmentsCount}</span> / {totalInstallmentsCount} paid
+                <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
+                Change Term / Plan
+              </Button>
+              <div className="text-xs font-semibold text-muted-foreground bg-muted/60 px-3.5 py-2 rounded-xl">
+                Progress: <span className="text-emerald-500 font-bold">{paidInstallmentsCount}</span> / {totalInstallmentsCount} paid
               </div>
             </div>
           </div>
 
-          {/* Optional Reconfigure Schedule Drawer */}
-          {isConfiguringSchedule && (
-            <div className="bg-white rounded-3xl p-6 shadow-sm space-y-4 animate-in fade-in duration-150">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <Settings2 className="w-4 h-4 text-blue-600" />
+          {/* Reconfigure Schedule Sheet */}
+          <Sheet open={isConfiguringSchedule} onOpenChange={setIsConfiguringSchedule}>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Settings2 className="w-4 h-4 text-primary" />
                   Reconfigure Payment Schedule Terms
-                </h3>
-                <span className="text-xs text-slate-500">
+                </SheetTitle>
+                <SheetDescription>
                   Select new duration to regenerate records
-                </span>
-              </div>
+                </SheetDescription>
+              </SheetHeader>
 
-              <div className="p-4 rounded-2xl bg-[#F6F7F9] space-y-4">
+              <div className="p-4 rounded-2xl bg-muted/60 space-y-4 mt-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                  <label className="block text-xs font-semibold text-muted-foreground mb-2">
                     Choose Duration (Months)
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -1083,10 +1105,10 @@ export function LoanDetailsClient({
                         key={m}
                         type="button"
                         onClick={() => setSelectedMonths(m)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           selectedMonths === m
-                            ? 'bg-blue-600 text-white shadow-sm'
-                            : 'bg-white text-slate-700 hover:bg-slate-200'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'bg-card text-foreground hover:bg-muted'
                         }`}
                       >
                         {m} Months {m === 24 ? '(Popular)' : ''}
@@ -1095,251 +1117,244 @@ export function LoanDetailsClient({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1">
                       Monthly Due Day
                     </label>
-                    <input
+                    <Input
                       type="number"
                       min={1}
                       max={31}
                       value={selectedDueDay}
                       onChange={(e) => setSelectedDueDay(Math.max(1, Math.min(31, parseInt(e.target.value) || 1)))}
-                      className="bili-input w-full text-sm bg-white"
+                      className="w-full text-sm bg-card"
                       placeholder="e.g. 20 (Due every 20th)"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1">
                       Monthly Interest Rate (%)
                     </label>
-                    <input
+                    <Input
                       type="number"
                       step="0.01"
                       min={0}
                       max={100}
                       value={selectedRate}
                       onChange={(e) => setSelectedRate(Math.max(0, parseFloat(e.target.value) || 0))}
-                      className="bili-input w-full text-sm bg-white"
+                      className="w-full text-sm bg-card"
                       placeholder="0.00%"
                     />
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-white flex flex-col justify-center">
-                    <span className="text-xs text-slate-500 font-medium">New Monthly Due:</span>
-                    <span className="text-lg font-extrabold text-blue-700">
+                  <div className="p-3.5 rounded-xl bg-card flex flex-col justify-center shadow-xs">
+                    <span className="text-xs text-muted-foreground font-medium">New Monthly Due:</span>
+                    <span className="text-lg font-extrabold text-primary">
                       ₱{previewMonthly} / month
                     </span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-muted-foreground">
                       Generates exactly {selectedMonths} records until loan end
                     </span>
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setIsConfiguringSchedule(false)}
-                    className="text-xs font-semibold text-slate-500 px-4 py-2 rounded-xl hover:bg-slate-200 transition-colors"
+                    className="rounded-xl"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     disabled={isSettingUpSchedule}
+                    size="sm"
                     onClick={handleSetupSchedule}
-                    className="bili-btn-primary py-2 px-5 text-xs font-semibold shadow-sm"
+                    className="rounded-xl shadow-sm"
                   >
                     {isSettingUpSchedule ? 'Updating...' : `Update to ${selectedMonths} Months (${selectedMonths} Records)`}
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </div>
-          )}
+            </SheetContent>
+          </Sheet>
 
-          {/* Schedule Table / List */}
-          <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-sm space-y-3">
-            {/* Header row */}
-            <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              <div className="col-span-3">Month / Term</div>
-              <div className="col-span-3">Due & Statement Date</div>
-              <div className="col-span-2">Amount Due</div>
-              <div className="col-span-2">Status</div>
-              <div className="col-span-2 text-right">Action</div>
-            </div>
+          {/* Schedule Table */}
+          <div className="bg-card rounded-3xl p-4 sm:p-6 shadow-card space-y-3">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16">#</TableHead>
+                  <TableHead>Month / Term</TableHead>
+                  <TableHead>Due & Statement Date</TableHead>
+                  <TableHead>Amount Due</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {installments.map((inst) => {
+                  const dueStatus = getDueStatus(inst.due_date, inst.is_paid);
+                  const isLoading = loadingInstallmentId === inst.id;
 
-            {/* Installment Rows */}
-            <div className="space-y-2">
-              {installments.map((inst) => {
-                const dueStatus = getDueStatus(inst.due_date, inst.is_paid);
-                const isLoading = loadingInstallmentId === inst.id;
-
-                return (
-                  <div
-                    key={inst.id}
-                    className={`rounded-2xl p-4 sm:px-4 sm:py-3.5 transition-colors flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 items-start sm:items-center ${
-                      inst.is_paid
-                        ? 'bg-[#F6F7F9]/80'
-                        : dueStatus.variant === 'overdue'
-                        ? 'bg-rose-50/50'
-                        : 'bg-[#F6F7F9]'
-                    }`}
-                  >
-                    {/* Month # */}
-                    <div className="col-span-3 flex items-center gap-2.5">
-                      <div
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
-                          inst.is_paid
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-white text-slate-700 shadow-sm'
-                        }`}
-                      >
-                        {inst.installment_number}
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold text-slate-900 block">
+                  return (
+                    <TableRow
+                      key={inst.id}
+                      className={inst.is_paid ? 'bg-muted/30' : dueStatus.variant === 'overdue' ? 'bg-rose-500/10' : ''}
+                    >
+                      <TableCell className="font-bold text-foreground">
+                        <div
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${
+                            inst.is_paid
+                              ? 'bg-success-soft text-success-soft-foreground'
+                              : 'bg-muted text-foreground'
+                          }`}
+                        >
+                          {inst.installment_number}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-semibold text-foreground block text-sm">
                           Month {inst.installment_number} of {totalInstallmentsCount}
                         </span>
-                        <span className="text-xs text-slate-400 font-medium">
+                        <span className="text-xs text-muted-foreground">
                           Installment record #{inst.installment_number}
                         </span>
-                      </div>
-                    </div>
-
-                    {/* Due Date & countdown */}
-                    <div className="col-span-3">
-                      <div className="text-sm font-semibold text-slate-800">
-                        {formatDate(inst.due_date)}
-                      </div>
-                      {inst.statement_date && (
-                        <div className="text-xs text-indigo-600 font-medium">
-                          Statement Cutoff: {formatDate(inst.statement_date)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-semibold text-foreground">
+                          {formatDate(inst.due_date)}
                         </div>
-                      )}
-                      <span
-                        className={`text-xs font-medium block ${
-                          inst.is_paid
-                            ? 'text-emerald-700'
-                            : dueStatus.variant === 'overdue'
-                            ? 'text-rose-600 font-semibold'
-                            : dueStatus.variant === 'due-today' || dueStatus.variant === 'due-soon'
-                            ? 'text-amber-600 font-semibold'
-                            : 'text-slate-400'
-                        }`}
-                      >
-                        {inst.is_paid
-                          ? inst.paid_on
-                            ? `Paid on ${formatDate(inst.paid_on)}`
-                            : 'Marked as Paid'
-                          : dueStatus.text}
-                      </span>
-                    </div>
-
-                    {/* Amount */}
-                    <div className="col-span-2">
-                      <span className="text-sm font-extrabold text-slate-900 block">
-                        {formatMoney(inst.amount)}
-                      </span>
-                      {inst.principal_amount !== null && inst.principal_amount !== undefined && inst.interest_amount !== null && inst.interest_amount !== undefined && Number(inst.interest_amount) > 0 && (
-                        <span className="text-xs text-slate-400 font-medium block">
-                          P: {formatMoney(inst.principal_amount)} • I: {formatMoney(inst.interest_amount)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Status Badge */}
-                    <div className="col-span-2">
-                      {inst.is_paid ? (
-                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
-                          <Check className="w-3.5 h-3.5" />
-                          Paid
-                        </span>
-                      ) : dueStatus.variant === 'overdue' ? (
-                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-rose-100 text-rose-800 inline-flex items-center gap-1">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          Overdue
-                        </span>
-                      ) : (
-                        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white text-slate-600 shadow-sm inline-flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          Pending
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Action Button */}
-                    <div className="col-span-2 w-full sm:w-auto flex sm:justify-end">
-                      {inst.is_paid ? (
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => handleToggleInstallment(inst)}
-                          className="text-xs font-medium text-slate-500 hover:text-slate-900 bg-white hover:bg-slate-100 px-3 py-1.5 rounded-xl shadow-sm transition-all flex items-center gap-1 w-full sm:w-auto justify-center"
+                        {inst.statement_date && (
+                          <div className="text-xs text-indigo-500 font-medium">
+                            Cutoff: {formatDate(inst.statement_date)}
+                          </div>
+                        )}
+                        <span
+                          className={`text-xs font-medium block ${
+                            inst.is_paid
+                              ? 'text-emerald-500'
+                              : dueStatus.variant === 'overdue'
+                              ? 'text-rose-500 font-semibold'
+                              : dueStatus.variant === 'due-today' || dueStatus.variant === 'due-soon'
+                              ? 'text-amber-500 font-semibold'
+                              : 'text-muted-foreground'
+                          }`}
                         >
-                          {isLoading ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <>
-                              <Undo2 className="w-3.5 h-3.5" />
-                              Undo
-                            </>
-                          )}
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => handleToggleInstallment(inst)}
-                          className="bili-btn-primary text-xs py-1.5 px-3.5 shadow-sm font-semibold flex items-center gap-1 w-full sm:w-auto justify-center"
-                        >
-                          {isLoading ? (
-                            <>
+                          {inst.is_paid
+                            ? inst.paid_on
+                              ? `Paid on ${formatDate(inst.paid_on)}`
+                              : 'Marked as Paid'
+                            : dueStatus.text}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-extrabold text-foreground block">
+                          {formatMoney(inst.amount)}
+                        </span>
+                        {inst.principal_amount !== null && inst.principal_amount !== undefined && inst.interest_amount !== null && inst.interest_amount !== undefined && Number(inst.interest_amount) > 0 && (
+                          <span className="text-xs text-muted-foreground font-medium block">
+                            P: {formatMoney(inst.principal_amount)} • I: {formatMoney(inst.interest_amount)}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {inst.is_paid ? (
+                          <Badge variant="success" className="gap-1">
+                            <Check className="w-3.5 h-3.5" />
+                            Paid
+                          </Badge>
+                        ) : dueStatus.variant === 'overdue' ? (
+                          <Badge variant="danger" className="gap-1">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            Overdue
+                          </Badge>
+                        ) : (
+                          <Badge variant="neutral" className="gap-1">
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                            Pending
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {inst.is_paid ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="xs"
+                            disabled={isLoading}
+                            onClick={() => handleToggleInstallment(inst)}
+                            className="rounded-lg shadow-sm"
+                          >
+                            {isLoading ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <Check className="w-3.5 h-3.5" />
-                              Mark as Paid
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                            ) : (
+                              <>
+                                <Undo2 className="w-3.5 h-3.5" />
+                                Undo
+                              </>
+                            )}
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            size="xs"
+                            disabled={isLoading}
+                            onClick={() => handleToggleInstallment(inst)}
+                            className="rounded-lg shadow-sm"
+                          >
+                            {isLoading ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Check className="w-3.5 h-3.5" />
+                                Mark as Paid
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
         </div>
       ) : (
         /* If no schedule is configured yet, provide 1-click schedule generator */
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden min-w-0 space-y-6">
+        <div className="bg-card text-card-foreground rounded-3xl p-6 sm:p-8 shadow-card overflow-hidden min-w-0 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+                <h2 className="text-lg sm:text-xl font-extrabold text-foreground tracking-tight">
                   Monthly Payment Schedule
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Generate a complete record of payments until the end of the loan (e.g. 24 months = 24 records).
                 </p>
               </div>
             </div>
 
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 shrink-0 self-start sm:self-auto">
+            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-muted text-muted-foreground shrink-0 self-start sm:self-auto">
               No Schedule Yet
             </span>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#F6F7F9] space-y-5">
+          <div className="p-5 rounded-2xl bg-muted/60 space-y-5">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">
                 Select Installment Term (Number of Months)
               </label>
               <div className="flex flex-wrap gap-2.5">
@@ -1348,10 +1363,10 @@ export function LoanDetailsClient({
                     key={m}
                     type="button"
                     onClick={() => setSelectedMonths(m)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       selectedMonths === m
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'bg-white text-slate-700 hover:bg-slate-200'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-card text-foreground hover:bg-muted'
                     }`}
                   >
                     {m} Months {m === 24 ? '⭐ (24 Records)' : ''}
@@ -1362,35 +1377,35 @@ export function LoanDetailsClient({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1.5">
                   Monthly Due Day (Day of Month)
                 </label>
-                <input
+                <Input
                   type="number"
                   min={1}
                   max={31}
                   value={selectedDueDay}
                   onChange={(e) => setSelectedDueDay(Math.max(1, Math.min(31, parseInt(e.target.value) || 1)))}
-                  className="bili-input w-full text-sm font-bold bg-white"
+                  className="h-10 min-h-0 bg-card text-sm font-bold"
                   placeholder="e.g. 20 (Due every 20th)"
                 />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Due date will automatically be set on this day every month.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1.5">
                   Monthly Interest Rate (%)
                 </label>
-                <input
+                <Input
                   type="number"
                   step="0.01"
                   min={0}
                   max={100}
                   value={selectedRate}
                   onChange={(e) => setSelectedRate(Math.max(0, parseFloat(e.target.value) || 0))}
-                  className="bili-input w-full text-sm font-bold bg-white"
+                  className="h-10 min-h-0 bg-card text-sm font-bold"
                   placeholder="0.00%"
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
@@ -1399,10 +1414,10 @@ export function LoanDetailsClient({
                       key={rate}
                       type="button"
                       onClick={() => setSelectedRate(rate)}
-                      className={`text-xs font-bold px-2 py-0.5 rounded-md transition-colors ${
+                      className={`text-xs font-bold px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
                         selectedRate === rate
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white hover:bg-slate-200 text-slate-600'
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-card hover:bg-muted text-muted-foreground'
                       }`}
                     >
                       {rate}%
@@ -1411,31 +1426,31 @@ export function LoanDetailsClient({
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-white shadow-sm flex flex-col justify-center">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              <div className="p-4 rounded-xl bg-card shadow-xs flex flex-col justify-center">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Calculated Monthly Share:
                 </span>
-                <span className="text-2xl font-extrabold text-blue-700 mt-0.5">
+                <span className="text-2xl font-extrabold text-blue-500 mt-0.5">
                   ₱{previewMonthly} / month
                 </span>
-                <span className="text-xs text-slate-500 font-medium mt-1">
+                <span className="text-xs text-muted-foreground font-medium mt-1">
                   Generates a table of exactly {selectedMonths} monthly payment records
                 </span>
               </div>
             </div>
 
             <div className="pt-2 flex justify-end">
-              <button
+              <Button
                 type="button"
                 disabled={isSettingUpSchedule}
                 onClick={handleSetupSchedule}
-                className="bili-btn-primary py-3 px-6 text-sm font-semibold shadow-sm flex items-center gap-2"
+                className="gap-2 font-semibold"
               >
                 <Sparkles className="w-4 h-4" />
                 {isSettingUpSchedule
                   ? 'Generating Schedule...'
                   : `Generate ${selectedMonths}-Month Payment Schedule (${selectedMonths} Records)`}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1444,25 +1459,25 @@ export function LoanDetailsClient({
       {/* Ad-hoc Repayments List (if any recorded via custom payment) */}
       {loan.payments && loan.payments.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-xl font-extrabold text-foreground tracking-tight">
             Recorded Repayments History
           </h2>
-          <div className="bg-white rounded-3xl p-6 shadow-sm space-y-3">
+          <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-3">
             {loan.payments.map((p) => (
               <div
                 key={p.id}
-                className="p-4 rounded-2xl bg-[#F6F7F9] flex items-center justify-between"
+                className="p-4 rounded-2xl bg-muted/60 flex items-center justify-between"
               >
                 <div>
-                  <div className="text-sm font-bold text-slate-900">
+                  <div className="text-sm font-bold text-foreground">
                     {formatMoney(p.amount)}
                   </div>
-                  <div className="text-xs text-slate-500 mt-0.5">
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     Paid on {formatDate(p.paid_on)} via {p.payment_method}
                     {p.note && ` • "${p.note}"`}
                   </div>
                 </div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500">
                   Recorded
                 </span>
               </div>
@@ -1476,42 +1491,42 @@ export function LoanDetailsClient({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+              <h2 className="text-xl font-extrabold text-foreground tracking-tight">
                 Traceable Activity & Ledger
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Every credit card charge, downpayment, and repayment linked to this loan is fully audited and traceable.
               </p>
             </div>
             <Link
               href="/dashboard/transactions"
-              className="text-xs font-semibold text-blue-600 hover:underline"
+              className="text-xs font-semibold text-blue-500 hover:underline"
             >
               All Transactions →
             </Link>
           </div>
 
-          <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-sm space-y-2.5">
+          <div className="bg-card text-card-foreground rounded-3xl p-4 sm:p-6 shadow-card space-y-2.5">
             {loan.transactions.map((tx) => (
               <div
                 key={tx.id}
-                className="p-3.5 sm:p-4 rounded-2xl bg-[#F6F7F9] flex items-center justify-between gap-4"
+                className="p-3.5 sm:p-4 rounded-2xl bg-muted/60 flex items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
                       tx.kind === 'income'
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-slate-200 text-slate-700'
+                        ? 'bg-emerald-500/10 text-emerald-500'
+                        : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {tx.kind === 'income' ? '+' : '-'}
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-slate-900">
+                    <div className="text-sm font-bold text-foreground">
                       {tx.note || (tx.kind === 'income' ? 'Repayment Received' : 'Purchase Swiped')}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {formatDate(tx.occurred_on)} • Method: {tx.payment_method.replace('_', ' ')}
                     </div>
                   </div>
@@ -1520,7 +1535,7 @@ export function LoanDetailsClient({
                 <div className="text-right">
                   <div
                     className={`text-sm font-extrabold ${
-                      tx.kind === 'income' ? 'text-emerald-700' : 'text-slate-900'
+                      tx.kind === 'income' ? 'text-emerald-500' : 'text-foreground'
                     }`}
                   >
                     {tx.kind === 'income' ? '+' : '-'} {formatMoney(tx.amount)}
@@ -1528,8 +1543,8 @@ export function LoanDetailsClient({
                   <span
                     className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                       tx.kind === 'income'
-                        ? 'bg-emerald-50 text-emerald-800'
-                        : 'bg-rose-50 text-rose-800'
+                        ? 'bg-emerald-500/10 text-emerald-500'
+                        : 'bg-rose-500/10 text-rose-500'
                     }`}
                   >
                     {tx.kind === 'income' ? 'Repayment In' : 'Card Swipe Out'}
