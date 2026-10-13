@@ -1,1 +1,4 @@
-export { POST, dynamic, runtime } from '../route';
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+export { POST } from '../route';
