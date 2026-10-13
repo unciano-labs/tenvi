@@ -499,7 +499,7 @@ export function LoansClient({
 
                                   <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5 flex-wrap">
                                     <span>Lent {formatDate(loan.loaned_on)}</span>
-                                    {loan.is_installment && loan.monthly_due_day && (
+                                    {Boolean(loan.is_installment && loan.monthly_due_day) && (
                                       <span>• Due day {loan.monthly_due_day}</span>
                                     )}
                                     {!loan.is_installment && loan.due_date && (
@@ -660,7 +660,7 @@ export function LoansClient({
                               {loan.credit_card.bank_name} •••• {loan.credit_card.last_4}
                             </Badge>
                           )}
-                          {loan.downpayment_amount && loan.downpayment_amount > 0 ? (
+                          {Number(loan.downpayment_amount || 0) > 0 ? (
                             <Badge variant="success" className="gap-1 font-semibold text-xs shrink-0">
                               ₱{Number(loan.downpayment_amount).toLocaleString()} Downpayment
                             </Badge>
@@ -719,7 +719,7 @@ export function LoansClient({
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground min-w-0">
                       <div className="flex items-center gap-3 flex-wrap min-w-0">
                         <span className="shrink-0">Lent: {formatDate(loan.loaned_on)}</span>
-                        {loan.is_installment && loan.monthly_due_day && (
+                        {Boolean(loan.is_installment && loan.monthly_due_day) && (
                           <Badge variant="soft" className="shrink-0">
                             Due day {loan.monthly_due_day} of month
                           </Badge>

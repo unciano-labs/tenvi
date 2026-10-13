@@ -473,7 +473,7 @@ export function LoanDetailsClient({
               </span>
             </div>
 
-            {loan.downpayment_amount && loan.downpayment_amount > 0 ? (
+            {Number(loan.downpayment_amount || 0) > 0 ? (
               <div>
                 <span className="text-xs text-muted-foreground font-medium block">
                   Downpayment Paid
@@ -615,7 +615,7 @@ export function LoanDetailsClient({
       </div>
 
       {/* Linked Credit Card & Downpayment Highlights */}
-      {(loan.credit_card || (loan.downpayment_amount && loan.downpayment_amount > 0)) && (
+      {Boolean(loan.credit_card || Number(loan.downpayment_amount || 0) > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {loan.credit_card && (
             <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card overflow-hidden min-w-0 flex items-start gap-4">
@@ -658,7 +658,7 @@ export function LoanDetailsClient({
             </div>
           )}
 
-          {loan.downpayment_amount && loan.downpayment_amount > 0 ? (
+          {Number(loan.downpayment_amount || 0) > 0 ? (
             <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card overflow-hidden min-w-0 flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6" />
@@ -676,7 +676,7 @@ export function LoanDetailsClient({
                   {formatMoney(loan.downpayment_amount)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Paid on {formatDate(loan.loaned_on)}. Net financed balance: <span className="font-semibold text-foreground">{formatMoney(loan.amount - loan.downpayment_amount)}</span>.
+                  Paid on {formatDate(loan.loaned_on)}. Net financed balance: <span className="font-semibold text-foreground">{formatMoney(Number(loan.amount) - Number(loan.downpayment_amount || 0))}</span>.
                 </p>
               </div>
             </div>
