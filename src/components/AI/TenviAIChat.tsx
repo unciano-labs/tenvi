@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Sparkles,
   X,
+  Minus,
   Send,
   Loader2,
   RotateCcw,
@@ -35,13 +36,6 @@ import { ParsedFinancialIntent } from '@/lib/ai/financialParser';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { MarkdownMessage } from './MarkdownMessage';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -315,15 +309,42 @@ export function TenviAIChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const triggerButtonRef = useRef<HTMLButtonElement>(null);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleOpenChat = () => {
-    setIsOpen(true);
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsMounted(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsOpen(true);
+      });
+    });
   };
 
   const handleCloseChat = () => {
     setIsOpen(false);
     setIsPromptsDrawerOpen(false);
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsMounted(false);
+      closeTimeoutRef.current = null;
+    }, 300);
   };
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Focus management: move focus into chat on open, return to trigger on close
   useEffect(() => {
@@ -348,6 +369,28 @@ export function TenviAIChat() {
     return () => {
       window.removeEventListener('open-tenvi-ai-chat', handleOpenChat);
       window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  // Close when clicking outside the floating chat window
+  useEffect(() => {
+    if (!isOpen) return;
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (
+        chatWindowRef.current &&
+        !chatWindowRef.current.contains(target) &&
+        triggerButtonRef.current &&
+        !triggerButtonRef.current.contains(target)
+      ) {
+        handleCloseChat();
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
     };
   }, [isOpen]);
 
@@ -675,50 +718,64 @@ export function TenviAIChat() {
   return (
     <>
       {/* Floating Trigger Button */}
-      <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40">
-        {!isOpen && (
-          <button
-            ref={triggerButtonRef}
-            data-tour="ai-button"
-            onClick={handleOpenChat}
-            aria-label="Open Tenvi Assistant - Tap to ask questions"
-            title="Open Tenvi Assistant"
-            className="group flex items-center justify-center sm:justify-start gap-3 bg-slate-800 text-white w-12 h-12 sm:w-auto sm:h-auto p-0 sm:pl-4 sm:pr-5 sm:py-3.5 rounded-full shadow-lg hover:shadow-xl hover:bg-slate-700 active:scale-95 cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-slate-400 origin-bottom-right"
-          >
-            <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors relative">
-              <Sparkles className="w-5 h-5 sm:w-4 sm:h-4 text-emerald-300 group-hover:rotate-12 transition-transform duration-300" />
-              <span className="sm:hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+      <div
+        className={`fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 transition-all duration-300 ease-out origin-bottom-right ${
+          isOpen
+            ? 'opacity-0 scale-75 pointer-events-none'
+            : 'opacity-100 scale-100 pointer-events-auto'
+        }`}
+      >
+        <button
+          ref={triggerButtonRef}
+          data-tour="ai-button"
+          onClick={handleOpenChat}
+          tabIndex={isOpen ? -1 : 0}
+          aria-label="Open Tenvi Assistant - Tap to ask questions"
+          title="Open Tenvi Assistant"
+          className="group flex items-center justify-center sm:justify-start gap-3 bg-slate-800 text-white w-12 h-12 sm:w-auto sm:h-auto p-0 sm:pl-4 sm:pr-5 sm:py-3.5 rounded-full shadow-lg hover:shadow-xl hover:bg-slate-700 active:scale-95 cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-slate-400"
+        >
+          <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors relative">
+            <Sparkles className="w-5 h-5 sm:w-4 sm:h-4 text-emerald-300 group-hover:rotate-12 transition-transform duration-300" />
+            <span className="sm:hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+          </div>
+          <div className="hidden sm:block text-left">
+            <div className="text-xs font-bold tracking-wide flex items-center gap-1.5">
+              Tenvi Assistant
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
-            <div className="hidden sm:block text-left">
-              <div className="text-xs font-bold tracking-wide flex items-center gap-1.5">
-                Tenvi Assistant
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              </div>
-              <div className="text-xs text-slate-300 font-medium">Help & Questions</div>
-            </div>
-          </button>
-        )}
+            <div className="text-xs text-slate-300 font-medium">Help & Questions</div>
+          </div>
+        </button>
       </div>
 
-      {/* Chat Window Sheet */}
-      <Sheet open={isOpen} onOpenChange={(open) => { if (open) handleOpenChat(); else handleCloseChat(); }}>
-        <SheetContent side="right" showCloseButton={false} className="p-0 flex flex-col h-full w-full sm:max-w-md bg-card shadow-lift">
+      {/* Floating Chat Window (Floating Card Dialog) */}
+      {isMounted && (
+        <div
+          ref={chatWindowRef}
+          role="dialog"
+          aria-label="Tenvi Assistant"
+          className={`fixed bottom-20 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-6 z-50 w-auto sm:w-[420px] md:w-[440px] h-[580px] max-h-[calc(100dvh-6rem)] sm:max-h-[min(640px,calc(100dvh-3rem))] bg-card rounded-3xl shadow-2xl flex flex-col overflow-hidden origin-bottom-right transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isOpen
+              ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+              : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
+          }`}
+        >
           {/* Header */}
-          <SheetHeader className="px-5 py-4 bg-slate-800 text-white flex flex-row items-center justify-between shrink-0 space-y-0">
+          <div className="px-5 py-4 bg-slate-800 text-white flex flex-row items-center justify-between shrink-0 select-none">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-emerald-300" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <SheetTitle className="text-sm font-bold tracking-tight text-white">Tenvi Assistant</SheetTitle>
+                  <h2 className="text-sm font-bold tracking-tight text-white">Tenvi Assistant</h2>
                   <Badge variant="success" className="h-5 px-1.5 text-[10px]">
                     Ready to Help
                   </Badge>
                 </div>
-                <SheetDescription className="text-xs text-slate-300">
+                <p className="text-xs text-slate-300">
                   Ask any question or record money easily
-                </SheetDescription>
+                </p>
               </div>
             </div>
 
@@ -745,7 +802,7 @@ export function TenviAIChat() {
                 size="icon-xs"
                 onClick={handleResetChat}
                 title="Start a new chat"
-                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white"
+                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
@@ -754,14 +811,25 @@ export function TenviAIChat() {
                 variant="ghost"
                 size="icon-xs"
                 onClick={handleCloseChat}
+                title="Minimize chat"
+                aria-label="Minimize chat"
+                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white cursor-pointer"
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={handleCloseChat}
                 title="Close Assistant"
                 aria-label="Close Assistant"
-                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white"
+                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </Button>
             </div>
-          </SheetHeader>
+          </div>
 
           {/* Interactive Sample Prompts Drawer (Slide Overlay) */}
           {isPromptsDrawerOpen ? (
@@ -853,7 +921,7 @@ export function TenviAIChat() {
             </div>
           ) : (
             /* Standard Messages Body */
-            <ScrollArea className="flex-1 p-4 bg-muted/30">
+            <ScrollArea className="flex-1 min-h-0 p-4 bg-muted/30">
               <div className="space-y-4">
                 {messages.map((msg) => (
                   <div
@@ -1174,8 +1242,8 @@ export function TenviAIChat() {
             <span className="font-medium">Safe & Private</span>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    )}
   </>
 );
 }
