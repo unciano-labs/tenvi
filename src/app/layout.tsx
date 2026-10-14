@@ -99,7 +99,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans overflow-x-hidden max-w-full", geist.variable)}>
-      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-slate-200 dark:selection:bg-slate-700 overflow-x-hidden max-w-full">
+      <body suppressHydrationWarning className="min-h-screen bg-background text-foreground antialiased selection:bg-slate-200 dark:selection:bg-slate-700 overflow-x-hidden max-w-full">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <Toaster />

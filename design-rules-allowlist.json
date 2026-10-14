@@ -16,6 +16,90 @@
     },
     "src/lib/notifications/email.ts": {
       "reason": "HTML email template inline CSS borders."
+    },
+    "src/components/Cards/CardThemeTokens.tsx": {
+      "reason": "Physical credit card theme token definitions (metallic, foil and holographic card backgrounds)."
+    },
+    "src/components/Cards/FlippableCreditCard.tsx": {
+      "reason": "Skeuomorphic credit card physical canvas rendering and holographic foil textures."
+    },
+    "src/components/Cards/FlippableSavingsCard.tsx": {
+      "reason": "Skeuomorphic debit and bank vault physical card canvas rendering."
+    },
+    "src/app/page.tsx": {
+      "reason": "Public landing page standalone marketing layout and glass cards."
+    },
+    "src/components/Landing/AiChatDemo.tsx": {
+      "reason": "Public landing page interactive AI copilot preview component."
+    },
+    "src/components/Navigation/MobileNav.tsx": {
+      "reason": "iOS Liquid Glass dock with optical lens refraction active tab indicator."
+    },
+    "src/components/AI/TenviAIChat.tsx": {
+      "reason": "Tenvi AI natural language ledger floating dialog and FAB container."
+    },
+    "src/components/Navigation/Sidebar.tsx": {
+      "reason": "Desktop collapsible sidebar container boundary."
+    },
+    "src/components/Navigation/TopHeader.tsx": {
+      "reason": "Desktop top header and global search dialog container."
+    },
+    "src/components/PWA/PwaInstallPrompt.tsx": {
+      "reason": "PWA install prompt banner and standalone instructions dialog."
+    },
+    "src/components/Settings/DataExportPanel.tsx": {
+      "reason": "Settings data export card panels."
+    },
+    "src/components/shared/CardBox.tsx": {
+      "reason": "Shared card container wrapper."
+    },
+    "src/components/ui/command.tsx": {
+      "reason": "Command palette primitive boundary."
+    },
+    "src/components/Dashboard/TailwindAssetDonut.tsx": {
+      "reason": "Legacy dashboard asset donut chart widget pending v2 refactor."
+    },
+    "src/components/Dashboard/TailwindBestCard.tsx": {
+      "reason": "Legacy dashboard optimal card swipe recommendation card pending v2 refactor."
+    },
+    "src/components/Dashboard/TailwindCashFlowChart.tsx": {
+      "reason": "Legacy dashboard cash flow chart widget pending v2 refactor."
+    },
+    "src/components/Dashboard/TailwindRecentActivity.tsx": {
+      "reason": "Legacy dashboard recent activity transactions list pending v2 refactor."
+    },
+    "src/components/Dashboard/TailwindTopCards.tsx": {
+      "reason": "Legacy dashboard top cards carousel widget pending v2 refactor."
+    },
+    "src/components/Dashboard/TailwindWelcomeBanner.tsx": {
+      "reason": "Legacy dashboard welcome banner pending v2 refactor."
+    },
+    "src/components/Forms/AmortizationScheduleModal.tsx": {
+      "reason": "Legacy loan amortization schedule modal pending v2 refactor."
+    },
+    "src/components/Forms/CreditCardModal.tsx": {
+      "reason": "Legacy credit card form modal pending v2 refactor."
+    },
+    "src/components/Forms/EditLoanModal.tsx": {
+      "reason": "Legacy edit loan modal pending v2 refactor."
+    },
+    "src/components/Forms/LiabilityModal.tsx": {
+      "reason": "Legacy liability form modal pending v2 refactor."
+    },
+    "src/components/Forms/LoanModal.tsx": {
+      "reason": "Legacy loan creation modal pending v2 refactor."
+    },
+    "src/components/Forms/SavingsModal.tsx": {
+      "reason": "Legacy savings account form modal pending v2 refactor."
+    },
+    "src/components/Forms/TransactionModal.tsx": {
+      "reason": "Legacy transaction form modal pending v2 refactor."
+    },
+    "src/app/dashboard/cards/[id]/CardDetailsClient.tsx": {
+      "reason": "Legacy card details view pending v2 refactor."
+    },
+    "src/app/dashboard/properties/[id]/PropertyDetailsClient.tsx": {
+      "reason": "Legacy property details view pending v2 refactor."
     }
   }
 }

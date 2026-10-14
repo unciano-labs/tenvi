@@ -363,7 +363,7 @@ export function DashboardOverviewClient({
           <ResponsiveDialogBody className="p-6 pt-2 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Assets Column */}
-              <div className="space-y-3 p-4 rounded-xl bg-lightsuccess/50 border border-success/20">
+              <div className="space-y-3 p-4 rounded-xl bg-lightsuccess/60 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-success">
                     What You Own (Assets)
@@ -374,19 +374,19 @@ export function DashboardOverviewClient({
                 </div>
 
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between py-1 border-b border-border/40">
+                  <div className="flex justify-between py-1.5">
                     <span className="text-muted-foreground">Bank Accounts & Cash</span>
                     <span className="font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.liquidSavings)}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-border/40">
+                  <div className="flex justify-between py-1.5">
                     <span className="text-muted-foreground">Money Owed to You</span>
                     <span className="font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.receivables)}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1">
+                  <div className="flex justify-between py-1.5">
                     <span className="text-muted-foreground">Properties & Vehicles</span>
                     <span className="font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.fixedAssets)}
@@ -396,7 +396,7 @@ export function DashboardOverviewClient({
               </div>
 
               {/* Liabilities Column */}
-              <div className="space-y-3 p-4 rounded-xl bg-lighterror/50 border border-danger/20">
+              <div className="space-y-3 p-4 rounded-xl bg-lighterror/60 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-danger">
                     What You Owe (Debts)
@@ -407,13 +407,13 @@ export function DashboardOverviewClient({
                 </div>
 
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between py-1 border-b border-border/40">
+                  <div className="flex justify-between py-1.5">
                     <span className="text-muted-foreground">Credit Card Balances</span>
                     <span className="font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.creditCardBalances)}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1">
+                  <div className="flex justify-between py-1.5">
                     <span className="text-muted-foreground">Loans & Mortgages</span>
                     <span className="font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.longTermLiabilities)}
