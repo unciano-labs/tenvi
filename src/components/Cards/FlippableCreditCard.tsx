@@ -165,8 +165,13 @@ export function FlippableCreditCard({
     <div className="flex flex-col items-center group/card w-full max-w-sm mx-auto transition-transform duration-300 ease-out hover:-translate-y-1.5">
       {/* 3D Perspective Card Container with Hover Effects */}
       <div
-        className="w-full relative [perspective:1200px] select-none cursor-pointer"
-        style={{ aspectRatio: '1.58 / 1', minHeight: '215px' }}
+        className="w-full relative perspective-1200 [perspective:1200px] select-none cursor-pointer"
+        style={{
+          aspectRatio: '1.58 / 1',
+          minHeight: '215px',
+          WebkitPerspective: '1200px',
+          perspective: '1200px',
+        }}
         onClick={handleCardClick}
         role="button"
         tabIndex={0}
@@ -179,15 +184,31 @@ export function FlippableCreditCard({
         aria-label={`${card.bank_name} ${card.name}. Click to flip card.`}
       >
         <div
-          className={`size-full relative transition-transform duration-500 ease-in-out [transform-style:preserve-3d] ${
+          className={`size-full relative transition-transform duration-500 ease-in-out preserve-3d [transform-style:preserve-3d] ${
             isFlipped ? '[transform:rotateY(180deg)]' : ''
           }`}
+          style={{
+            WebkitTransformStyle: 'preserve-3d',
+            transformStyle: 'preserve-3d',
+            WebkitTransform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+          }}
         >
           {/* ================= CARD FRONT (Minimal Solid) ================= */}
           <div
-            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between overflow-hidden border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} transition-all duration-300 [backface-visibility:hidden] ${
-              isFlipped ? 'pointer-events-none' : 'pointer-events-auto'
+            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} bg-slate-900 backface-hidden [backface-visibility:hidden] ${
+              isFlipped ? 'opacity-0 pointer-events-none invisible' : 'opacity-100 pointer-events-auto visible'
             }`}
+            style={{
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+              WebkitTransform: 'rotateY(0deg) translateZ(1px)',
+              transform: 'rotateY(0deg) translateZ(1px)',
+              zIndex: isFlipped ? 1 : 2,
+              opacity: isFlipped ? 0 : 1,
+              visibility: isFlipped ? 'hidden' : 'visible',
+              transition: 'transform 500ms ease-in-out, opacity 350ms ease-in-out, visibility 350ms',
+            }}
           >
             {/* Subtle solid accent top highlight line */}
             <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />
@@ -358,9 +379,19 @@ export function FlippableCreditCard({
 
           {/* ================= CARD BACK (Details Solid) ================= */}
           <div
-            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between overflow-hidden border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} [transform:rotateY(180deg)] [backface-visibility:hidden] transition-all duration-300 ${
-              isFlipped ? 'pointer-events-auto' : 'pointer-events-none'
+            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} bg-slate-900 backface-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] ${
+              isFlipped ? 'opacity-100 pointer-events-auto visible' : 'opacity-0 pointer-events-none invisible'
             }`}
+            style={{
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+              WebkitTransform: 'rotateY(180deg) translateZ(1px)',
+              transform: 'rotateY(180deg) translateZ(1px)',
+              zIndex: isFlipped ? 2 : 1,
+              opacity: isFlipped ? 1 : 0,
+              visibility: isFlipped ? 'visible' : 'hidden',
+              transition: 'transform 500ms ease-in-out, opacity 350ms ease-in-out, visibility 350ms',
+            }}
           >
             {/* Subtle solid accent top highlight line */}
             <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />

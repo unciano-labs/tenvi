@@ -721,3 +721,34 @@
   top: auto !important;
   bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
 }
+
+/* Cross-browser 3D Card Flipping utilities (WebKit/Safari, Chrome iOS, and Chromium) */
+@utility perspective-1200 {
+  -webkit-perspective: 1200px;
+  perspective: 1200px;
+}
+
+@utility preserve-3d {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+@utility backface-hidden {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.perspective-1200 {
+  -webkit-perspective: 1200px;
+  perspective: 1200px;
+}
+
+.preserve-3d {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}

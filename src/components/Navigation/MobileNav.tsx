@@ -8,18 +8,9 @@ import { MOBILE_BOTTOM_NAV_ITEMS } from './nav-config';
 export function MobileNav() {
   const pathname = usePathname();
   const [isShrunk, setIsShrunk] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
-  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-
-  const [indicatorStyle, setIndicatorStyle] = useState<{
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-    opacity: number;
-  }>({ left: 0, top: 0, width: 0, height: 0, opacity: 0 });
+  const navRef = useRef<HTMLElement>(null);
 
   const navItems = MOBILE_BOTTOM_NAV_ITEMS.map((item) => ({
     label: item.mobileLabel || item.label,
@@ -30,34 +21,95 @@ export function MobileNav() {
 
   const activeIndex = navItems.findIndex((item) => item.active);
 
+  // Initialize indicator position based on active tab index to avoid lagging
+  const [indicatorStyle, setIndicatorStyle] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    opacity: number;
+  }>(() => {
+    const idx = activeIndex >= 0 ? activeIndex : 0;
+    return {
+      left: 14 + idx * 62,
+      top: 7,
+      width: 56,
+      height: 48,
+      opacity: 1,
+    };
+  });
+
+  // Dynamically measure active tab element bounds relative to the nav container
   const updateIndicator = useCallback(() => {
-    const targetIndex = activeIndex >= 0 ? activeIndex : 0;
-    const activeEl = itemRefs.current[targetIndex];
+    const navEl = navRef.current;
+    if (!navEl) return;
+
+    // Always query the exact element marked with data-active="true", fallback to activeIndex
+    const activeEl =
+      activeIndex >= 0
+        ? navEl.querySelector<HTMLAnchorElement>('a[data-active="true"]') ||
+          navEl.querySelectorAll<HTMLAnchorElement>('a[data-nav-item]')[activeIndex]
+        : null;
+
     if (activeEl) {
+      const navRect = navEl.getBoundingClientRect();
+      const activeRect = activeEl.getBoundingClientRect();
+
+      let left: number;
+      let top: number;
+      let width: number;
+      let height: number;
+
+      if (activeRect.width > 0 && navRect.width > 0) {
+        // In Safari, getBoundingClientRect() relative to parent border box is accurate across all flex layouts
+        left = Math.round(activeRect.left - navRect.left - (navEl.clientLeft || 0));
+        top = Math.round(activeRect.top - navRect.top - (navEl.clientTop || 0));
+        width = Math.round(activeRect.width);
+        height = Math.round(activeRect.height);
+      } else {
+        left = activeEl.offsetLeft || 14 + (activeIndex >= 0 ? activeIndex : 0) * 62;
+        top = activeEl.offsetTop || 7;
+        width = activeEl.offsetWidth || 56;
+        height = activeEl.offsetHeight || 48;
+      }
+
       setIndicatorStyle({
-        left: activeEl.offsetLeft,
-        top: activeEl.offsetTop,
-        width: activeEl.offsetWidth,
-        height: activeEl.offsetHeight,
+        left,
+        top,
+        width,
+        height,
         opacity: 1,
       });
+    } else if (activeIndex < 0) {
+      setIndicatorStyle((prev) => ({
+        ...prev,
+        opacity: 0,
+      }));
     }
   }, [activeIndex]);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Update indicator position on route change, shrink toggle, and window resize
+  // Update layout measurements whenever active tab index, pathname, or shrink state changes
   useEffect(() => {
     updateIndicator();
-    const frame = requestAnimationFrame(updateIndicator);
-    const timeout = setTimeout(updateIndicator, 450); // after spring transition completes
+    const frame1 = requestAnimationFrame(updateIndicator);
+    const frame2 = requestAnimationFrame(() => requestAnimationFrame(updateIndicator));
+    const timeout = setTimeout(updateIndicator, 200);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && navRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        updateIndicator();
+      });
+      resizeObserver.observe(navRef.current);
+    }
+
     return () => {
-      cancelAnimationFrame(frame);
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
       clearTimeout(timeout);
+      if (resizeObserver) resizeObserver.disconnect();
     };
-  }, [updateIndicator, isShrunk, pathname]);
+  }, [updateIndicator, isShrunk, pathname, activeIndex]);
 
   useEffect(() => {
     window.addEventListener('resize', updateIndicator);
@@ -157,9 +209,15 @@ export function MobileNav() {
       </svg>
 
       <nav
+        ref={navRef}
+        id="mobile-bottom-nav"
         onClick={() => setIsShrunk(false)}
         onTouchStart={() => setIsShrunk(false)}
         onMouseEnter={() => setIsShrunk(false)}
+        style={{
+          WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
+          backdropFilter: 'blur(24px) saturate(1.5)',
+        }}
         className={`pointer-events-auto origin-bottom relative rounded-full backdrop-blur-2xl backdrop-saturate-150 bg-background/55 dark:bg-card/75 border border-white/25 dark:border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),inset_0_-1px_2px_rgba(0,0,0,0.15),0_12px_32px_-4px_rgba(0,0,0,0.25)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_2px_rgba(0,0,0,0.4),0_16px_36px_-4px_rgba(0,0,0,0.6)] flex items-center justify-center transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] transform-gpu select-none ${
           isShrunk
             ? 'h-12 px-2.5 gap-1 scale-95 shadow-md'
@@ -170,17 +228,19 @@ export function MobileNav() {
       >
         {/* Animated Sliding Liquid Glass / Lens Refraction Bubble */}
         <div
+          id="mobile-nav-liquid-indicator"
           aria-hidden="true"
-          className={`absolute pointer-events-none transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] z-0 transform-gpu ${
+          className={`absolute top-0 left-0 pointer-events-none transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] z-0 transform-gpu ${
             indicatorStyle.opacity > 0 ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
+            WebkitTransform: `translate3d(${indicatorStyle.left}px, ${indicatorStyle.top - (isShrunk ? 2 : 4)}px, 0)`,
             transform: `translate3d(${indicatorStyle.left}px, ${indicatorStyle.top - (isShrunk ? 2 : 4)}px, 0)`,
             width: `${indicatorStyle.width}px`,
             height: `${indicatorStyle.height + (isShrunk ? 4 : 8)}px`,
           }}
         >
-          <div className="w-full h-full relative rounded-[22px] border border-white/50 dark:border-white/25 bg-gradient-to-b from-white/35 via-white/10 to-white/25 dark:from-white/20 dark:via-white/5 dark:to-white/15 backdrop-blur-md backdrop-brightness-110 dark:backdrop-brightness-125 shadow-[inset_0_2px_3px_rgba(255,255,255,0.85),inset_0_-3px_6px_rgba(0,0,0,0.18),0_6px_16px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_3px_rgba(255,255,255,0.35),inset_0_-3px_6px_rgba(0,0,0,0.45),0_8px_20px_rgba(0,0,0,0.4)]">
+          <div className="w-full h-full relative rounded-[22px] border border-white/60 dark:border-white/30 bg-gradient-to-b from-white/40 via-white/15 to-white/30 dark:from-white/25 dark:via-white/10 dark:to-white/20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),inset_0_-3px_6px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-3px_6px_rgba(0,0,0,0.45),0_10px_24px_rgba(0,0,0,0.4)]">
             {/* Glossy top specular highlight rim */}
             <div className="absolute inset-x-2 top-0.5 h-[1.5px] rounded-full bg-gradient-to-r from-transparent via-white/95 dark:via-white/70 to-transparent pointer-events-none" />
             {/* Subtle primary tint */}
@@ -193,22 +253,38 @@ export function MobileNav() {
           return (
             <Link
               key={item.href}
-              ref={(el) => {
-                itemRefs.current[index] = el;
-              }}
+              data-nav-item={index}
+              data-active={item.active ? 'true' : 'false'}
               href={item.href}
               aria-current={item.active ? 'page' : undefined}
               onClick={() => {
                 setIsShrunk(false);
-                if (itemRefs.current[index]) {
-                  const el = itemRefs.current[index]!;
-                  setIndicatorStyle({
-                    left: el.offsetLeft,
-                    top: el.offsetTop,
-                    width: el.offsetWidth,
-                    height: el.offsetHeight,
-                    opacity: 1,
-                  });
+                const navEl = navRef.current;
+                if (navEl) {
+                  const tabEls = navEl.querySelectorAll<HTMLAnchorElement>('a[data-nav-item]');
+                  const targetEl = tabEls[index];
+                  if (targetEl) {
+                    const navRect = navEl.getBoundingClientRect();
+                    const targetRect = targetEl.getBoundingClientRect();
+                    const targetLeft =
+                      targetRect.width > 0 && navRect.width > 0
+                        ? Math.round(targetRect.left - navRect.left - (navEl.clientLeft || 0))
+                        : targetEl.offsetLeft;
+                    const targetTop =
+                      targetRect.height > 0 && navRect.height > 0
+                        ? Math.round(targetRect.top - navRect.top - (navEl.clientTop || 0))
+                        : targetEl.offsetTop;
+                    const targetWidth = targetRect.width > 0 ? Math.round(targetRect.width) : targetEl.offsetWidth;
+                    const targetHeight = targetRect.height > 0 ? Math.round(targetRect.height) : targetEl.offsetHeight;
+
+                    setIndicatorStyle({
+                      left: targetLeft,
+                      top: targetTop,
+                      width: targetWidth,
+                      height: targetHeight,
+                      opacity: 1,
+                    });
+                  }
                 }
               }}
               className={`relative z-10 flex flex-col items-center justify-center rounded-[20px] transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer touch-manipulation select-none ${

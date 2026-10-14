@@ -1,5 +1,5 @@
 // Tenvi Progressive Web App Service Worker
-const CACHE_NAME = 'tenvi-pwa-v1';
+const CACHE_NAME = 'tenvi-pwa-v2';
 
 // Core static assets to pre-cache on install
 const PRECACHE_ASSETS = [
@@ -51,6 +51,17 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (!url.protocol.startsWith('http')) return;
+
+  // 0. Completely bypass Service Worker in local development and for Turbopack/HMR to prevent stale chunk caching
+  if (
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.pathname.includes('turbopack') ||
+    url.pathname.startsWith('/_next/webpack-hmr') ||
+    url.pathname.startsWith('/_next/static/development')
+  ) {
+    return;
+  }
 
   // 1. Bypass Service Worker entirely for dynamic data, Supabase, APIs, Next.js server actions
   const isBypassRoute =
