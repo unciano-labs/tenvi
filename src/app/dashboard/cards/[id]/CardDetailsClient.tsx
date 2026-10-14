@@ -667,18 +667,18 @@ export function CardDetailsClient({
                             {group.transactions.map((tx) => (
                               <div
                                 key={tx.id}
-                                className="group p-3 rounded-2xl bg-muted/60 hover:bg-muted transition-colors flex items-center justify-between text-xs gap-3"
+                                className="group p-3 rounded-2xl bg-muted/60 hover:bg-muted transition-colors flex items-start justify-between text-xs gap-3 min-w-0"
                               >
-                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                  <div className="p-1.5 rounded-xl bg-card shadow-xs shrink-0 text-foreground">
+                                <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                  <div className="p-1.5 rounded-xl bg-card shadow-xs shrink-0 text-foreground mt-0.5">
                                     {tx.kind === 'expense' ? (
                                       <TrendingDown className="size-3.5 text-danger-soft-foreground" />
                                     ) : (
                                       <TrendingUp className="size-3.5 text-success-soft-foreground" />
                                     )}
                                   </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
+                                  <div className="min-w-0 flex-1 space-y-0.5">
+                                    <div className="flex items-center gap-2 flex-wrap min-w-0">
                                       <span className="font-bold text-foreground truncate">
                                         {tx.note || 'Card Purchase'}
                                       </span>
@@ -686,13 +686,23 @@ export function CardDetailsClient({
                                         {tx.category?.name || 'General'}
                                       </span>
                                     </div>
-                                    <span className="text-xs text-muted-foreground block mt-0.5">
-                                      {formatDate(tx.occurred_on)}
-                                    </span>
+                                    <div className="text-xs text-muted-foreground truncate">
+                                      <span>{formatDate(tx.occurred_on)}</span>
+                                    </div>
+                                    {tx.loan_id && (
+                                      <div className="pt-1">
+                                        <Link
+                                          href={`/dashboard/loans/${tx.loan_id}`}
+                                          className="inline-flex items-center gap-1 text-2xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded-full transition-colors shrink-0"
+                                        >
+                                          Loan: {tx.loan?.contact?.name || 'Borrower'} →
+                                        </Link>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-2.5 shrink-0">
+                                <div className="shrink-0 flex items-center gap-2 text-right pt-0.5">
                                   <span
                                     className={`text-xs sm:text-sm font-extrabold whitespace-nowrap ${
                                       tx.kind === 'expense' ? 'text-foreground' : 'text-success-soft-foreground'

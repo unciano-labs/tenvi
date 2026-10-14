@@ -1195,12 +1195,12 @@ export function PropertyDetailsClient({
             {filteredLedgerItems.map((item) => (
               <div
                 key={item.id}
-                className="py-4 flex items-center justify-between gap-4 hover:bg-muted/50 px-2 rounded-2xl transition-colors"
+                className="py-3.5 sm:py-4 flex items-start justify-between gap-3 hover:bg-muted/50 px-2 rounded-2xl transition-colors min-w-0"
               >
                 {/* Left: Icon, Date, Title, Category / Method */}
-                <div className="flex items-center gap-3.5 min-w-0">
+                <div className="flex items-start gap-3 sm:gap-3.5 min-w-0 flex-1">
                   <div
-                    className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                    className={`size-9 sm:size-10 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 ${
                       item.kind === 'income'
                         ? 'bg-emerald-500/10 text-emerald-500'
                         : item.kind === 'advance'
@@ -1217,39 +1217,35 @@ export function PropertyDetailsClient({
                     )}
                   </div>
 
-                  <div className="min-w-0">
-                    <span className="text-sm font-bold text-foreground block truncate">
-                      {item.title}
-                    </span>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
-                      <span>{formatDate(item.occurredOn)}</span>
-                      {item.categoryName && (
-                        <>
-                          <span>•</span>
-                          <span
-                            className={`font-semibold px-2 py-0.5 rounded-md ${
-                              item.isAdvance
-                                ? 'bg-indigo-500/10 text-indigo-500'
-                                : 'text-foreground bg-muted'
-                            }`}
-                          >
-                            {item.categoryName}
-                          </span>
-                        </>
-                      )}
-                      <span>•</span>
-                      <span className="capitalize font-medium text-muted-foreground">
-                        {item.paymentMethod.replace('_', ' ')}
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <span className="text-xs sm:text-sm font-bold text-foreground truncate">
+                        {item.title}
                       </span>
+                      {item.categoryName && (
+                        <span
+                          className={`text-2xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                            item.isAdvance
+                              ? 'bg-indigo-500/10 text-indigo-500'
+                              : 'text-foreground bg-muted'
+                          }`}
+                        >
+                          {item.categoryName}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      <span>{formatDate(item.occurredOn)}</span>
+                      <span className="ml-1.5">• {item.paymentMethod.replace('_', ' ')}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Amount & Actions */}
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-right">
+                <div className="shrink-0 flex items-center gap-2 sm:gap-3 text-right pt-0.5">
+                  <div>
                     <span
-                      className={`text-base font-extrabold block ${
+                      className={`text-sm sm:text-base font-extrabold block whitespace-nowrap ${
                         item.kind === 'income'
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : item.kind === 'advance'
@@ -1263,7 +1259,7 @@ export function PropertyDetailsClient({
                       {formatMoney(item.amount)}
                     </span>
                     <span
-                      className={`text-xs capitalize block font-bold ${
+                      className={`text-2xs capitalize block font-bold ${
                         item.kind === 'advance'
                           ? item.status === 'paid'
                             ? 'text-emerald-500'

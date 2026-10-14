@@ -1474,20 +1474,27 @@ export function LoanDetailsClient({
             {loan.payments.map((p) => (
               <div
                 key={p.id}
-                className="p-4 rounded-2xl bg-muted/60 flex items-center justify-between"
+                className="p-3.5 sm:p-4 rounded-2xl bg-muted/60 hover:bg-muted/80 transition-colors flex items-start justify-between gap-3 min-w-0"
               >
-                <div>
-                  <div className="text-sm font-bold text-foreground">
-                    {formatMoney(p.amount)}
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                    <span className="text-xs sm:text-sm font-bold text-foreground">
+                      Repayment Record
+                    </span>
+                    <span className="text-2xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                      Recorded
+                    </span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    Paid on {formatDate(p.paid_on)} via {p.payment_method}
-                    {p.note && ` • "${p.note}"`}
+                  <div className="text-xs text-muted-foreground truncate">
+                    <span>Paid on {formatDate(p.paid_on)} via {p.payment_method.replace('_', ' ')}</span>
+                    {p.note && <span className="ml-1.5">• "{p.note}"</span>}
                   </div>
                 </div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500">
-                  Recorded
-                </span>
+                <div className="shrink-0 text-right pt-0.5">
+                  <span className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 whitespace-nowrap block">
+                    {formatMoney(p.amount)}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -1518,44 +1525,47 @@ export function LoanDetailsClient({
             {loan.transactions.map((tx) => (
               <div
                 key={tx.id}
-                className="p-3.5 sm:p-4 rounded-2xl bg-muted/60 flex items-center justify-between gap-4"
+                className="p-3.5 sm:p-4 rounded-2xl bg-muted/60 hover:bg-muted/80 transition-colors flex items-start justify-between gap-3 group min-w-0"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
                   <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
+                    className={`size-9 sm:size-10 rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 mt-0.5 ${
                       tx.kind === 'income'
-                        ? 'bg-emerald-500/10 text-emerald-500'
-                        : 'bg-muted text-muted-foreground'
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                     }`}
                   >
                     {tx.kind === 'income' ? '+' : '-'}
                   </div>
-                  <div>
-                    <div className="text-sm font-bold text-foreground">
-                      {tx.note || (tx.kind === 'income' ? 'Repayment Received' : 'Purchase Swiped')}
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <span className="text-xs sm:text-sm font-bold text-foreground truncate">
+                        {tx.note || (tx.kind === 'income' ? 'Repayment Received' : 'Purchase Swiped')}
+                      </span>
+                      <span
+                        className={`text-2xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${
+                          tx.kind === 'income'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                        }`}
+                      >
+                        {tx.kind === 'income' ? 'Repayment In' : 'Card Swipe Out'}
+                      </span>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatDate(tx.occurred_on)} • Method: {tx.payment_method.replace('_', ' ')}
+                    <div className="text-xs text-muted-foreground truncate">
+                      <span>{formatDate(tx.occurred_on)}</span>
+                      <span className="ml-1.5">• Method: {tx.payment_method.replace('_', ' ')}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div
-                    className={`text-sm font-extrabold ${
-                      tx.kind === 'income' ? 'text-emerald-500' : 'text-foreground'
+                <div className="shrink-0 text-right pt-0.5">
+                  <span
+                    className={`text-sm sm:text-base font-extrabold whitespace-nowrap block ${
+                      tx.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'
                     }`}
                   >
                     {tx.kind === 'income' ? '+' : '-'} {formatMoney(tx.amount)}
-                  </div>
-                  <span
-                    className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                      tx.kind === 'income'
-                        ? 'bg-emerald-500/10 text-emerald-500'
-                        : 'bg-rose-500/10 text-rose-500'
-                    }`}
-                  >
-                    {tx.kind === 'income' ? 'Repayment In' : 'Card Swipe Out'}
                   </span>
                 </div>
               </div>

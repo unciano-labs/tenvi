@@ -304,114 +304,141 @@ export function TransactionsClient({
       ) : (
         <Card className="p-5 sm:p-7 shadow-xs overflow-hidden min-w-0 space-y-4">
           <div className="space-y-3">
-            {filtered.slice(0, visibleCount).map((t) => (
-              <div
-                key={t.id}
-                className="p-3.5 sm:p-4 rounded-2xl bg-muted/50 hover:bg-muted/80 transition-colors flex items-center justify-between gap-3 group min-w-0"
-              >
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                  <div
-                    className={`size-9 sm:size-10 rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 ${
-                      t.kind === 'income'
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : t.kind === 'transfer'
-                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                    }`}
-                  >
-                    {t.kind === 'income' ? '+' : t.kind === 'transfer' ? '⇄' : '-'}
-                  </div>
+            {filtered.slice(0, visibleCount).map((t) => {
+              const hasBottomBadges = Boolean(
+                t.loan_id || t.credit_card || t.savings || t.transfer_to_savings
+              );
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
-                      <p className="text-xs sm:text-sm font-semibold text-foreground whitespace-normal break-words">
-                        {t.kind === 'transfer'
-                          ? `Transfer: ${t.savings?.name || 'Vault'} → ${t.transfer_to_savings?.name || 'Vault'}`
-                          : t.category?.name || (t.kind === 'income' ? 'Income' : 'Expense')}
-                      </p>
-                      <Badge variant="soft" className="text-2xs capitalize shrink-0 font-medium">
-                        {t.kind === 'transfer' ? 'Inter-Vault' : t.payment_method.replace('_', ' ')}
-                      </Badge>
-                      {t.loan_id && (
-                        <Link
-                          href={`/dashboard/loans/${t.loan_id}`}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded-full transition-colors shrink-0"
-                        >
-                          <HandCoins className="w-3 h-3" />
-                          Loan: {t.loan?.contact?.name || 'Borrower'} →
-                        </Link>
-                      )}
+              return (
+                <div
+                  key={t.id}
+                  className="p-3.5 sm:p-4 rounded-2xl bg-muted/50 hover:bg-muted/80 transition-colors flex items-start justify-between gap-3 group min-w-0"
+                >
+                  {/* Left Column: + / - Circle Icon + Content Details */}
+                  <div className="flex items-start gap-3 sm:gap-3.5 min-w-0 flex-1">
+                    {/* Top-aligned Circle Icon */}
+                    <div
+                      className={`size-9 sm:size-10 rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 mt-0.5 ${
+                        t.kind === 'income'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : t.kind === 'transfer'
+                          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                      }`}
+                    >
+                      {t.kind === 'income' ? '+' : t.kind === 'transfer' ? '⇄' : '-'}
                     </div>
 
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs text-muted-foreground mt-0.5 min-w-0">
-                      <span className="shrink-0">{formatDate(t.occurred_on)}</span>
-                      {t.note && <span className="truncate max-w-[160px] sm:max-w-xs">• {t.note}</span>}
+                    {/* Left Content Area */}
+                    <div className="min-w-0 flex-1 space-y-1">
+                      {/* Header Row: Transaction Type & Payment Method inline */}
+                      <div className="flex items-center gap-2 flex-wrap min-w-0">
+                        <p className="text-xs sm:text-sm font-bold text-foreground truncate">
+                          {t.kind === 'transfer'
+                            ? `Transfer: ${t.savings?.name || 'Vault'} → ${t.transfer_to_savings?.name || 'Vault'}`
+                            : t.category?.name || (t.kind === 'income' ? 'Income' : 'Expense')}
+                        </p>
+                        <Badge variant="soft" className="text-2xs capitalize shrink-0 font-medium">
+                          {t.kind === 'transfer' ? 'Inter-Vault' : t.payment_method.replace('_', ' ')}
+                        </Badge>
+                      </div>
 
-                      {/* Traceable Connected Credit Card Link */}
-                      {t.credit_card && (
-                        <Link
-                          href={`/dashboard/cards/${t.credit_card.id}`}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded-full transition-colors shrink-0 truncate max-w-[200px]"
-                          title="Traceable: View card details and statement breakdown"
-                        >
-                          <CardIcon className="w-3 h-3 text-primary shrink-0" />
-                          <span className="truncate">{t.credit_card.bank_name || t.credit_card.name} (••{t.credit_card.last_4})</span> →
-                        </Link>
-                      )}
+                      {/* Metadata Row: Date & Note combined in single compact, muted line */}
+                      <div className="flex items-center text-xs text-muted-foreground truncate">
+                        <span className="shrink-0">{formatDate(t.occurred_on)}</span>
+                        {t.note && (
+                          <span className="truncate ml-1.5">• {t.note}</span>
+                        )}
+                      </div>
 
-                      {/* Traceable Connected Savings Account Link */}
-                      {t.savings && (
-                        <Link
-                          href="/dashboard/savings"
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded-full transition-colors shrink-0 truncate max-w-[200px]"
-                          title="Traceable: View under Savings Stash"
-                        >
-                          <PiggyBank className="w-3 h-3 text-emerald-600 shrink-0" />
-                          <span className="truncate">{t.savings.name} ({t.savings.institution_name})</span> →
-                        </Link>
-                      )}
+                      {/* Bottom Badges Row: Interactive Traceable Link Pills */}
+                      {hasBottomBadges && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          {/* Loan Link Pill */}
+                          {t.loan_id && (
+                            <Link
+                              href={`/dashboard/loans/${t.loan_id}`}
+                              className="inline-flex items-center gap-1 text-2xs sm:text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-0.5 rounded-full transition-colors shrink-0 max-w-full"
+                            >
+                              <HandCoins className="w-3 h-3 shrink-0" />
+                              <span className="truncate">Loan: {t.loan?.contact?.name || 'Borrower'} →</span>
+                            </Link>
+                          )}
 
-                      {/* Traceable Connected Destination Savings Account Link */}
-                      {t.transfer_to_savings && (
-                        <Link
-                          href="/dashboard/savings"
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded-full transition-colors shrink-0 truncate max-w-[200px]"
-                          title="Traceable: Destination Savings Vault"
-                        >
-                          <PiggyBank className="w-3 h-3 text-blue-600 shrink-0" />
-                          <span className="truncate">To: {t.transfer_to_savings.name}</span> →
-                        </Link>
+                          {/* Connected Credit Card Link Pill */}
+                          {t.credit_card && (
+                            <Link
+                              href={`/dashboard/cards/${t.credit_card.id}`}
+                              className="inline-flex items-center gap-1 text-2xs sm:text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-0.5 rounded-full transition-colors shrink-0 max-w-full"
+                              title="Traceable: View card details and statement breakdown"
+                            >
+                              <CardIcon className="w-3 h-3 text-primary shrink-0" />
+                              <span className="truncate">
+                                {t.credit_card.bank_name || t.credit_card.name} (••{t.credit_card.last_4}) →
+                              </span>
+                            </Link>
+                          )}
+
+                          {/* Connected Savings Account Link Pill */}
+                          {t.savings && (
+                            <Link
+                              href="/dashboard/savings"
+                              className="inline-flex items-center gap-1 text-2xs sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-0.5 rounded-full transition-colors shrink-0 max-w-full"
+                              title="Traceable: View under Savings Stash"
+                            >
+                              <PiggyBank className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <span className="truncate">
+                                {t.savings.name} ({t.savings.institution_name}) →
+                              </span>
+                            </Link>
+                          )}
+
+                          {/* Connected Destination Savings Link Pill */}
+                          {t.transfer_to_savings && (
+                            <Link
+                              href="/dashboard/savings"
+                              className="inline-flex items-center gap-1 text-2xs sm:text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-0.5 rounded-full transition-colors shrink-0 max-w-full"
+                              title="Traceable: Destination Savings Vault"
+                            >
+                              <PiggyBank className="w-3 h-3 text-blue-600 shrink-0" />
+                              <span className="truncate">To: {t.transfer_to_savings.name} →</span>
+                            </Link>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-                  <span
-                    className={`text-sm sm:text-base font-extrabold whitespace-nowrap ${
-                      t.kind === 'income'
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : t.kind === 'transfer'
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-foreground'
-                    }`}
-                  >
-                    {t.kind === 'income' ? '+' : t.kind === 'transfer' ? '⇄ ' : '- '} {formatMoney(t.amount)}
-                  </span>
+                  {/* Right Column: Amount + Delete Icon (Top-Aligned, Strict Column Separation) */}
+                  <div className="shrink-0 flex items-center gap-2 sm:gap-3 text-right pt-0.5">
+                    <span
+                      className={`text-sm sm:text-base font-extrabold whitespace-nowrap ${
+                        t.kind === 'income'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : t.kind === 'transfer'
+                          ? 'text-blue-600 dark:text-blue-400'
+                          : 'text-foreground'
+                      }`}
+                    >
+                      {t.kind === 'income' ? '+' : t.kind === 'transfer' ? '⇄ ' : '- '}
+                      {formatMoney(t.amount)}
+                    </span>
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => handleDelete(t.id)}
-                    className="opacity-70 sm:opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-                    title="Delete transaction"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => handleDelete(t.id)}
+                      className="opacity-70 sm:opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity cursor-pointer"
+                      title="Delete transaction"
+                      aria-label="Delete transaction"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Lazy Load / Server Cursor Button */}
