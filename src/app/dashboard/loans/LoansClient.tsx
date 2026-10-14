@@ -183,7 +183,7 @@ export function LoansClient({
             setSelectedContactIdForLoan('');
             setIsLoanModalOpen(true);
           }}
-          className="rounded-xl gap-2 font-semibold shadow-xs self-start sm:self-auto"
+          className="w-full sm:w-auto rounded-xl gap-2 font-semibold shadow-xs min-h-11 h-11 active:scale-[0.99] transition-transform"
         >
           <Plus className="w-4 h-4" />
           Record a Loan / Advance
@@ -191,13 +191,14 @@ export function LoansClient({
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 gap-3 sm:gap-6 pb-1 sm:pb-0">
         <StatCard
           label="Total Still Owed to You"
           value={formatMoney(totalOwed)}
           subtext={`Across ${initialLoans.filter((l) => l.status !== 'paid').length} active loans (${groupedEntities.filter((g) => g.totalOwed > 0).length} entities)`}
           icon={HandCoins}
           variant="warning"
+          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -206,6 +207,7 @@ export function LoansClient({
           subtext="All-time recorded loans"
           icon={HandCoins}
           variant="neutral"
+          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -214,15 +216,16 @@ export function LoansClient({
           subtext={`${initialLoans.filter((l) => l.status === 'paid').length} loans cleared`}
           icon={CheckCircle2}
           variant="positive"
+          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
       </div>
 
       {/* Filter Tabs, View Mode Switcher, and Search Bar */}
       <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
         {/* View Mode & Status Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 max-w-full min-w-0">
           {/* View Mode Switcher */}
-          <div className="flex items-center gap-1 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar shrink-0">
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar min-w-0">
             <Button
               type="button"
               variant={viewMode === 'entity' ? 'default' : 'ghost'}
@@ -256,7 +259,7 @@ export function LoansClient({
           </div>
 
           {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar shrink-0">
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar min-w-0">
             <Button
               type="button"
               variant={statusFilter === 'active' ? 'default' : 'ghost'}

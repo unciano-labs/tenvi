@@ -121,7 +121,7 @@ export function SavingsClient({
 
         <Button
           onClick={() => setIsAddModalOpen(true)}
-          className="rounded-xl gap-2 font-semibold shadow-xs self-start sm:self-auto"
+          className="w-full sm:w-auto rounded-xl gap-2 font-semibold shadow-xs min-h-11 h-11 active:scale-[0.99] transition-transform"
         >
           <Plus className="w-4 h-4" />
           Add Savings or Cash
@@ -129,13 +129,14 @@ export function SavingsClient({
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 gap-3 sm:gap-6 pb-1 sm:pb-0">
         <StatCard
           label="Total Savings & Cash"
           value={formatMoney(totalSavings)}
           subtext={`Across ${initialAccounts.length} accounts & wallets`}
           icon={PiggyBank}
           variant="positive"
+          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -144,6 +145,7 @@ export function SavingsClient({
           subtext="Maya, CIMB, MariBank, SeaBank, etc."
           icon={Sparkles}
           variant="neutral"
+          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -152,13 +154,14 @@ export function SavingsClient({
           subtext="Physical cash, GCash, Maya wallet"
           icon={Banknote}
           variant="neutral"
+          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
       </div>
 
       {/* Filter Tabs and Search Bar */}
       <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
         {/* Type Filter Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar max-w-full shrink-0">
+        <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar max-w-full min-w-0">
           <Button
             type="button"
             variant={typeFilter === 'all' ? 'default' : 'ghost'}

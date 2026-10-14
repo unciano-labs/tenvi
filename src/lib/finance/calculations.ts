@@ -4,6 +4,7 @@
  */
 
 import { CURRENCY_SYMBOL } from '@/lib/constants';
+import { convertCurrency } from './fx';
 
 /**
  * Format numbers into Philippine Peso currency strings
@@ -1312,29 +1313,41 @@ export interface NetWorthBreakdown {
 }
 
 /**
- * Commercial FinTech Net Worth Engine
+ * Commercial FinTech Net Worth Engine with Multi-Currency FX Support
  * Net Worth = (Liquid Cash + Receivables + Fixed Assets) - (Credit Card Balances + Term Liabilities)
+ * All values normalized to baseCurrency (default: PHP)
  */
 export function calculateTrueNetWorth(params: {
-  savings: Array<{ current_balance?: number | string | null; is_active?: boolean }>;
-  loans: Array<{ balance_remaining?: number | string | null; status?: string }>;
-  properties: Array<{ estimated_value?: number | string | null; status?: string }>;
-  creditCards?: Array<{ latest_statement?: { billed_amount?: number | string | null; paid_amount?: number | string | null } | null }>;
-  liabilities?: Array<{ current_principal_balance?: number | string | null; status?: string }>;
+  savings: Array<{ current_balance?: number | string | null; is_active?: boolean; currency?: string | null }>;
+  loans: Array<{ balance_remaining?: number | string | null; status?: string; currency?: string | null }>;
+  properties: Array<{ estimated_value?: number | string | null; status?: string; currency?: string | null }>;
+  creditCards?: Array<{ latest_statement?: { billed_amount?: number | string | null; paid_amount?: number | string | null } | null; currency?: string | null }>;
+  liabilities?: Array<{ current_principal_balance?: number | string | null; status?: string; currency?: string | null }>;
+  baseCurrency?: string;
+  exchangeRates?: Record<string, number>;
 }): NetWorthBreakdown {
+  const baseCurrency = (params.baseCurrency || 'PHP').toUpperCase();
+  const rates = params.exchangeRates;
+
+  const toBase = (val: number | string | null | undefined, curr?: string | null) => {
+    const num = Number(val || 0);
+    if (!curr || curr.toUpperCase() === baseCurrency) return num;
+    return convertCurrency(num, curr, baseCurrency, rates);
+  };
+
   const liquidSavings = (params.savings || [])
     .filter((s) => s.is_active !== false)
-    .reduce((sum, s) => sum + Number(s.current_balance || 0), 0);
+    .reduce((sum, s) => sum + toBase(s.current_balance, s.currency), 0);
 
   const receivables = (params.loans || [])
     .filter((l) => l.status !== 'paid')
-    .reduce((sum, l) => sum + Number(l.balance_remaining || 0), 0);
+    .reduce((sum, l) => sum + toBase(l.balance_remaining, l.currency), 0);
 
   const fixedAssets = (params.properties || [])
     .filter((p) => p.status !== 'sold' && p.status !== 'inactive')
-    .reduce((sum, p) => sum + Number(p.estimated_value || 0), 0);
+    .reduce((sum, p) => sum + toBase(p.estimated_value, p.currency), 0);
 
-  const totalAssets = liquidSavings + receivables + fixedAssets;
+  const totalAssets = Number((liquidSavings + receivables + fixedAssets).toFixed(2));
 
   let creditCardBalances = 0;
   if (params.creditCards) {
@@ -1342,26 +1355,26 @@ export function calculateTrueNetWorth(params: {
       const stmt = card.latest_statement;
       if (!stmt) return sum;
       const unpaid = Math.max(0, Number(stmt.billed_amount || 0) - Number(stmt.paid_amount || 0));
-      return sum + unpaid;
+      return sum + toBase(unpaid, card.currency);
     }, 0);
   }
 
   const longTermLiabilities = (params.liabilities || [])
     .filter((l) => l.status === 'active')
-    .reduce((sum, l) => sum + Number(l.current_principal_balance || 0), 0);
+    .reduce((sum, l) => sum + toBase(l.current_principal_balance, l.currency), 0);
 
-  const totalLiabilities = creditCardBalances + longTermLiabilities;
-  const netWorth = totalAssets - totalLiabilities;
+  const totalLiabilities = Number((creditCardBalances + longTermLiabilities).toFixed(2));
+  const netWorth = Number((totalAssets - totalLiabilities).toFixed(2));
   const debtToAssetRatio =
     totalAssets > 0 ? Math.min(100, Math.round((totalLiabilities / totalAssets) * 100)) : 0;
 
   return {
-    liquidSavings,
-    receivables,
-    fixedAssets,
+    liquidSavings: Number(liquidSavings.toFixed(2)),
+    receivables: Number(receivables.toFixed(2)),
+    fixedAssets: Number(fixedAssets.toFixed(2)),
     totalAssets,
-    creditCardBalances,
-    longTermLiabilities,
+    creditCardBalances: Number(creditCardBalances.toFixed(2)),
+    longTermLiabilities: Number(longTermLiabilities.toFixed(2)),
     totalLiabilities,
     netWorth,
     debtToAssetRatio,

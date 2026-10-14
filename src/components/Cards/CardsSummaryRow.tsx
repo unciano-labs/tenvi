@@ -34,9 +34,9 @@ export function CardsSummaryRow({
   const usageInfo = getUsageLevel(usagePct);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
+    <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 gap-3 sm:gap-6 pb-1 sm:pb-0">
       {/* 1. You can still spend */}
-      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-[270px] sm:min-w-0 snap-start shrink-0 sm:shrink">
         <div>
           <div className="flex items-start justify-between gap-2 mb-3">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
@@ -64,7 +64,7 @@ export function CardsSummaryRow({
       </div>
 
       {/* 2. Used so far */}
-      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-[270px] sm:min-w-0 snap-start shrink-0 sm:shrink">
         <div>
           <div className="flex items-start justify-between gap-2 mb-3">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
@@ -95,7 +95,7 @@ export function CardsSummaryRow({
       </div>
 
       {/* 3. Next payment */}
-      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-[270px] sm:min-w-0 snap-start shrink-0 sm:shrink">
         <div>
           <div className="flex items-start justify-between gap-2 mb-3">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">

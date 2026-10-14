@@ -49,21 +49,21 @@ export function TailwindTopCards({
   const savingsRate = monthlyInflow > 0 ? Math.round((netSavings / monthlyInflow) * 100) : 0;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       {/* 1. True Net Worth Card */}
-      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+      <div className="bg-card text-card-foreground rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
         <div>
-          <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-2 sm:mb-3">
             <div className="flex items-center gap-1 min-w-0">
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
-                Total Net Worth
+              <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug truncate">
+                Net Worth
               </span>
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <button
                       type="button"
-                      className="text-muted-foreground/70 hover:text-foreground cursor-pointer shrink-0"
+                      className="text-muted-foreground/70 hover:text-foreground cursor-pointer shrink-0 hidden sm:inline-flex"
                       aria-label="Explain Net Worth"
                     />
                   }
@@ -76,21 +76,21 @@ export function TailwindTopCards({
               </Tooltip>
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="size-8 sm:size-9 rounded-xl bg-lightprimary text-primary flex items-center justify-center font-bold shrink-0">
-                <Landmark className="size-4 sm:size-4.5" />
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="size-7 sm:size-9 rounded-lg sm:rounded-xl bg-lightprimary text-primary flex items-center justify-center font-bold shrink-0">
+                <Landmark className="size-3.5 sm:size-4.5" />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
                     <button
                       type="button"
-                      className="size-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                      className="size-6 sm:size-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-colors shrink-0"
                       aria-label="Net worth options"
                     />
                   }
                 >
-                  <MoreVertical className="size-3.5" />
+                  <MoreVertical className="size-3 sm:size-3.5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl shadow-lift border border-border/60">
                   <DropdownMenuLabel className="px-2 py-1 text-2xs text-muted-foreground font-normal">
@@ -120,18 +120,18 @@ export function TailwindTopCards({
           </div>
 
           <div
-            className="text-2xl font-bold text-foreground mb-1 leading-tight"
+            className="text-base sm:text-2xl font-bold text-foreground mb-0.5 sm:mb-1 leading-tight truncate"
             title={formatMoney(netWorth)}
           >
             {formatMoney(netWorth)}
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-2xs sm:text-[11px] text-muted-foreground/80 font-normal mt-1">
-          <span>Assets − Total Debts</span>
+        <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground/80 font-normal mt-1 min-w-0">
+          <span className="truncate">Assets − Debts</span>
           <button
             onClick={onOpenNetWorthModal}
-            className="text-primary hover:underline font-semibold cursor-pointer shrink-0 ml-2"
+            className="text-primary hover:underline font-semibold cursor-pointer shrink-0 ml-1.5"
           >
             Breakdown
           </button>
@@ -139,19 +139,19 @@ export function TailwindTopCards({
       </div>
 
       {/* 2. Monthly Inflow Card */}
-      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+      <div className="bg-card text-card-foreground rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
         <div>
-          <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-2 sm:mb-3">
             <div className="flex items-center gap-1 min-w-0">
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
-                Money Coming In
+              <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug truncate">
+                Money In
               </span>
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <button
                       type="button"
-                      className="text-muted-foreground/70 hover:text-foreground cursor-pointer shrink-0"
+                      className="text-muted-foreground/70 hover:text-foreground cursor-pointer shrink-0 hidden sm:inline-flex"
                       aria-label="Explain Inflow"
                     />
                   }
@@ -164,41 +164,41 @@ export function TailwindTopCards({
               </Tooltip>
             </div>
 
-            <div className="size-8 sm:size-9 rounded-xl bg-lightsuccess text-success flex items-center justify-center font-bold shrink-0">
-              <ArrowDownLeft className="size-4 sm:size-4.5" />
+            <div className="size-7 sm:size-9 rounded-lg sm:rounded-xl bg-lightsuccess text-success flex items-center justify-center font-bold shrink-0">
+              <ArrowDownLeft className="size-3.5 sm:size-4.5" />
             </div>
           </div>
 
           <div
-            className="text-2xl font-bold text-foreground mb-1 leading-tight"
+            className="text-base sm:text-2xl font-bold text-foreground mb-0.5 sm:mb-1 leading-tight truncate"
             title={formatMoney(monthlyInflow)}
           >
             {formatMoney(monthlyInflow)}
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-2xs sm:text-[11px] text-muted-foreground/80 font-normal mt-1">
-          <span>This month's deposits</span>
-          <Link href="/dashboard/transactions" className="text-primary hover:underline font-semibold shrink-0 ml-2">
+        <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground/80 font-normal mt-1 min-w-0">
+          <span className="truncate">Deposits</span>
+          <Link href="/dashboard/transactions" className="text-primary hover:underline font-semibold shrink-0 ml-1.5">
             View
           </Link>
         </div>
       </div>
 
       {/* 3. Monthly Outflow Card */}
-      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+      <div className="bg-card text-card-foreground rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
         <div>
-          <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-2 sm:mb-3">
             <div className="flex items-center gap-1 min-w-0">
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
-                Money Going Out
+              <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug truncate">
+                Money Out
               </span>
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <button
                       type="button"
-                      className="text-muted-foreground/70 hover:text-foreground cursor-pointer shrink-0"
+                      className="text-muted-foreground/70 hover:text-foreground cursor-pointer shrink-0 hidden sm:inline-flex"
                       aria-label="Explain Outflow"
                     />
                   }
@@ -211,51 +211,51 @@ export function TailwindTopCards({
               </Tooltip>
             </div>
 
-            <div className="size-8 sm:size-9 rounded-xl bg-lighterror text-danger flex items-center justify-center font-bold shrink-0">
-              <ArrowUpRight className="size-4 sm:size-4.5" />
+            <div className="size-7 sm:size-9 rounded-lg sm:rounded-xl bg-lighterror text-danger flex items-center justify-center font-bold shrink-0">
+              <ArrowUpRight className="size-3.5 sm:size-4.5" />
             </div>
           </div>
 
           <div
-            className="text-2xl font-bold text-foreground mb-1 leading-tight"
+            className="text-base sm:text-2xl font-bold text-foreground mb-0.5 sm:mb-1 leading-tight truncate"
             title={formatMoney(monthlyOutflow)}
           >
             {formatMoney(monthlyOutflow)}
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-2xs sm:text-[11px] text-muted-foreground/80 font-normal mt-1">
-          <span className="flex items-center gap-1 min-w-0">
+        <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground/80 font-normal mt-1 min-w-0">
+          <span className="flex items-center gap-1 min-w-0 truncate">
             {netSavings >= 0 ? (
-              <span className="text-success font-semibold flex items-center gap-0.5">
-                <TrendingUp className="size-3 shrink-0" /> {savingsRate}% saved
+              <span className="text-success font-semibold flex items-center gap-0.5 truncate">
+                <TrendingUp className="size-2.5 sm:size-3 shrink-0" /> {savingsRate}%
               </span>
             ) : (
-              <span className="text-danger font-semibold flex items-center gap-0.5">
-                <TrendingDown className="size-3 shrink-0" /> Over budget
+              <span className="text-danger font-semibold flex items-center gap-0.5 truncate">
+                <TrendingDown className="size-2.5 sm:size-3 shrink-0" /> Over
               </span>
             )}
           </span>
-          <Link href="/dashboard/transactions" className="text-primary hover:underline font-semibold shrink-0 ml-2">
+          <Link href="/dashboard/transactions" className="text-primary hover:underline font-semibold shrink-0 ml-1.5">
             Spending
           </Link>
         </div>
       </div>
 
       {/* 4. Total Liabilities / Debts Card */}
-      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+      <div className="bg-card text-card-foreground rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
         <div>
-          <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-2 sm:mb-3">
             <div className="flex items-center gap-1 min-w-0">
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
-                Total Debts & Owed
+              <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug truncate">
+                Total Debts
               </span>
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <button
                       type="button"
-                      className="text-muted-foreground/70 hover:text-foreground cursor-pointer shrink-0"
+                      className="text-muted-foreground/70 hover:text-foreground cursor-pointer shrink-0 hidden sm:inline-flex"
                       aria-label="Explain Debts"
                     />
                   }
@@ -268,21 +268,21 @@ export function TailwindTopCards({
               </Tooltip>
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="size-8 sm:size-9 rounded-xl bg-lightwarning text-warning flex items-center justify-center font-bold shrink-0">
-                <CreditCard className="size-4 sm:size-4.5" />
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="size-7 sm:size-9 rounded-lg sm:rounded-xl bg-lightwarning text-warning flex items-center justify-center font-bold shrink-0">
+                <CreditCard className="size-3.5 sm:size-4.5" />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
                     <button
                       type="button"
-                      className="size-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                      className="size-6 sm:size-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-colors shrink-0"
                       aria-label="Debt options"
                     />
                   }
                 >
-                  <MoreVertical className="size-3.5" />
+                  <MoreVertical className="size-3 sm:size-3.5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52 p-1.5 rounded-xl shadow-lift border border-border/60">
                   <DropdownMenuItem
@@ -303,16 +303,16 @@ export function TailwindTopCards({
           </div>
 
           <div
-            className="text-2xl font-bold text-foreground mb-1 leading-tight"
+            className="text-base sm:text-2xl font-bold text-foreground mb-0.5 sm:mb-1 leading-tight truncate"
             title={formatMoney(totalLiabilities)}
           >
             {formatMoney(totalLiabilities)}
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-2xs sm:text-[11px] text-muted-foreground/80 font-normal mt-1">
-          <span>Cards & loan balances</span>
-          <Link href="/dashboard/cards" className="text-primary hover:underline font-semibold shrink-0 ml-2">
+        <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground/80 font-normal mt-1 min-w-0">
+          <span className="truncate">Balances</span>
+          <Link href="/dashboard/cards" className="text-primary hover:underline font-semibold shrink-0 ml-1.5">
             Manage
           </Link>
         </div>

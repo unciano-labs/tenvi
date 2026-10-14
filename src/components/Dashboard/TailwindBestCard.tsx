@@ -227,7 +227,7 @@ export function TailwindBestCard({
               <div className="pt-1">
                 <Button
                   onClick={() => onAddPurchaseClick(bestCardObj.id)}
-                  className="w-full h-8 text-xs font-semibold rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full min-h-10 h-10 text-xs font-semibold rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.99] transition-transform"
                 >
                   <Plus className="size-3.5" />
                   <span>Swipe with this Card</span>

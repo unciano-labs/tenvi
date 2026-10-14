@@ -163,7 +163,7 @@ export function TransactionsClient({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto">
           <Button
             type="button"
             variant="soft"
@@ -171,9 +171,9 @@ export function TransactionsClient({
               setAutoScanReceipt(true);
               setIsModalOpen(true);
             }}
-            className="rounded-xl gap-2 font-semibold"
+            className="flex-1 sm:flex-initial rounded-xl gap-2 font-semibold min-h-11 h-11 active:scale-[0.99] transition-transform text-xs sm:text-sm"
           >
-            <Camera className="w-4 h-4 text-primary" />
+            <Camera className="w-4 h-4 text-primary shrink-0" />
             <span>Scan Receipt</span>
           </Button>
 
@@ -183,10 +183,10 @@ export function TransactionsClient({
               setAutoScanReceipt(false);
               setIsModalOpen(true);
             }}
-            className="rounded-xl gap-2 font-semibold shadow-xs"
+            className="flex-1 sm:flex-initial rounded-xl gap-2 font-semibold shadow-xs min-h-11 h-11 active:scale-[0.99] transition-transform text-xs sm:text-sm"
           >
-            <Plus className="w-4 h-4" />
-            <span>Record Expense or Income</span>
+            <Plus className="w-4 h-4 shrink-0" />
+            <span>Record Transaction</span>
           </Button>
         </div>
       </div>
@@ -195,7 +195,7 @@ export function TransactionsClient({
       <Card className="p-5 shadow-xs overflow-hidden min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Kind Filter Tabs */}
-          <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar shrink-0">
+          <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar min-w-0">
             <Button
               type="button"
               variant={kindFilter === 'all' ? 'default' : 'ghost'}

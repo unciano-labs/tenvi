@@ -49,6 +49,7 @@ import { MarkdownMessage } from './MarkdownMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { TenviIcon } from '@/components/ui/TenviIcon';
 import { getPropertyIcon } from '@/lib/constants';
 
 export interface SamplePromptItem {
@@ -295,13 +296,13 @@ const QUICK_STARTER_PILLS = [
 const INITIAL_WELCOME_MESSAGE: AIChatMessage = {
   id: 'welcome-msg',
   sender: 'assistant',
-  text: "👋 Hello! I'm your **Tenvi Assistant**.\n\nI can help you easily record everyday spending, check upcoming bills, or see how much savings you have.\n\nYou can talk to me in simple English, Tagalog, or Taglish!",
+  text: "Hello! I'm **Tenvi AI**, your personal financial assistant.\n\nAsk questions about your credit cards, cash flow, or record expenses in plain English or Taglish.",
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   quickReplies: [
-    'How much did I spend this week?',
-    'What bills are due soon?',
-    'Paid 150 for lunch in cash',
-    'How much savings do I have?',
+    'Summarize my credit card usage',
+    'Upcoming due dates',
+    'Check portfolio cash flow',
+    'Paid 250 for lunch in cash',
   ],
 };
 
@@ -436,6 +437,63 @@ export function TenviAIChat({
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Scroll tracking to tuck or scale down FAB slightly when scrolling down
+  const [isScrolledDown, setIsScrolledDown] = useState(false);
+  const lastScrollY = useRef(0);
+  const scrollTicking = useRef(false);
+
+  useEffect(() => {
+    const handleScroll = (e?: Event) => {
+      if (!scrollTicking.current) {
+        window.requestAnimationFrame(() => {
+          let currentY = 0;
+          const target = e?.target as HTMLElement | null;
+          if (
+            target &&
+            typeof target.scrollTop === 'number' &&
+            target !== document.documentElement &&
+            target !== (document as unknown)
+          ) {
+            currentY = target.scrollTop;
+          } else {
+            const mainEl = document.getElementById('dashboard-main') || document.querySelector('main');
+            if (mainEl && mainEl.scrollTop > 0) {
+              currentY = mainEl.scrollTop;
+            } else {
+              currentY = window.scrollY || document.documentElement.scrollTop || 0;
+            }
+          }
+
+          const delta = currentY - lastScrollY.current;
+          if (currentY <= 30) {
+            setIsScrolledDown(false);
+            lastScrollY.current = Math.max(0, currentY);
+            scrollTicking.current = false;
+            return;
+          }
+
+          if (Math.abs(delta) > 10) {
+            if (delta > 0 && currentY > 50) {
+              setIsScrolledDown(true);
+            } else if (delta < 0) {
+              setIsScrolledDown(false);
+            }
+            lastScrollY.current = currentY;
+          }
+          scrollTicking.current = false;
+        });
+        scrollTicking.current = true;
+      }
+    };
+
+    document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      document.removeEventListener('scroll', handleScroll, { capture: true });
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const handleOpenChat = () => {
     if (closeTimeoutRef.current) {
@@ -1143,14 +1201,18 @@ export function TenviAIChat({
       ? SAMPLE_PROMPTS_DATA
       : SAMPLE_PROMPTS_DATA.filter((p) => p.category === selectedPromptCategory);
 
+  const isInitialState = messages.length === 1 && messages[0].id === 'welcome-msg';
+
   return (
     <>
-      {/* Floating Trigger Button */}
+      {/* Floating Trigger Button (Tenvi AI FAB) */}
       <div
-        className={`fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 transition-all duration-300 ease-out origin-bottom-right ${
+        className={`fixed z-40 transition-all duration-300 ease-out origin-bottom-right top-auto bottom-24 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] bottom-ai-fab right-4 md:bottom-6 md:right-6 ${
           isOpen
             ? 'opacity-0 scale-75 pointer-events-none'
-            : 'opacity-100 scale-100 pointer-events-auto'
+            : isScrolledDown
+            ? 'opacity-85 scale-90 translate-y-2 pointer-events-auto'
+            : 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
         }`}
       >
         <button
@@ -1158,70 +1220,98 @@ export function TenviAIChat({
           data-tour="ai-button"
           onClick={handleOpenChat}
           tabIndex={isOpen ? -1 : 0}
-          aria-label="Open Tenvi Assistant - Tap to ask questions"
-          title="Open Tenvi Assistant"
-          className="group flex items-center justify-center sm:justify-start gap-3 bg-slate-800 text-white w-12 h-12 sm:w-auto sm:h-auto p-0 sm:pl-4 sm:pr-5 sm:py-3.5 rounded-full shadow-lg hover:shadow-xl hover:bg-slate-700 active:scale-95 cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-slate-400"
+          aria-label="Open Tenvi AI Financial Assistant"
+          title="Open Tenvi AI Financial Assistant"
+          className="group relative flex items-center justify-center md:justify-start gap-2.5 bg-background/90 dark:bg-card/90 backdrop-blur-xl border border-border/70 text-foreground w-12 h-12 md:w-auto md:h-12 md:px-3.5 md:py-2 rounded-2xl shadow-lg hover:shadow-xl hover:border-border hover:scale-105 active:scale-95 cursor-pointer touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-200"
         >
-          <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors relative">
-            <Sparkles className="w-5 h-5 sm:w-4 sm:h-4 text-emerald-300 group-hover:rotate-12 transition-transform duration-300" />
-            <span className="sm:hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+          {/* Icon Container with Corner Sparkle AI Badge */}
+          <div className="relative shrink-0 flex items-center justify-center">
+            <TenviIcon variant="solid" className="w-7 h-7 rounded-xl shadow-2xs group-hover:rotate-3 transition-transform duration-300" />
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xs border border-background">
+              <Sparkles className="w-2.5 h-2.5 text-white animate-pulse" />
+            </span>
           </div>
-          <div className="hidden sm:block text-left">
-            <div className="text-xs font-bold tracking-wide flex items-center gap-1.5">
-              Tenvi Assistant
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+
+          {/* Desktop Text Label */}
+          <div className="hidden md:flex flex-col text-left pr-1 leading-tight select-none">
+            <div className="text-xs font-bold tracking-tight flex items-center gap-1.5 text-foreground">
+              <span>Tenvi AI</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </div>
-            <div className="text-xs text-slate-300 font-medium">Help & Questions</div>
+            <span className="text-[11px] text-muted-foreground font-medium">Financial Assistant</span>
           </div>
         </button>
       </div>
 
-      {/* Floating Chat Window (Floating Card Dialog) */}
+      {/* Mobile Dimmed Backdrop */}
+      {isMounted && (
+        <div
+          className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-xs md:hidden transition-opacity duration-300 ${
+            isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={handleCloseChat}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Floating Chat Window (Desktop Popover Card / Mobile Bottom Sheet) */}
       {isMounted && (
         <div
           ref={chatWindowRef}
           role="dialog"
-          aria-label="Tenvi Assistant"
-          className={`fixed bottom-20 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-6 z-50 w-auto sm:w-[420px] md:w-[440px] h-[580px] max-h-[calc(100dvh-6rem)] sm:max-h-[min(640px,calc(100dvh-3rem))] bg-card rounded-3xl shadow-2xl flex flex-col overflow-hidden origin-bottom-right transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          aria-label="Tenvi AI Financial Assistant"
+          aria-modal="true"
+          className={`fixed z-50 flex flex-col overflow-hidden bg-background md:bg-card/95 md:backdrop-blur-xl border-border/60 shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+            inset-x-0 bottom-0 h-[88dvh] max-h-[88dvh] rounded-t-3xl border-t pb-[max(0.75rem,env(safe-area-inset-bottom))]
+            md:inset-auto md:bottom-20 md:right-6 md:w-[410px] md:h-[600px] md:max-h-[calc(100vh-7rem)] md:rounded-2xl md:border md:pb-0 md:origin-bottom-right ${
             isOpen
-              ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
-              : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
+              ? 'opacity-100 translate-y-0 md:scale-100 pointer-events-auto'
+              : 'opacity-0 translate-y-full md:translate-y-4 md:scale-95 pointer-events-none'
           }`}
         >
-          {/* Header */}
-          <div className="px-5 py-4 bg-slate-800 text-white flex flex-row items-center justify-between shrink-0 select-none">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5 text-emerald-300" />
+          {/* Mobile Drag Handle */}
+          <div className="flex md:hidden items-center justify-center pt-2.5 pb-1 shrink-0 select-none">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+          </div>
+
+          {/* Minimalist Header */}
+          <div className="px-4 py-3 bg-card/80 backdrop-blur-md border-b border-border/50 text-foreground flex items-center justify-between shrink-0 select-none">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative shrink-0">
+                <TenviIcon variant="solid" className="w-8 h-8 rounded-xl shadow-2xs" />
+                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xs border border-background">
+                  <Sparkles className="w-2 h-2 text-white" />
+                </span>
               </div>
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <h2 className="text-sm font-bold tracking-tight text-white">Tenvi Assistant</h2>
-                  <Badge variant="success" className="h-5 px-1.5 text-[10px]">
-                    Ready to Help
-                  </Badge>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h2 className="text-sm font-semibold tracking-tight text-foreground truncate">Tenvi AI</h2>
+                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Active
+                  </span>
                 </div>
-                <p className="text-xs text-slate-300">
-                  Ask any question or record money easily
+                <p className="text-[11px] text-muted-foreground font-medium truncate">
+                  Financial Assistant
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <Button
                 type="button"
                 variant="ghost"
-                size="xs"
+                size="icon-xs"
                 onClick={() => setIsPromptsDrawerOpen((prev) => !prev)}
                 title="Common Questions & Examples"
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl cursor-pointer ${
+                aria-label="Examples"
+                className={`rounded-xl transition-colors ${
                   isPromptsDrawerOpen
-                    ? 'bg-amber-300 text-slate-900 font-bold shadow-xs'
-                    : 'bg-white/15 hover:bg-white/25 text-slate-200'
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
-                <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
-                <span className="hidden xs:inline">Examples</span>
+                <Lightbulb className="w-4 h-4" />
               </Button>
 
               <Button
@@ -1230,7 +1320,8 @@ export function TenviAIChat({
                 size="icon-xs"
                 onClick={handleResetChat}
                 title="Start a new chat"
-                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white cursor-pointer"
+                aria-label="Reset chat"
+                className="rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
@@ -1241,7 +1332,7 @@ export function TenviAIChat({
                 onClick={handleCloseChat}
                 title="Minimize chat"
                 aria-label="Minimize chat"
-                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white cursor-pointer"
+                className="hidden md:inline-flex rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 <Minus className="w-4 h-4" />
               </Button>
@@ -1252,7 +1343,7 @@ export function TenviAIChat({
                 onClick={handleCloseChat}
                 title="Close Assistant"
                 aria-label="Close Assistant"
-                className="rounded-xl hover:bg-white/15 text-slate-300 hover:text-white cursor-pointer"
+                className="rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -1349,23 +1440,75 @@ export function TenviAIChat({
             </div>
           ) : (
             /* Standard Messages Body */
-            <ScrollArea className="flex-1 min-h-0 p-4 bg-muted/30">
-              <div className="space-y-4">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col ${
-                      msg.sender === 'user' ? 'items-end' : 'items-start'
-                    }`}
-                  >
-                    {/* Bubble */}
+            <ScrollArea className="flex-1 min-h-0 p-4 bg-muted/20">
+              {isInitialState ? (
+                /* Empty State Hero */
+                <div className="py-6 px-3 flex flex-col items-center text-center space-y-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-3xl bg-muted/60 border border-border/70 flex items-center justify-center shadow-xs">
+                      <TenviIcon variant="solid" className="w-10 h-10 rounded-2xl shadow-xs" />
+                    </div>
+                    <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xs border-2 border-background">
+                      <Sparkles className="w-3 h-3 text-white" />
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 max-w-xs">
+                    <h3 className="text-base font-bold text-foreground tracking-tight">
+                      Welcome to Tenvi AI
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Your intelligent financial companion. Ask questions about your cards, analyze cash flow, or log spending instantly.
+                    </p>
+                  </div>
+
+                  {/* Suggestion Starter Chips */}
+                  <div className="w-full pt-1 flex flex-col gap-2 max-w-sm">
+                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider text-left pl-1">
+                      Suggested Prompts
+                    </div>
+                    {[
+                      { label: 'Summarize my credit card usage', icon: CreditCard, prompt: 'Summarize my credit card usage' },
+                      { label: 'Upcoming due dates', icon: Calendar, prompt: 'When is my next credit card due date?' },
+                      { label: 'Check portfolio cash flow', icon: TrendingUp, prompt: 'Check portfolio cash flow and monthly spending' },
+                      { label: 'Paid 250 for lunch in cash', icon: Banknote, prompt: 'Paid 250 for lunch in cash' },
+                    ].map((chip, idx) => {
+                      const Icon = chip.icon;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSendMessage(chip.prompt)}
+                          disabled={isProcessing}
+                          className="w-full text-left px-3.5 py-2.5 rounded-xl border border-border/60 bg-card hover:bg-muted/70 hover:border-border transition-all text-xs font-medium text-foreground flex items-center justify-between group shadow-2xs cursor-pointer active:scale-[0.99]"
+                        >
+                          <span className="flex items-center gap-2.5 truncate">
+                            <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                            <span className="truncate">{chip.label}</span>
+                          </span>
+                          <Zap className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-emerald-500 transition-colors shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((msg) => (
                     <div
-                      className={`max-w-[88%] rounded-2xl p-3.5 text-sm leading-relaxed ${
-                        msg.sender === 'user'
-                          ? 'bg-slate-800 text-white rounded-tr-none shadow-xs'
-                          : 'bg-card text-foreground shadow-card rounded-tl-none'
+                      key={msg.id}
+                      className={`flex flex-col ${
+                        msg.sender === 'user' ? 'items-end' : 'items-start'
                       }`}
                     >
+                      {/* Bubble */}
+                      <div
+                        className={`max-w-[85%] rounded-2xl p-3.5 text-sm leading-relaxed ${
+                          msg.sender === 'user'
+                            ? 'bg-primary text-primary-foreground rounded-tr-xs shadow-xs ml-auto'
+                            : 'bg-muted/50 dark:bg-muted/30 border border-border/40 text-foreground rounded-tl-xs shadow-xs'
+                        }`}
+                      >
                       {/* User Image Attachment */}
                       {msg.imageUrl && (
                         <div className="mb-2 max-w-xs overflow-hidden rounded-xl bg-black/20">
@@ -1945,8 +2088,8 @@ export function TenviAIChat({
 
                     {/* Timestamp */}
                     <div
-                      className={`text-xs mt-1.5 text-right ${
-                        msg.sender === 'user' ? 'text-slate-300' : 'text-muted-foreground'
+                      className={`text-[10px] mt-1 text-muted-foreground select-none ${
+                        msg.sender === 'user' ? 'text-right mr-1' : 'text-left ml-1'
                       }`}
                     >
                       {msg.timestamp}
@@ -1958,14 +2101,14 @@ export function TenviAIChat({
                     msg.quickReplies.length > 0 &&
                     !msg.transaction &&
                     (!msg.transactions || msg.transactions.length === 0) && (
-                    <div className="flex flex-wrap gap-1.5 mt-2 max-w-[92%]">
+                    <div className="flex flex-wrap gap-1.5 mt-2.5 max-w-[95%]">
                       {msg.quickReplies.map((reply, idx) => (
                         <button
                           key={idx}
                           type="button"
                           onClick={() => handleQuickReply(reply)}
                           disabled={isProcessing}
-                          className="text-xs font-semibold bg-card hover:bg-primary hover:text-primary-foreground text-foreground px-3 py-1.5 rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="text-xs font-semibold bg-card border border-border/60 hover:bg-primary hover:text-primary-foreground hover:border-primary text-foreground px-3 py-1.5 rounded-xl shadow-2xs transition-all cursor-pointer disabled:opacity-50 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           {reply}
                         </button>
@@ -1974,22 +2117,23 @@ export function TenviAIChat({
                   )}
                 </div>
               ))}
-
-              <div ref={messagesEndRef} />
             </div>
+            )}
+
+            <div ref={messagesEndRef} />
           </ScrollArea>
         )}
 
         {/* Quick-Prompt Chips Bar (Above Input) */}
         {!isPromptsDrawerOpen && (
-          <div className="px-3 pt-2 pb-1 bg-card shrink-0">
+          <div className="px-3 pt-2 pb-1 bg-card/80 backdrop-blur-md border-t border-border/40 shrink-0">
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
               <button
                 type="button"
                 onClick={() => setIsPromptsDrawerOpen(true)}
-                className="flex items-center gap-1 text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors cursor-pointer shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex items-center gap-1 text-[11px] font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/20 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors cursor-pointer shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Lightbulb className="w-3 h-3 text-amber-600" />
+                <Lightbulb className="w-3 h-3 text-amber-500" />
                 <span>Prompt Ideas</span>
               </button>
               {QUICK_STARTER_PILLS.map((pill, idx) => (
@@ -1998,7 +2142,7 @@ export function TenviAIChat({
                   type="button"
                   onClick={() => handleSendMessage(pill.prompt)}
                   disabled={isProcessing}
-                  className="text-xs font-medium bg-muted/60 hover:bg-primary hover:text-primary-foreground text-foreground px-2.5 py-1 rounded-full whitespace-nowrap transition-colors cursor-pointer shrink-0 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="text-[11px] font-medium bg-muted/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full whitespace-nowrap transition-colors cursor-pointer shrink-0 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {pill.label}
                 </button>
@@ -2007,22 +2151,22 @@ export function TenviAIChat({
           </div>
         )}
 
-        {/* Footer Input */}
-        <div className="p-3 bg-card shrink-0">
+        {/* Footer Input Bar */}
+        <div className="p-3 bg-card/90 backdrop-blur-md border-t border-border/40 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-3">
           {/* Image attachment preview if selected */}
           {attachedImage && (
-            <div className="mb-2 p-2 rounded-xl bg-muted/60 shadow-xs flex items-center justify-between gap-2">
+            <div className="mb-2 p-2 rounded-xl bg-muted/70 border border-border/50 shadow-xs flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <img
                   src={attachedImage.previewUrl}
                   alt="Preview"
-                  className="w-10 h-10 rounded-lg object-cover shrink-0"
+                  className="w-10 h-10 rounded-lg object-cover shrink-0 border border-border/60"
                 />
                 <div className="min-w-0">
                   <span className="text-xs font-bold text-foreground truncate block">
                     Photo Attached
                   </span>
-                  <span className="text-xs text-muted-foreground truncate block">
+                  <span className="text-[11px] text-muted-foreground truncate block">
                     {attachedImage.file.name || 'Receipt or document'}
                   </span>
                 </div>
@@ -2040,7 +2184,8 @@ export function TenviAIChat({
             </div>
           )}
 
-          <div className="bg-muted/60 rounded-2xl p-2 flex items-end gap-2">
+          {/* Floating Input Container */}
+          <div className="relative rounded-2xl bg-muted/40 border border-border/60 p-1.5 pl-3 flex items-end gap-1.5 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
             <input
               ref={fileInputRef}
               type="file"
@@ -2051,56 +2196,70 @@ export function TenviAIChat({
             <textarea
               ref={inputRef}
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={(e) => {
+                setInputText(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
+              }}
               onKeyDown={handleKeyDown}
               placeholder={
                 attachedImage
                   ? "Add note (e.g. 'Expenses' or 'Receivables for John')..."
-                  : "Type a question or expense (e.g. 'paid 350 for groceries in cash')..."
+                  : "Ask a question or log spending (e.g. 'paid 250 for lunch')..."
               }
               rows={1}
               disabled={isProcessing}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none max-h-24 py-1.5 px-2 font-medium border-0"
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none py-1.5 font-medium border-0 max-h-24 leading-relaxed"
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => fileInputRef.current?.click()}
-              title="Upload photo / receipt"
-              disabled={isProcessing}
-              className="rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              <ImagePlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => setIsPromptsDrawerOpen((prev) => !prev)}
-              title="Common question examples"
-              className="rounded-xl text-muted-foreground hover:text-foreground"
-            >
-              <Lightbulb className="w-4 h-4 text-amber-600" />
-            </Button>
-            <Button
-              type="button"
-              size="icon-xs"
-              onClick={() => handleSendMessage()}
-              disabled={(!inputText.trim() && !attachedImage) || isProcessing}
-              aria-label="Send message"
-              className="rounded-xl shadow-xs"
-            >
-              {isProcessing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-3.5 h-3.5" />
-              )}
-            </Button>
+            
+            <div className="flex items-center gap-1 shrink-0 pb-0.5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => fileInputRef.current?.click()}
+                title="Upload receipt / photo"
+                disabled={isProcessing}
+                className="rounded-xl text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-muted/80 cursor-pointer"
+              >
+                <ImagePlus className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setIsPromptsDrawerOpen((prev) => !prev)}
+                title="Common prompt ideas"
+                className="rounded-xl text-muted-foreground hover:text-amber-500 hover:bg-muted/80"
+              >
+                <Lightbulb className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon-xs"
+                onClick={() => handleSendMessage()}
+                disabled={(!inputText.trim() && !attachedImage) || isProcessing}
+                aria-label="Send message"
+                className={`rounded-xl transition-all cursor-pointer ${
+                  inputText.trim() || attachedImage
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs active:scale-95'
+                    : 'bg-muted text-muted-foreground/50 cursor-not-allowed opacity-60'
+                }`}
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+              </Button>
+            </div>
           </div>
-          <div className="mt-1.5 px-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Press Enter or tap Send</span>
-            <span className="font-medium">Safe & Private</span>
+          <div className="mt-1.5 px-1.5 flex items-center justify-between text-[11px] text-muted-foreground select-none">
+            <span>Press Enter to send</span>
+            <span className="font-medium text-muted-foreground/80 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80" />
+              Private & Encrypted
+            </span>
           </div>
         </div>
       </div>

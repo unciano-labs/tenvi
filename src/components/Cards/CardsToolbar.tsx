@@ -86,7 +86,7 @@ export function CardsToolbar({
         </div>
 
         {/* Sort Controls */}
-        <div className="flex items-center gap-2 self-start sm:self-auto overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 self-start sm:self-auto overflow-x-auto no-scrollbar w-full sm:w-auto max-w-full min-w-0">
           <span className="text-xs font-medium text-muted-foreground shrink-0 hidden lg:inline">
             Sort by:
           </span>
@@ -96,7 +96,7 @@ export function CardsToolbar({
               const selected = Array.isArray(val) && val.length > 0 ? (val[val.length - 1] as CardSortOption) : null;
               if (selected) onSortChange(selected);
             }}
-            className="bg-muted p-1 rounded-xl"
+            className="bg-muted p-1 rounded-xl w-full sm:w-auto justify-start sm:justify-center overflow-x-auto no-scrollbar min-w-0"
           >
             <ToggleGroupItem value="due_date" className="rounded-lg text-xs px-3">
               Pay date

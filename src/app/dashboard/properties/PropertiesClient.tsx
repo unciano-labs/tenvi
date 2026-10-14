@@ -341,13 +341,14 @@ export function PropertiesClient({
       </div>
 
       {/* Portfolio Overview Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 pb-1 sm:pb-0">
         <StatCard
           label="Total Portfolio Value"
           value={formatMoney(portfolioSummary.totalValuation)}
           subtext={`${properties.length} total assets (${portfolioSummary.activeCount} active)`}
           icon={Building2}
           variant="neutral"
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -356,6 +357,7 @@ export function PropertiesClient({
           subtext={`${formatMoney(totalLiabilitiesBalance)} debt liabilities`}
           icon={ShieldCheck}
           variant={netPortfolioEquity > 0 ? 'positive' : 'warning'}
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -364,6 +366,7 @@ export function PropertiesClient({
           subtext="Boundary, fares, rentals logged"
           icon={TrendingUp}
           variant="positive"
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -372,6 +375,7 @@ export function PropertiesClient({
           subtext="Amortizations, PMS, repairs, insurance"
           icon={TrendingDown}
           variant="negative"
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -384,6 +388,7 @@ export function PropertiesClient({
           }
           icon={Sparkles}
           variant={portfolioSummary.netCashFlow >= 0 ? 'positive' : 'warning'}
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
       </div>
 
@@ -404,21 +409,21 @@ export function PropertiesClient({
           </p>
         </div>
 
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="p-3.5 rounded-2xl bg-muted/60 min-w-[140px]">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
+        <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full md:w-auto">
+          <div className="p-3.5 rounded-2xl bg-muted/60 flex-1 sm:flex-initial min-w-0 sm:min-w-[140px]">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block truncate">
               Total Monthly Loans
             </span>
-            <span className="text-base font-bold text-foreground">
+            <span className="text-base font-bold text-foreground block">
               {formatMoney(portfolioSummary.totalMonthlyAmortization)}
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-muted/60 min-w-[140px]">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
+          <div className="p-3.5 rounded-2xl bg-muted/60 flex-1 sm:flex-initial min-w-0 sm:min-w-[140px]">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block truncate">
               Annual Insurance Total
             </span>
-            <span className="text-base font-bold text-foreground">
+            <span className="text-base font-bold text-foreground block">
               {formatMoney(portfolioSummary.totalAnnualInsurance)}
             </span>
           </div>
@@ -537,7 +542,7 @@ export function PropertiesClient({
       {/* Filter and Search Bar */}
       <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
         {/* Type tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar shrink-0">
+        <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar max-w-full min-w-0">
           <Button
             type="button"
             variant={selectedType === 'all' ? 'default' : 'ghost'}
@@ -864,14 +869,14 @@ export function PropertiesClient({
                 </div>
 
                 {/* Footer Actions */}
-                <div className="pt-4 flex items-center justify-between gap-2 min-w-0">
-                  <div className="flex items-center gap-1.5 shrink-0">
+                <div className="pt-4 flex flex-wrap items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <Button
                       type="button"
                       size="xs"
                       variant="soft"
                       onClick={() => handleOpenTxModal(property.id, 'income')}
-                      className="text-emerald-600 dark:text-emerald-400 font-bold"
+                      className="text-emerald-600 dark:text-emerald-400 font-bold active:scale-[0.99] transition-transform"
                     >
                       + Income
                     </Button>
@@ -880,7 +885,7 @@ export function PropertiesClient({
                       size="xs"
                       variant="soft"
                       onClick={() => handleOpenTxModal(property.id, 'expense')}
-                      className="text-rose-600 dark:text-rose-400 font-bold"
+                      className="text-rose-600 dark:text-rose-400 font-bold active:scale-[0.99] transition-transform"
                     >
                       + Expense
                     </Button>

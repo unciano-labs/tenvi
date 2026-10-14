@@ -52,7 +52,7 @@ export const MAIN_NAV_ITEMS: NavItemConfig[] = [
   },
   {
     label: 'Credit Cards',
-    mobileLabel: 'Credit Cards',
+    mobileLabel: 'Cards',
     href: '/dashboard/cards',
     icon: CreditCard,
   },

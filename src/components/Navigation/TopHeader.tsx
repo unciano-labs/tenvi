@@ -193,7 +193,7 @@ export function TopHeader({ userName, userEmail }: TopHeaderProps) {
                   size="icon"
                   nativeButton={false}
                   render={<Link href="/dashboard/settings" />}
-                  className="size-8 sm:size-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                  className="hidden sm:inline-flex size-8 sm:size-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
                   aria-label="Help and guidance"
                 />
               }

@@ -436,7 +436,7 @@ export function PropertyDetailsClient({
         </div>
 
         {/* Valuation & Net Equity display */}
-        <div className="p-4 rounded-2xl bg-muted min-w-[220px] text-left md:text-right space-y-1">
+        <div className="p-4 rounded-2xl bg-muted w-full md:w-auto md:min-w-[220px] text-left md:text-right space-y-1">
           <div>
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
               Market Valuation
@@ -460,9 +460,9 @@ export function PropertyDetailsClient({
 
       {/* Financial KPIs */}
       <div
-        className={`grid grid-cols-1 sm:grid-cols-2 ${
+        className={`flex overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 ${
           payables.length > 0 ? 'lg:grid-cols-6' : 'lg:grid-cols-5'
-        } gap-4`}
+        } gap-3 sm:gap-4 pb-1 sm:pb-0`}
       >
         <StatCard
           label="Market Valuation"
@@ -470,6 +470,7 @@ export function PropertyDetailsClient({
           subtext={`Acquisition: ${formatMoney(property.purchase_price || 0)}`}
           icon={Building2}
           variant="neutral"
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -478,6 +479,7 @@ export function PropertyDetailsClient({
           subtext={`${equityPercentage}% owned • ${formatMoney(totalLinkedLiabilities)} debt`}
           icon={ShieldCheck}
           variant={netOwnerEquity > 0 ? 'positive' : 'warning'}
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -486,6 +488,7 @@ export function PropertyDetailsClient({
           subtext={`${financials.incomeCount} revenue entries logged`}
           icon={TrendingUp}
           variant="positive"
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
@@ -494,6 +497,7 @@ export function PropertyDetailsClient({
           subtext={`${financials.expenseCount} operating expenses`}
           icon={TrendingDown}
           variant="negative"
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         {payables.length > 0 && (
@@ -503,6 +507,7 @@ export function PropertyDetailsClient({
             subtext={`${payables.length} advances owed to owner`}
             icon={HandCoins}
             variant="warning"
+            className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
           />
         )}
 
@@ -516,6 +521,7 @@ export function PropertyDetailsClient({
           }
           icon={Sparkles}
           variant={financials.netCashFlow >= 0 ? 'positive' : 'warning'}
+          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
       </div>
 

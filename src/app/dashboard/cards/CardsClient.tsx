@@ -352,15 +352,15 @@ export function CardsClient({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <Button
             variant="soft"
             size="default"
             render={<Link href="/dashboard/settings?tab=cards" />}
-            className="min-h-12 h-12 px-4 font-semibold"
+            className="flex-1 sm:flex-initial min-h-11 h-11 sm:min-h-12 sm:h-12 px-3 sm:px-4 font-semibold active:scale-[0.99] transition-transform"
             aria-label="Open card reminder settings"
           >
-            <Bell className="mr-2 size-4 text-muted-foreground" />
+            <Bell className="mr-1.5 sm:mr-2 size-4 text-muted-foreground shrink-0" />
             Reminders
           </Button>
 
@@ -371,9 +371,9 @@ export function CardsClient({
               setEditingCard(null);
               setIsModalOpen(true);
             }}
-            className="min-h-12 h-12 px-5 font-semibold cursor-pointer shadow-none"
+            className="flex-1 sm:flex-initial min-h-11 h-11 sm:min-h-12 sm:h-12 px-4 sm:px-5 font-semibold cursor-pointer shadow-none active:scale-[0.99] transition-transform"
           >
-            <Plus className="mr-1.5 size-4" />
+            <Plus className="mr-1.5 size-4 shrink-0" />
             Add a card
           </Button>
         </div>
