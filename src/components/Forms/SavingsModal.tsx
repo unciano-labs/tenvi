@@ -127,7 +127,7 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
           {/* Live Card Preview */}
           <div
             className={`w-full rounded-[22px] p-4 sm:p-5 text-white border ${theme.borderColor} ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden transition-all duration-300 shadow-card flex flex-col justify-between`}
-            style={{ aspectRatio: '1.58 / 1', minHeight: '190px' }}
+            style={{ aspectRatio: '1.58 / 1', minHeight: '190px', backgroundColor: theme.bgHex || theme.accentHex }}
           >
             {/* Accent top highlight line */}
             <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />

@@ -121,20 +121,20 @@ export function MobileNav() {
           WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
           backdropFilter: 'blur(24px) saturate(1.5)',
         }}
-        className={`pointer-events-auto origin-bottom relative rounded-full backdrop-blur-2xl backdrop-saturate-150 bg-background/55 dark:bg-card/75 border border-white/25 dark:border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),inset_0_-1px_2px_rgba(0,0,0,0.15),0_12px_32px_-4px_rgba(0,0,0,0.25)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_2px_rgba(0,0,0,0.4),0_16px_36px_-4px_rgba(0,0,0,0.6)] inline-flex items-center justify-center transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] transform-gpu select-none px-2.5 ${
+        className={`pointer-events-auto origin-bottom relative rounded-full backdrop-blur-2xl backdrop-saturate-150 bg-background/55 dark:bg-card/75 border border-white/25 dark:border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),inset_0_-1px_2px_rgba(0,0,0,0.15),0_12px_32px_-4px_rgba(0,0,0,0.25)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_2px_rgba(0,0,0,0.4),0_16px_36px_-4px_rgba(0,0,0,0.6)] flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] transform-gpu select-none px-2.5 ${
           isShrunk
-            ? 'h-12 shadow-md'
+            ? 'h-12 w-[260px] shadow-md'
             : 'h-[62px] w-[330px] max-w-[calc(100vw-1.75rem)]'
         }`}
         aria-label="Mobile Bottom Navigation"
         role="navigation"
       >
-        <div className={`relative h-full ${isShrunk ? 'inline-flex items-center' : 'flex items-center w-full'}`}>
+        <div className="relative flex items-center w-full h-full">
           {/* Animated Sliding Liquid Glass / Lens Refraction Bubble */}
           <div
             id="mobile-nav-liquid-indicator"
             aria-hidden="true"
-            className={`absolute top-0 bottom-0 left-0 flex items-center justify-center pointer-events-none transition-transform duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] z-0 transform-gpu ${
+            className={`absolute top-0 bottom-0 left-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] z-0 transform-gpu ${
               activeIndex >= 0 ? 'opacity-100' : 'opacity-0'
             }`}
             style={{
@@ -143,15 +143,15 @@ export function MobileNav() {
             }}
           >
             <div
-              className={`relative border border-white/60 dark:border-white/30 bg-gradient-to-b from-white/40 via-white/15 to-white/30 dark:from-white/25 dark:via-white/10 dark:to-white/20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),inset_0_-3px_6px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-3px_6px_rgba(0,0,0,0.45),0_10px_24px_rgba(0,0,0,0.4)] transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+              className={`relative border border-white/60 dark:border-white/30 bg-gradient-to-b from-white/40 via-white/15 to-white/30 dark:from-white/25 dark:via-white/10 dark:to-white/20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),inset_0_-3px_6px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-3px_6px_rgba(0,0,0,0.45),0_10px_24px_rgba(0,0,0,0.4)] transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] ${
                 isShrunk ? 'w-[38px] h-[38px] rounded-full' : 'w-[56px] h-[50px] rounded-[20px]'
               }`}
             >
               {/* Glossy top specular highlight rim */}
-              <div className="absolute inset-x-2 top-0.5 h-[1.5px] rounded-full bg-gradient-to-r from-transparent via-white/95 dark:via-white/70 to-transparent pointer-events-none" />
+              <div className="absolute inset-x-2 top-0.5 h-[1.5px] rounded-full bg-gradient-to-r from-transparent via-white/95 dark:via-white/70 to-transparent pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)]" />
               {/* Subtle primary tint */}
               <div
-                className={`absolute inset-0 bg-primary/10 dark:bg-primary/20 pointer-events-none transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                className={`absolute inset-0 bg-primary/10 dark:bg-primary/20 pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] ${
                   isShrunk ? 'rounded-full' : 'rounded-[20px]'
                 }`}
               />
@@ -169,10 +169,8 @@ export function MobileNav() {
                 aria-label={item.label}
                 aria-current={item.active ? 'page' : undefined}
                 onClick={() => setIsShrunk(false)}
-                className={`relative z-10 transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95 cursor-pointer touch-manipulation select-none ${
-                  isShrunk
-                    ? 'w-12 h-12 flex items-center justify-center shrink-0 rounded-full'
-                    : 'flex-1 h-full flex flex-col items-center justify-center py-1 rounded-[20px]'
+                className={`relative z-10 flex-1 h-full flex flex-col items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] active:scale-95 cursor-pointer touch-manipulation select-none ${
+                  isShrunk ? 'rounded-full' : 'py-1 rounded-[20px]'
                 } ${
                   item.active
                     ? 'text-primary dark:text-primary font-semibold'
@@ -180,17 +178,17 @@ export function MobileNav() {
                 }`}
               >
                 <Icon
-                  className={`size-5 shrink-0 transition-transform duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                  className={`size-5 shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] ${
                     item.active
                       ? 'scale-105 stroke-[2.25] text-primary dark:text-primary drop-shadow-[0_1px_2px_rgba(0,0,0,0.15)]'
                       : 'stroke-2 text-muted-foreground/80'
                   }`}
                 />
                 <span
-                  className={`leading-none truncate transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                  className={`leading-none truncate overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] ${
                     isShrunk
-                      ? 'hidden opacity-0 max-h-0 scale-75 -translate-y-1 pointer-events-none'
-                      : 'opacity-100 max-h-4 scale-100 translate-y-0 text-[10px] mt-1 max-w-[58px] tracking-tight'
+                      ? 'opacity-0 max-h-0 max-w-0 scale-75 -translate-y-1 mt-0 pointer-events-none'
+                      : 'opacity-100 max-h-5 max-w-[58px] scale-100 translate-y-0 text-[10px] mt-1 tracking-tight'
                   } ${item.active ? 'font-bold text-primary dark:text-primary' : 'text-muted-foreground'}`}
                 >
                   {item.label}

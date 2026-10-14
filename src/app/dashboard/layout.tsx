@@ -67,12 +67,12 @@ export default async function DashboardLayout({
         {/* Main Content Area (Only scrollable container) */}
         <main
           id="dashboard-main"
-          className="flex-1 h-full min-h-0 min-w-0 w-full max-w-full overflow-y-auto overflow-x-hidden overscroll-contain flex flex-col"
+          className="flex-1 h-full min-h-0 min-w-0 w-full max-w-full overflow-y-auto overflow-x-hidden overscroll-contain"
         >
           {/* Sticky Top Header with search, theme switch, notifications, and profile dropdown */}
           <TopHeader userName={userName} userEmail={userEmail} />
 
-          <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 py-4 sm:py-8 pb-40 sm:pb-36 md:pb-28 lg:pb-32 flex-1 min-h-0 min-w-0">
+          <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 py-4 sm:py-8 pb-36 pb-[calc(9rem+env(safe-area-inset-bottom,0px))] md:pb-28 min-w-0">
             {children}
           </div>
         </main>

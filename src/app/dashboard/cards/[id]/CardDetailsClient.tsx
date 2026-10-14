@@ -275,10 +275,11 @@ export function CardDetailsClient({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
         {/* Physical Card Representation - Inheriting color, solid matte theme, border, glow, and pattern */}
         {(() => {
-          const { theme, network, pattern } = parseCardStyle(card.color_theme, card.name);
+          const { theme, network, pattern } = parseCardStyle((card as any).color || card.color_theme, card.name);
           return (
             <div
               className={`p-5 sm:p-6 rounded-[22px] text-white border ${theme.borderColor} ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden flex flex-col justify-between min-h-[210px] shadow-card transition-all duration-300`}
+              style={{ backgroundColor: theme.bgHex || theme.accentHex }}
             >
               {/* Subtle solid accent top highlight line */}
               <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />

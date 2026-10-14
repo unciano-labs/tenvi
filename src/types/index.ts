@@ -38,6 +38,7 @@ export interface SavingsAccount {
   target_amount?: number | null;
   interest_rate?: number | null;
   color_theme: string;
+  color?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -97,6 +98,7 @@ export interface CreditCard {
   statement_day: number;
   due_day: number;
   color_theme: string;
+  color?: string;
   is_active: boolean;
   reminders_enabled?: boolean;
   created_at: string;

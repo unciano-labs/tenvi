@@ -82,6 +82,7 @@ export default async function CardsPage() {
 
   const cardsWithStatements = (creditCards || []).map((card) => ({
     ...card,
+    color: card.color || card.color_theme,
     latest_statement: statementsByCard.get(card.id) || null,
   }));
 

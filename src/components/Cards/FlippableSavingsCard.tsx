@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SavingsAccount } from '@/types';
 import { formatMoney } from '@/lib/finance/calculations';
 import {
@@ -55,8 +55,17 @@ export function FlippableSavingsCard({
   const [isFlipped, setIsFlipped] = useState(false);
   const [isThemePopoverOpen, setIsThemePopoverOpen] = useState(false);
 
-  // Parse solid accent and pattern
-  const { theme, themeId, pattern } = parseCardStyle(account.color_theme || 'emerald', account.name);
+  // Per-card color state initialized from account.color or account.color_theme
+  const initialStyle = (account as any).color || account.color_theme || 'emerald';
+  const [localStyle, setLocalStyle] = useState<string>(initialStyle);
+
+  useEffect(() => {
+    const current = (account as any).color || account.color_theme || 'emerald';
+    setLocalStyle(current);
+  }, [(account as any).color, account.color_theme]);
+
+  // Parse solid accent and pattern from localStyle
+  const { theme, themeId, pattern } = parseCardStyle(localStyle, account.name);
 
   const balance = Number(account.current_balance || 0);
   const target = Number(account.target_amount || 0);
@@ -79,8 +88,11 @@ export function FlippableSavingsCard({
 
   const handleChangeAccent = async (newAccentId: CardAccentId) => {
     const packed = formatCardStyle(newAccentId, 'visa', pattern);
+    const prev = localStyle;
+    setLocalStyle(packed);
     const res = await updateSavingsThemeAction(account.id, packed);
     if (res?.error) {
+      setLocalStyle(prev);
       toast.error(res.error);
     } else {
       toast.success('Account accent updated!');
@@ -89,8 +101,11 @@ export function FlippableSavingsCard({
 
   const handleChangePattern = async (newPatternId: CardPatternId) => {
     const packed = formatCardStyle(themeId, 'visa', newPatternId);
+    const prev = localStyle;
+    setLocalStyle(packed);
     const res = await updateSavingsThemeAction(account.id, packed);
     if (res?.error) {
+      setLocalStyle(prev);
       toast.error(res.error);
     } else {
       toast.success('Account pattern updated!');
@@ -147,10 +162,11 @@ export function FlippableSavingsCard({
         >
           {/* ================= CARD FRONT (Minimal Solid) ================= */}
           <div
-            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} bg-slate-900 backface-hidden [backface-visibility:hidden] ${
+            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} backface-hidden [backface-visibility:hidden] ${
               isFlipped ? 'opacity-0 pointer-events-none invisible' : 'opacity-100 pointer-events-auto visible'
             }`}
             style={{
+              backgroundColor: theme.bgHex || theme.accentHex,
               WebkitBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden',
               WebkitTransform: 'rotateY(0deg) translateZ(1px)',
@@ -294,10 +310,11 @@ export function FlippableSavingsCard({
 
           {/* ================= CARD BACK (Details Solid) ================= */}
           <div
-            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} bg-slate-900 backface-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] ${
+            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} backface-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] ${
               isFlipped ? 'opacity-100 pointer-events-auto visible' : 'opacity-0 pointer-events-none invisible'
             }`}
             style={{
+              backgroundColor: theme.bgHex || theme.accentHex,
               WebkitBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden',
               WebkitTransform: 'rotateY(180deg) translateZ(1px)',

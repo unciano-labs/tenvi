@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { CreditCard } from '@/types';
 import {
@@ -23,7 +23,7 @@ import {
   VisaLogo,
   MastercardLogo,
 } from './CardThemeTokens';
-import { updateCreditCardAction } from '@/app/actions/cards';
+import { updateCreditCardAction, updateCreditCardThemeAction } from '@/app/actions/cards';
 import { toast } from 'sonner';
 import {
   RotateCcw,
@@ -74,8 +74,17 @@ export function FlippableCreditCard({
   const [isFlipped, setIsFlipped] = useState(false);
   const [isThemePopoverOpen, setIsThemePopoverOpen] = useState(false);
 
-  // Parse solid accent, network, and pattern
-  const { theme, themeId, network, pattern } = parseCardStyle(card.color_theme, card.name);
+  // Per-card color state initialized from card.color or card.color_theme
+  const initialStyle = (card as any).color || card.color_theme || 'cyan';
+  const [localStyle, setLocalStyle] = useState<string>(initialStyle);
+
+  useEffect(() => {
+    const current = (card as any).color || card.color_theme || 'cyan';
+    setLocalStyle(current);
+  }, [(card as any).color, card.color_theme]);
+
+  // Parse solid accent, network, and pattern from localStyle
+  const { theme, themeId, network, pattern } = parseCardStyle(localStyle, card.name);
 
   const creditLimit = Number(card.credit_limit || 0);
   const totalUsed = spending.totalUsed || 0;
@@ -104,57 +113,42 @@ export function FlippableCreditCard({
     setIsFlipped((prev) => !prev);
   };
 
-  // Change solid accent
+  // Change solid accent for this specific card
   const handleChangeAccent = async (newAccentId: CardAccentId) => {
     const packed = formatCardStyle(newAccentId, network, pattern);
-    const res = await updateCreditCardAction(card.id, {
-      name: card.name,
-      bankName: card.bank_name,
-      last4: card.last_4,
-      creditLimit: card.credit_limit,
-      statementDay: card.statement_day,
-      dueDay: card.due_day,
-      colorTheme: packed,
-    });
+    const prev = localStyle;
+    setLocalStyle(packed);
+    const res = await updateCreditCardThemeAction(card.id, packed);
     if (res?.error) {
+      setLocalStyle(prev);
       toast.error(res.error);
     } else {
       toast.success('Card accent updated!');
     }
   };
 
-  // Change background pattern
+  // Change background pattern for this specific card
   const handleChangePattern = async (newPatternId: CardPatternId) => {
     const packed = formatCardStyle(themeId, network, newPatternId);
-    const res = await updateCreditCardAction(card.id, {
-      name: card.name,
-      bankName: card.bank_name,
-      last4: card.last_4,
-      creditLimit: card.credit_limit,
-      statementDay: card.statement_day,
-      dueDay: card.due_day,
-      colorTheme: packed,
-    });
+    const prev = localStyle;
+    setLocalStyle(packed);
+    const res = await updateCreditCardThemeAction(card.id, packed);
     if (res?.error) {
+      setLocalStyle(prev);
       toast.error(res.error);
     } else {
       toast.success('Card pattern updated!');
     }
   };
 
-  // Toggle network
+  // Toggle network for this specific card
   const handleToggleNetwork = async (newNetwork: CardNetwork) => {
     const packed = formatCardStyle(themeId, newNetwork, pattern);
-    const res = await updateCreditCardAction(card.id, {
-      name: card.name,
-      bankName: card.bank_name,
-      last4: card.last_4,
-      creditLimit: card.credit_limit,
-      statementDay: card.statement_day,
-      dueDay: card.due_day,
-      colorTheme: packed,
-    });
+    const prev = localStyle;
+    setLocalStyle(packed);
+    const res = await updateCreditCardThemeAction(card.id, packed);
     if (res?.error) {
+      setLocalStyle(prev);
       toast.error(res.error);
     } else {
       toast.success(`Network set to ${newNetwork === 'visa' ? 'Visa' : 'Mastercard'}!`);
@@ -196,10 +190,11 @@ export function FlippableCreditCard({
         >
           {/* ================= CARD FRONT (Minimal Solid) ================= */}
           <div
-            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} bg-slate-900 backface-hidden [backface-visibility:hidden] ${
+            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} backface-hidden [backface-visibility:hidden] ${
               isFlipped ? 'opacity-0 pointer-events-none invisible' : 'opacity-100 pointer-events-auto visible'
             }`}
             style={{
+              backgroundColor: theme.bgHex || theme.accentHex,
               WebkitBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden',
               WebkitTransform: 'rotateY(0deg) translateZ(1px)',
@@ -379,10 +374,11 @@ export function FlippableCreditCard({
 
           {/* ================= CARD BACK (Details Solid) ================= */}
           <div
-            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} bg-slate-900 backface-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] ${
+            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} backface-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] ${
               isFlipped ? 'opacity-100 pointer-events-auto visible' : 'opacity-0 pointer-events-none invisible'
             }`}
             style={{
+              backgroundColor: theme.bgHex || theme.accentHex,
               WebkitBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden',
               WebkitTransform: 'rotateY(180deg) translateZ(1px)',

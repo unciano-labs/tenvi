@@ -30,9 +30,14 @@ export default async function SavingsPage() {
     .not('savings_id', 'is', null)
     .order('occurred_on', { ascending: false });
 
+  const mappedAccounts = (accounts || []).map((acc) => ({
+    ...acc,
+    color: acc.color || acc.color_theme,
+  }));
+
   return (
     <SavingsClient
-      initialAccounts={accounts || []}
+      initialAccounts={mappedAccounts}
       savingsTransactions={transactions || []}
     />
   );

@@ -42,6 +42,7 @@ export interface CardAccentConfig {
   id: CardAccentId;
   name: string;
   accentHex: string;
+  bgHex: string;
   bgColor: string;
   borderColor: string;
   hoverBorderColor: string;
@@ -57,6 +58,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'red',
     name: 'Crimson Red',
     accentHex: '#ef4444',
+    bgHex: '#b91c1c',
     bgColor: 'bg-[#b91c1c]',
     borderColor: 'border-red-400/50',
     hoverBorderColor: 'group-hover/card:border-red-200',
@@ -70,6 +72,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'rose',
     name: 'Ruby Rose',
     accentHex: '#f43f5e',
+    bgHex: '#be123c',
     bgColor: 'bg-[#be123c]',
     borderColor: 'border-rose-400/50',
     hoverBorderColor: 'group-hover/card:border-rose-200',
@@ -83,6 +86,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'vermilion',
     name: 'Hot Coral',
     accentHex: '#ff6b6b',
+    bgHex: '#c2410c',
     bgColor: 'bg-[#c2410c]',
     borderColor: 'border-orange-400/50',
     hoverBorderColor: 'group-hover/card:border-orange-200',
@@ -96,6 +100,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'orange',
     name: 'Sunset Orange',
     accentHex: '#f97316',
+    bgHex: '#ea580c',
     bgColor: 'bg-[#ea580c]',
     borderColor: 'border-orange-300/50',
     hoverBorderColor: 'group-hover/card:border-orange-200',
@@ -109,6 +114,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'amber',
     name: 'Solar Amber',
     accentHex: '#f59e0b',
+    bgHex: '#d97706',
     bgColor: 'bg-[#d97706]',
     borderColor: 'border-amber-300/50',
     hoverBorderColor: 'group-hover/card:border-amber-200',
@@ -122,6 +128,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'gold',
     name: 'Honey Gold',
     accentHex: '#eab308',
+    bgHex: '#854d0e',
     bgColor: 'bg-[#854d0e]',
     borderColor: 'border-yellow-400/50',
     hoverBorderColor: 'group-hover/card:border-yellow-200',
@@ -135,6 +142,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'lime',
     name: 'Neon Lime',
     accentHex: '#84cc16',
+    bgHex: '#4d7c0f',
     bgColor: 'bg-[#4d7c0f]',
     borderColor: 'border-lime-400/50',
     hoverBorderColor: 'group-hover/card:border-lime-200',
@@ -148,6 +156,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'emerald',
     name: 'Forest Emerald',
     accentHex: '#10b981',
+    bgHex: '#065f46',
     bgColor: 'bg-[#065f46]',
     borderColor: 'border-emerald-300/50',
     hoverBorderColor: 'group-hover/card:border-emerald-200',
@@ -161,6 +170,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'mint',
     name: 'Mint Jade',
     accentHex: '#34d399',
+    bgHex: '#047857',
     bgColor: 'bg-[#047857]',
     borderColor: 'border-emerald-400/50',
     hoverBorderColor: 'group-hover/card:border-emerald-200',
@@ -174,6 +184,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'teal',
     name: 'Oceanic Teal',
     accentHex: '#14b8a6',
+    bgHex: '#115e59',
     bgColor: 'bg-[#115e59]',
     borderColor: 'border-teal-300/50',
     hoverBorderColor: 'group-hover/card:border-teal-200',
@@ -187,6 +198,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'cyan',
     name: 'Electric Cyan',
     accentHex: '#06b6d4',
+    bgHex: '#0e7490',
     bgColor: 'bg-[#0e7490]',
     borderColor: 'border-cyan-300/50',
     hoverBorderColor: 'group-hover/card:border-cyan-200',
@@ -200,6 +212,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'sky',
     name: 'Sky Cerulean',
     accentHex: '#0ea5e9',
+    bgHex: '#0369a1',
     bgColor: 'bg-[#0369a1]',
     borderColor: 'border-sky-300/50',
     hoverBorderColor: 'group-hover/card:border-sky-200',
@@ -213,6 +226,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'blue',
     name: 'Sapphire Blue',
     accentHex: '#3b82f6',
+    bgHex: '#1d4ed8',
     bgColor: 'bg-[#1d4ed8]',
     borderColor: 'border-blue-300/50',
     hoverBorderColor: 'group-hover/card:border-blue-200',
@@ -226,6 +240,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'cobalt',
     name: 'Deep Cobalt',
     accentHex: '#2563eb',
+    bgHex: '#1e3a8a',
     bgColor: 'bg-[#1e3a8a]',
     borderColor: 'border-blue-400/50',
     hoverBorderColor: 'group-hover/card:border-blue-200',
@@ -239,6 +254,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'indigo',
     name: 'Royal Indigo',
     accentHex: '#6366f1',
+    bgHex: '#3730a3',
     bgColor: 'bg-[#3730a3]',
     borderColor: 'border-indigo-300/50',
     hoverBorderColor: 'group-hover/card:border-indigo-200',
@@ -252,6 +268,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'purple',
     name: 'Cyber Purple',
     accentHex: '#a855f7',
+    bgHex: '#6b21a8',
     bgColor: 'bg-[#6b21a8]',
     borderColor: 'border-purple-300/50',
     hoverBorderColor: 'group-hover/card:border-purple-200',
@@ -265,6 +282,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'violet',
     name: 'Electric Violet',
     accentHex: '#8b5cf6',
+    bgHex: '#7c3aed',
     bgColor: 'bg-[#7c3aed]',
     borderColor: 'border-violet-300/50',
     hoverBorderColor: 'group-hover/card:border-violet-200',
@@ -278,6 +296,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'pink',
     name: 'Magenta Pink',
     accentHex: '#ec4899',
+    bgHex: '#9d174d',
     bgColor: 'bg-[#9d174d]',
     borderColor: 'border-pink-300/50',
     hoverBorderColor: 'group-hover/card:border-pink-200',
@@ -291,6 +310,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'silver',
     name: 'Titanium Slate',
     accentHex: '#94a3b8',
+    bgHex: '#334155',
     bgColor: 'bg-[#334155]',
     borderColor: 'border-slate-300/50',
     hoverBorderColor: 'group-hover/card:border-slate-100',
@@ -304,6 +324,7 @@ export const CARD_ACCENTS: Record<CardAccentId, CardAccentConfig> = {
     id: 'carbon',
     name: 'Stealth Onyx',
     accentHex: '#71717a',
+    bgHex: '#18181b',
     bgColor: 'bg-[#18181b]',
     borderColor: 'border-zinc-500/50',
     hoverBorderColor: 'group-hover/card:border-zinc-300',
@@ -335,14 +356,37 @@ export const CARD_PATTERNS: CardPatternConfig[] = [
 
 // Aliases for backwards compatibility with previous theme IDs
 export type CardThemeId = CardAccentId;
-export const CARD_THEMES = CARD_ACCENTS;
+
+// Complete static lookup map for card themes (satisfies CARD_THEMES[card.color] ?? CARD_THEMES.default)
+export const CARD_THEMES: Record<string, CardAccentConfig> = {
+  ...CARD_ACCENTS,
+  default: CARD_ACCENTS.cyan,
+  slate: CARD_ACCENTS.silver,
+  zinc: CARD_ACCENTS.carbon,
+  gray: CARD_ACCENTS.silver,
+  grey: CARD_ACCENTS.silver,
+  green: CARD_ACCENTS.emerald,
+  yellow: CARD_ACCENTS.gold,
+  ruby: CARD_ACCENTS.rose,
+  black: CARD_ACCENTS.carbon,
+  coral: CARD_ACCENTS.vermilion,
+};
+
+/**
+ * Returns a static card theme config from any color string or fallback to default
+ */
+export function getCardTheme(color?: string | null): CardAccentConfig {
+  if (!color) return CARD_THEMES.default;
+  const key = color.trim().toLowerCase();
+  return CARD_THEMES[key] ?? CARD_THEMES.default;
+}
 
 /**
  * Parses color_theme string (e.g. "cyan:visa:waves" or "emerald_teal" or "#0f172a")
  * and extracts accent config, network, and pattern.
  */
 export function parseCardStyle(
-  colorTheme: string = 'cyan',
+  colorTheme?: string | null,
   cardName: string = ''
 ): {
   theme: CardAccentConfig;
@@ -376,11 +420,11 @@ export function parseCardStyle(
     if (parts[2] && validPatterns.includes(parts[2])) {
       rawPattern = parts[2] as CardPatternId;
     }
-  } else {
+  } else if (normalized) {
     rawAccent = normalized;
   }
 
-  // Backwards compatibility mapping
+  // Backwards compatibility & alias mapping
   if (rawAccent === 'ocean_blue' || (rawAccent.includes('cyan') && rawAccent !== 'blue')) {
     rawAccent = 'cyan';
   } else if (rawAccent === 'emerald_teal' || rawAccent.includes('emerald') || rawAccent.includes('green')) {
@@ -393,7 +437,13 @@ export function parseCardStyle(
     rawAccent = 'rose';
   } else if (rawAccent === 'obsidian_black' || rawAccent.includes('black') || rawAccent.includes('dark')) {
     rawAccent = 'carbon';
-  } else if (rawAccent.includes('slate')) {
+  } else if (
+    rawAccent.includes('slate') ||
+    rawAccent.includes('gray') ||
+    rawAccent.includes('grey') ||
+    rawAccent.includes('#0f172a') ||
+    rawAccent.includes('#1e293b')
+  ) {
     rawAccent = 'silver';
   }
 
@@ -407,10 +457,39 @@ export function parseCardStyle(
     }
   }
 
-  const validAccentId = (rawAccent in CARD_ACCENTS ? rawAccent : 'cyan') as CardAccentId;
+  let theme: CardAccentConfig;
+  let themeId: CardAccentId;
+
+  if (rawAccent in CARD_ACCENTS) {
+    themeId = rawAccent as CardAccentId;
+    theme = CARD_ACCENTS[themeId];
+  } else if (rawAccent in CARD_THEMES) {
+    theme = CARD_THEMES[rawAccent];
+    themeId = (theme.id in CARD_ACCENTS ? theme.id : 'cyan') as CardAccentId;
+  } else if (rawAccent.startsWith('#') || rawAccent.startsWith('rgb')) {
+    themeId = 'carbon';
+    theme = {
+      id: 'carbon',
+      name: 'Custom',
+      accentHex: rawAccent,
+      bgHex: rawAccent,
+      bgColor: '',
+      borderColor: 'border-white/25',
+      hoverBorderColor: 'group-hover/card:border-white/40',
+      glowShadow: 'shadow-[0_8px_24px_-4px_rgba(0,0,0,0.35)]',
+      textColor: 'text-white',
+      barColor: 'bg-white/40',
+      badgeBg: 'bg-black/40 text-white border-white/20',
+      chipAccent: 'border-white/40',
+    };
+  } else {
+    theme = CARD_THEMES.default ?? CARD_ACCENTS.cyan;
+    themeId = theme.id;
+  }
+
   return {
-    themeId: validAccentId,
-    theme: CARD_ACCENTS[validAccentId],
+    themeId,
+    theme,
     network: rawNetwork,
     pattern: rawPattern,
   };

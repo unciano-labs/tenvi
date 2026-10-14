@@ -87,6 +87,34 @@ export async function updateCreditCardAction(id: string, data: any) {
   return { success: true };
 }
 
+export async function updateCreditCardThemeAction(id: string, colorTheme: string) {
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
+  }
+  const user = auth.user;
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('bili_credit_cards')
+    .update({
+      color_theme: colorTheme,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error updating card theme:', error);
+    return { error: 'Failed to update credit card theme' };
+  }
+
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/cards');
+  return { success: true };
+}
+
 export async function deleteCreditCardAction(id: string) {
   const auth = await requireWebsiteUser();
   if (!auth.isAuthorized || !auth.user) {
