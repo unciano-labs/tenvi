@@ -35,13 +35,13 @@ export function BestCardTodayPanel({
               <span className="flex size-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Sparkles className="size-3.5" />
               </span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Best Card to Use Today ({todayFormatted})
               </span>
             </div>
 
             <div className="flex items-baseline gap-2.5">
-              <h3 className="text-xl font-bold text-foreground sm:text-2xl">
+              <h3 className="text-base font-semibold leading-snug text-foreground whitespace-normal break-words">
                 {bestCard.card.bank_name} {bestCard.card.name}
               </h3>
               <span className="text-sm font-mono text-muted-foreground">
@@ -59,7 +59,7 @@ export function BestCardTodayPanel({
 
           <div className="flex items-center gap-3 self-start md:self-auto shrink-0">
             <div className="flex flex-col items-center justify-center rounded-2xl bg-muted px-4 py-2 text-center">
-              <span className="text-2xl font-extrabold text-foreground sm:text-3xl">
+              <span className="text-2xl font-bold tracking-tight text-foreground">
                 {bestCard.floatDays}
               </span>
               <span className="text-2xs font-medium text-muted-foreground uppercase tracking-tight">

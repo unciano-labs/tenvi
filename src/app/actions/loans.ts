@@ -3,7 +3,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { WEBSITE_ID } from '@/lib/constants';
+import { requireWebsiteUser } from '@/lib/auth/guards';
 import { loanSchema, updateLoanSchema, loanPaymentSchema } from '@/lib/validations/schemas';
+import { logAuditEntry } from '@/lib/audit/logger';
 import {
   calculateLoanStatus,
   generateInstallmentSchedule,
@@ -24,15 +26,12 @@ import { sendHttpSms } from '@/lib/notifications/sms';
 
 
 export async function createLoanAction(data: any) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'You must be logged in to record loans.' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'You must be logged in to record loans.' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const parsed = loanSchema.safeParse(data);
   if (!parsed.success) {
@@ -117,20 +116,24 @@ export async function createLoanAction(data: any) {
   const principalToFinance = Math.max(0, amount - downpayment);
   const interestRate = Math.max(0, Number(monthlyInterestRate || 0));
 
-  const months = isInstallment && installmentMonths ? Number(installmentMonths) : null;
+  const months = isInstallment && installmentMonths && Number(installmentMonths) > 0 ? Number(installmentMonths) : null;
   // If loan is swiped on credit card, monthly due day follows card due day!
   const effectiveDueDay = cardDueDay
     ? cardDueDay
-    : (isInstallment && monthlyDueDay ? Number(monthlyDueDay) : 15);
+    : (monthlyDueDay ? Number(monthlyDueDay) : 15);
 
   const totalInterest =
-    isInstallment && months && months > 0 && interestRate > 0
+    months && months > 0 && interestRate > 0
       ? Number((principalToFinance * (interestRate / 100) * months).toFixed(2))
       : 0;
 
   const totalRepayable = principalToFinance + totalInterest;
   const monthlyAmount =
-    months && months > 0 ? Number((totalRepayable / months).toFixed(2)) : null;
+    months && months > 0
+      ? Number((totalRepayable / months).toFixed(2))
+      : interestRate > 0
+      ? Number((principalToFinance * (interestRate / 100)).toFixed(2))
+      : null;
 
   let initialBalance = totalRepayable;
   let initialStatus: 'unpaid' | 'partial' | 'paid' = 'unpaid';
@@ -152,10 +155,10 @@ export async function createLoanAction(data: any) {
       status: initialStatus,
       reason: reason || null,
       loaned_on: loanedOn,
-      due_date: isInstallment ? null : dueDate || null,
-      is_installment: Boolean(isInstallment),
+      due_date: months ? null : dueDate || null,
+      is_installment: Boolean(isInstallment || months || interestRate > 0),
       installment_months: months,
-      monthly_due_day: isInstallment ? effectiveDueDay : null,
+      monthly_due_day: (isInstallment || interestRate > 0 || cardDueDay) ? effectiveDueDay : null,
       monthly_amount: monthlyAmount,
       monthly_interest_rate: interestRate,
       total_interest: totalInterest,
@@ -302,15 +305,12 @@ export async function toggleLoanInstallmentPaidAction(
   installmentId: string,
   isPaid: boolean
 ) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   // Fetch installment details and borrower name for transaction traceability
   const { data: installment } = await supabase
@@ -429,15 +429,12 @@ export async function toggleLoanInstallmentPaidAction(
 }
 
 export async function recordLoanPaymentAction(data: any) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const parsed = loanPaymentSchema.safeParse(data);
   if (!parsed.success) {
@@ -518,34 +515,53 @@ export async function recordLoanPaymentAction(data: any) {
 }
 
 export async function deleteLoanAction(id: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
-  // Delete linked transactions for traceability cleanup
+  // 1. Fetch loan for audit logging
+  const { data: loan } = await supabase
+    .from('bili_loans')
+    .select('*')
+    .eq('id', id)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  const now = new Date().toISOString();
+
+  // 2. Soft-delete linked transactions
   await supabase
     .from('bili_transactions')
-    .delete()
+    .update({ deleted_at: now })
     .eq('loan_id', id)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id);
 
+  // 3. Soft-delete the loan
   const { error } = await supabase
     .from('bili_loans')
-    .delete()
+    .update({ deleted_at: now })
     .eq('id', id)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id);
 
   if (error) {
-    console.error('Error deleting loan:', error);
+    console.error('Error soft-deleting loan:', error);
     return { error: 'Failed to delete loan' };
   }
+
+  // 4. Audit Log
+  await logAuditEntry({
+    userId: user.id,
+    action: 'SOFT_DELETE',
+    entityType: 'loan',
+    entityId: id,
+    oldData: loan,
+  });
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/loans');
@@ -569,14 +585,12 @@ export async function setupLoanInstallmentsAction({
   monthlyDueDay: number;
   monthlyInterestRate?: number | null;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   // 1. Fetch loan with linked card
   const { data: loan, error: loanErr } = await supabase
@@ -701,15 +715,12 @@ export async function setupLoanInstallmentsAction({
  * Update an existing loan's details, borrower, interest rate, downpayment, and card sync
  */
 export async function updateLoanAction(data: any) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'You must be logged in to edit loans.' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'You must be logged in to edit loans.' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const parsed = updateLoanSchema.safeParse(data);
   if (!parsed.success) {
@@ -812,21 +823,25 @@ export async function updateLoanAction(data: any) {
   const downpayment = Math.min(amount, Math.max(0, Number(downpaymentAmount || 0)));
   const principalToFinance = Math.max(0, amount - downpayment);
   const interestRate = Math.max(0, Number(monthlyInterestRate || 0));
-  const months = isInstallment && installmentMonths ? Number(installmentMonths) : null;
+  const months = isInstallment && installmentMonths && Number(installmentMonths) > 0 ? Number(installmentMonths) : null;
 
   // If card is swiped, monthly due day follows card due day!
   const effectiveDueDay = cardDueDay
     ? cardDueDay
-    : (isInstallment && monthlyDueDay ? Number(monthlyDueDay) : 15);
+    : (monthlyDueDay ? Number(monthlyDueDay) : 15);
 
   const totalInterest =
-    isInstallment && months && months > 0 && interestRate > 0
+    months && months > 0 && interestRate > 0
       ? Number((principalToFinance * (interestRate / 100) * months).toFixed(2))
       : 0;
 
   const totalRepayable = principalToFinance + totalInterest;
   const monthlyAmount =
-    months && months > 0 ? Number((totalRepayable / months).toFixed(2)) : null;
+    months && months > 0
+      ? Number((totalRepayable / months).toFixed(2))
+      : interestRate > 0
+      ? Number((principalToFinance * (interestRate / 100)).toFixed(2))
+      : null;
 
   // 4. Calculate payments already made
   const existingInstallments = existingLoan.installments || [];
@@ -862,10 +877,10 @@ export async function updateLoanAction(data: any) {
       status: newStatus,
       reason: reason || null,
       loaned_on: loanedOn,
-      due_date: isInstallment ? null : dueDate || null,
-      is_installment: Boolean(isInstallment),
+      due_date: months ? null : dueDate || null,
+      is_installment: Boolean(isInstallment || months || interestRate > 0),
       installment_months: months,
-      monthly_due_day: isInstallment ? effectiveDueDay : null,
+      monthly_due_day: (isInstallment || interestRate > 0 || cardDueDay) ? effectiveDueDay : null,
       monthly_amount: monthlyAmount,
       monthly_interest_rate: interestRate,
       total_interest: totalInterest,
@@ -1018,14 +1033,12 @@ export async function updateLoanBorrowerContactAction({
   borrowerEmail?: string | null;
   notifyBorrower: boolean;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   // 1. Fetch loan
   const { data: loan, error: loanErr } = await supabase
@@ -1089,14 +1102,12 @@ export async function sendLoanBorrowerReminderAction(
   channel: 'sms' | 'email',
   customMessage?: string
 ) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   // Fetch loan with contact and installments
   const { data: loan, error: loanErr } = await supabase
@@ -1151,6 +1162,33 @@ export async function sendLoanBorrowerReminderAction(
       upcomingAmount = Number(unpaid[0].amount);
       installmentNote = `Month #${unpaid[0].installment_number} of ${loan.installment_months || unpaid.length}`;
     }
+  }
+
+  // If no fixed installments, but loan has monthly due day (e.g. open-ended monthly interest loan)
+  if (!installmentNote && loan.monthly_due_day) {
+    const now = new Date();
+    const dueDay = Math.min(31, Math.max(1, Number(loan.monthly_due_day)));
+    const dueYear = now.getFullYear();
+    const dueMonth = now.getMonth();
+    const lastDayThisMonth = new Date(dueYear, dueMonth + 1, 0).getDate();
+    const thisMonthDue = new Date(dueYear, dueMonth, Math.min(dueDay, lastDayThisMonth));
+    thisMonthDue.setHours(0, 0, 0, 0);
+
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+
+    if (thisMonthDue.getTime() < todayMidnight.getTime()) {
+      const nextMonth = dueMonth + 1;
+      const lastDayNextMonth = new Date(dueYear, nextMonth + 1, 0).getDate();
+      upcomingTargetDate = new Date(dueYear, nextMonth, Math.min(dueDay, lastDayNextMonth)).toISOString().split('T')[0];
+    } else {
+      upcomingTargetDate = thisMonthDue.toISOString().split('T')[0];
+    }
+
+    if (loan.monthly_amount && Number(loan.monthly_amount) > 0) {
+      upcomingAmount = Number(loan.monthly_amount);
+    }
+    installmentNote = Number(loan.monthly_interest_rate || 0) > 0 ? 'Monthly Interest' : 'Monthly Payment';
   }
 
   let daysDiff = 0;

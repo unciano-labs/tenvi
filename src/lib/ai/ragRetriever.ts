@@ -485,7 +485,7 @@ export async function retrieveRagFinancialContext({
         created_at,
         category:bili_categories(id, name, kind),
         credit_card:bili_credit_cards(id, name, bank_name, last_4),
-        savings:bili_savings(id, name, institution_name),
+        savings:savings_id(id, name, institution_name),
         property:bili_properties(id, name, identifier)
       `)
       .eq('website_id', WEBSITE_ID)

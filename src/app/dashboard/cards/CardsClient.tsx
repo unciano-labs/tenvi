@@ -9,6 +9,7 @@ import { CreditCard, Category } from '@/types';
 import {
   calculateNextDueDate,
   calculateOptimalCardToSwipe,
+  calculateCardSpending,
   getCardUrgency,
   formatDate,
   OptimalCardResult,
@@ -120,19 +121,8 @@ export function CardsClient({
     }
 
     activeCards.forEach((card) => {
-      const directSpend = cardTransactions
-        .filter((t) => t.credit_card_id === card.id && t.kind === 'expense')
-        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
-
-      const loansSpend = linkedLoans
-        .filter((l) => l.credit_card_id === card.id && l.status !== 'paid')
-        .reduce((sum, l) => sum + Number(l.balance_remaining || 0), 0);
-
-      map.set(card.id, {
-        directSpend,
-        loansSpend,
-        totalUsed: directSpend + loansSpend,
-      });
+      const spending = calculateCardSpending(card, cardTransactions, linkedLoans);
+      map.set(card.id, spending);
     });
 
     return map;
@@ -168,7 +158,7 @@ export function CardsClient({
     return calculateOptimalCardToSwipe(activeCards, cardTransactions, linkedLoans);
   }, [activeCards, cardTransactions, linkedLoans, initialOptimalResult, removedCardIds]);
 
-  // Pay These Soon items (balances due within 7 days, excluding paid items)
+  // Pay These Soon items (balances due within 3 days or overdue, excluding paid items)
   const dueSoonCards = useMemo(() => {
     if (initialDueSoonCards && removedCardIds.length === 0 && paidStatementIds.length === 0) {
       return initialDueSoonCards;
@@ -190,7 +180,8 @@ export function CardsClient({
         const dueInfo = calculateNextDueDate(card.due_day);
         const urgencyInfo = getCardUrgency(dueInfo.nextDueDate, totalBalance);
 
-        if (urgencyInfo.urgency === 'urgent' || urgencyInfo.urgency === 'soon' || urgencyInfo.urgency === 'overdue') {
+        // Hide if all cards paid or no dues incoming within 3 days (daysRemaining <= 3)
+        if (dueInfo.daysRemaining <= 3) {
           items.push({
             statementId: card.latest_statement?.id,
             cardId: card.id,
@@ -200,7 +191,7 @@ export function CardsClient({
             dueDateFormatted: formatDate(dueInfo.nextDueDate),
             daysRemaining: dueInfo.daysRemaining,
             amountDue: totalBalance,
-            urgency: urgencyInfo.urgency as 'urgent' | 'soon' | 'overdue',
+            urgency: urgencyInfo.urgency === 'overdue' ? 'overdue' : 'urgent',
           });
         }
       }
@@ -353,7 +344,7 @@ export function CardsClient({
       {/* 1. Page Header (TNV-018, TNV-031, TNV-032) */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             My Credit Cards
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -396,11 +387,13 @@ export function CardsClient({
         nextPayment={nextPaymentItem}
       />
 
-      {/* 3. Pay These Soon Panel (TNV-020) */}
-      <PayTheseSoonPanel
-        dueSoonCards={dueSoonCards}
-        onPaidSuccess={handlePaidSuccess}
-      />
+      {/* 3. Pay These Soon Panel (TNV-020) - Hidden if all cards paid or no dues incoming in 3 days */}
+      {dueSoonCards.length > 0 && (
+        <PayTheseSoonPanel
+          dueSoonCards={dueSoonCards}
+          onPaidSuccess={handlePaidSuccess}
+        />
+      )}
 
       {/* 4. Best Card Today Panel (TNV-023) */}
       <BestCardTodayPanel
@@ -475,11 +468,7 @@ export function CardsClient({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {displayedCards.map((card) => {
-            const spending = spendingMap.get(card.id) || {
-              directSpend: 0,
-              loansSpend: 0,
-              totalUsed: 0,
-            };
+            const spending = spendingMap.get(card.id) || calculateCardSpending(card, [], []);
 
             return (
               <CreditCardTile

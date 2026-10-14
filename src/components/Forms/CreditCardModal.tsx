@@ -40,26 +40,29 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import {
   CreditCard as CardIcon,
   HelpCircle,
   Palette,
   Check,
-  ChevronDown,
   Loader2,
 } from 'lucide-react';
-
-const PRESET_CARD_COLORS = [
-  { id: '#0f172a', name: 'Charcoal Black', hex: '#0f172a' },
-  { id: '#1e3a8a', name: 'Royal Navy', hex: '#1e3a8a' },
-  { id: '#065f46', name: 'Forest Emerald', hex: '#065f46' },
-  { id: '#9f1239', name: 'Burgundy Crimson', hex: '#9f1239' },
-  { id: '#92400e', name: 'Bronze Amber', hex: '#92400e' },
-  { id: '#581c87', name: 'Imperial Purple', hex: '#581c87' },
-  { id: '#0f766e', name: 'Deep Teal', hex: '#0f766e' },
-  { id: '#334155', name: 'Graphite Slate', hex: '#334155' },
-];
+import {
+  parseCardStyle,
+  formatCardStyle,
+  CARD_ACCENTS,
+  CARD_THEMES,
+  CARD_PATTERNS,
+  CardThemeId,
+  CardAccentId,
+  CardNetwork,
+  CardPatternId,
+  CardPatternOverlay,
+  EmvChip,
+  ContactlessWave,
+  VisaLogo,
+  MastercardLogo,
+} from '@/components/Cards/CardThemeTokens';
 
 const creditCardFormSchema = z.object({
   bankName: z.string().min(1, 'Please select or enter the bank name.'),
@@ -97,7 +100,6 @@ interface CreditCardModalProps {
 
 export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps) {
   const [isPending, startTransition] = useTransition();
-  const [isColorOpen, setIsColorOpen] = useState(false);
   const isEditing = Boolean(card);
 
   const form = useForm<CreditCardFormValues>({
@@ -202,37 +204,71 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
         </ResponsiveDialogHeader>
 
         <ResponsiveDialogBody className="space-y-6">
-          {/* Live Card Preview (TNV-027) */}
-          <div
-            className="rounded-2xl p-5 text-white shadow-card transition-all duration-300 relative overflow-hidden"
-            style={{ backgroundColor: watchedColor || '#0f172a' }}
-          >
-            <div className="flex items-start justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-white/80">
-                {resolvedDisplayBank}
-              </span>
-              <CardIcon className="size-6 text-white/70" />
-            </div>
-            <div className="mt-6 mb-2">
-              <p className="font-mono text-base tracking-widest text-white/90">
-                •••• •••• •••• {watchedLast4 ? watchedLast4.padStart(4, '•') : '••••'}
-              </p>
-            </div>
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-2xs font-medium text-white/60 uppercase">Card Nickname</p>
-                <p className="text-sm font-bold text-white truncate max-w-[200px]">
-                  {watchedName || 'Personal Card'}
-                </p>
+          {/* Live Card Preview matching the solid accent design */}
+          {(() => {
+            const { theme, network, pattern } = parseCardStyle(watchedColor || 'cyan', watchedName);
+            const parsedLimit = watchedLimit ? parseFloat(watchedLimit.replace(/,/g, '') || '0') : 0;
+
+            return (
+              <div
+                className={`w-full rounded-[22px] p-4 sm:p-5 text-white border ${theme.borderColor} ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden transition-all duration-300 shadow-card flex flex-col justify-between`}
+                style={{ aspectRatio: '1.58 / 1', minHeight: '210px' }}
+              >
+                {/* Accent top highlight line */}
+                <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />
+
+                {/* Background Pattern Overlay */}
+                <CardPatternOverlay pattern={pattern} accentHex={theme.accentHex} />
+
+                {/* Top: Bank & Nickname */}
+                <div className="relative z-10 flex items-start justify-between">
+                  <div>
+                    <h4 className="font-black text-xs sm:text-sm tracking-wider uppercase text-white/95">
+                      {resolvedDisplayBank || 'ISSUING BANK'}
+                    </h4>
+                    <p className="text-[11px] text-white/70 font-medium">
+                      {watchedName || 'Card Nickname'}
+                    </p>
+                  </div>
+                  <div className="size-6 rounded-full bg-white/10 flex items-center justify-center">
+                    <CardIcon className="size-3 text-white/70" />
+                  </div>
+                </div>
+
+                {/* Middle: Chip + Available Spending */}
+                <div className="relative z-10 flex items-center justify-between my-auto py-1">
+                  <div className="flex items-center gap-2">
+                    <EmvChip />
+                    <ContactlessWave />
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[10px] font-medium text-white/60 block tracking-wide uppercase">
+                      Available Spending:
+                    </span>
+                    <span className="text-lg sm:text-xl font-black text-white tracking-tight">
+                      ₱{parsedLimit.toLocaleString('en-PH')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom: Dots + Network Logo */}
+                <div className="relative z-10 flex items-end justify-between pt-1">
+                  <div className="font-mono text-xs sm:text-sm font-semibold tracking-widest text-white/80">
+                    •••• •••• •••• {watchedLast4 ? watchedLast4.padStart(4, '•') : '••••'}
+                  </div>
+
+                  <div className="flex items-center">
+                    {network === 'mastercard' ? (
+                      <MastercardLogo className="h-5" />
+                    ) : (
+                      <VisaLogo className="h-4" />
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-2xs font-medium text-white/60 uppercase">Credit Limit</p>
-                <p className="text-sm font-bold text-white">
-                  ₱{watchedLimit ? parseFloat(watchedLimit.replace(/,/g, '') || '0').toLocaleString('en-PH') : '0'}
-                </p>
-              </div>
-            </div>
-          </div>
+            );
+          })()}
 
           <Form {...form}>
             <form id="credit-card-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -415,46 +451,126 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
                 </div>
               </div>
 
-              {/* Color Customization (TNV-027) */}
-              <Collapsible open={isColorOpen} onOpenChange={setIsColorOpen} className="pt-2">
-                <CollapsibleTrigger
-                  render={
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer select-none"
-                    />
-                  }
-                >
+              {/* Color & Appearance Customization - Directly visible */}
+              <div className="pt-2 border-t border-border/40 space-y-4">
+                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                   <Palette className="size-3.5" />
-                  <span>Customize card color</span>
-                  <ChevronDown
-                    className={`size-3.5 transition-transform duration-200 ${
-                      isColorOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-3">
-                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                    {PRESET_CARD_COLORS.map((preset) => {
-                      const isSelected = watchedColor === preset.hex;
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => form.setValue('colorTheme', preset.hex)}
-                          className={`relative flex size-10 items-center justify-center rounded-xl transition-transform hover:scale-105 cursor-pointer shadow-xs ${
-                            isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
-                          }`}
-                          style={{ backgroundColor: preset.hex }}
-                          title={preset.name}
-                        >
-                          {isSelected && <Check className="size-4 text-white" />}
-                        </button>
-                      );
-                    })}
+                  <span>Card Appearance (Color, Pattern & Network)</span>
+                </div>
+                  {/* Color Swatch Selector - 20 colors, scrollable, pure clickable circles without text */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Card Color
+                      </span>
+                      <span className="text-3xs text-muted-foreground font-medium">Scroll for more &rarr;</span>
+                    </div>
+                    <div className="grid grid-rows-2 grid-flow-col auto-cols-max gap-2.5 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin scroll-smooth">
+                      {Object.values(CARD_ACCENTS).map((acc) => {
+                        const { themeId, network, pattern } = parseCardStyle(watchedColor || 'cyan', watchedName);
+                        const isSelected = themeId === acc.id;
+
+                        return (
+                          <button
+                            key={acc.id}
+                            type="button"
+                            onClick={() => {
+                              form.setValue('colorTheme', formatCardStyle(acc.id, network, pattern));
+                            }}
+                            className={`size-8 sm:size-9 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110 shadow-xs shrink-0 ${
+                              isSelected
+                                ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110 shadow-md'
+                                : 'hover:opacity-90'
+                            }`}
+                            style={{ backgroundColor: acc.accentHex }}
+                            title={acc.name}
+                            aria-label={acc.name}
+                          >
+                            {isSelected && <Check className="size-4 text-white drop-shadow stroke-[3]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
+
+                  {/* Background Pattern Selector - 10 patterns */}
+                  <div className="pt-2 border-t border-border/40">
+                    <span className="text-2xs font-semibold text-muted-foreground block mb-2 uppercase tracking-wider">
+                      Background Accent Pattern (10 options)
+                    </span>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {CARD_PATTERNS.map((p) => {
+                        const { themeId, network, pattern } = parseCardStyle(watchedColor || 'cyan', watchedName);
+                        const isSelected = pattern === p.id;
+
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              form.setValue('colorTheme', formatCardStyle(themeId, network, p.id));
+                            }}
+                            className={`h-9 px-1 rounded-xl border text-2xs font-semibold flex items-center justify-center cursor-pointer transition-all truncate ${
+                              isSelected
+                                ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
+                                : 'border-border/60 hover:bg-muted text-muted-foreground'
+                            }`}
+                            title={p.name}
+                          >
+                            {p.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Network Selector (Visa vs Mastercard) */}
+                  <div className="pt-2 border-t border-border/40">
+                    <span className="text-2xs font-semibold text-muted-foreground block mb-2 uppercase tracking-wider">
+                      Card Network
+                    </span>
+                    <div className="grid grid-cols-2 gap-3 max-w-xs">
+                      {(() => {
+                        const { themeId, network, pattern } = parseCardStyle(watchedColor || 'cyan', watchedName);
+                        return (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                form.setValue('colorTheme', formatCardStyle(themeId, 'visa', pattern));
+                              }}
+                              className={`h-11 rounded-xl border flex items-center justify-center gap-2 p-2 cursor-pointer transition-all ${
+                                network === 'visa'
+                                  ? 'bg-primary/10 border-primary text-primary font-bold'
+                                  : 'bg-muted/40 border-border/60 hover:bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              <span className="font-black italic text-base">VISA</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                form.setValue('colorTheme', formatCardStyle(themeId, 'mastercard', pattern));
+                              }}
+                              className={`h-11 rounded-xl border flex items-center justify-center gap-2 p-2 cursor-pointer transition-all ${
+                                network === 'mastercard'
+                                  ? 'bg-primary/10 border-primary font-bold'
+                                  : 'bg-muted/40 border-border/60 hover:bg-muted'
+                              }`}
+                            >
+                              <div className="flex items-center">
+                                <div className="size-4 rounded-full bg-[#EB001B]" />
+                                <div className="size-4 rounded-full bg-[#F79E1B] -ml-2 opacity-95" />
+                              </div>
+                              <span className="text-xs font-bold text-foreground">Mastercard</span>
+                            </button>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+              </div>
             </form>
           </Form>
         </ResponsiveDialogBody>

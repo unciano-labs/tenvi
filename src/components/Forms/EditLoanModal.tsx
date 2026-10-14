@@ -13,8 +13,8 @@ import {
   Mail,
   CheckCircle2,
 } from 'lucide-react';
-import type { Contact, CreditCard, Loan } from '@/types';
-import { INSTALLMENT_MONTHS_OPTIONS } from '@/lib/constants';
+import type { Contact, CreditCard, Loan, Property } from '@/types';
+import { INSTALLMENT_MONTHS_OPTIONS, getPropertyIcon } from '@/lib/constants';
 import { formatMoney } from '@/lib/finance/calculations';
 import {
   ResponsiveDialog,
@@ -34,6 +34,7 @@ interface EditLoanModalProps {
   onClose: () => void;
   loan: Loan;
   contacts: Contact[];
+  properties?: Property[];
   creditCards?: CreditCard[];
 }
 
@@ -56,6 +57,7 @@ export function EditLoanModal({
   onClose,
   loan,
   contacts,
+  properties = [],
   creditCards = [],
 }: EditLoanModalProps) {
   const [contactId, setContactId] = useState(loan.contact_id || '');
@@ -78,8 +80,8 @@ export function EditLoanModal({
   );
   const [dueDate, setDueDate] = useState(loan.due_date || '');
   const [isInstallment, setIsInstallment] = useState(loan.is_installment);
-  const [installmentMonths, setInstallmentMonths] = useState<number>(
-    loan.installment_months || 24
+  const [installmentMonths, setInstallmentMonths] = useState<number | null>(
+    loan.installment_months || null
   );
   const [monthlyDueDay, setMonthlyDueDay] = useState<number>(
     loan.monthly_due_day || 15
@@ -104,7 +106,7 @@ export function EditLoanModal({
       setLoanedOn(loan.loaned_on || new Date().toISOString().split('T')[0]);
       setDueDate(loan.due_date || '');
       setIsInstallment(loan.is_installment);
-      setInstallmentMonths(loan.installment_months || 24);
+      setInstallmentMonths(loan.installment_months || null);
       setMonthlyDueDay(loan.monthly_due_day || 15);
       setMonthlyInterestRate(
         loan.monthly_interest_rate != null ? String(loan.monthly_interest_rate) : '0'
@@ -129,29 +131,94 @@ export function EditLoanModal({
   const parsedDownpayment = parseFloat(downpaymentAmount) || 0;
   const principalToFinance = Math.max(0, parsedAmount - parsedDownpayment);
   const parsedRate = Math.max(0, parseFloat(monthlyInterestRate) || 0);
+  const hasDuration = Boolean(installmentMonths && installmentMonths > 0);
 
   // Calculations for live preview
   const totalInterest =
-    isInstallment && installmentMonths > 0 && parsedRate > 0
-      ? Number(((principalToFinance * (parsedRate / 100)) * installmentMonths).toFixed(2))
+    hasDuration && parsedRate > 0
+      ? Number(((principalToFinance * (parsedRate / 100)) * (installmentMonths as number)).toFixed(2))
       : 0;
   const totalRepayable = principalToFinance + totalInterest;
+  const monthlyInterestOnly =
+    parsedRate > 0 ? Number((principalToFinance * (parsedRate / 100)).toFixed(2)) : 0;
   const monthlyAmortization =
-    isInstallment && installmentMonths > 0 && totalRepayable > 0
-      ? Number((totalRepayable / installmentMonths).toFixed(2))
+    hasDuration && totalRepayable > 0
+      ? Number((totalRepayable / (installmentMonths as number)).toFixed(2))
+      : monthlyInterestOnly > 0
+      ? monthlyInterestOnly
       : null;
 
-  const handleContactChange = (selectedId: string) => {
-    setContactId(selectedId);
-    if (selectedId) {
+  const handleContactChange = (val: string) => {
+    if (!val) {
+      setContactId('');
       setNewContactName('');
-      const found = contacts.find((c) => c.id === selectedId);
+      setBorrowerPhone('');
+      setBorrowerEmail('');
+      return;
+    }
+    if (val.startsWith('prop:')) {
+      const propId = val.replace('prop:', '');
+      const prop = properties.find((p) => p.id === propId);
+      if (prop) {
+        const propFullName = `${prop.name}${prop.identifier ? ` (${prop.identifier})` : ''}`;
+        const matched = contacts.find(
+          (c) =>
+            c.name.toLowerCase() === prop.name.toLowerCase() ||
+            c.name.toLowerCase() === propFullName.toLowerCase()
+        );
+        if (matched) {
+          setContactId(matched.id);
+          setNewContactName('');
+          setBorrowerPhone(matched.phone || '');
+          setBorrowerEmail(matched.email || '');
+        } else {
+          setContactId('');
+          setNewContactName(propFullName);
+          setBorrowerPhone('');
+          setBorrowerEmail('');
+        }
+      }
+    } else {
+      setContactId(val);
+      setNewContactName('');
+      const found = contacts.find((c) => c.id === val);
       if (found) {
-        if (found.phone) setBorrowerPhone(found.phone);
-        if (found.email) setBorrowerEmail(found.email);
+        setBorrowerPhone(found.phone || '');
+        setBorrowerEmail(found.email || '');
+      } else {
+        setBorrowerPhone('');
+        setBorrowerEmail('');
       }
     }
   };
+
+  const selectedPropForContact = contactId
+    ? properties.find((p) => {
+        const c = contacts.find((cnt) => cnt.id === contactId);
+        if (!c) return false;
+        const propFullName = `${p.name}${p.identifier ? ` (${p.identifier})` : ''}`;
+        return (
+          p.name.toLowerCase() === c.name.toLowerCase() ||
+          propFullName.toLowerCase() === c.name.toLowerCase()
+        );
+      })
+    : null;
+
+  const selectedPropForName = newContactName
+    ? properties.find((p) => {
+        const propFullName = `${p.name}${p.identifier ? ` (${p.identifier})` : ''}`;
+        return (
+          p.name.toLowerCase() === newContactName.toLowerCase() ||
+          propFullName.toLowerCase() === newContactName.toLowerCase()
+        );
+      })
+    : null;
+
+  const selectValue = selectedPropForContact
+    ? `prop:${selectedPropForContact.id}`
+    : selectedPropForName
+    ? `prop:${selectedPropForName.id}`
+    : contactId || '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,16 +304,32 @@ export function EditLoanModal({
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <select
-                  value={contactId}
+                  value={selectValue}
                   onChange={(e) => handleContactChange(e.target.value)}
                   className="w-full bg-muted/60 border-none rounded-2xl py-3 px-3.5 text-xs text-foreground font-semibold focus:ring-2 focus:ring-primary outline-none"
                 >
-                  <option value="">Select Existing Contact</option>
-                  {contacts.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                  <option value="">Select Existing Contact / Entity</option>
+                  {contacts.length > 0 && (
+                    <optgroup label="People & Contacts">
+                      {contacts.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          👤 {c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {properties.length > 0 && (
+                    <optgroup label="Properties & Assets">
+                      {properties.map((p) => {
+                        const label = `${p.name}${p.identifier ? ` (${p.identifier})` : ''}`;
+                        return (
+                          <option key={`prop:${p.id}`} value={`prop:${p.id}`}>
+                            {getPropertyIcon(p.property_type)} {label}
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  )}
                 </select>
 
                 <Input
@@ -255,7 +338,11 @@ export function EditLoanModal({
                   value={newContactName}
                   onChange={(e) => {
                     setNewContactName(e.target.value);
-                    if (e.target.value) setContactId('');
+                    if (e.target.value) {
+                      setContactId('');
+                      setBorrowerPhone('');
+                      setBorrowerEmail('');
+                    }
                   }}
                   className="w-full bg-muted/60 text-xs"
                 />
@@ -444,25 +531,46 @@ export function EditLoanModal({
               {isInstallment ? (
                 <div className="space-y-3 p-4 rounded-2xl bg-muted/60">
                   <div>
-                    <label className="text-xs text-muted-foreground font-medium block mb-2">
-                      Installment Duration (Months)
-                    </label>
-                    <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs text-muted-foreground font-medium">
+                        Installment Duration (Optional)
+                      </label>
+                      <span className="text-2xs font-semibold text-muted-foreground">
+                        {installmentMonths ? `${installmentMonths} Months Fixed` : 'No Fixed Term (Open-Ended)'}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setInstallmentMonths(null)}
+                        className={`py-2 px-3 text-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          installmentMonths === null
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'bg-card text-foreground hover:bg-muted border border-border/50'
+                        }`}
+                      >
+                        No Fixed Term (Open-Ended)
+                      </button>
                       {INSTALLMENT_MONTHS_OPTIONS.map((m) => (
                         <button
                           key={m}
                           type="button"
                           onClick={() => setInstallmentMonths(m)}
-                          className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          className={`py-2 px-2.5 text-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             installmentMonths === m
                               ? 'bg-primary text-primary-foreground shadow-sm'
-                              : 'bg-card text-foreground hover:bg-muted'
+                              : 'bg-card text-foreground hover:bg-muted border border-border/50'
                           }`}
                         >
                           {m} Mos
                         </button>
                       ))}
                     </div>
+                    <p className="text-2xs text-muted-foreground mt-1.5">
+                      {installmentMonths
+                        ? `Configured for ${installmentMonths} monthly payments.`
+                        : 'Duration is optional. Select "No Fixed Term" for ongoing monthly interest without a fixed maturity.'}
+                    </p>
                   </div>
 
                   <div>
@@ -487,22 +595,44 @@ export function EditLoanModal({
                   </div>
                 </div>
               ) : (
-                <div>
-                  <label className="text-xs font-bold text-muted-foreground tracking-wide block mb-1.5">
-                    Target Repayment Date
-                  </label>
-                  <Input
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full bg-muted/60 text-xs font-semibold"
-                  />
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground tracking-wide block mb-1.5">
+                      Target Repayment Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="w-full bg-muted/60 text-xs font-semibold"
+                    />
+                  </div>
+                  {parsedRate > 0 && (
+                    <div>
+                      <label className="text-xs text-muted-foreground font-medium block mb-1">
+                        Monthly Interest Due Day
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={31}
+                          value={monthlyDueDay}
+                          onChange={(e) => setMonthlyDueDay(parseInt(e.target.value, 10) || 1)}
+                          className="w-24 bg-card text-xs font-bold"
+                        />
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Due every {getOrdinalSuffix(monthlyDueDay)} of the month
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
             {/* 7. Live Financial Calculation Summary */}
-            {principalToFinance > 0 && isInstallment && (
+            {principalToFinance > 0 && (
               <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2.5">
                 <div className="flex items-center justify-between text-xs pb-1">
                   <span className="text-slate-300">Financed Principal:</span>
@@ -513,28 +643,36 @@ export function EditLoanModal({
                   <>
                     <div className="flex items-center justify-between text-xs pb-1">
                       <span className="text-slate-300">
-                        Total Interest ({parsedRate}%/mo × {installmentMonths} mos):
+                        {hasDuration
+                          ? `Total Interest (${parsedRate}%/mo × ${installmentMonths} mos):`
+                          : `Monthly Interest Rate:`}
                       </span>
-                      <span className="font-bold text-amber-300">+{formatMoney(totalInterest)}</span>
+                      <span className="font-bold text-amber-300">
+                        {hasDuration ? `+${formatMoney(totalInterest)}` : `${parsedRate}% / month`}
+                      </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs pb-1">
-                      <span className="text-slate-300 font-semibold">Total Repayable Amount:</span>
-                      <span className="font-extrabold text-white">{formatMoney(totalRepayable)}</span>
-                    </div>
+                    {hasDuration && (
+                      <div className="flex items-center justify-between text-xs pb-1">
+                        <span className="text-slate-300 font-semibold">Total Repayable Amount:</span>
+                        <span className="font-extrabold text-white">{formatMoney(totalRepayable)}</span>
+                      </div>
+                    )}
                   </>
                 )}
 
                 <div className="flex items-center justify-between pt-1">
                   <div>
-                    <span className="text-xs text-slate-400 block">Monthly Amortization</span>
+                    <span className="text-xs text-slate-400 block">
+                      {hasDuration ? 'Monthly Amortization' : 'Monthly Interest Due'}
+                    </span>
                     <span className="text-lg font-extrabold text-emerald-400">
                       {formatMoney(monthlyAmortization || 0)}
                       <span className="text-xs text-slate-300 font-normal"> / month</span>
                     </span>
                   </div>
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/10 text-slate-200">
-                    {installmentMonths} installments
+                    {hasDuration ? `${installmentMonths} installments` : 'No fixed term'}
                   </span>
                 </div>
               </div>

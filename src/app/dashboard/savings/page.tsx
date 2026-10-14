@@ -15,6 +15,7 @@ export default async function SavingsPage() {
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user?.id)
     .eq('is_active', true)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   const { data: transactions } = await supabase
@@ -25,6 +26,7 @@ export default async function SavingsPage() {
     `)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user?.id)
+    .is('deleted_at', null)
     .not('savings_id', 'is', null)
     .order('occurred_on', { ascending: false });
 

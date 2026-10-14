@@ -226,3 +226,23 @@ export const DOCUMENT_TYPE_PRESETS: DocumentTypeOption[] = [
   },
 ];
 
+/**
+ * Returns a friendly emoji icon for property and asset types
+ */
+export function getPropertyIcon(type?: string | null): string {
+  switch (type) {
+    case 'vehicle':
+      return '🚗';
+    case 'real_estate':
+      return '🏠';
+    case 'commercial':
+      return '🏢';
+    case 'land':
+      return '🏞️';
+    case 'equipment':
+      return '🚜';
+    default:
+      return '📦';
+  }
+}
+

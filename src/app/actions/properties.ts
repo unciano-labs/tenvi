@@ -3,20 +3,18 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { WEBSITE_ID } from '@/lib/constants';
+import { requireWebsiteUser } from '@/lib/auth/guards';
 import { propertySchema } from '@/lib/validations/schemas';
 import { PropertyInput } from '@/types';
+import { logAuditEntry } from '@/lib/audit/logger';
 
 export async function createPropertyAction(data: PropertyInput) {
-  const supabase = await createClient();
-
-  // 1. Authenticate user session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'You must be logged in to create a property.' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'You must be logged in to create a property.' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   // 2. Validate inputs with Zod
   const parsed = propertySchema.safeParse(data);
@@ -78,15 +76,12 @@ export async function createPropertyAction(data: PropertyInput) {
 }
 
 export async function updatePropertyAction(id: string, data: PropertyInput) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'You must be logged in to update a property.' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'You must be logged in to update a property.' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const parsed = propertySchema.safeParse(data);
   if (!parsed.success) {
@@ -147,29 +142,113 @@ export async function updatePropertyAction(id: string, data: PropertyInput) {
 }
 
 export async function deletePropertyAction(id: string) {
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
+  }
+  const user = auth.user;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // 1. Fetch current property for audit logging
+  const { data: prop } = await supabase
+    .from('bili_properties')
+    .select('*')
+    .eq('id', id)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .maybeSingle();
 
-  if (!user) {
-    return { error: 'Unauthorized' };
-  }
-
+  // 2. Soft delete
   const { error } = await supabase
     .from('bili_properties')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id);
 
   if (error) {
-    console.error('Error deleting property:', error);
+    console.error('Error soft-deleting property:', error);
     return { error: 'Failed to delete property.' };
   }
+
+  // 3. Log Audit
+  await logAuditEntry({
+    userId: user.id,
+    action: 'SOFT_DELETE',
+    entityType: 'property',
+    entityId: id,
+    oldData: prop,
+  });
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/properties');
   return { success: true };
 }
+
+export async function recordPropertyValuationAction(data: {
+  propertyId: string;
+  valuationAmount: number;
+  valuationDate?: string;
+  valuationSource?: 'manual' | 'appraisal' | 'depreciation_engine';
+  notes?: string;
+}) {
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
+  }
+  const user = auth.user;
+  const supabase = await createClient();
+
+  const amount = Number(data.valuationAmount);
+  if (isNaN(amount) || amount < 0) {
+    return { error: 'Valuation amount must be a positive number.' };
+  }
+
+  const valuationDate = data.valuationDate || new Date().toISOString().split('T')[0];
+
+  // 1. Insert historical valuation entry
+  const { error: valErr } = await supabase.from('bili_asset_valuations').insert({
+    website_id: WEBSITE_ID,
+    user_id: user.id,
+    property_id: data.propertyId,
+    valuation_date: valuationDate,
+    valuation_amount: amount,
+    valuation_source: data.valuationSource || 'manual',
+    notes: data.notes || null,
+  });
+
+  if (valErr) {
+    console.error('Error logging asset valuation:', valErr);
+    return { error: 'Failed to record asset valuation history.' };
+  }
+
+  // 2. Update current estimated_value on property
+  const { error: updateErr } = await supabase
+    .from('bili_properties')
+    .update({
+      estimated_value: amount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', data.propertyId)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id);
+
+  if (updateErr) {
+    console.error('Error updating estimated_value:', updateErr);
+  }
+
+  // 3. Audit log
+  await logAuditEntry({
+    userId: user.id,
+    action: 'UPDATE',
+    entityType: 'property',
+    entityId: data.propertyId,
+    newData: { estimated_value: amount, valuation_date: valuationDate },
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/properties');
+  revalidatePath(`/dashboard/properties/${data.propertyId}`);
+  return { success: true };
+}
+

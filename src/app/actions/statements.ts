@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
+import { requireWebsiteUser } from '@/lib/auth/guards';
 import { revalidatePath } from 'next/cache';
 import {
   parseStatementText,
@@ -33,15 +34,12 @@ export async function parseStatementFileAction(
   userGeminiKey?: string
 ): Promise<{ success: boolean; result?: StatementParseResult; error?: string }> {
   try {
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { success: false, error: 'Unauthorized. Please log in.' };
+    const auth = await requireWebsiteUser();
+    if (!auth.isAuthorized || !auth.user) {
+      return { success: false, error: auth.error || 'Unauthorized. Please log in.' };
     }
+    const user = auth.user;
+    const supabase = await createClient();
 
     // 1. Fetch categories to power auto-categorization
     const { data: categories } = await supabase
@@ -391,15 +389,12 @@ export async function importStatementTransactionsAction(
   transactions: RawImportTransactionInput[]
 ): Promise<{ success: boolean; importedCount: number; error?: string }> {
   try {
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { success: false, importedCount: 0, error: 'Unauthorized.' };
+    const auth = await requireWebsiteUser();
+    if (!auth.isAuthorized || !auth.user) {
+      return { success: false, importedCount: 0, error: auth.error || 'Unauthorized.' };
     }
+    const user = auth.user;
+    const supabase = await createClient();
 
     if (!transactions || transactions.length === 0) {
       return { success: false, importedCount: 0, error: 'No transactions selected for import.' };
@@ -419,16 +414,17 @@ export async function importStatementTransactionsAction(
     }
 
     // Prepare rows for batch insert into bili_transactions
+    // Payments are marked as 'transfer' to avoid distorting gross income or expenses
     const rows = transactions.map((t) => ({
       website_id: WEBSITE_ID,
       user_id: user.id,
-      kind: t.isPayment ? 'income' : 'expense',
+      kind: t.isPayment ? 'transfer' : 'expense',
       amount: Math.abs(t.amount),
       payment_method: 'credit_card',
       credit_card_id: cardId,
-      category_id: t.categoryId || null,
+      category_id: t.isPayment ? null : t.categoryId || null,
       occurred_on: t.date || new Date().toISOString().split('T')[0],
-      note: t.description.trim() || 'Card Swipe',
+      note: t.description.trim() || (t.isPayment ? 'Card Bill Payment' : 'Card Swipe'),
     }));
 
     const { error: insertError } = await supabase.from('bili_transactions').insert(rows);

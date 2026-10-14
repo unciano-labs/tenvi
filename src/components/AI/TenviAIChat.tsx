@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Sparkles,
   X,
@@ -25,20 +25,31 @@ import {
   Edit3,
   Car,
   Layers,
+  ImagePlus,
+  Receipt,
+  User,
+  AlertTriangle,
+  Trash2,
+  Check,
 } from 'lucide-react';
 import {
   processAIChatMessageAction,
   undoAITransactionAction,
   undoAIMultipleTransactionsAction,
+  commitPhotoParsedItemsAction,
+  commitSinglePhotoParsedItemAction,
   AIChatMessage,
 } from '@/app/actions/ai';
 import { ParsedFinancialIntent } from '@/lib/ai/financialParser';
+import { ParsedPhotoItem } from '@/types';
+import { optimizeImageForUpload } from '@/lib/ai/imageOptimizer';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { MarkdownMessage } from './MarkdownMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getPropertyIcon } from '@/lib/constants';
 
 export interface SamplePromptItem {
   id: string;
@@ -294,10 +305,115 @@ const INITIAL_WELCOME_MESSAGE: AIChatMessage = {
   ],
 };
 
-export function TenviAIChat() {
+export interface ContactOption {
+  id: string;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+}
+
+export interface PropertyOption {
+  id: string;
+  name: string;
+  property_type?: string;
+  identifier?: string | null;
+}
+
+export interface TenviAIChatProps {
+  initialContacts?: ContactOption[];
+  initialProperties?: PropertyOption[];
+}
+
+export function TenviAIChat({
+  initialContacts = [],
+  initialProperties = [],
+}: TenviAIChatProps = {}) {
   const router = useRouter();
+  const [contacts, setContacts] = useState<ContactOption[]>(initialContacts);
+  const [properties, setProperties] = useState<PropertyOption[]>(initialProperties);
+  const [customBorrowers, setCustomBorrowers] = useState<string[]>([]);
+  const [enteringCustomBorrower, setEnteringCustomBorrower] = useState<Record<string, boolean>>({});
+  const [savingSingleItemId, setSavingSingleItemId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialContacts && initialContacts.length > 0) {
+      setContacts(initialContacts);
+    }
+  }, [initialContacts]);
+
+  useEffect(() => {
+    if (initialProperties && initialProperties.length > 0) {
+      setProperties(initialProperties);
+    }
+  }, [initialProperties]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<AIChatMessage[]>([INITIAL_WELCOME_MESSAGE]);
+
+  // Aggregate all available borrowers: official contacts + properties & assets + custom borrower names
+  const allAvailableBorrowers = useMemo(() => {
+    const list: Array<{
+      id: string;
+      name: string;
+      isCustom: boolean;
+      isProperty?: boolean;
+      icon?: string;
+    }> = [];
+    const seen = new Set<string>();
+
+    // 1. Official user contacts
+    for (const c of contacts) {
+      const lower = c.name.trim().toLowerCase();
+      if (lower && !seen.has(lower)) {
+        seen.add(lower);
+        list.push({ id: c.id, name: c.name.trim(), isCustom: false, icon: '👤' });
+      }
+    }
+
+    // 2. Properties & Assets
+    for (const p of properties) {
+      const lower = p.name.trim().toLowerCase();
+      if (lower && !seen.has(lower)) {
+        seen.add(lower);
+        list.push({
+          id: `prop:${p.name.trim()}`,
+          name: p.name.trim(),
+          isCustom: false,
+          isProperty: true,
+          icon: getPropertyIcon(p.property_type),
+        });
+      }
+    }
+
+    // 3. Custom borrowers entered or detected in pending photo items (min length 2)
+    const allCustoms = new Set<string>();
+    for (const name of customBorrowers) {
+      if (name && name.trim().length >= 2) {
+        allCustoms.add(name.trim());
+      }
+    }
+    for (const m of messages) {
+      if (m.pendingPhotoItems) {
+        for (const it of m.pendingPhotoItems) {
+          const b = it.borrowerName?.trim();
+          if (b && b.length >= 2) {
+            allCustoms.add(b);
+          }
+        }
+      }
+    }
+
+    for (const name of allCustoms) {
+      const lower = name.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        list.push({ id: `custom:${name}`, name, isCustom: true, icon: '✨' });
+      }
+    }
+
+    return list;
+  }, [contacts, properties, customBorrowers, messages]);
+
   const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingState, setPendingState] = useState<ParsedFinancialIntent | null>(null);
@@ -305,9 +421,17 @@ export function TenviAIChat() {
   const [undoingBatchMsgId, setUndoingBatchMsgId] = useState<string | null>(null);
   const [isPromptsDrawerOpen, setIsPromptsDrawerOpen] = useState(false);
   const [selectedPromptCategory, setSelectedPromptCategory] = useState<string>('all');
+  const [attachedImage, setAttachedImage] = useState<{
+    file: File;
+    previewUrl: string;
+    base64: string;
+    mimeType: string;
+  } | null>(null);
+  const [savingPhotoMsgId, setSavingPhotoMsgId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const triggerButtonRef = useRef<HTMLButtonElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -427,18 +551,310 @@ export function TenviAIChat() {
     }
   }, [messages, isOpen, isPromptsDrawerOpen]);
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file (JPEG, PNG, WebP).');
+      return;
+    }
+
+    try {
+      const optimized = await optimizeImageForUpload(file);
+      const previewUrl = URL.createObjectURL(optimized);
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const base64 = result.includes('base64,') ? result.split('base64,')[1] : result;
+        setAttachedImage({
+          file: optimized,
+          previewUrl,
+          base64,
+          mimeType: optimized.type || 'image/jpeg',
+        });
+      };
+      reader.readAsDataURL(optimized);
+    } catch (err) {
+      console.error('Failed to process image:', err);
+      toast.error('Could not process the selected image.');
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = () => {
+    if (attachedImage?.previewUrl) {
+      URL.revokeObjectURL(attachedImage.previewUrl);
+    }
+    setAttachedImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleTogglePhotoItemType = (msgId: string, itemId: string) => {
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== msgId || !m.pendingPhotoItems) return m;
+        const updated: ParsedPhotoItem[] = m.pendingPhotoItems.map((it) => {
+          if (it.id !== itemId) return it;
+          const nextType: 'expense' | 'receivable' = it.type === 'expense' ? 'receivable' : 'expense';
+          let bName = nextType === 'expense' ? null : it.borrowerName;
+          let cId = nextType === 'expense' ? null : it.contactId;
+
+          // If switching to receivable and borrower is missing, check if title matches any contact
+          if (nextType === 'receivable' && !bName) {
+            const foundContact = contacts.find((c) =>
+              it.title.toLowerCase().includes(c.name.toLowerCase())
+            );
+            if (foundContact) {
+              bName = foundContact.name;
+              cId = foundContact.id;
+            }
+          }
+
+          return {
+            ...it,
+            type: nextType,
+            borrowerName: bName,
+            contactId: cId,
+            missingFields:
+              nextType === 'receivable' && !bName?.trim()
+                ? Array.from(new Set([...(it.missingFields || []), 'borrower' as const]))
+                : it.missingFields?.filter((f) => f !== 'borrower') || [],
+          };
+        });
+        return { ...m, pendingPhotoItems: updated };
+      })
+    );
+  };
+
+  const handleSetAllPhotoItemTypes = (msgId: string, type: 'expense' | 'receivable') => {
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== msgId || !m.pendingPhotoItems) return m;
+        const updated = m.pendingPhotoItems.map((it) => {
+          let bName = type === 'expense' ? null : it.borrowerName;
+          let cId = type === 'expense' ? null : it.contactId;
+
+          if (type === 'receivable' && !bName) {
+            const foundContact = contacts.find((c) =>
+              it.title.toLowerCase().includes(c.name.toLowerCase())
+            );
+            if (foundContact) {
+              bName = foundContact.name;
+              cId = foundContact.id;
+            }
+          }
+
+          return {
+            ...it,
+            type,
+            borrowerName: bName,
+            contactId: cId,
+            missingFields:
+              type === 'receivable' && !bName?.trim()
+                ? Array.from(new Set([...(it.missingFields || []), 'borrower' as const]))
+                : it.missingFields?.filter((f) => f !== 'borrower') || [],
+          };
+        });
+        return { ...m, pendingPhotoItems: updated };
+      })
+    );
+  };
+
+  const handleSetPhotoItemBorrower = (
+    msgId: string,
+    itemId: string,
+    borrowerName: string,
+    contactId?: string | null
+  ) => {
+    const trimmed = borrowerName.trim();
+
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== msgId || !m.pendingPhotoItems) return m;
+        const updated = m.pendingPhotoItems.map((it) => {
+          if (it.id !== itemId) return it;
+          let finalContactId = contactId;
+          if (finalContactId === undefined) {
+            const matched = contacts.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
+            finalContactId = matched?.id || null;
+          }
+          return {
+            ...it,
+            borrowerName: trimmed || null,
+            contactId: finalContactId,
+            missingFields: trimmed
+              ? it.missingFields?.filter((f) => f !== 'borrower') || []
+              : Array.from(new Set([...(it.missingFields || []), 'borrower' as const])),
+          };
+        });
+        return { ...m, pendingPhotoItems: updated };
+      })
+    );
+  };
+
+  const handleDiscardPhotoItem = (msgId: string, itemId: string) => {
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== msgId || !m.pendingPhotoItems) return m;
+        const remaining = m.pendingPhotoItems.filter((it) => it.id !== itemId);
+        return {
+          ...m,
+          pendingPhotoItems: remaining,
+          isSaved: remaining.length === 0 ? true : m.isSaved,
+        };
+      })
+    );
+    toast.info('Item discarded.');
+  };
+
+  const handleSaveSinglePhotoItem = async (msgId: string, item: ParsedPhotoItem) => {
+    if (item.type === 'receivable' && !item.borrowerName?.trim()) {
+      toast.error('Please assign or enter a borrower name before saving.');
+      return;
+    }
+
+    setSavingSingleItemId(item.id);
+    try {
+      const res = await commitSinglePhotoParsedItemAction(item);
+      if (!res.success) {
+        toast.error(res.error || 'Failed to save item.');
+        return;
+      }
+
+      // If a new contact was created, register it immediately in contacts and customBorrowers
+      if (res.createdContact) {
+        setContacts((prev) => {
+          if (prev.some((c) => c.id === res.createdContact!.id)) return prev;
+          return [...prev, res.createdContact!];
+        });
+        setCustomBorrowers((prev) => Array.from(new Set([...prev, res.createdContact!.name])));
+      }
+
+      // Remove the saved item from the pending list AND link remaining items with same borrower
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.id !== msgId || !m.pendingPhotoItems) return m;
+          const remaining = m.pendingPhotoItems
+            .filter((it) => it.id !== item.id)
+            .map((it) => {
+              if (
+                res.createdContact &&
+                it.borrowerName &&
+                it.borrowerName.trim().toLowerCase() === res.createdContact.name.toLowerCase()
+              ) {
+                return {
+                  ...it,
+                  contactId: res.createdContact.id,
+                };
+              }
+              return it;
+            });
+          return {
+            ...m,
+            pendingPhotoItems: remaining,
+            isSaved: remaining.length === 0 ? true : m.isSaved,
+          };
+        })
+      );
+
+      toast.success(
+        `Saved "${item.title}" (₱${Number(item.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })})`
+      );
+      router.refresh();
+    } catch (err) {
+      console.error('Error saving single photo item:', err);
+      toast.error('An error occurred while saving the item.');
+    } finally {
+      setSavingSingleItemId(null);
+    }
+  };
+
+  const handleConfirmSavePhotoItems = async (msgId: string, items: ParsedPhotoItem[]) => {
+    setSavingPhotoMsgId(msgId);
+    try {
+      const res = await commitPhotoParsedItemsAction(items);
+      if (!res.success) {
+        toast.error(res.error || 'Failed to save items.');
+        return;
+      }
+
+      if (res.createdContacts && res.createdContacts.length > 0) {
+        setContacts((prev) => {
+          const newOnes = res.createdContacts!.filter((nc) => !prev.some((p) => p.id === nc.id));
+          return [...prev, ...newOnes];
+        });
+      }
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === msgId
+            ? {
+                ...m,
+                isSaved: true,
+                savedSummary: res.savedSummary,
+              }
+            : m
+        )
+      );
+
+      setPendingState(null);
+
+      const parts: string[] = [];
+      if (res.savedSummary?.expenseCount) {
+        parts.push(
+          `${res.savedSummary.expenseCount} Expenses (₱${res.savedSummary.expenseTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`
+        );
+      }
+      if (res.savedSummary?.receivableCount) {
+        parts.push(
+          `${res.savedSummary.receivableCount} Receivables (₱${res.savedSummary.receivableTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`
+        );
+      }
+
+      toast.success(`Saved to Ledgers: ${parts.join(', ')}`);
+      router.refresh();
+    } catch (err) {
+      console.error('Error saving photo items:', err);
+      toast.error('An error occurred while saving.');
+    } finally {
+      setSavingPhotoMsgId(null);
+    }
+  };
+
+  const handleCancelPhotoItems = (msgId: string) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === msgId
+          ? {
+              ...m,
+              pendingPhotoItems: undefined,
+            }
+          : m
+      )
+    );
+    setPendingState(null);
+    toast.info('Cancelled saving photo items.');
+  };
+
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
-    if (!text || isProcessing) return;
+    if ((!text && !attachedImage) || isProcessing) return;
 
     if (isPromptsDrawerOpen) {
       setIsPromptsDrawerOpen(false);
     }
 
+    const imageToSend = attachedImage;
+    setAttachedImage(null);
+
     const userMsg: AIChatMessage = {
       id: `user-${Date.now()}`,
       sender: 'user',
-      text,
+      text: text || (imageToSend ? '📸 [Uploaded Photo]' : ''),
+      imageUrl: imageToSend?.previewUrl,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
@@ -465,6 +881,7 @@ export function TenviAIChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
+          image: imageToSend ? { base64: imageToSend.base64, mimeType: imageToSend.mimeType } : null,
           pendingState,
           history,
         }),
@@ -526,6 +943,9 @@ export function TenviAIChat() {
                         quickReplies: data.quickReplies,
                         transaction: data.transaction,
                         transactions: data.transactions,
+                        pendingPhotoItems: data.pendingPhotoItems,
+                        savedSummary: data.savedSummary,
+                        isSaved: data.savedSummary ? true : m.isSaved,
                         isStreaming: false,
                       }
                     : m
@@ -572,7 +992,12 @@ export function TenviAIChat() {
     } catch (err) {
       console.warn('Streaming fetch failed, falling back to Server Action:', err);
       try {
-        const fallbackRes = await processAIChatMessageAction(text, pendingState, history);
+        const fallbackRes = await processAIChatMessageAction(
+          text,
+          pendingState,
+          history,
+          imageToSend ? { base64: imageToSend.base64, mimeType: imageToSend.mimeType } : null
+        );
         setPendingState(fallbackRes.pendingState);
 
         setMessages((prev) =>
@@ -584,6 +1009,9 @@ export function TenviAIChat() {
                   quickReplies: fallbackRes.quickReplies,
                   transaction: fallbackRes.transaction,
                   transactions: fallbackRes.transactions,
+                  pendingPhotoItems: fallbackRes.pendingPhotoItems,
+                  savedSummary: fallbackRes.savedSummary,
+                  isSaved: fallbackRes.savedSummary ? true : m.isSaved,
                   isStreaming: false,
                 }
               : m
@@ -938,6 +1366,17 @@ export function TenviAIChat() {
                           : 'bg-card text-foreground shadow-card rounded-tl-none'
                       }`}
                     >
+                      {/* User Image Attachment */}
+                      {msg.imageUrl && (
+                        <div className="mb-2 max-w-xs overflow-hidden rounded-xl bg-black/20">
+                          <img
+                            src={msg.imageUrl}
+                            alt="Uploaded photo"
+                            className="max-h-52 w-auto rounded-xl object-contain shadow-xs"
+                          />
+                        </div>
+                      )}
+
                       {msg.sender === 'assistant' && !msg.text && msg.isStreaming ? (
                         <div className="flex items-center gap-2 py-1 text-xs text-muted-foreground font-medium">
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
@@ -1135,6 +1574,375 @@ export function TenviAIChat() {
                       </div>
                     )}
 
+                    {/* Photo Parsed Items Confirmation & Review Card */}
+                    {msg.pendingPhotoItems && (msg.pendingPhotoItems.length > 0 || msg.isSaved) && (
+                      <div className="mt-4 p-4 sm:p-6 rounded-2xl bg-muted/50 space-y-4 shadow-xs">
+                        {/* Header */}
+                        <div className="flex items-center justify-between pb-1">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                              <Receipt className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <span className="text-sm font-bold text-foreground block">
+                                Photo Review ({msg.pendingPhotoItems.length} {msg.pendingPhotoItems.length === 1 ? 'item' : 'items'})
+                              </span>
+                              <span className="text-xs text-muted-foreground block">
+                                {msg.isSaved || msg.pendingPhotoItems.length === 0
+                                  ? 'All parsed items have been processed'
+                                  : 'Review items, select borrowers, or save individually'}
+                              </span>
+                            </div>
+                          </div>
+                          {msg.pendingPhotoItems.length > 0 && (
+                            <div className="text-right">
+                              <span className="text-[10px] uppercase font-bold text-muted-foreground block tracking-wider">
+                                Total
+                              </span>
+                              <span className="text-base font-extrabold text-foreground block">
+                                ₱{msg.pendingPhotoItems.reduce((sum, it) => sum + Number(it.amount || 0), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Batch Type Switcher */}
+                        {!msg.isSaved && msg.pendingPhotoItems.length > 1 && (
+                          <div className="flex items-center justify-between gap-2 bg-card p-2.5 rounded-xl shadow-2xs">
+                            <span className="text-xs text-muted-foreground font-semibold pl-1">Batch apply:</span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleSetAllPhotoItemTypes(msg.id, 'expense')}
+                                className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+                              >
+                                All Expenses 🏷️
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSetAllPhotoItemTypes(msg.id, 'receivable')}
+                                className="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
+                              >
+                                All Receivables 👤
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Itemized List */}
+                        <div className="space-y-3.5 max-h-[34rem] overflow-y-auto pr-1">
+                          {msg.pendingPhotoItems.map((item, idx) => (
+                            <div key={item.id || idx} className="bg-card rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
+                              {/* Title, Date & Amount */}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1 space-y-1">
+                                  <span className="text-sm sm:text-base font-bold text-foreground block leading-snug truncate">
+                                    {item.title}
+                                  </span>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                                    <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                    <span>{item.date}</span>
+                                    {item.categoryName && (
+                                      <>
+                                        <span>•</span>
+                                        <Tag className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                        <span className="truncate">{item.categoryName}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="text-base sm:text-lg font-extrabold text-foreground block">
+                                    ₱{Number(item.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Duplicate Warning Banner */}
+                              {item.duplicateWarning?.isDuplicate && !msg.isSaved && (
+                                <div className="p-3 sm:p-3.5 rounded-xl bg-amber-500/10 text-amber-900 dark:text-amber-200 space-y-2">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-start gap-2 text-xs font-semibold">
+                                      <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                      <div>
+                                        <span className="block font-bold">Possible duplicate entry detected</span>
+                                        <span className="block text-[11px] font-medium opacity-90 mt-0.5">
+                                          Existing record: ₱{item.duplicateWarning.matchedAmount?.toLocaleString('en-US', { minimumFractionDigits: 2 })} on {item.duplicateWarning.matchedDate} ({item.duplicateWarning.matchedDescription})
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDiscardPhotoItem(msg.id, item.id)}
+                                      className="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-amber-200/80 hover:bg-amber-300/80 dark:bg-amber-900/60 dark:hover:bg-amber-800/60 text-amber-950 dark:text-amber-100 shrink-0 cursor-pointer transition-colors"
+                                    >
+                                      Discard
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Type Toggle & Details */}
+                              <div className="space-y-2.5 pt-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  {/* Toggle Expense vs Receivable */}
+                                  {!msg.isSaved ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleTogglePhotoItemType(msg.id, item.id)}
+                                      className={`text-xs font-bold px-3.5 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+                                        item.type === 'expense'
+                                          ? 'bg-rose-50 text-rose-700 hover:bg-rose-100'
+                                          : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                                      }`}
+                                    >
+                                      {item.type === 'expense' ? (
+                                        <>
+                                          <ArrowDownLeft className="w-3.5 h-3.5" />
+                                          Expense (Money Out)
+                                        </>
+                                      ) : (
+                                        <>
+                                          <ArrowUpRight className="w-3.5 h-3.5" />
+                                          Receivable (Lent)
+                                        </>
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <span
+                                      className={`text-xs font-bold px-3.5 py-1 rounded-full ${
+                                        item.type === 'expense' ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-blue-700'
+                                      }`}
+                                    >
+                                      {item.type === 'expense' ? 'Expense' : 'Receivable'}
+                                    </span>
+                                  )}
+
+                                  {item.type === 'receivable' && msg.isSaved && (
+                                    <span className="text-xs text-muted-foreground font-semibold">
+                                      {item.borrowerName ? `for ${item.borrowerName}` : 'Unassigned'}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Receivable Borrower Selector Row */}
+                                {item.type === 'receivable' && !msg.isSaved && (() => {
+                                  const isCustomMode = Boolean(enteringCustomBorrower[item.id]);
+                                  const borrowerMatch = item.borrowerName
+                                    ? allAvailableBorrowers.find(
+                                        (b) => b.name.toLowerCase() === item.borrowerName?.toLowerCase()
+                                      )
+                                    : null;
+                                  const selectValue = isCustomMode
+                                    ? '__new__'
+                                    : borrowerMatch
+                                    ? borrowerMatch.id
+                                    : item.borrowerName
+                                    ? '__new__'
+                                    : '';
+
+                                  return (
+                                    <div className="p-3.5 sm:p-4 bg-muted/40 rounded-xl space-y-2.5">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                          <User className="w-3.5 h-3.5 text-blue-600" />
+                                          Borrower:
+                                        </span>
+                                        {!item.borrowerName?.trim() && (
+                                          <span className="text-xs font-bold text-amber-600">
+                                            ⚠️ Needs borrower
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                        <select
+                                          value={selectValue}
+                                          onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (!val) {
+                                              setEnteringCustomBorrower((prev) => ({ ...prev, [item.id]: false }));
+                                              handleSetPhotoItemBorrower(msg.id, item.id, '', null);
+                                            } else if (val === '__new__') {
+                                              setEnteringCustomBorrower((prev) => ({ ...prev, [item.id]: true }));
+                                            } else if (val.startsWith('prop:')) {
+                                              setEnteringCustomBorrower((prev) => ({ ...prev, [item.id]: false }));
+                                              const propName = val.replace('prop:', '');
+                                              const matched = contacts.find((c) => c.name.toLowerCase() === propName.toLowerCase());
+                                              handleSetPhotoItemBorrower(msg.id, item.id, propName, matched?.id || null);
+                                            } else if (val.startsWith('custom:')) {
+                                              setEnteringCustomBorrower((prev) => ({ ...prev, [item.id]: false }));
+                                              const customName = val.replace('custom:', '');
+                                              handleSetPhotoItemBorrower(msg.id, item.id, customName, null);
+                                            } else {
+                                              setEnteringCustomBorrower((prev) => ({ ...prev, [item.id]: false }));
+                                              const matched = contacts.find((c) => c.id === val);
+                                              if (matched) {
+                                                handleSetPhotoItemBorrower(msg.id, item.id, matched.name, matched.id);
+                                              }
+                                            }
+                                          }}
+                                          className="text-xs bg-card text-foreground font-semibold py-2 px-3 rounded-xl outline-none flex-1 border-0 cursor-pointer shadow-2xs"
+                                        >
+                                          <option value="">-- Choose Borrower / Asset --</option>
+                                          {contacts.length > 0 && (
+                                            <optgroup label="People & Contacts">
+                                              {contacts.map((c) => (
+                                                <option key={c.id} value={c.id}>
+                                                  👤 {c.name}
+                                                </option>
+                                              ))}
+                                            </optgroup>
+                                          )}
+                                          {properties.length > 0 && (
+                                            <optgroup label="Properties & Assets">
+                                              {properties.map((p) => {
+                                                const label = `${p.name}${p.identifier ? ` (${p.identifier})` : ''}`;
+                                                return (
+                                                  <option key={`prop:${p.id}`} value={`prop:${p.name}`}>
+                                                    {getPropertyIcon(p.property_type)} {label}
+                                                  </option>
+                                                );
+                                              })}
+                                            </optgroup>
+                                          )}
+                                          {allAvailableBorrowers.some((b) => b.isCustom) && (
+                                            <optgroup label="Recently Added">
+                                              {allAvailableBorrowers
+                                                .filter((b) => b.isCustom)
+                                                .map((b) => (
+                                                  <option key={b.id} value={b.id}>
+                                                    ✨ {b.name}
+                                                  </option>
+                                                ))}
+                                            </optgroup>
+                                          )}
+                                          <option value="__new__">✏️ + Enter New Borrower Name</option>
+                                        </select>
+
+                                        {/* Custom Borrower Text Input when __new__ is selected or custom mode is active */}
+                                        {(isCustomMode || (item.borrowerName && !borrowerMatch && !contacts.some((c) => c.id === item.contactId))) && (
+                                          <input
+                                            type="text"
+                                            placeholder="Type borrower name (e.g. H100)..."
+                                            value={item.borrowerName || ''}
+                                            autoFocus={isCustomMode}
+                                            onChange={(e) =>
+                                              handleSetPhotoItemBorrower(msg.id, item.id, e.target.value, null)
+                                            }
+                                            onBlur={(e) => {
+                                              const val = e.target.value.trim();
+                                              if (val.length >= 2) {
+                                                setCustomBorrowers((prev) => {
+                                                  if (prev.some((b) => b.toLowerCase() === val.toLowerCase())) return prev;
+                                                  return [...prev, val];
+                                                });
+                                              }
+                                            }}
+                                            className="text-xs bg-card text-foreground font-semibold py-2 px-3 rounded-xl outline-none sm:w-52 border-0 placeholder:text-muted-foreground shadow-2xs"
+                                          />
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+
+                              {/* Individual Item Action Footer */}
+                              {!msg.isSaved && (
+                                <div className="pt-2 flex items-center justify-between gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDiscardPhotoItem(msg.id, item.id)}
+                                    disabled={savingSingleItemId === item.id || savingPhotoMsgId === msg.id}
+                                    className="text-xs font-semibold text-muted-foreground hover:text-rose-600 transition-colors flex items-center gap-1 cursor-pointer py-1 px-2 rounded-lg"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Discard
+                                  </button>
+
+                                  <Button
+                                    type="button"
+                                    size="xs"
+                                    onClick={() => handleSaveSinglePhotoItem(msg.id, item)}
+                                    disabled={
+                                      savingSingleItemId === item.id ||
+                                      savingPhotoMsgId === msg.id ||
+                                      (item.type === 'receivable' && !item.borrowerName?.trim())
+                                    }
+                                    className="rounded-xl shadow-xs font-bold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer px-3 py-1.5"
+                                  >
+                                    {savingSingleItemId === item.id ? (
+                                      <>
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        Saving...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Check className="w-3.5 h-3.5" />
+                                        Save Item
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Confirmation Action Footer */}
+                        <div className="pt-2 flex items-center justify-between gap-2">
+                          {msg.isSaved || msg.pendingPhotoItems.length === 0 ? (
+                            <span className="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              All Items Confirmed & Saved to Ledgers ✅
+                            </span>
+                          ) : (
+                            <>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="xs"
+                                onClick={() => handleCancelPhotoItems(msg.id)}
+                                disabled={savingPhotoMsgId === msg.id || Boolean(savingSingleItemId)}
+                                className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                              >
+                                Discard All ({msg.pendingPhotoItems.length})
+                              </Button>
+
+                              {msg.pendingPhotoItems.length > 1 && (
+                                <Button
+                                  type="button"
+                                  size="xs"
+                                  onClick={() => handleConfirmSavePhotoItems(msg.id, msg.pendingPhotoItems!)}
+                                  disabled={
+                                    savingPhotoMsgId === msg.id ||
+                                    Boolean(savingSingleItemId) ||
+                                    msg.pendingPhotoItems.some(
+                                      (it) => it.type === 'receivable' && !it.borrowerName?.trim()
+                                    )
+                                  }
+                                  className="rounded-xl shadow-xs gap-1 font-bold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer"
+                                >
+                                  {savingPhotoMsgId === msg.id ? (
+                                    <>
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      Saving All...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      Save All Remaining ({msg.pendingPhotoItems.length})
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Timestamp */}
                     <div
                       className={`text-xs mt-1.5 text-right ${
@@ -1201,17 +2009,70 @@ export function TenviAIChat() {
 
         {/* Footer Input */}
         <div className="p-3 bg-card shrink-0">
+          {/* Image attachment preview if selected */}
+          {attachedImage && (
+            <div className="mb-2 p-2 rounded-xl bg-muted/60 shadow-xs flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <img
+                  src={attachedImage.previewUrl}
+                  alt="Preview"
+                  className="w-10 h-10 rounded-lg object-cover shrink-0"
+                />
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-foreground truncate block">
+                    Photo Attached
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate block">
+                    {attachedImage.file.name || 'Receipt or document'}
+                  </span>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={handleRemoveImage}
+                className="rounded-lg text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+                title="Remove photo"
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          )}
+
           <div className="bg-muted/60 rounded-2xl p-2 flex items-end gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
             <textarea
               ref={inputRef}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a question or expense (e.g. 'paid 350 for groceries in cash')..."
+              placeholder={
+                attachedImage
+                  ? "Add note (e.g. 'Expenses' or 'Receivables for John')..."
+                  : "Type a question or expense (e.g. 'paid 350 for groceries in cash')..."
+              }
               rows={1}
               disabled={isProcessing}
               className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none max-h-24 py-1.5 px-2 font-medium border-0"
             />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => fileInputRef.current?.click()}
+              title="Upload photo / receipt"
+              disabled={isProcessing}
+              className="rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <ImagePlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </Button>
             <Button
               type="button"
               variant="ghost"
@@ -1226,7 +2087,7 @@ export function TenviAIChat() {
               type="button"
               size="icon-xs"
               onClick={() => handleSendMessage()}
-              disabled={!inputText.trim() || isProcessing}
+              disabled={(!inputText.trim() && !attachedImage) || isProcessing}
               aria-label="Send message"
               className="rounded-xl shadow-xs"
             >

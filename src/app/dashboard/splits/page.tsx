@@ -21,7 +21,8 @@ export default async function SplitsPage() {
     .select('*')
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user?.id)
-    .eq('is_active', true);
+    .eq('is_active', true)
+    .is('deleted_at', null);
 
   const { data: splits } = await supabase
     .from('bili_bill_splits')

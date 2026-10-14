@@ -8,6 +8,7 @@ import {
   X,
   PlusCircle,
   MinusCircle,
+  ArrowLeftRight,
   Loader2,
   Calendar,
   FileText,
@@ -60,7 +61,7 @@ export function TransactionModal({
   defaultPaymentMethod,
   autoTriggerScan,
 }: TransactionModalProps) {
-  const [kind, setKind] = useState<'expense' | 'income'>('expense');
+  const [kind, setKind] = useState<'expense' | 'income' | 'transfer'>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<string>(
@@ -68,6 +69,7 @@ export function TransactionModal({
   );
   const [creditCardId, setCreditCardId] = useState(defaultCreditCardId || '');
   const [savingsId, setSavingsId] = useState('');
+  const [transferToSavingsId, setTransferToSavingsId] = useState('');
   const [propertyId, setPropertyId] = useState(defaultPropertyId || '');
   const [occurredOn, setOccurredOn] = useState(
     new Date().toISOString().split('T')[0]
@@ -196,15 +198,27 @@ export function TransactionModal({
       return;
     }
 
+    if (kind === 'transfer') {
+      if (!savingsId || !transferToSavingsId) {
+        toast.error('Please select both a source and destination account.');
+        return;
+      }
+      if (savingsId === transferToSavingsId) {
+        toast.error('Source and destination accounts must be different.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     const res = await createTransactionAction({
       kind,
       amount: parseFloat(amount),
-      categoryId: categoryId || null,
-      paymentMethod,
-      creditCardId: paymentMethod === 'credit_card' ? creditCardId || null : null,
-      savingsId: paymentMethod !== 'credit_card' ? savingsId || null : null,
-      propertyId: propertyId || null,
+      categoryId: kind !== 'transfer' ? categoryId || null : null,
+      paymentMethod: kind === 'transfer' ? 'bank_transfer' : paymentMethod,
+      creditCardId: paymentMethod === 'credit_card' && kind !== 'transfer' ? creditCardId || null : null,
+      savingsId: savingsId || null,
+      transferToSavingsId: kind === 'transfer' ? transferToSavingsId || null : null,
+      propertyId: kind !== 'transfer' ? propertyId || null : null,
       occurredOn,
       note: note.trim() || null,
     });
@@ -215,12 +229,17 @@ export function TransactionModal({
       toast.error(res.error);
     } else {
       toast.success(
-        kind === 'expense' ? 'Recorded Money Out!' : 'Recorded Money In!'
+        kind === 'transfer'
+          ? 'Transfer recorded successfully!'
+          : kind === 'expense'
+          ? 'Recorded Money Out!'
+          : 'Recorded Money In!'
       );
       // Reset & close
       setAmount('');
       setNote('');
       setSavingsId('');
+      setTransferToSavingsId('');
       clearReceipt();
       onClose();
     }
@@ -336,7 +355,7 @@ export function TransactionModal({
           )}
         </div>
 
-        {/* Big Kind Switcher: Money Out (Expense) vs Money In (Income) */}
+        {/* Kind Switcher: Money Out (Expense), Money In (Income), Transfer */}
         <Tabs
           value={kind}
           onValueChange={(val) => {
@@ -345,20 +364,27 @@ export function TransactionModal({
           }}
           className="w-full mb-2"
         >
-          <TabsList className="w-full grid grid-cols-2 p-1 bg-muted">
+          <TabsList className="w-full grid grid-cols-3 gap-1 p-1 bg-muted">
             <TabsTrigger
               value="expense"
-              className="py-2.5 data-active:text-rose-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
+              className="py-2.5 data-active:text-rose-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <MinusCircle className="w-4 h-4 text-rose-600" />
-              Money Out (Expense)
+              <MinusCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>Expense</span>
             </TabsTrigger>
             <TabsTrigger
               value="income"
-              className="py-2.5 data-active:text-emerald-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
+              className="py-2.5 data-active:text-emerald-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <PlusCircle className="w-4 h-4 text-emerald-600" />
-              Money In (Income)
+              <PlusCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Income</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="transfer"
+              className="py-2.5 data-active:text-blue-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <ArrowLeftRight className="w-4 h-4 text-blue-600 shrink-0" />
+              <span>Transfer</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -379,137 +405,189 @@ export function TransactionModal({
             />
           </div>
 
-          {/* Category Picker */}
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Category
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-1">
-              {filteredCategories.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setCategoryId(cat.id)}
-                  aria-pressed={categoryId === cat.id}
-                  className={`p-2.5 rounded-xl text-xs font-medium text-left truncate transition-all cursor-pointer ${
-                    categoryId === cat.id
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+          {kind === 'transfer' ? (
+            <div className="space-y-4 p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 animate-in fade-in duration-150">
+              <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200 text-xs font-bold uppercase tracking-wider">
+                <ArrowLeftRight className="w-4 h-4 text-blue-600 shrink-0" />
+                Inter-Account Vault Transfer
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-foreground mb-1.5">
+                    From Account (Source)
+                  </label>
+                  <select
+                    required
+                    value={savingsId}
+                    onChange={(e) => setSavingsId(e.target.value)}
+                    className="h-10 w-full rounded-xl bg-card border border-border px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">-- Choose source vault --</option>
+                    {savingsAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id} disabled={acc.id === transferToSavingsId}>
+                        {acc.name} ({acc.institution_name} • ₱{Number(acc.current_balance).toLocaleString('en-US', { minimumFractionDigits: 2 })})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-foreground mb-1.5">
+                    To Account (Destination)
+                  </label>
+                  <select
+                    required
+                    value={transferToSavingsId}
+                    onChange={(e) => setTransferToSavingsId(e.target.value)}
+                    className="h-10 w-full rounded-xl bg-card border border-border px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">-- Choose destination vault --</option>
+                    {savingsAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id} disabled={acc.id === savingsId}>
+                        {acc.name} ({acc.institution_name} • ₱{Number(acc.current_balance).toLocaleString('en-US', { minimumFractionDigits: 2 })})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80">
+                Transfers move money between your vaults without inflating monthly expenses or gross income totals.
+              </p>
             </div>
-          </div>
-
-          {/* Payment Method */}
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Payment Method
-            </label>
-            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-              {PAYMENT_METHODS.map((pm) => (
-                <button
-                  key={pm.id}
-                  type="button"
-                  onClick={() => setPaymentMethod(pm.id)}
-                  aria-pressed={paymentMethod === pm.id}
-                  className={`py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-xs font-semibold transition-all cursor-pointer text-center truncate ${
-                    paymentMethod === pm.id
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  {pm.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Linked Credit Card Dropdown if Credit Card chosen */}
-          {paymentMethod === 'credit_card' && (
-            <div className="p-4 rounded-2xl bg-indigo-50/60 animate-in fade-in duration-150">
-              <label className="block text-xs font-semibold text-indigo-900 mb-2 flex items-center gap-1.5">
-                <CreditCardIcon className="w-4 h-4 text-indigo-700" />
-                Select Credit Card
-              </label>
-              {creditCards.length === 0 ? (
-                <p className="text-xs text-indigo-700">
-                  No credit cards added yet. You can add one in the Cards module.
-                </p>
-              ) : (
-                <select
-                  value={creditCardId}
-                  onChange={(e) => setCreditCardId(e.target.value)}
-                  className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="">-- Choose card --</option>
-                  {creditCards.map((card) => (
-                    <option key={card.id} value={card.id}>
-                      {card.bank_name} - {card.name} (•••• {card.last_4})
-                    </option>
+          ) : (
+            <>
+              {/* Category Picker */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Category
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-1">
+                  {filteredCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setCategoryId(cat.id)}
+                      aria-pressed={categoryId === cat.id}
+                      className={`p-2.5 rounded-xl text-xs font-medium text-left truncate transition-all cursor-pointer ${
+                        categoryId === cat.id
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
                   ))}
-                </select>
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Payment Method
+                </label>
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                  {PAYMENT_METHODS.map((pm) => (
+                    <button
+                      key={pm.id}
+                      type="button"
+                      onClick={() => setPaymentMethod(pm.id)}
+                      aria-pressed={paymentMethod === pm.id}
+                      className={`py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-xs font-semibold transition-all cursor-pointer text-center truncate ${
+                        paymentMethod === pm.id
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      {pm.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Linked Credit Card Dropdown if Credit Card chosen */}
+              {paymentMethod === 'credit_card' && (
+                <div className="p-4 rounded-2xl bg-indigo-50/60 animate-in fade-in duration-150">
+                  <label className="block text-xs font-semibold text-indigo-900 mb-2 flex items-center gap-1.5">
+                    <CreditCardIcon className="w-4 h-4 text-indigo-700" />
+                    Select Credit Card
+                  </label>
+                  {creditCards.length === 0 ? (
+                    <p className="text-xs text-indigo-700">
+                      No credit cards added yet. You can add one in the Cards module.
+                    </p>
+                  ) : (
+                    <select
+                      value={creditCardId}
+                      onChange={(e) => setCreditCardId(e.target.value)}
+                      className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="">-- Choose card --</option>
+                      {creditCards.map((card) => (
+                        <option key={card.id} value={card.id}>
+                          {card.bank_name} - {card.name} (•••• {card.last_4})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
-          {/* Linked Savings Account / Vault if applicable */}
-          {savingsAccounts.length > 0 && paymentMethod !== 'credit_card' && (
-            <div className="p-4 rounded-2xl bg-emerald-50/60 animate-in fade-in duration-150">
-              <label className="block text-xs font-semibold text-emerald-950 mb-2 flex items-center gap-1.5">
-                <PiggyBank className="w-4 h-4 text-emerald-700" />
-                Connect to Savings / Vault Account (Optional)
-              </label>
-              <select
-                value={savingsId}
-                onChange={(e) => setSavingsId(e.target.value)}
-                className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">-- None (General Cash Flow) --</option>
-                {savingsAccounts.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name} ({acc.institution_name} • ₱
-                    {Number(acc.current_balance).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                    })})
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-emerald-800/80 mt-1.5">
-                {kind === 'income'
-                  ? 'Deposit will be automatically added to this vault balance.'
-                  : 'Expense will be automatically deducted from this vault balance.'}
-              </p>
-            </div>
-          )}
+              {/* Linked Savings Account / Vault if applicable */}
+              {savingsAccounts.length > 0 && paymentMethod !== 'credit_card' && (
+                <div className="p-4 rounded-2xl bg-emerald-50/60 animate-in fade-in duration-150">
+                  <label className="block text-xs font-semibold text-emerald-950 mb-2 flex items-center gap-1.5">
+                    <PiggyBank className="w-4 h-4 text-emerald-700" />
+                    Connect to Savings / Vault Account (Optional)
+                  </label>
+                  <select
+                    value={savingsId}
+                    onChange={(e) => setSavingsId(e.target.value)}
+                    className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">-- None (General Cash Flow) --</option>
+                    {savingsAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} ({acc.institution_name} • ₱
+                        {Number(acc.current_balance).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                        })})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-emerald-800/80 mt-1.5">
+                    {kind === 'income'
+                      ? 'Deposit will be automatically added to this vault balance.'
+                      : 'Expense will be automatically deducted from this vault balance.'}
+                  </p>
+                </div>
+              )}
 
-          {/* Linked Property / Asset (Optional) */}
-          {properties.length > 0 && (
-            <div className="p-4 rounded-2xl bg-amber-50/60 animate-in fade-in duration-150">
-              <label className="block text-xs font-semibold text-amber-950 mb-2 flex items-center gap-1.5">
-                <Building2 className="w-4 h-4 text-amber-700" />
-                Connect to Property / Vehicle (Optional)
-              </label>
-              <select
-                value={propertyId}
-                onChange={(e) => setPropertyId(e.target.value)}
-                className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">-- None (Personal / General) --</option>
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} {p.identifier ? `(${p.identifier})` : ''} • {p.property_type}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-amber-800/80 mt-1.5">
-                {kind === 'income'
-                  ? 'Earnings will be attributed to this property/vehicle revenue.'
-                  : 'Costs will be attributed to this property/vehicle expenses.'}
-              </p>
-            </div>
+              {/* Linked Property / Asset (Optional) */}
+              {properties.length > 0 && (
+                <div className="p-4 rounded-2xl bg-amber-50/60 animate-in fade-in duration-150">
+                  <label className="block text-xs font-semibold text-amber-950 mb-2 flex items-center gap-1.5">
+                    <Building2 className="w-4 h-4 text-amber-700" />
+                    Connect to Property / Vehicle (Optional)
+                  </label>
+                  <select
+                    value={propertyId}
+                    onChange={(e) => setPropertyId(e.target.value)}
+                    className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">-- None (Personal / General) --</option>
+                    {properties.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} {p.identifier ? `(${p.identifier})` : ''} • {p.property_type}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-amber-800/80 mt-1.5">
+                    {kind === 'income'
+                      ? 'Earnings will be attributed to this property/vehicle revenue.'
+                      : 'Costs will be attributed to this property/vehicle expenses.'}
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           {/* Date & Note */}

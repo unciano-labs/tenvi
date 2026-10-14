@@ -29,6 +29,8 @@ import {
   Loader2,
   Zap,
   ExternalLink,
+  Download,
+  Database,
 } from 'lucide-react';
 import {
   saveNotificationSettingsAction,
@@ -47,6 +49,7 @@ import {
 } from '@/types';
 import { formatMoney, calculateNextDueDate } from '@/lib/finance/calculations';
 import { NotificationTemplatesEditor } from '@/components/Notifications/NotificationTemplatesEditor';
+import { DataExportPanel } from '@/components/Settings/DataExportPanel';
 import { testGeminiConnectionAction, getGeminiUsageStatsAction } from '@/app/actions/gemini';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
@@ -466,7 +469,7 @@ export function SettingsClient({
       {/* Header & Appearance Theme Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {isAdmin ? 'Settings & Intelligence Center' : 'Notification Templates'}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -521,6 +524,11 @@ export function SettingsClient({
               </TabsTrigger>
             </>
           )}
+
+          <TabsTrigger value="export" className="flex items-center gap-2">
+            <Download className="w-4 h-4 text-emerald-600" />
+            <span>Data Export</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* TAB 1: SETTINGS (Admin Only) */}
@@ -1674,56 +1682,56 @@ export function SettingsClient({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Daily Requests */}
             <div className="bg-card text-card-foreground shadow-card rounded-3xl p-6 space-y-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-2xs sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                 Daily Requests Used
               </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-foreground">
+              <div className="text-lg sm:text-xl font-bold text-foreground">
                 {geminiStats?.dailyRequestsUsed || 0}
-                <span className="text-sm font-normal text-muted-foreground ml-1">
+                <span className="text-xs font-normal text-muted-foreground ml-1">
                   / {geminiStats?.dailyRequestsLimit || 1500}
                 </span>
               </div>
-              <p className="text-xs text-emerald-500 font-semibold">
+              <p className="text-2xs sm:text-[11px] text-emerald-500 font-semibold mt-1">
                 {geminiStats?.dailyRemainingRequests ?? 1500} free requests remaining today
               </p>
             </div>
 
             {/* Rate Limit */}
             <div className="bg-card text-card-foreground shadow-card rounded-3xl p-6 space-y-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-2xs sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                 Burst Rate Limit
               </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-foreground">
+              <div className="text-lg sm:text-xl font-bold text-foreground">
                 {geminiStats?.minuteRateLimit || 15}
-                <span className="text-sm font-normal text-muted-foreground ml-1">RPM</span>
+                <span className="text-xs font-normal text-muted-foreground ml-1">RPM</span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-2xs sm:text-[11px] text-muted-foreground/80 font-normal mt-1">
                 Up to 15 requests per minute allowed on free tier
               </p>
             </div>
 
             {/* Tokens Processed */}
             <div className="bg-card text-card-foreground shadow-card rounded-3xl p-6 space-y-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-2xs sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                 Tokens Processed Today
               </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-foreground">
+              <div className="text-lg sm:text-xl font-bold text-foreground">
                 {(geminiStats?.tokensUsedToday || 0).toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-2xs sm:text-[11px] text-muted-foreground/80 font-normal mt-1">
                 Cap: 1,000,000 tokens / min (TPM)
               </p>
             </div>
 
             {/* Daily Reset Countdown */}
             <div className="bg-card text-card-foreground shadow-card rounded-3xl p-6 space-y-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-2xs sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                 Daily Quota Reset
               </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-foreground">
+              <div className="text-lg sm:text-xl font-bold text-foreground">
                 ~{geminiStats?.resetHoursRemaining || 24}h
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-2xs sm:text-[11px] text-muted-foreground/80 font-normal mt-1">
                 Resets daily at 00:00 UTC (8:00 AM PHT)
               </p>
             </div>
@@ -1860,6 +1868,11 @@ export function SettingsClient({
           </div>
         </TabsContent>
       )}
+
+      {/* TAB 5: DATA EXPORT */}
+      <TabsContent value="export" className="space-y-6 animate-in fade-in duration-150">
+        <DataExportPanel />
+      </TabsContent>
       </Tabs>
     </div>
   );

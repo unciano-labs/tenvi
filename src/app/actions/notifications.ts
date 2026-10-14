@@ -114,8 +114,8 @@ export async function getNotificationSettingsAction(): Promise<{
     card_email_subject: data.card_email_subject || DEFAULT_CARD_EMAIL_SUBJECT,
     card_email_body: data.card_email_body || DEFAULT_CARD_EMAIL_BODY,
     smtp_email: data.smtp_email || null,
-    smtp_app_password: data.smtp_app_password || null,
-    httpsms_api_key: data.httpsms_api_key || null,
+    smtp_app_password: data.smtp_app_password ? '[CONFIGURED]' : null,
+    httpsms_api_key: data.httpsms_api_key ? '[CONFIGURED]' : null,
     httpsms_from_number: data.httpsms_from_number || null,
   };
 

@@ -33,18 +33,20 @@ import {
   formatDate,
   calculateLoanStatus,
 } from '@/lib/finance/calculations';
-import { Loan, Contact, CreditCard } from '@/types';
+import { Loan, Contact, CreditCard, Property } from '@/types';
 import { confirmModal } from '@/components/ui/GlobalDialog';
 
 interface LoansClientProps {
   initialLoans: Loan[];
   contacts: Contact[];
+  properties?: Property[];
   creditCards?: CreditCard[];
 }
 
 export function LoansClient({
   initialLoans,
   contacts,
+  properties = [],
   creditCards = [],
 }: LoansClientProps) {
   const router = useRouter();
@@ -168,7 +170,7 @@ export function LoansClient({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground truncate">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             People Who Owe You
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -384,12 +386,12 @@ export function LoansClient({
                   <div className="space-y-4 min-w-0">
                     {/* Entity Card Header */}
                     <div className="flex items-start justify-between gap-3 min-w-0">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
                         <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-extrabold text-base shrink-0 shadow-2xs">
                           {group.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-lg font-bold text-foreground truncate">
+                          <h3 className="text-base font-semibold leading-snug text-foreground whitespace-normal break-words">
                             {group.name}
                           </h3>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
@@ -411,7 +413,7 @@ export function LoansClient({
 
                       <Badge
                         variant={isFullySettled ? 'success' : 'warning'}
-                        className="font-bold text-xs shrink-0 whitespace-nowrap"
+                        className="font-medium text-xs shrink-0 whitespace-nowrap"
                       >
                         {isFullySettled ? 'All Settled ✅' : `${formatMoney(group.totalOwed)} Owed`}
                       </Badge>
@@ -421,14 +423,14 @@ export function LoansClient({
                     <div className="p-4 rounded-2xl bg-muted/60 space-y-2.5 min-w-0">
                       <div className="flex justify-between items-end gap-2 min-w-0">
                         <div className="min-w-0">
-                          <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider block">
+                          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
                             Total Outstanding
                           </span>
-                          <span className="text-2xl font-extrabold text-foreground truncate block">
+                          <span className="text-2xl font-bold tracking-tight text-foreground block">
                             {formatMoney(group.totalOwed)}
                           </span>
                         </div>
-                        <span className="text-xs font-bold text-muted-foreground shrink-0">
+                        <span className="text-xs font-medium text-muted-foreground shrink-0">
                           of {formatMoney(group.totalOriginal)} lent
                         </span>
                       </div>
@@ -480,8 +482,12 @@ export function LoansClient({
                                     >
                                       {loan.status === 'paid'
                                         ? 'Paid'
-                                        : loan.is_installment
+                                        : loan.installment_months
                                         ? `${loan.installment_months}M Installment`
+                                        : Number(loan.monthly_interest_rate || 0) > 0
+                                        ? 'Monthly Interest'
+                                        : loan.is_installment
+                                        ? 'Monthly Loan'
                                         : 'Advance'}
                                     </Badge>
 
@@ -493,7 +499,7 @@ export function LoansClient({
                                     )}
                                   </div>
 
-                                  <span className="font-bold text-foreground group-hover:text-primary transition-colors text-xs truncate block mt-1">
+                                  <span className="font-semibold text-foreground group-hover:text-primary transition-colors text-xs whitespace-normal break-words leading-snug block mt-1">
                                     {loan.reason || 'Personal Advance'}
                                   </span>
 
@@ -645,29 +651,33 @@ export function LoansClient({
                     <div className="flex items-start justify-between gap-3 mb-2 min-w-0">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap min-w-0">
-                          <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                          <h3 className="text-base font-semibold leading-snug text-foreground group-hover:text-primary transition-colors whitespace-normal break-words">
                             {loan.contact?.name || 'Borrower'}
                           </h3>
                           {loan.is_installment && (
-                            <Badge variant="soft" className="gap-1 font-semibold text-xs shrink-0">
+                            <Badge variant="soft" className="gap-1 font-medium text-xs shrink-0">
                               <Clock className="w-3 h-3" />
-                              {loan.installment_months} Mos Installment
+                              {loan.installment_months
+                                ? `${loan.installment_months} Mos Installment`
+                                : Number(loan.monthly_interest_rate || 0) > 0
+                                ? `${loan.monthly_interest_rate}% / mo Interest`
+                                : 'Monthly Loan'}
                             </Badge>
                           )}
                           {loan.credit_card && (
-                            <Badge variant="soft" className="gap-1 font-semibold text-xs shrink-0">
+                            <Badge variant="soft" className="gap-1 font-medium text-xs shrink-0">
                               <CreditCardIcon className="w-3 h-3 text-muted-foreground" />
                               {loan.credit_card.bank_name} •••• {loan.credit_card.last_4}
                             </Badge>
                           )}
                           {Number(loan.downpayment_amount || 0) > 0 ? (
-                            <Badge variant="success" className="gap-1 font-semibold text-xs shrink-0">
+                            <Badge variant="success" className="gap-1 font-medium text-xs shrink-0">
                               ₱{Number(loan.downpayment_amount).toLocaleString()} Downpayment
                             </Badge>
                           ) : null}
                         </div>
                         {loan.reason && (
-                          <p className="text-xs text-muted-foreground mt-1 truncate">
+                          <p className="text-xs text-muted-foreground mt-1 whitespace-normal break-words">
                             {loan.reason}
                           </p>
                         )}
@@ -681,7 +691,7 @@ export function LoansClient({
                             ? 'default'
                             : 'warning'
                         }
-                        className="font-bold text-xs shrink-0 whitespace-nowrap"
+                        className="font-medium text-xs shrink-0 whitespace-nowrap"
                       >
                         {loan.status === 'paid'
                           ? 'All Paid Up ✅'
@@ -695,14 +705,14 @@ export function LoansClient({
                     <div className="mt-4 p-4 rounded-2xl bg-muted/60 min-w-0">
                       <div className="flex justify-between items-end mb-2 gap-2 min-w-0">
                         <div className="min-w-0">
-                          <span className="text-xs text-muted-foreground font-medium block">
+                          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
                             Remaining Balance
                           </span>
-                          <span className="text-2xl font-extrabold text-foreground truncate block">
+                          <span className="text-2xl font-bold tracking-tight text-foreground block">
                             {formatMoney(loan.balance_remaining)}
                           </span>
                         </div>
-                        <span className="text-xs font-bold text-muted-foreground shrink-0">
+                        <span className="text-xs font-medium text-muted-foreground shrink-0">
                           of {formatMoney(loan.amount)}
                         </span>
                       </div>
@@ -799,6 +809,7 @@ export function LoansClient({
           setSelectedContactIdForLoan('');
         }}
         contacts={contacts}
+        properties={properties}
         creditCards={creditCards}
         defaultContactId={selectedContactIdForLoan}
       />

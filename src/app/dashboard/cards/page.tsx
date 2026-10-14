@@ -2,10 +2,11 @@ import { createClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
 import {
   calculateOptimalCardToSwipe,
+  calculateCardSpending,
   calculateNextDueDate,
   formatDate,
+  type CardSpendingSummary,
 } from '@/lib/finance/calculations';
-import type { CardSpendingSummary } from '@/components/Cards/CreditCardTile';
 import type { DueSoonCardItem } from '@/components/Cards/PayTheseSoonPanel';
 import { CardsClient } from './CardsClient';
 
@@ -34,6 +35,7 @@ export default async function CardsPage() {
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
       .eq('is_active', true)
+      .is('deleted_at', null)
       .order('due_day', { ascending: true }),
 
     supabase
@@ -48,6 +50,7 @@ export default async function CardsPage() {
       .select('id, amount, balance_remaining, reason, credit_card_id, status, contact:bili_contacts(name)')
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
+      .is('deleted_at', null)
       .not('credit_card_id', 'is', null),
 
     supabase
@@ -58,6 +61,7 @@ export default async function CardsPage() {
       `)
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
+      .is('deleted_at', null)
       .not('credit_card_id', 'is', null)
       .order('occurred_on', { ascending: false }),
 
@@ -90,23 +94,11 @@ export default async function CardsPage() {
   cardsWithStatements.forEach((card) => {
     totalLimit += Number(card.credit_limit || 0);
 
-    const directSpend = (transactions || [])
-      .filter((t) => t.credit_card_id === card.id && t.kind === 'expense')
-      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const spending = calculateCardSpending(card, transactions || [], loans || []);
+    totalUsed += spending.totalUsed;
+    boughtForOthers += spending.loansSpend;
 
-    const loansSpend = (loans || [])
-      .filter((l) => l.credit_card_id === card.id && l.status !== 'paid')
-      .reduce((sum, l) => sum + Number(l.balance_remaining || 0), 0);
-
-    const cardTotalUsed = directSpend + loansSpend;
-    totalUsed += cardTotalUsed;
-    boughtForOthers += loansSpend;
-
-    spendingMap[card.id] = {
-      directSpend,
-      loansSpend,
-      totalUsed: cardTotalUsed,
-    };
+    spendingMap[card.id] = spending;
   });
 
   // Server-computed optimal card recommendation (TNV-030)
@@ -116,7 +108,7 @@ export default async function CardsPage() {
     loans || []
   );
 
-  // Server-computed pay these soon items (TNV-030)
+  // Server-computed pay these soon items (hidden if all cards paid or no dues incoming in 3 days)
   const initialDueSoonCards: DueSoonCardItem[] = [];
   cardsWithStatements.forEach((card) => {
     const spending = spendingMap[card.id];
@@ -126,7 +118,8 @@ export default async function CardsPage() {
 
     if (totalBalance > 0) {
       const dueDateInfo = calculateNextDueDate(card.due_day);
-      if (dueDateInfo.daysRemaining <= 7) {
+      // Only include cards due within 3 days (or overdue)
+      if (dueDateInfo.daysRemaining <= 3) {
         initialDueSoonCards.push({
           statementId: card.latest_statement?.id,
           cardId: card.id,
@@ -136,7 +129,7 @@ export default async function CardsPage() {
           dueDateFormatted: formatDate(dueDateInfo.nextDueDate),
           daysRemaining: dueDateInfo.daysRemaining,
           amountDue: totalBalance,
-          urgency: dueDateInfo.daysRemaining <= 3 ? 'urgent' : 'soon',
+          urgency: dueDateInfo.daysRemaining < 0 ? 'overdue' : 'urgent',
         });
       }
     }

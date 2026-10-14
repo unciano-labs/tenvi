@@ -3,21 +3,20 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { WEBSITE_ID } from '@/lib/constants';
+import { requireWebsiteUser } from '@/lib/auth/guards';
+import { logAuditEntry } from '@/lib/audit/logger';
 import {
   savingsAccountSchema,
   savingsBalanceUpdateSchema,
 } from '@/lib/validations/schemas';
 
 export async function createSavingsAccountAction(data: any) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'You must be logged in to manage savings.' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'You must be logged in to manage savings.' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const parsed = savingsAccountSchema.safeParse(data);
   if (!parsed.success) {
@@ -60,15 +59,12 @@ export async function createSavingsAccountAction(data: any) {
 }
 
 export async function updateSavingsBalanceAction(data: any) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const parsed = savingsBalanceUpdateSchema.safeParse(data);
   if (!parsed.success) {
@@ -123,25 +119,74 @@ export async function updateSavingsBalanceAction(data: any) {
 }
 
 export async function deleteSavingsAccountAction(id: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
+  // 1. Fetch account for audit logging
+  const { data: account } = await supabase
+    .from('bili_savings')
+    .select('*')
+    .eq('id', id)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  // 2. Soft delete
   const { error } = await supabase
     .from('bili_savings')
-    .delete()
+    .update({
+      deleted_at: new Date().toISOString(),
+      is_active: false,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id);
 
   if (error) {
-    console.error('Error deleting savings account:', error);
+    console.error('Error soft-deleting savings account:', error);
     return { error: 'Failed to delete account' };
+  }
+
+  // 3. Audit Log
+  await logAuditEntry({
+    userId: user.id,
+    action: 'SOFT_DELETE',
+    entityType: 'savings',
+    entityId: id,
+    oldData: account,
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/savings');
+  return { success: true };
+}
+
+export async function updateSavingsThemeAction(id: string, colorTheme: string) {
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
+  }
+  const user = auth.user;
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('bili_savings')
+    .update({
+      color_theme: colorTheme,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error updating savings theme:', error);
+    return { error: 'Failed to update account theme' };
   }
 
   revalidatePath('/dashboard');

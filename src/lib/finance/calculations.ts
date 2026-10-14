@@ -483,7 +483,7 @@ export function groupTransactionsByStatementDate(
     if (tx.kind === 'expense') {
       group.totalExpenses += amt;
       group.netSpend += amt;
-    } else {
+    } else if (tx.kind === 'income') {
       group.totalIncome += amt;
       group.netSpend -= amt;
     }
@@ -530,6 +530,68 @@ export interface OptimalCardResult {
   rankedCards: CardSpendRecommendation[];
   cautionCards: CardSpendRecommendation[];
   todayFormatted: string;
+}
+
+export interface CardSpendingSummary {
+  directSpend: number;
+  loansSpend: number;
+  totalUsed: number;
+  availableToSpend: number;
+  utilizationPercent: number;
+  lastSwipeDate?: string | null;
+}
+
+/**
+ * Standardized credit card spending and utilization calculation.
+ * Ensures consistent spending power, total used, and available credit across all views:
+ * - Cards dashboard overview (/dashboard/cards)
+ * - Individual card details page (/dashboard/cards/[id])
+ * - Optimal card to swipe algorithm
+ *
+ * Rules:
+ * 1. directSpend: sum of expense transactions with this card, excluding loan-linked expenses (!t.loan_id)
+ *    to prevent double counting with loan balances.
+ * 2. loansSpend: sum of unpaid loan balances (status !== 'paid') swiped on this card.
+ * 3. totalUsed = directSpend + loansSpend.
+ * 4. availableToSpend = Math.max(0, creditLimit - totalUsed).
+ */
+export function calculateCardSpending(
+  card: { id: string; credit_limit?: number | string | null },
+  transactions: Array<{ credit_card_id?: string | null; kind?: string | null; amount?: number | string | null; loan_id?: string | null }> = [],
+  loans: Array<{ credit_card_id?: string | null; balance_remaining?: number | string | null; status?: string | null }> = []
+): CardSpendingSummary {
+  const cardId = card?.id;
+  const creditLimit = Number(card?.credit_limit || 0);
+
+  const hasAnyTxCardId = (transactions || []).some((t) => Boolean(t.credit_card_id));
+  const directSpend = (transactions || [])
+    .filter((t) => {
+      if (hasAnyTxCardId && t.credit_card_id !== cardId) return false;
+      const isExpense = t.kind?.toLowerCase() === 'expense';
+      return isExpense && !t.loan_id;
+    })
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+  const hasAnyLoanCardId = (loans || []).some((l) => Boolean(l.credit_card_id));
+  const loansSpend = (loans || [])
+    .filter((l) => {
+      if (hasAnyLoanCardId && l.credit_card_id !== cardId) return false;
+      return l.status !== 'paid';
+    })
+    .reduce((sum, l) => sum + Number(l.balance_remaining || 0), 0);
+
+  const totalUsed = directSpend + loansSpend;
+  const availableToSpend = Math.max(0, creditLimit - totalUsed);
+  const utilizationPercent =
+    creditLimit > 0 ? Math.min(100, Math.round((totalUsed / creditLimit) * 100)) : 0;
+
+  return {
+    directSpend,
+    loansSpend,
+    totalUsed,
+    availableToSpend,
+    utilizationPercent,
+  };
 }
 
 /**
@@ -624,21 +686,13 @@ export function calculateOptimalCardToSwipe(
     );
 
     // Available spending power calculation
-    const cardDirectSpend = transactions
-      .filter((t) => t.credit_card_id === card.id && t.kind === 'expense' && !t.loan_id)
-      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
-
-    const cardLoans = linkedLoans.filter((l) => l.credit_card_id === card.id);
-    const cardSwipedLoans = cardLoans.reduce(
-      (sum, l) => sum + Number(l.balance_remaining || 0),
-      0
-    );
-
-    const totalUtilized = cardDirectSpend + cardSwipedLoans;
-    const creditLimit = Number(card.credit_limit || 0);
-    const availablePower = Math.max(0, creditLimit - totalUtilized);
-    const utilizationPercent =
-      creditLimit > 0 ? Math.min(100, Math.round((totalUtilized / creditLimit) * 100)) : 0;
+    const {
+      directSpend: cardDirectSpend,
+      loansSpend: cardSwipedLoans,
+      totalUsed: totalUtilized,
+      availableToSpend: availablePower,
+      utilizationPercent,
+    } = calculateCardSpending(card, transactions, linkedLoans);
 
     // Determine recommendation tier and advice
     let recommendationTier: 'optimal' | 'good' | 'caution' = 'good';
@@ -836,7 +890,7 @@ export function calculatePropertyFinancials(
   },
   transactions: Array<{
     property_id?: string | null;
-    kind: 'income' | 'expense';
+    kind: 'income' | 'expense' | 'transfer';
     amount: number | string;
   }>
 ): PropertyFinancials {
@@ -852,7 +906,7 @@ export function calculatePropertyFinancials(
     if (t.kind === 'income') {
       totalIncome += amt;
       incomeCount++;
-    } else {
+    } else if (t.kind === 'expense') {
       totalExpense += amt;
       expenseCount++;
     }
@@ -1244,3 +1298,338 @@ export function calculateCardCycleDates(
     isCutoffToday,
   };
 }
+
+export interface NetWorthBreakdown {
+  liquidSavings: number;
+  receivables: number;
+  fixedAssets: number;
+  totalAssets: number;
+  creditCardBalances: number;
+  longTermLiabilities: number;
+  totalLiabilities: number;
+  netWorth: number;
+  debtToAssetRatio: number;
+}
+
+/**
+ * Commercial FinTech Net Worth Engine
+ * Net Worth = (Liquid Cash + Receivables + Fixed Assets) - (Credit Card Balances + Term Liabilities)
+ */
+export function calculateTrueNetWorth(params: {
+  savings: Array<{ current_balance?: number | string | null; is_active?: boolean }>;
+  loans: Array<{ balance_remaining?: number | string | null; status?: string }>;
+  properties: Array<{ estimated_value?: number | string | null; status?: string }>;
+  creditCards?: Array<{ latest_statement?: { billed_amount?: number | string | null; paid_amount?: number | string | null } | null }>;
+  liabilities?: Array<{ current_principal_balance?: number | string | null; status?: string }>;
+}): NetWorthBreakdown {
+  const liquidSavings = (params.savings || [])
+    .filter((s) => s.is_active !== false)
+    .reduce((sum, s) => sum + Number(s.current_balance || 0), 0);
+
+  const receivables = (params.loans || [])
+    .filter((l) => l.status !== 'paid')
+    .reduce((sum, l) => sum + Number(l.balance_remaining || 0), 0);
+
+  const fixedAssets = (params.properties || [])
+    .filter((p) => p.status !== 'sold' && p.status !== 'inactive')
+    .reduce((sum, p) => sum + Number(p.estimated_value || 0), 0);
+
+  const totalAssets = liquidSavings + receivables + fixedAssets;
+
+  let creditCardBalances = 0;
+  if (params.creditCards) {
+    creditCardBalances = params.creditCards.reduce((sum, card) => {
+      const stmt = card.latest_statement;
+      if (!stmt) return sum;
+      const unpaid = Math.max(0, Number(stmt.billed_amount || 0) - Number(stmt.paid_amount || 0));
+      return sum + unpaid;
+    }, 0);
+  }
+
+  const longTermLiabilities = (params.liabilities || [])
+    .filter((l) => l.status === 'active')
+    .reduce((sum, l) => sum + Number(l.current_principal_balance || 0), 0);
+
+  const totalLiabilities = creditCardBalances + longTermLiabilities;
+  const netWorth = totalAssets - totalLiabilities;
+  const debtToAssetRatio =
+    totalAssets > 0 ? Math.min(100, Math.round((totalLiabilities / totalAssets) * 100)) : 0;
+
+  return {
+    liquidSavings,
+    receivables,
+    fixedAssets,
+    totalAssets,
+    creditCardBalances,
+    longTermLiabilities,
+    totalLiabilities,
+    netWorth,
+    debtToAssetRatio,
+  };
+}
+
+// ============================================================================
+// REDUCING-BALANCE LOAN & MORTGAGE AMORTIZATION ENGINE (Task 3.1)
+// ============================================================================
+
+export interface AmortizationScheduleRow {
+  installmentNumber: number;
+  dueDate: string;
+  paymentAmount: number;
+  principalAmount: number;
+  interestAmount: number;
+  remainingBalance: number;
+  cumulativeInterest: number;
+  cumulativePrincipal: number;
+}
+
+export interface AmortizationSummary {
+  monthlyPayment: number;
+  totalPayment: number;
+  totalInterest: number;
+  totalPrincipal: number;
+  schedule: AmortizationScheduleRow[];
+}
+
+/**
+ * Calculate fixed monthly amortization payment (PMT formula)
+ * PMT = P * [r(1+r)^n] / [(1+r)^n - 1]
+ */
+export function calculateMonthlyAmortizationPayment(
+  principal: number,
+  annualInterestRate: number,
+  termMonths: number
+): number {
+  const p = Math.max(0, principal);
+  const n = Math.max(0, Math.round(termMonths));
+  if (p === 0 || n === 0) return 0;
+
+  const annualRate = Math.max(0, annualInterestRate);
+  if (annualRate === 0) {
+    return Number((p / n).toFixed(2));
+  }
+
+  const r = annualRate / 100 / 12;
+  const factor = Math.pow(1 + r, n);
+  const pmt = p * ((r * factor) / (factor - 1));
+  return Number(pmt.toFixed(2));
+}
+
+/**
+ * Generate full reducing-balance amortization schedule
+ * Guarantees final period convergence to exactly 0.00
+ */
+export function calculateAmortizationSchedule(params: {
+  principal: number;
+  annualInterestRate: number;
+  termMonths: number;
+  startDate?: string;
+  monthlyDueDay?: number;
+}): AmortizationSummary {
+  const principal = Math.max(0, Number(params.principal || 0));
+  const termMonths = Math.max(0, Math.round(Number(params.termMonths || 0)));
+  const annualRate = Math.max(0, Number(params.annualInterestRate || 0));
+  const startDateStr = params.startDate || new Date().toISOString().split('T')[0];
+  const dueDay = params.monthlyDueDay ? Math.min(31, Math.max(1, params.monthlyDueDay)) : 15;
+
+  if (principal === 0 || termMonths === 0) {
+    return {
+      monthlyPayment: 0,
+      totalPayment: 0,
+      totalInterest: 0,
+      totalPrincipal: 0,
+      schedule: [],
+    };
+  }
+
+  const monthlyRate = annualRate > 0 ? annualRate / 100 / 12 : 0;
+  const regularPayment = calculateMonthlyAmortizationPayment(principal, annualRate, termMonths);
+
+  const startDate = new Date(startDateStr);
+  let currentYear = startDate.getFullYear();
+  let currentMonth = startDate.getMonth();
+
+  let remainingPrincipal = principal;
+  let cumulativeInterest = 0;
+  let cumulativePrincipal = 0;
+  const schedule: AmortizationScheduleRow[] = [];
+
+  for (let i = 1; i <= termMonths; i++) {
+    currentMonth += 1;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear += 1;
+    }
+    const maxDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const clampedDay = Math.min(dueDay, maxDaysInMonth);
+    const dueDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
+
+    const interestAmount = monthlyRate > 0 ? Number((remainingPrincipal * monthlyRate).toFixed(2)) : 0;
+    let principalAmount = 0;
+    let paymentAmount = 0;
+
+    if (i === termMonths) {
+      // Final month converges balance exactly to 0
+      principalAmount = remainingPrincipal;
+      paymentAmount = Number((principalAmount + interestAmount).toFixed(2));
+      remainingPrincipal = 0;
+    } else {
+      principalAmount = Number((regularPayment - interestAmount).toFixed(2));
+      if (principalAmount > remainingPrincipal) {
+        principalAmount = remainingPrincipal;
+      }
+      paymentAmount = regularPayment;
+      remainingPrincipal = Number((remainingPrincipal - principalAmount).toFixed(2));
+    }
+
+    cumulativeInterest = Number((cumulativeInterest + interestAmount).toFixed(2));
+    cumulativePrincipal = Number((cumulativePrincipal + principalAmount).toFixed(2));
+
+    schedule.push({
+      installmentNumber: i,
+      dueDate,
+      paymentAmount,
+      principalAmount,
+      interestAmount,
+      remainingBalance: Math.max(0, remainingPrincipal),
+      cumulativeInterest,
+      cumulativePrincipal,
+    });
+  }
+
+  const totalPayment = Number((cumulativePrincipal + cumulativeInterest).toFixed(2));
+
+  return {
+    monthlyPayment: regularPayment,
+    totalPayment,
+    totalInterest: cumulativeInterest,
+    totalPrincipal: cumulativePrincipal,
+    schedule,
+  };
+}
+
+/**
+ * Calculate interest vs. principal split for the next upcoming payment
+ */
+export function calculateNextAmortizationSplit(params: {
+  currentBalance: number;
+  annualInterestRate: number;
+  monthlyPayment: number;
+}): {
+  principalPortion: number;
+  interestPortion: number;
+  newBalance: number;
+} {
+  const balance = Math.max(0, Number(params.currentBalance || 0));
+  const rate = Math.max(0, Number(params.annualInterestRate || 0));
+  const pmt = Math.max(0, Number(params.monthlyPayment || 0));
+
+  if (balance === 0) {
+    return { principalPortion: 0, interestPortion: 0, newBalance: 0 };
+  }
+
+  const monthlyRate = rate > 0 ? rate / 100 / 12 : 0;
+  const interestPortion = Number((balance * monthlyRate).toFixed(2));
+
+  let principalPortion = Number((pmt - interestPortion).toFixed(2));
+  if (principalPortion < 0) principalPortion = 0;
+  if (principalPortion > balance) principalPortion = balance;
+
+  const newBalance = Number(Math.max(0, balance - principalPortion).toFixed(2));
+
+  return {
+    principalPortion,
+    interestPortion,
+    newBalance,
+  };
+}
+
+// ============================================================================
+// ASSET VALUATION & STRAIGHT-LINE DEPRECIATION ENGINE (Task 3.2)
+// ============================================================================
+
+export interface AssetDepreciationDetails {
+  costBasis: number;
+  salvageValue: number;
+  usefulLifeYears: number;
+  elapsedMonths: number;
+  monthlyDepreciation: number;
+  accumulatedDepreciation: number;
+  currentBookValue: number;
+  percentDepreciated: number;
+  isFullyDepreciated: boolean;
+}
+
+/**
+ * Standard commercial straight-line depreciation formula:
+ * Annual Depr = (Cost - Salvage) / Useful Life
+ * Monthly Depr = Annual Depr / 12
+ * Accumulated Depr = Monthly Depr * Elapsed Months (capped at Cost - Salvage)
+ * Current Book Value = Cost - Accumulated Depr (floored at Salvage)
+ */
+export function calculateStraightLineDepreciation(params: {
+  purchasePrice: number;
+  purchaseDate: string | Date;
+  salvageValue?: number;
+  usefulLifeYears?: number;
+  asOfDate?: string | Date;
+}): AssetDepreciationDetails {
+  const cost = Math.max(0, Number(params.purchasePrice || 0));
+  const salvage =
+    params.salvageValue !== undefined
+      ? Math.max(0, Number(params.salvageValue))
+      : Number((cost * 0.1).toFixed(2)); // Default 10% salvage value
+  const lifeYears = Math.max(1, Number(params.usefulLifeYears || 5)); // Default 5 years for vehicles
+
+  if (cost <= 0) {
+    return {
+      costBasis: 0,
+      salvageValue: 0,
+      usefulLifeYears: lifeYears,
+      elapsedMonths: 0,
+      monthlyDepreciation: 0,
+      accumulatedDepreciation: 0,
+      currentBookValue: 0,
+      percentDepreciated: 0,
+      isFullyDepreciated: false,
+    };
+  }
+
+  const pDate = new Date(params.purchaseDate);
+  const asOf = params.asOfDate ? new Date(params.asOfDate) : new Date();
+
+  let elapsedMonths = 0;
+  if (!isNaN(pDate.getTime()) && asOf >= pDate) {
+    const yearDiff = asOf.getFullYear() - pDate.getFullYear();
+    const monthDiff = asOf.getMonth() - pDate.getMonth();
+    elapsedMonths = Math.max(0, yearDiff * 12 + monthDiff);
+  }
+
+  const totalDepreciableAmount = Math.max(0, cost - salvage);
+  const totalMonths = lifeYears * 12;
+  const monthlyDepreciation = Number((totalDepreciableAmount / totalMonths).toFixed(2));
+
+  const accumulatedDepreciation = Number(
+    Math.min(totalDepreciableAmount, monthlyDepreciation * elapsedMonths).toFixed(2)
+  );
+  const currentBookValue = Number(Math.max(salvage, cost - accumulatedDepreciation).toFixed(2));
+  const percentDepreciated =
+    totalDepreciableAmount > 0
+      ? Math.min(100, Math.round((accumulatedDepreciation / totalDepreciableAmount) * 100))
+      : 100;
+  const isFullyDepreciated = currentBookValue <= salvage || elapsedMonths >= totalMonths;
+
+  return {
+    costBasis: cost,
+    salvageValue: salvage,
+    usefulLifeYears: lifeYears,
+    elapsedMonths,
+    monthlyDepreciation,
+    accumulatedDepreciation,
+    currentBookValue,
+    percentDepreciated,
+    isFullyDepreciated,
+  };
+}
+
+

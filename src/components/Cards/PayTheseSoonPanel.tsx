@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { formatMoney } from '@/lib/finance/calculations';
 import { markStatementPaidAction } from '@/app/actions/cards';
 import { toast } from 'sonner';
-import { CheckCircle2, Clock, AlertTriangle, Loader2 } from 'lucide-react';
+import { Clock, AlertTriangle, Loader2 } from 'lucide-react';
 
 export interface DueSoonCardItem {
   statementId?: string;
@@ -62,6 +62,10 @@ export function PayTheseSoonPanel({
     });
   };
 
+  if (!dueSoonCards || dueSoonCards.length === 0) {
+    return null;
+  }
+
   return (
     <Card className="shadow-card" aria-live="polite">
       <CardHeader className="pb-3">
@@ -72,29 +76,16 @@ export function PayTheseSoonPanel({
             </div>
             <CardTitle className="text-base font-semibold">Pay These Soon</CardTitle>
           </div>
-          {dueSoonCards.length > 0 && (
-            <Badge variant="warning">
-              {dueSoonCards.length} {dueSoonCards.length === 1 ? 'bill' : 'bills'} due within 7 days
-            </Badge>
-          )}
+          <Badge variant="warning">
+            {dueSoonCards.length} {dueSoonCards.length === 1 ? 'bill' : 'bills'} due within 3 days
+          </Badge>
         </div>
         <CardDescription>
           Upcoming statement balances that need attention to avoid interest and late fees.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {dueSoonCards.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-2xl bg-success-soft p-4 text-success-soft-foreground">
-            <CheckCircle2 className="size-5 shrink-0" />
-            <div>
-              <p className="text-sm font-semibold">You're all caught up!</p>
-              <p className="text-xs opacity-90">
-                No credit card bills are due within the next 7 days.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
+        <div className="space-y-3">
             {dueSoonCards.map((item) => {
               const isItemPending = isPending && pendingCardId === item.cardId;
               const isUrgentOrOverdue = item.urgency === 'urgent' || item.urgency === 'overdue';
@@ -102,7 +93,7 @@ export function PayTheseSoonPanel({
               return (
                 <div
                   key={item.cardId}
-                  className="flex flex-col gap-3 rounded-2xl bg-muted/60 p-4 transition-colors hover:bg-muted sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 rounded-2xl bg-muted/60 p-4 transition-colors hover:bg-muted sm:flex-row sm:items-start sm:justify-between"
                 >
                   <div className="flex items-start gap-3">
                     <div
@@ -119,11 +110,11 @@ export function PayTheseSoonPanel({
                       )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-foreground text-sm">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-foreground text-base leading-snug whitespace-normal break-words">
                           {item.bankName} {item.cardName}
                         </span>
-                        <span className="text-xs text-muted-foreground font-mono">
+                        <span className="text-xs text-muted-foreground font-mono shrink-0">
                           •••• {item.last4}
                         </span>
                       </div>
@@ -140,7 +131,7 @@ export function PayTheseSoonPanel({
                       </div>
                       <Badge
                         variant={isUrgentOrOverdue ? 'danger' : 'warning'}
-                        className="mt-0.5 text-2xs py-0.5 px-2"
+                        className="mt-0.5 text-xs font-medium"
                       >
                         {item.daysRemaining < 0
                           ? `Overdue by ${Math.abs(item.daysRemaining)}d`
@@ -167,7 +158,6 @@ export function PayTheseSoonPanel({
               );
             })}
           </div>
-        )}
       </CardContent>
     </Card>
   );

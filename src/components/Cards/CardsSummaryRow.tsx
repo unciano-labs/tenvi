@@ -36,82 +36,84 @@ export function CardsSummaryRow({
   return (
     <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
       {/* 1. You can still spend */}
-      <Card className="shadow-card">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            You can still spend
-          </CardTitle>
-          <div className="flex size-9 items-center justify-center rounded-xl bg-success-soft text-success-soft-foreground">
-            <ShieldCheck className="size-5" />
+      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
+              You can still spend
+            </span>
+            <div className="size-8 sm:size-9 rounded-xl bg-success-soft text-success-soft-foreground flex items-center justify-center shrink-0">
+              <ShieldCheck className="size-4 sm:size-4.5" />
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <div className="text-2xl font-bold text-foreground mb-1 leading-tight">
             {formatMoney(availableToSpend)}
           </div>
-          <div className="space-y-1.5">
-            <Progress
-              value={usagePct}
-              variant={usageInfo.variant}
-              className="h-2"
-              aria-label={`Credit limit utilization: ${usagePct}%`}
-            />
-            <p className="text-xs text-muted-foreground">
-              Total credit limit: <span className="font-semibold text-foreground">{formatMoney(totalLimit)}</span>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="space-y-1.5 mt-2">
+          <Progress
+            value={usagePct}
+            variant={usageInfo.variant}
+            className="h-2"
+            aria-label={`Credit limit utilization: ${usagePct}%`}
+          />
+          <p className="text-2xs sm:text-[11px] text-muted-foreground/80 font-normal">
+            Total credit limit: <span className="font-semibold text-foreground">{formatMoney(totalLimit)}</span>
+          </p>
+        </div>
+      </div>
 
       {/* 2. Used so far */}
-      <Card className="shadow-card">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Used so far
-          </CardTitle>
-          <div className="flex size-9 items-center justify-center rounded-xl bg-muted text-foreground">
-            <Wallet className="size-5" />
+      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
+              Used so far
+            </span>
+            <div className="size-8 sm:size-9 rounded-xl bg-muted text-foreground flex items-center justify-center shrink-0">
+              <Wallet className="size-4 sm:size-4.5" />
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <div className="text-2xl font-bold text-foreground mb-1 leading-tight">
             {formatMoney(totalUsed)}
           </div>
+        </div>
+        <div className="mt-2">
           {boughtForOthers > 0 ? (
             <Link
               href="/dashboard/receivables"
-              className="inline-flex items-center text-xs font-medium text-warning-soft-foreground hover:underline"
+              className="inline-flex items-center text-2xs sm:text-[11px] font-medium text-warning-soft-foreground hover:underline"
             >
               Includes {formatMoney(boughtForOthers)} you bought for others →
             </Link>
           ) : (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-2xs sm:text-[11px] text-muted-foreground/80 font-normal">
               Direct purchases on your cards
             </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* 3. Next payment */}
-      <Card className="shadow-card">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Next payment
-          </CardTitle>
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <CalendarClock className="size-5" />
+      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-all flex flex-col justify-between min-w-0">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
+              Next payment
+            </span>
+            <div className="size-8 sm:size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <CalendarClock className="size-4 sm:size-4.5" />
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-2">
           {nextPayment && nextPayment.amountDue > 0 ? (
-            <>
+            <div>
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                <span className="text-2xl font-bold text-foreground leading-tight">
                   {formatMoney(nextPayment.amountDue)}
                 </span>
                 <Badge
                   variant={nextPayment.daysRemaining <= 3 ? 'danger' : 'warning'}
-                  className="font-medium"
+                  className="font-medium text-2xs shrink-0"
                 >
                   {nextPayment.daysRemaining === 0
                     ? 'Due today'
@@ -120,23 +122,28 @@ export function CardsSummaryRow({
                       : `Due in ${nextPayment.daysRemaining} days`}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">{nextPayment.bankName}</span> • Pay by {nextPayment.dueDateFormatted}
-              </p>
-            </>
+            </div>
           ) : (
-            <div className="space-y-1 py-1">
-              <div className="flex items-center gap-1.5 text-base font-semibold text-success-soft-foreground">
-                <CheckCircle2 className="size-4" />
+            <div className="py-0.5">
+              <div className="flex items-center gap-1.5 text-sm sm:text-base font-semibold text-success-soft-foreground">
+                <CheckCircle2 className="size-4 shrink-0" />
                 <span>Nothing to pay right now</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                All card balances are caught up or have zero balance.
-              </p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+        <div className="mt-2">
+          {nextPayment && nextPayment.amountDue > 0 ? (
+            <p className="text-2xs sm:text-[11px] text-muted-foreground/80 font-normal">
+              <span className="font-semibold text-foreground">{nextPayment.bankName}</span> • Pay by {nextPayment.dueDateFormatted}
+            </p>
+          ) : (
+            <p className="text-2xs sm:text-[11px] text-muted-foreground/80 font-normal">
+              All card balances are caught up or have zero balance.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

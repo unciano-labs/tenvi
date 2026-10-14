@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { WEBSITE_ID, DOCUMENT_TYPE_PRESETS, DocumentTypeOption } from '@/lib/constants';
+import { requireWebsiteUser } from '@/lib/auth/guards';
 import { revalidatePath } from 'next/cache';
 import { PropertyDocument, PropertyDocumentType } from '@/types';
 import { calculateDocumentExpiryStatus } from '@/lib/finance/calculations';
@@ -15,6 +16,28 @@ import {
 import { sendGmailEmail } from '@/lib/notifications/email';
 import { sendHttpSms } from '@/lib/notifications/sms';
 
+/**
+ * Resolves storage paths or legacy URLs into temporary signed URLs for private bucket access.
+ */
+async function resolveDocumentUrls(supabase: any, docs: any[]): Promise<PropertyDocument[]> {
+  if (!docs || docs.length === 0) return [];
+  return Promise.all(
+    docs.map(async (doc) => {
+      if (!doc.file_url || doc.file_url === '#no-file') {
+        return doc as PropertyDocument;
+      }
+      let filePath = doc.file_url;
+      if (filePath.includes('/bili-documents/')) {
+        filePath = decodeURIComponent(filePath.split('/bili-documents/')[1].split('?')[0]);
+      }
+      const { data } = await supabase.storage.from('bili-documents').createSignedUrl(filePath, 3600);
+      return {
+        ...doc,
+        file_url: data?.signedUrl || doc.file_url,
+      } as PropertyDocument;
+    })
+  );
+}
 
 /**
  * Fetch all documents connected to a specific property
@@ -23,20 +46,18 @@ export async function getPropertyDocumentsAction(
   propertyId: string
 ): Promise<{ documents: PropertyDocument[]; error?: string }> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { documents: [], error: 'Unauthorized' };
+    const auth = await requireWebsiteUser();
+    if (!auth.isAuthorized || !auth.user) {
+      return { documents: [], error: auth.error || 'Unauthorized' };
     }
+
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('bili_property_documents')
       .select('*')
       .eq('website_id', WEBSITE_ID)
-      .eq('user_id', user.id)
+      .eq('user_id', auth.user.id)
       .eq('property_id', propertyId)
       .order('created_at', { ascending: false });
 
@@ -45,7 +66,8 @@ export async function getPropertyDocumentsAction(
       return { documents: [], error: error.message };
     }
 
-    return { documents: (data || []) as PropertyDocument[] };
+    const resolved = await resolveDocumentUrls(supabase, data || []);
+    return { documents: resolved };
   } catch (err: any) {
     console.error('Error in getPropertyDocumentsAction:', err);
     return { documents: [], error: err.message };
@@ -61,14 +83,12 @@ export async function getAllUserDocumentsAction(): Promise<{
   error?: string;
 }> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { documents: [], error: 'Unauthorized' };
+    const auth = await requireWebsiteUser();
+    if (!auth.isAuthorized || !auth.user) {
+      return { documents: [], error: auth.error || 'Unauthorized' };
     }
+
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('bili_property_documents')
@@ -77,7 +97,7 @@ export async function getAllUserDocumentsAction(): Promise<{
         property:bili_properties(*)
       `)
       .eq('website_id', WEBSITE_ID)
-      .eq('user_id', user.id)
+      .eq('user_id', auth.user.id)
       .order('expiry_date', { ascending: true, nullsFirst: false });
 
     if (error) {
@@ -85,7 +105,8 @@ export async function getAllUserDocumentsAction(): Promise<{
       return { documents: [], error: error.message };
     }
 
-    return { documents: (data || []) as PropertyDocument[] };
+    const resolved = await resolveDocumentUrls(supabase, data || []);
+    return { documents: resolved };
   } catch (err: any) {
     console.error('Error in getAllUserDocumentsAction:', err);
     return { documents: [], error: err.message };
@@ -99,14 +120,13 @@ export async function uploadPropertyDocumentAction(
   formData: FormData
 ): Promise<{ success: boolean; document?: PropertyDocument; error?: string }> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { success: false, error: 'Unauthorized. Please log in.' };
+    const auth = await requireWebsiteUser();
+    if (!auth.isAuthorized || !auth.user) {
+      return { success: false, error: auth.error || 'Unauthorized. Please log in.' };
     }
+
+    const supabase = await createClient();
+    const user = auth.user;
 
     const propertyId = formData.get('property_id') as string;
     const title = (formData.get('title') as string)?.trim();
@@ -171,11 +191,8 @@ export async function uploadPropertyDocumentAction(
         return { success: false, error: `Failed to upload file: ${uploadErr.message}` };
       }
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('bili-documents').getPublicUrl(uploadData.path);
-
-      fileUrl = publicUrl || uploadData.path;
+      // Store private relative path
+      fileUrl = uploadData.path;
     }
 
     // Insert record into bili_property_documents
@@ -210,7 +227,8 @@ export async function uploadPropertyDocumentAction(
     revalidatePath('/dashboard/properties');
     revalidatePath(`/dashboard/properties/${propertyId}`);
 
-    return { success: true, document: newDoc as PropertyDocument };
+    const [resolvedDoc] = await resolveDocumentUrls(supabase, [newDoc]);
+    return { success: true, document: resolvedDoc };
   } catch (err: any) {
     console.error('Error in uploadPropertyDocumentAction:', err);
     return { success: false, error: err.message };
@@ -225,14 +243,13 @@ export async function updatePropertyDocumentAction(
   formData: FormData
 ): Promise<{ success: boolean; document?: PropertyDocument; error?: string }> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { success: false, error: 'Unauthorized. Please log in.' };
+    const auth = await requireWebsiteUser();
+    if (!auth.isAuthorized || !auth.user) {
+      return { success: false, error: auth.error || 'Unauthorized. Please log in.' };
     }
+
+    const supabase = await createClient();
+    const user = auth.user;
 
     // Fetch existing document to verify ownership
     const { data: existingDoc, error: fetchErr } = await supabase
@@ -290,11 +307,8 @@ export async function updatePropertyDocumentAction(
         return { success: false, error: `Failed to upload replacement file: ${uploadErr.message}` };
       }
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('bili-documents').getPublicUrl(uploadData.path);
-
-      fileUrl = publicUrl || uploadData.path;
+      // Store private relative path
+      fileUrl = uploadData.path;
     }
 
     const { data: updatedDoc, error: updateErr } = await supabase
@@ -326,7 +340,8 @@ export async function updatePropertyDocumentAction(
     revalidatePath('/dashboard/properties');
     revalidatePath(`/dashboard/properties/${existingDoc.property_id}`);
 
-    return { success: true, document: updatedDoc as PropertyDocument };
+    const [resolvedDoc] = await resolveDocumentUrls(supabase, [updatedDoc]);
+    return { success: true, document: resolvedDoc };
   } catch (err: any) {
     console.error('Error in updatePropertyDocumentAction:', err);
     return { success: false, error: err.message };
@@ -340,14 +355,13 @@ export async function deletePropertyDocumentAction(
   documentId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { success: false, error: 'Unauthorized.' };
+    const auth = await requireWebsiteUser();
+    if (!auth.isAuthorized || !auth.user) {
+      return { success: false, error: auth.error || 'Unauthorized.' };
     }
+
+    const supabase = await createClient();
+    const user = auth.user;
 
     const { data: doc, error: fetchErr } = await supabase
       .from('bili_property_documents')
@@ -361,14 +375,14 @@ export async function deletePropertyDocumentAction(
       return { success: false, error: 'Document not found.' };
     }
 
-    // Attempt to remove file from storage if it belongs to bili-documents
-    if (doc.file_url && doc.file_url.includes('bili-documents')) {
+    // Attempt to remove file from storage
+    if (doc.file_url && doc.file_url !== '#no-file') {
       try {
-        const parts = doc.file_url.split('/bili-documents/');
-        if (parts.length > 1) {
-          const filePath = decodeURIComponent(parts[1].split('?')[0]);
-          await supabase.storage.from('bili-documents').remove([filePath]);
+        let filePath = doc.file_url;
+        if (filePath.includes('/bili-documents/')) {
+          filePath = decodeURIComponent(filePath.split('/bili-documents/')[1].split('?')[0]);
         }
+        await supabase.storage.from('bili-documents').remove([filePath]);
       } catch (storageErr) {
         console.warn('Storage delete non-fatal error:', storageErr);
       }
@@ -401,14 +415,13 @@ export async function sendDocumentExpiryAlertAction(
   documentId: string
 ): Promise<{ success: boolean; message?: string; error?: string; channels?: string[] }> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { success: false, error: 'Unauthorized.' };
+    const auth = await requireWebsiteUser();
+    if (!auth.isAuthorized || !auth.user) {
+      return { success: false, error: auth.error || 'Unauthorized.' };
     }
+
+    const supabase = await createClient();
+    const user = auth.user;
 
     const { data: doc, error: docErr } = await supabase
       .from('bili_property_documents')

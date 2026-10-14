@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { WEBSITE_ID } from '@/lib/constants';
 import { creditCardSchema } from '@/lib/validations/schemas';
 import { requireWebsiteUser } from '@/lib/auth/guards';
+import { logAuditEntry } from '@/lib/audit/logger';
 
 export async function createCreditCardAction(data: any) {
   const auth = await requireWebsiteUser();
@@ -119,9 +120,10 @@ export async function softDeleteCreditCardAction(id: string) {
   const user = auth.user;
   const supabase = await createClient();
 
+  const now = new Date().toISOString();
   const { error } = await supabase
     .from('bili_credit_cards')
-    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .update({ is_active: false, deleted_at: now, updated_at: now })
     .eq('id', id)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id);
@@ -130,6 +132,14 @@ export async function softDeleteCreditCardAction(id: string) {
     console.error('Error removing card:', error);
     return { error: 'Failed to remove credit card' };
   }
+
+  await logAuditEntry({
+    userId: user.id,
+    action: 'SOFT_DELETE',
+    entityType: 'credit_card',
+    entityId: id,
+    newData: { deleted_at: now, is_active: false },
+  });
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/cards');
@@ -144,9 +154,10 @@ export async function restoreCreditCardAction(id: string) {
   const user = auth.user;
   const supabase = await createClient();
 
+  const now = new Date().toISOString();
   const { error } = await supabase
     .from('bili_credit_cards')
-    .update({ is_active: true, updated_at: new Date().toISOString() })
+    .update({ is_active: true, deleted_at: null, updated_at: now })
     .eq('id', id)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id);
@@ -155,6 +166,14 @@ export async function restoreCreditCardAction(id: string) {
     console.error('Error restoring card:', error);
     return { error: 'Failed to restore credit card' };
   }
+
+  await logAuditEntry({
+    userId: user.id,
+    action: 'RESTORE',
+    entityType: 'credit_card',
+    entityId: id,
+    newData: { restored: true, deleted_at: null, is_active: true },
+  });
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/cards');
@@ -166,6 +185,7 @@ export async function markStatementPaidAction(data: {
   amountPaid: number;
   paidOn?: string | null;
   isFullPayment?: boolean;
+  savingsAccountId?: string | null;
 }) {
   const auth = await requireWebsiteUser();
   if (!auth.isAuthorized || !auth.user) {
@@ -174,11 +194,11 @@ export async function markStatementPaidAction(data: {
   const user = auth.user;
   const supabase = await createClient();
 
-  const { statementId, amountPaid, paidOn, isFullPayment } = data;
+  const { statementId, amountPaid, paidOn, isFullPayment, savingsAccountId } = data;
 
   const { data: statement, error: fetchError } = await supabase
     .from('bili_card_statements')
-    .select('*')
+    .select('*, credit_card:bili_credit_cards(name, bank_name)')
     .eq('id', statementId)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
@@ -192,6 +212,10 @@ export async function markStatementPaidAction(data: {
     return { success: true, message: 'Statement is already marked as paid.' };
   }
 
+  const effectivePayment = isFullPayment
+    ? Math.max(0, Number(statement.billed_amount) - Number(statement.paid_amount || 0))
+    : Number(amountPaid || 0);
+
   const newPaidAmount = isFullPayment
     ? Number(statement.billed_amount)
     : Math.min(Number(statement.billed_amount), Number(statement.paid_amount || 0) + Number(amountPaid || 0));
@@ -200,6 +224,73 @@ export async function markStatementPaidAction(data: {
     newPaidAmount >= Number(statement.billed_amount) ? 'paid' : 'partially_paid';
 
   const paymentTimestamp = paidOn ? new Date(paidOn).toISOString() : new Date().toISOString();
+
+  // If a funding savings account is selected, deduct balance and log transfer transaction
+  if (savingsAccountId && effectivePayment > 0) {
+    const { data: account, error: accErr } = await supabase
+      .from('bili_savings')
+      .select('id, current_balance, name')
+      .eq('id', savingsAccountId)
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id)
+      .single();
+
+    if (accErr || !account) {
+      return { error: 'Selected savings account not found or unauthorized' };
+    }
+
+    if (Number(account.current_balance) < effectivePayment) {
+      return {
+        error: `Insufficient balance in ${account.name}. Required: ₱${effectivePayment.toLocaleString()}, Available: ₱${Number(account.current_balance).toLocaleString()}`,
+      };
+    }
+
+    // Deduct from savings account
+    const { error: deductErr } = await supabase
+      .from('bili_savings')
+      .update({
+        current_balance: Number(account.current_balance) - effectivePayment,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', savingsAccountId)
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id);
+
+    if (deductErr) {
+      console.error('Error deducting from savings account for statement payment:', deductErr);
+      return { error: 'Failed to deduct payment from selected savings account.' };
+    }
+
+    // Create a first-class transfer transaction (does not double-count expense or gross income)
+    const cardTitle = (statement.credit_card as any)?.name || 'Credit Card';
+    const { error: txErr } = await supabase.from('bili_transactions').insert({
+      website_id: WEBSITE_ID,
+      user_id: user.id,
+      savings_id: savingsAccountId,
+      credit_card_id: statement.credit_card_id,
+      amount: effectivePayment,
+      kind: 'transfer',
+      category: 'Credit Card Payment',
+      description: `Statement payment for ${cardTitle}`,
+      paid_at: paymentTimestamp,
+      is_cleared: true,
+    });
+
+    if (txErr) {
+      console.error('Error logging transfer transaction for statement payment:', txErr);
+      // rollback savings deduction
+      await supabase
+        .from('bili_savings')
+        .update({
+          current_balance: Number(account.current_balance),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', savingsAccountId)
+        .eq('website_id', WEBSITE_ID)
+        .eq('user_id', user.id);
+      return { error: 'Failed to record payment transaction.' };
+    }
+  }
 
   const { error: updateError } = await supabase
     .from('bili_card_statements')
@@ -220,6 +311,8 @@ export async function markStatementPaidAction(data: {
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/cards');
+  revalidatePath('/dashboard/savings');
+  revalidatePath('/dashboard/transactions');
   revalidatePath(`/dashboard/cards/${statement.credit_card_id}`);
 
   return { success: true, status: newStatus, paidAmount: newPaidAmount };

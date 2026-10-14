@@ -3,20 +3,18 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { WEBSITE_ID } from '@/lib/constants';
+import { requireWebsiteUser } from '@/lib/auth/guards';
 import { billSplitSchema } from '@/lib/validations/schemas';
 import { sendGmailEmail } from '@/lib/notifications/email';
 import { sendHttpSms } from '@/lib/notifications/sms';
 
 export async function createBillSplitAction(data: any) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'You must be logged in to split bills.' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'You must be logged in to split bills.' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const parsed = billSplitSchema.safeParse(data);
   if (!parsed.success) {
@@ -101,15 +99,12 @@ export async function toggleParticipantPaidAction(
   participantId: string,
   isPaid: boolean
 ) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from('bili_split_participants')
@@ -135,14 +130,12 @@ export async function toggleParticipantPaidAction(
 }
 
 export async function deleteBillSplitAction(id: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from('bili_bill_splits')
@@ -171,14 +164,12 @@ export async function sendSplitParticipantReminderAction({
   channel: 'sms' | 'email';
   customMessage?: string;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Unauthorized' };
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
   }
+  const user = auth.user;
+  const supabase = await createClient();
 
   const { data: participant, error: fetchErr } = await supabase
     .from('bili_split_participants')

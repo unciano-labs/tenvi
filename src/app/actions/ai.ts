@@ -16,6 +16,14 @@ import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS, withTimeou
 import { isClearlyOffTopic, hasFinancialOrTenviRelevance } from '@/lib/ai/guardrails';
 import { revalidatePath } from 'next/cache';
 
+import { ParsedPhotoItem } from '@/types';
+import {
+  parsePhotoFinancialItems,
+  commitPhotoParsedItems,
+  commitSinglePhotoParsedItem,
+  updatePendingPhotoItemsWithUserInput,
+} from '@/lib/ai/photoParser';
+
 export interface AITransactionItem {
   id: string;
   kind: 'expense' | 'income';
@@ -34,9 +42,18 @@ export interface AIChatMessage {
   sender: 'user' | 'assistant';
   text: string;
   timestamp: string;
+  imageUrl?: string;
   quickReplies?: string[];
   transaction?: AITransactionItem;
   transactions?: AITransactionItem[];
+  pendingPhotoItems?: ParsedPhotoItem[];
+  savedSummary?: {
+    expenseCount: number;
+    receivableCount: number;
+    expenseTotal: number;
+    receivableTotal: number;
+  };
+  isSaved?: boolean;
   isUndone?: boolean;
   isStreaming?: boolean;
 }
@@ -47,6 +64,13 @@ export interface ChatResponse {
   pendingState: ParsedFinancialIntent | null;
   transaction?: AITransactionItem;
   transactions?: AITransactionItem[];
+  pendingPhotoItems?: ParsedPhotoItem[];
+  savedSummary?: {
+    expenseCount: number;
+    receivableCount: number;
+    expenseTotal: number;
+    receivableTotal: number;
+  };
   error?: string;
 }
 
@@ -56,7 +80,8 @@ export interface ChatResponse {
 export async function processAIChatMessageAction(
   message: string,
   pendingState: ParsedFinancialIntent | null,
-  history?: ChatHistoryItem[]
+  history?: ChatHistoryItem[],
+  image?: { base64: string; mimeType: string } | null
 ): Promise<ChatResponse> {
   const supabase = await createClient();
 
@@ -74,6 +99,81 @@ export async function processAIChatMessageAction(
 
   const trimmedMessage = (message || '').trim();
   const ctx = await fetchUserFinancialContext(supabase, user.id);
+
+  // 1. If an image was submitted, parse items via Multimodal Vision
+  if (image && image.base64) {
+    const photoResult = await parsePhotoFinancialItems({
+      image,
+      userMessage: trimmedMessage,
+      ctx,
+      history,
+    });
+
+    return {
+      reply: photoResult.reply,
+      quickReplies: photoResult.quickReplies,
+      pendingState: {
+        ...(pendingState || { missingFields: [], confidence: 0.95 }),
+        pendingPhotoItems: photoResult.items,
+      },
+      pendingPhotoItems: photoResult.items,
+    };
+  }
+
+  // 2. If there are pending photo items waiting for confirmation or clarification
+  if (pendingState?.pendingPhotoItems && pendingState.pendingPhotoItems.length > 0) {
+    const updateRes = updatePendingPhotoItemsWithUserInput({
+      items: pendingState.pendingPhotoItems,
+      userMessage: trimmedMessage,
+      ctx,
+    });
+
+    if (updateRes.action === 'commit') {
+      const commitRes = await commitPhotoParsedItems({
+        supabase,
+        userId: user.id,
+        items: updateRes.updatedItems,
+      });
+
+      revalidatePath('/dashboard');
+      revalidatePath('/dashboard/transactions');
+      revalidatePath('/dashboard/loans');
+      revalidatePath('/dashboard/receivables');
+
+      const parts: string[] = [];
+      if (commitRes.summary.expenseCount > 0) {
+        parts.push(`• **${commitRes.summary.expenseCount} Expenses** recorded (₱${commitRes.summary.expenseTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`);
+      }
+      if (commitRes.summary.receivableCount > 0) {
+        parts.push(`• **${commitRes.summary.receivableCount} Receivables** recorded (₱${commitRes.summary.receivableTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`);
+      }
+
+      return {
+        reply: `✅ Confirmed and saved **${updateRes.updatedItems.length} items** to your digital ledgers!\n\n${parts.join('\n')}`,
+        quickReplies: ['View Transactions', 'View Receivables'],
+        pendingState: null,
+        savedSummary: commitRes.summary,
+      };
+    }
+
+    if (updateRes.action === 'cancel') {
+      return {
+        reply: updateRes.reply,
+        quickReplies: updateRes.quickReplies,
+        pendingState: null,
+      };
+    }
+
+    return {
+      reply: updateRes.reply,
+      quickReplies: updateRes.quickReplies,
+      pendingState: {
+        ...pendingState,
+        pendingPhotoItems: updateRes.updatedItems,
+      },
+      pendingPhotoItems: updateRes.updatedItems,
+    };
+  }
 
   // Check off-topic guardrails first
   const isOffTopic =
@@ -442,4 +542,105 @@ export async function undoAIMultipleTransactionsAction(
   revalidatePath('/dashboard/properties');
 
   return { success: true };
+}
+
+/**
+ * Commits confirmed items parsed from a photo directly via 1-click button
+ */
+export async function commitPhotoParsedItemsAction(items: ParsedPhotoItem[]): Promise<{
+  success: boolean;
+  error?: string;
+  savedSummary?: {
+    expenseCount: number;
+    receivableCount: number;
+    expenseTotal: number;
+    receivableTotal: number;
+  };
+  createdContacts?: Array<{ id: string; name: string }>;
+  errors?: string[];
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  if (!items || items.length === 0) {
+    return { success: false, error: 'No items to save' };
+  }
+
+  try {
+    const res = await commitPhotoParsedItems({
+      supabase,
+      userId: user.id,
+      items,
+    });
+
+    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/transactions');
+    revalidatePath('/dashboard/loans');
+    revalidatePath('/dashboard/receivables');
+
+    return {
+      success: true,
+      savedSummary: res.summary,
+      createdContacts: res.createdContacts,
+      errors: res.errors,
+    };
+  } catch (err: any) {
+    console.error('Error committing photo parsed items:', err);
+    return {
+      success: false,
+      error: err?.message || 'Failed to save items',
+    };
+  }
+}
+
+/**
+ * Commits a single confirmed item parsed from a photo directly via 1-click button
+ */
+export async function commitSinglePhotoParsedItemAction(item: ParsedPhotoItem): Promise<{
+  success: boolean;
+  error?: string;
+  savedRecord?: any;
+  createdContact?: { id: string; name: string } | null;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  if (!item) {
+    return { success: false, error: 'No item provided to save' };
+  }
+
+  try {
+    const res = await commitSinglePhotoParsedItem({
+      supabase,
+      userId: user.id,
+      item,
+    });
+
+    if (res.success) {
+      revalidatePath('/dashboard');
+      revalidatePath('/dashboard/transactions');
+      revalidatePath('/dashboard/loans');
+      revalidatePath('/dashboard/receivables');
+    }
+
+    return res;
+  } catch (err: any) {
+    console.error('Error committing single photo parsed item:', err);
+    return {
+      success: false,
+      error: err?.message || 'Failed to save item',
+    };
+  }
 }

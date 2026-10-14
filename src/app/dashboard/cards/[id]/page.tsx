@@ -30,6 +30,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
     .eq('id', id)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
+    .is('deleted_at', null)
     .single();
 
   if (cardError || !card) {
@@ -75,6 +76,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
     .eq('credit_card_id', id)
+    .is('deleted_at', null)
     .order('occurred_on', { ascending: false });
 
   // 3. Fetch loans swiped for others using this card
@@ -86,7 +88,8 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
     `)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
-    .eq('credit_card_id', id);
+    .eq('credit_card_id', id)
+    .is('deleted_at', null);
 
   // 4. Fetch categories for modal
   const { data: categories } = await supabase
@@ -101,7 +104,8 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
     .select('*')
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
-    .eq('is_active', true);
+    .eq('is_active', true)
+    .is('deleted_at', null);
 
   return (
     <CardDetailsClient

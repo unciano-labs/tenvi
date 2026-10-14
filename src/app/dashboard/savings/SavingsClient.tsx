@@ -29,6 +29,7 @@ import { StatCard } from '@/components/ui/StatCard';
 import { formatMoney } from '@/lib/finance/calculations';
 import { SavingsAccount } from '@/types';
 import { confirmModal } from '@/components/ui/GlobalDialog';
+import { FlippableSavingsCard } from '@/components/Cards/FlippableSavingsCard';
 
 interface SavingsClientProps {
   initialAccounts: SavingsAccount[];
@@ -110,7 +111,7 @@ export function SavingsClient({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground truncate">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Savings & Cash Stash
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -272,180 +273,16 @@ export function SavingsClient({
         )
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedAccounts.map((acc) => {
-              const Icon = getTypeIcon(acc.account_type);
-              const target = Number(acc.target_amount || 0);
-              const balance = Number(acc.current_balance);
-              const progress = target > 0 ? Math.min(100, Math.round((balance / target) * 100)) : null;
-
-              return (
-                <Card
-                  key={acc.id}
-                  className="p-6 shadow-xs overflow-hidden min-w-0 flex flex-col justify-between space-y-5"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <div className="size-10 rounded-2xl bg-muted text-foreground flex items-center justify-center shrink-0">
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-base font-bold text-foreground truncate">
-                            {acc.name}
-                          </h3>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {acc.institution_name}
-                            {acc.account_number_last4 ? ` ••${acc.account_number_last4}` : ''}
-                          </p>
-                        </div>
-                      </div>
-
-                      {acc.interest_rate && acc.interest_rate > 0 && (
-                        <Badge variant="warning" className="shrink-0 gap-1 font-bold text-xs">
-                          <Sparkles className="w-3 h-3" />
-                          {acc.interest_rate}% p.a.
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Balance Display */}
-                    <div className="mt-4 p-4 rounded-2xl bg-muted/60 min-w-0">
-                      <span className="text-xs text-muted-foreground block mb-1">
-                        Current Stash
-                      </span>
-                      <span className="text-2xl font-extrabold text-foreground truncate block">
-                        {formatMoney(balance)}
-                      </span>
-
-                      {/* Target Goal Progress */}
-                      {target > 0 && progress !== null && (
-                        <div className="mt-3 space-y-1.5">
-                          <Progress value={progress} className="h-2" />
-                          <div className="flex justify-between text-xs text-muted-foreground font-medium">
-                            <span className="truncate">Target: {formatMoney(target)}</span>
-                            <span className="font-bold text-foreground shrink-0 ml-2">{progress}%</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Connected Transactions Activity */}
-                    {(() => {
-                      const thisAccTxs = (savingsTransactions || []).filter(
-                        (t) => t.savings_id === acc.id
-                      );
-                      const isExpanded = expandedAccountTxs[acc.id] ?? false;
-
-                      return (
-                        <div className="mt-3 p-3.5 rounded-2xl bg-primary/5 space-y-2 min-w-0">
-                          <div className="flex items-center justify-between text-xs min-w-0">
-                            <span className="font-bold text-foreground flex items-center gap-1.5 truncate">
-                              <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
-                              Connected Activity ({thisAccTxs.length})
-                            </span>
-                            {thisAccTxs.length > 0 && (
-                              <Button
-                                type="button"
-                                variant="soft"
-                                size="xs"
-                                onClick={() =>
-                                  setExpandedAccountTxs((prev) => ({
-                                    ...prev,
-                                    [acc.id]: !isExpanded,
-                                  }))
-                                }
-                                className="text-xs shrink-0 rounded-lg gap-1"
-                              >
-                                {isExpanded ? (
-                                  <>
-                                    Hide <ChevronUp className="w-3 h-3" />
-                                  </>
-                                ) : (
-                                  <>
-                                    View <ChevronDown className="w-3 h-3" />
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                          </div>
-
-                          {isExpanded && thisAccTxs.length > 0 && (
-                            <div className="max-h-48 overflow-y-auto pr-1.5 space-y-1.5 pt-1 bili-scrollbar">
-                              {thisAccTxs.map((tx) => (
-                                <div
-                                  key={tx.id}
-                                  className="p-2.5 rounded-xl bg-card flex items-center justify-between text-xs text-foreground shadow-xs gap-2 min-w-0"
-                                >
-                                  <div className="truncate min-w-0 flex-1">
-                                    <div className="font-semibold text-foreground truncate flex items-center gap-1.5 min-w-0">
-                                      <Badge variant="soft" className="text-2xs font-medium shrink-0">
-                                        {tx.category?.name ||
-                                          (tx.kind === 'income' ? 'Deposit' : 'Expense')}
-                                      </Badge>
-                                      <span className="truncate">
-                                        {tx.note ||
-                                          (tx.kind === 'income'
-                                            ? 'Deposit'
-                                            : 'Withdrawal')}
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground mt-0.5">
-                                      {tx.occurred_on}
-                                    </div>
-                                  </div>
-
-                                  <div className="text-right shrink-0">
-                                    <span
-                                      className={`font-bold ${
-                                        tx.kind === 'income'
-                                          ? 'text-emerald-600 dark:text-emerald-400'
-                                          : 'text-foreground'
-                                      }`}
-                                    >
-                                      {tx.kind === 'income' ? '+' : '-'}
-                                      {formatMoney(Number(tx.amount))}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {thisAccTxs.length === 0 && (
-                            <p className="text-xs text-muted-foreground">
-                              No direct transactions linked yet. Expenses or income tagged to this account will appear here.
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Card Actions */}
-                  <div className="pt-2 flex items-center justify-between gap-3">
-                    <Button
-                      onClick={() => setSelectedForBalance(acc)}
-                      size="sm"
-                      className="rounded-xl gap-1.5 font-semibold text-xs flex-1 sm:flex-initial"
-                    >
-                      <ArrowUpDown className="w-3.5 h-3.5" />
-                      Deposit / Withdraw
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => handleDelete(acc.id)}
-                      className="text-muted-foreground hover:text-destructive shrink-0"
-                      title="Remove account"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+            {displayedAccounts.map((acc) => (
+              <FlippableSavingsCard
+                key={acc.id}
+                account={acc}
+                transactions={savingsTransactions}
+                onOpenBalanceModal={setSelectedForBalance}
+                onDelete={handleDelete}
+              />
+            ))}
           </div>
 
           {/* Lazy Load Button */}

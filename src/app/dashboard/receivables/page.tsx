@@ -18,6 +18,7 @@ export default async function ReceivablesPage() {
   const [
     { data: contacts },
     { data: creditCards },
+    { data: properties },
     { data: loans },
     { data: splits },
   ] = await Promise.all([
@@ -32,6 +33,15 @@ export default async function ReceivablesPage() {
       .select('*')
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
+      .is('deleted_at', null)
+      .order('name'),
+    supabase
+      .from('bili_properties')
+      .select('*')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user?.id)
+      .is('deleted_at', null)
+      .neq('status', 'sold')
       .order('name'),
     supabase
       .from('bili_loans')
@@ -44,6 +54,7 @@ export default async function ReceivablesPage() {
       `)
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false }),
     supabase
       .from('bili_bill_splits')
@@ -66,6 +77,7 @@ export default async function ReceivablesPage() {
       initialSplits={splits || []}
       contacts={contacts || []}
       creditCards={creditCards || []}
+      properties={properties || []}
     />
   );
 }

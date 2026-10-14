@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { createAdminClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
 import {
@@ -31,10 +32,22 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    // 0. Optional Bearer authentication for Vercel Cron
+    // 0. Fail-closed Bearer authentication for Vercel Cron (SEC-04)
+    const cronSecret = process.env.CRON_SECRET;
     const authHeader = request.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!cronSecret || !authHeader) {
+      return NextResponse.json({ error: 'Unauthorized: Missing cron credentials' }, { status: 401 });
+    }
+
+    const expectedHeader = `Bearer ${cronSecret}`;
+    const headerBuffer = Buffer.from(authHeader);
+    const expectedBuffer = Buffer.from(expectedHeader);
+
+    if (
+      headerBuffer.length !== expectedBuffer.length ||
+      !crypto.timingSafeEqual(headerBuffer, expectedBuffer)
+    ) {
+      return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
     }
 
     const supabase = createAdminClient();
@@ -222,6 +235,30 @@ export async function GET(request: Request) {
           }
         } else if (loan.due_date) {
           targetDueDate = loan.due_date;
+        } else if (loan.monthly_due_day) {
+          const now = new Date(today);
+          const dueDay = Math.min(31, Math.max(1, Number(loan.monthly_due_day)));
+          const dueYear = now.getFullYear();
+          const dueMonth = now.getMonth();
+          const lastDayThisMonth = new Date(dueYear, dueMonth + 1, 0).getDate();
+          const thisMonthDue = new Date(dueYear, dueMonth, Math.min(dueDay, lastDayThisMonth));
+          thisMonthDue.setHours(0, 0, 0, 0);
+
+          const todayMidnight = new Date(today);
+          todayMidnight.setHours(0, 0, 0, 0);
+
+          if (thisMonthDue.getTime() < todayMidnight.getTime()) {
+            const nextMonth = dueMonth + 1;
+            const lastDayNextMonth = new Date(dueYear, nextMonth + 1, 0).getDate();
+            targetDueDate = new Date(dueYear, nextMonth, Math.min(dueDay, lastDayNextMonth)).toISOString().split('T')[0];
+          } else {
+            targetDueDate = thisMonthDue.toISOString().split('T')[0];
+          }
+
+          if (loan.monthly_amount && Number(loan.monthly_amount) > 0) {
+            dueAmount = Number(loan.monthly_amount);
+          }
+          installmentNote = Number(loan.monthly_interest_rate || 0) > 0 ? 'Monthly Interest' : 'Monthly Payment';
         }
 
         if (!targetDueDate) continue;

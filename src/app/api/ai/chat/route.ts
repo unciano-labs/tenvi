@@ -14,6 +14,12 @@ import {
   simulateStreamText,
 } from '@/lib/ai/streamExtractor';
 import { isClearlyOffTopic, hasFinancialOrTenviRelevance } from '@/lib/ai/guardrails';
+import {
+  parsePhotoFinancialItems,
+  commitPhotoParsedItems,
+  updatePendingPhotoItemsWithUserInput,
+} from '@/lib/ai/photoParser';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -37,11 +43,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { message = '', pendingState = null, history = [] } = body;
+  const { message = '', pendingState = null, history = [], image = null } = body;
   const trimmedMessage = String(message || '').trim();
 
-  if (!trimmedMessage) {
-    return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+  if (!trimmedMessage && !image) {
+    return NextResponse.json({ error: 'Message or photo is required' }, { status: 400 });
   }
 
   // 2. Set up SSE stream
@@ -63,6 +69,114 @@ export async function POST(request: Request) {
     try {
       // Fetch live financial context
       const ctx = await fetchUserFinancialContext(supabase, user.id);
+
+      // Handle photo upload via Multimodal Vision
+      if (image && image.base64) {
+        const photoResult = await parsePhotoFinancialItems({
+          image,
+          userMessage: trimmedMessage,
+          ctx,
+          history,
+        });
+
+        await simulateStreamText(photoResult.reply, (delta) => {
+          sendEvent('delta', { text: delta, chunk: delta });
+        }, 12);
+
+        await sendEvent('done', {
+          reply: photoResult.reply,
+          quickReplies: photoResult.quickReplies,
+          pendingPhotoItems: photoResult.items,
+          pendingState: {
+            ...(pendingState || { missingFields: [], confidence: 0.95 }),
+            pendingPhotoItems: photoResult.items,
+          },
+        });
+
+        await writer.close();
+        return;
+      }
+
+      // Handle pending photo review confirmation/clarification
+      if (pendingState?.pendingPhotoItems && pendingState.pendingPhotoItems.length > 0) {
+        const updateRes = updatePendingPhotoItemsWithUserInput({
+          items: pendingState.pendingPhotoItems,
+          userMessage: trimmedMessage,
+          ctx,
+        });
+
+        if (updateRes.action === 'commit') {
+          const commitRes = await commitPhotoParsedItems({
+            supabase,
+            userId: user.id,
+            items: updateRes.updatedItems,
+          });
+
+          revalidatePath('/dashboard');
+          revalidatePath('/dashboard/transactions');
+          revalidatePath('/dashboard/loans');
+          revalidatePath('/dashboard/receivables');
+
+          const parts: string[] = [];
+          if (commitRes.summary.expenseCount > 0) {
+            parts.push(`• **${commitRes.summary.expenseCount} Expenses** recorded (₱${commitRes.summary.expenseTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`);
+          }
+          if (commitRes.summary.receivableCount > 0) {
+            parts.push(`• **${commitRes.summary.receivableCount} Receivables** recorded (₱${commitRes.summary.receivableTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`);
+          }
+
+          const successReply = `✅ Confirmed and saved **${updateRes.updatedItems.length} items** to your digital ledgers!\n\n${parts.join('\n')}`;
+
+          await simulateStreamText(successReply, (delta) => {
+            sendEvent('delta', { text: delta, chunk: delta });
+          }, 12);
+
+          await sendEvent('done', {
+            reply: successReply,
+            quickReplies: ['View Transactions', 'View Receivables'],
+            savedSummary: commitRes.summary,
+            pendingState: null,
+            pendingPhotoItems: null,
+          });
+
+          await writer.close();
+          return;
+        }
+
+        if (updateRes.action === 'cancel') {
+          await simulateStreamText(updateRes.reply, (delta) => {
+            sendEvent('delta', { text: delta, chunk: delta });
+          }, 12);
+
+          await sendEvent('done', {
+            reply: updateRes.reply,
+            quickReplies: updateRes.quickReplies,
+            pendingState: null,
+            pendingPhotoItems: null,
+          });
+
+          await writer.close();
+          return;
+        }
+
+        // Action is 'update' (e.g. changed type or set borrower)
+        await simulateStreamText(updateRes.reply, (delta) => {
+          sendEvent('delta', { text: delta, chunk: delta });
+        }, 12);
+
+        await sendEvent('done', {
+          reply: updateRes.reply,
+          quickReplies: updateRes.quickReplies,
+          pendingPhotoItems: updateRes.updatedItems,
+          pendingState: {
+            ...pendingState,
+            pendingPhotoItems: updateRes.updatedItems,
+          },
+        });
+
+        await writer.close();
+        return;
+      }
 
       // Check off-topic guardrails first
       const isOffTopic =

@@ -30,6 +30,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
     .eq('id', id)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
+    .is('deleted_at', null)
     .single();
 
   if (propError || !property) {
@@ -74,6 +75,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
     .eq('property_id', id)
+    .is('deleted_at', null)
     .order('occurred_on', { ascending: false });
 
   // 3. Fetch categories for transaction modals
@@ -88,7 +90,8 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
     .from('bili_properties')
     .select('*')
     .eq('website_id', WEBSITE_ID)
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .is('deleted_at', null);
 
   // 5. Fetch credit cards
   const { data: creditCards } = await supabase
@@ -96,7 +99,8 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
     .select('*')
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
-    .eq('is_active', true);
+    .eq('is_active', true)
+    .is('deleted_at', null);
 
   // 6. Fetch documents connected to this property
   const { data: documents } = await supabase
@@ -107,6 +111,70 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
     .eq('property_id', id)
     .order('created_at', { ascending: false });
 
+  // 7. Fetch matching contacts & payables (loans/advances owed by this property)
+  const { data: allUserContacts } = await supabase
+    .from('bili_contacts')
+    .select('id, name')
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id);
+
+  const propNameClean = property.name.trim().toLowerCase();
+  const propIdentClean = (property.identifier || '').trim().toLowerCase();
+
+  const matchedContacts = (allUserContacts || []).filter((c) => {
+    const cName = c.name.trim().toLowerCase();
+    if (cName === propNameClean) return true;
+    if (propIdentClean && cName.includes(propIdentClean)) return true;
+    if (cName.includes(propNameClean) || propNameClean.includes(cName)) return true;
+    const propWords = propNameClean.split(/\s+/).filter((w: string) => w.length >= 3);
+    if (propWords.some((w: string) => cName.includes(w))) return true;
+    return false;
+  });
+
+  const matchedContactIds = matchedContacts.map((c) => c.id);
+  const primaryPropertyContact =
+    matchedContacts.find((c) => c.name.trim().toLowerCase() === propNameClean) ||
+    matchedContacts[0] ||
+    null;
+
+  let propertyPayables: any[] = [];
+  if (matchedContactIds.length > 0) {
+    const { data: payablesData } = await supabase
+      .from('bili_loans')
+      .select(`
+        *,
+        credit_card:bili_credit_cards(*),
+        payments:bili_loan_payments(*),
+        installments:bili_loan_installments(*)
+      `)
+      .in('contact_id', matchedContactIds)
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .order('loaned_on', { ascending: false });
+
+    propertyPayables = payablesData || [];
+  }
+
+  // 8. Fetch liabilities linked directly to this property
+  const { data: liabilities } = await supabase
+    .from('bili_liabilities')
+    .select('*')
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .eq('property_id', id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
+  // 9. Fetch user's liquid savings accounts
+  const { data: savingsAccounts } = await supabase
+    .from('bili_savings')
+    .select('*')
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .is('deleted_at', null)
+    .order('name', { ascending: true });
+
   return (
     <PropertyDetailsClient
       property={property}
@@ -115,6 +183,10 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
       allProperties={allProperties || [property]}
       creditCards={creditCards || []}
       documents={documents || []}
+      propertyContact={primaryPropertyContact}
+      payables={propertyPayables}
+      liabilities={liabilities || []}
+      savingsAccounts={savingsAccounts || []}
     />
   );
 }

@@ -45,3 +45,6 @@ yarn-error.log*
 
 # scratch directory
 /scratch
+
+# reference templates
+/templates

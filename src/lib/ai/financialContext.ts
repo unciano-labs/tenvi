@@ -20,6 +20,7 @@ export interface LoanSummaryItem {
   amount: number;
   balanceRemaining: number;
   status: string;
+  loanedOn?: string | null;
   dueDate?: string | null;
 }
 
@@ -63,6 +64,7 @@ export interface UserFinancialContext {
   activeLoansList: LoanSummaryItem[];
   activeSplitsList: SplitSummaryItem[];
   recentTransactions?: RecentLedgerItem[];
+  contacts?: { id: string; name: string }[];
 }
 
 
@@ -73,7 +75,7 @@ export async function fetchUserFinancialContext(
   const now = new Date();
   const startOfMonthISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
-  const [categoriesRes, cardsRes, savingsRes, transactionsRes, loansRes, splitsRes, propertiesRes, recentTransactionsRes] = await Promise.all([
+  const [categoriesRes, cardsRes, savingsRes, transactionsRes, loansRes, splitsRes, propertiesRes, recentTransactionsRes, contactsRes] = await Promise.all([
     supabase
       .from('bili_categories')
       .select('id, name, kind')
@@ -147,14 +149,20 @@ export async function fetchUserFinancialContext(
         note,
         category:bili_categories(name),
         credit_card:bili_credit_cards(name, last_4),
-        savings:bili_savings(name),
+        savings:savings_id(name),
         property:bili_properties(name)
       `)
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', userId)
       .order('occurred_on', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(10),
+      .limit(50),
+    supabase
+      .from('bili_contacts')
+      .select('id, name')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', userId)
+      .order('name'),
   ]);
 
   const categories: AvailableCategory[] = (categoriesRes.data || []).map((c: any) => ({
@@ -221,6 +229,7 @@ export async function fetchUserFinancialContext(
       amount: Number(l.amount || 0),
       balanceRemaining: bal,
       status: l.status,
+      loanedOn: l.loaned_on || null,
       dueDate: l.due_date,
     });
   }
@@ -313,6 +322,7 @@ export async function fetchUserFinancialContext(
     activeSplitsList,
     properties,
     recentTransactions,
+    contacts: (contactsRes?.data || []).map((c: any) => ({ id: c.id, name: c.name })),
   };
 }
 

@@ -35,6 +35,7 @@ import {
   calculateNextDueDate,
   groupTransactionsByStatementDate,
   calculateOptimalCardToSwipe,
+  calculateCardSpending,
   getUsageLevel,
   getCardUrgency,
 } from '@/lib/finance/calculations';
@@ -54,6 +55,15 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+
+import {
+  parseCardStyle,
+  CardPatternOverlay,
+  EmvChip,
+  ContactlessWave,
+  VisaLogo,
+  MastercardLogo,
+} from '@/components/Cards/CardThemeTokens';
 
 // Lazy-load modal forms
 const CreditCardModal = dynamic(
@@ -111,20 +121,14 @@ export function CardDetailsClient({
   );
 
   // Financial calculations
-  const totalDirectSpend = currentTransactions
-    .filter((t) => t.kind === 'expense' && !t.loan_id)
-    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
-
-  const totalSwipedLoansRemaining = linkedLoans.reduce(
-    (sum, l) => sum + Number(l.balance_remaining || 0),
-    0
-  );
-
-  const totalUtilized = totalDirectSpend + totalSwipedLoansRemaining;
+  const {
+    directSpend: totalDirectSpend,
+    loansSpend: totalSwipedLoansRemaining,
+    totalUsed: totalUtilized,
+    availableToSpend: availablePower,
+    utilizationPercent,
+  } = calculateCardSpending(card, currentTransactions, linkedLoans);
   const creditLimit = Number(card.credit_limit || 0);
-  const availablePower = Math.max(0, creditLimit - totalUtilized);
-  const utilizationPercent =
-    creditLimit > 0 ? Math.min(100, Math.round((totalUtilized / creditLimit) * 100)) : 0;
   const usageInfo = getUsageLevel(utilizationPercent);
   const dueInfo = calculateNextDueDate(card.due_day);
   const urgencyInfo = getCardUrgency(dueInfo.nextDueDate, totalUtilized);
@@ -172,22 +176,6 @@ export function CardDetailsClient({
     }));
   };
 
-  const getCardBgStyle = (theme?: string) => {
-    if (!theme) return { backgroundColor: '#0f172a' };
-    if (theme.startsWith('#')) return { backgroundColor: theme };
-    switch (theme) {
-      case 'indigo':
-        return { backgroundColor: '#1e3a8a' };
-      case 'emerald':
-        return { backgroundColor: '#065f46' };
-      case 'rose':
-        return { backgroundColor: '#9f1239' };
-      case 'amber':
-        return { backgroundColor: '#92400e' };
-      default:
-        return { backgroundColor: '#0f172a' };
-    }
-  };
 
   // 1. All statement cycles that actually have transactions or are active/current
   const cutoffsWithTransactions = statementGroups.filter(
@@ -247,14 +235,14 @@ export function CardDetailsClient({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                 {card.bank_name} {card.name}
               </h1>
-              <Badge variant={urgencyInfo.variant} className="font-semibold text-xs py-0.5 px-2.5">
+              <Badge variant={urgencyInfo.variant} className="font-medium text-xs py-0.5 px-2.5">
                 {urgencyInfo.label}
               </Badge>
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Card ending in <strong className="font-mono text-foreground">•••• {card.last_4}</strong> • Bill is made on Day {card.statement_day}
             </p>
           </div>
@@ -285,47 +273,76 @@ export function CardDetailsClient({
 
       {/* 2. Unified Hero: Compact Physical Card + Financial Overview Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
-        {/* Physical Card Representation */}
-        <div
-          className="p-5 sm:p-6 rounded-3xl text-white shadow-card relative overflow-hidden flex flex-col justify-between min-h-[190px]"
-          style={getCardBgStyle(card.color_theme)}
-        >
-          <div className="flex justify-between items-start">
-            <div className="min-w-0 pr-2">
-              <p className="text-xs uppercase font-bold tracking-wider text-slate-300 truncate">
-                {card.bank_name}
-              </p>
-              <p className="text-base sm:text-lg font-bold tracking-tight mt-0.5 truncate">
-                {card.name}
-              </p>
-            </div>
-            <div className="size-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-              <CardIcon className="size-5 text-white" />
-            </div>
-          </div>
+        {/* Physical Card Representation - Inheriting color, solid matte theme, border, glow, and pattern */}
+        {(() => {
+          const { theme, network, pattern } = parseCardStyle(card.color_theme, card.name);
+          return (
+            <div
+              className={`p-5 sm:p-6 rounded-[22px] text-white border ${theme.borderColor} ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden flex flex-col justify-between min-h-[210px] shadow-card transition-all duration-300`}
+            >
+              {/* Subtle solid accent top highlight line */}
+              <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />
 
-          <div className="space-y-3 pt-2">
-            <div>
-              <p className="text-xs text-slate-300 font-medium">Card Number</p>
-              <p className="text-sm font-mono tracking-widest font-bold">
-                •••• •••• •••• {card.last_4}
-              </p>
-            </div>
+              {/* Background Pattern Overlay */}
+              <CardPatternOverlay pattern={pattern} accentHex={theme.accentHex} />
 
-            <div className="flex justify-between items-end pt-2 text-xs">
-              <div>
-                <span className="text-xs text-slate-300 block font-medium">Bill is made</span>
-                <span className="font-bold text-white">Day {card.statement_day}</span>
+              {/* Top: Bank & Nickname */}
+              <div className="relative z-10 flex justify-between items-start">
+                <div className="min-w-0 pr-2">
+                  <p className="text-xs font-medium uppercase tracking-wider text-white/80 block">
+                    {card.bank_name}
+                  </p>
+                  <p className="text-base font-semibold leading-snug text-white whitespace-normal break-words mt-0.5">
+                    {card.name}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="size-7 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                    title="Edit card appearance"
+                    aria-label="Edit card appearance"
+                  >
+                    <Pencil className="size-3" />
+                  </button>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-xs text-slate-300 block font-medium">Credit Limit</span>
-                <span className="font-bold text-white">
-                  {creditLimit > 0 ? formatMoney(creditLimit) : 'No limit set'}
-                </span>
+
+              {/* Middle: EMV Chip + Contactless Wave */}
+              <div className="relative z-10 flex items-center justify-between my-2">
+                <div className="flex items-center gap-2">
+                  <EmvChip />
+                  <ContactlessWave />
+                </div>
+
+                <div className="text-right">
+                  <span className="text-xs font-medium uppercase tracking-wider text-white/80 block">
+                    Available Spending:
+                  </span>
+                  <span className="text-2xl font-bold tracking-tight text-white leading-tight">
+                    {formatMoney(availablePower)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Bottom: Card Number + Network Logo */}
+              <div className="relative z-10 flex justify-between items-end pt-1">
+                <div className="font-mono text-xs sm:text-sm font-semibold tracking-widest text-white/80">
+                  •••• •••• •••• {card.last_4}
+                </div>
+
+                <div className="flex items-center">
+                  {network === 'mastercard' ? (
+                    <MastercardLogo className="h-5" />
+                  ) : (
+                    <VisaLogo className="h-4" />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Financial Overview & Key Schedule */}
         <Card className="lg:col-span-2 shadow-card overflow-hidden flex flex-col justify-between">
@@ -419,7 +436,7 @@ export function CardDetailsClient({
                 <HandCoins className="size-4" />
               </div>
               <div>
-                <CardTitle className="text-sm font-bold">
+                <CardTitle className="text-base font-semibold leading-snug">
                   Bought for Others on this Card ({linkedLoans.length})
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -428,7 +445,7 @@ export function CardDetailsClient({
               </div>
             </div>
 
-            <Badge variant="secondary" className="font-bold">
+            <Badge variant="secondary" className="text-xs font-medium">
               {formatMoney(totalSwipedLoansRemaining)} remaining
             </Badge>
           </CardHeader>

@@ -10,6 +10,8 @@ import {
   savingsAccountSchema,
   savingsBalanceUpdateSchema,
   propertySchema,
+  liabilitySchema,
+  liabilityPaymentSchema,
 } from '@/lib/validations/schemas';
 
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -21,6 +23,8 @@ export type LoanPaymentInput = z.infer<typeof loanPaymentSchema>;
 export type BillSplitInput = z.infer<typeof billSplitSchema>;
 export type SavingsAccountInput = z.infer<typeof savingsAccountSchema>;
 export type PropertyInput = z.infer<typeof propertySchema>;
+export type LiabilityInput = z.infer<typeof liabilitySchema>;
+export type LiabilityPaymentInput = z.infer<typeof liabilityPaymentSchema>;
 
 export interface SavingsAccount {
   id: string;
@@ -99,16 +103,19 @@ export interface CreditCard {
   latest_statement?: CardStatement | null;
 }
 
+export type TransactionKind = 'income' | 'expense' | 'transfer';
+
 export interface Transaction {
   id: string;
   website_id: string;
   user_id: string;
-  kind: 'income' | 'expense';
+  kind: TransactionKind;
   amount: number;
   category_id?: string | null;
   payment_method: string;
   credit_card_id?: string | null;
   savings_id?: string | null;
+  transfer_to_savings_id?: string | null;
   property_id?: string | null;
   loan_id?: string | null;
   occurred_on: string;
@@ -117,6 +124,7 @@ export interface Transaction {
   category?: Category | null;
   credit_card?: CreditCard | null;
   savings?: SavingsAccount | null;
+  transfer_to_savings?: SavingsAccount | null;
   property?: Property | null;
   loan?: Loan | null;
 }
@@ -146,6 +154,53 @@ export interface Property {
   created_at: string;
   updated_at: string;
   documents?: PropertyDocument[];
+  liabilities?: Liability[];
+  valuations?: AssetValuation[];
+}
+
+export interface AssetValuation {
+  id: string;
+  website_id: string;
+  user_id: string;
+  property_id: string;
+  valuation_date: string;
+  valuation_amount: number;
+  valuation_source: 'manual' | 'depreciation_engine' | 'appraisal';
+  notes?: string | null;
+  created_at: string;
+}
+
+export type LiabilityType =
+  | 'mortgage'
+  | 'auto_loan'
+  | 'personal_loan'
+  | 'student_loan'
+  | 'business_loan'
+  | 'other';
+
+export type LiabilityStatus = 'active' | 'paid_off' | 'refinanced' | 'defaulted';
+
+export interface Liability {
+  id: string;
+  website_id: string;
+  user_id: string;
+  name: string;
+  lender_name: string;
+  liability_type: LiabilityType;
+  original_principal: number;
+  current_principal_balance: number;
+  annual_interest_rate: number;
+  term_months?: number | null;
+  monthly_payment: number;
+  due_day?: number | null;
+  start_date?: string | null;
+  property_id?: string | null;
+  status: LiabilityStatus;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+  property?: Property | null;
 }
 
 export type PropertyDocumentType =
@@ -389,6 +444,30 @@ export interface UserOnboarding {
   created_at: string;
   updated_at: string;
 }
+export interface DuplicateWarningInfo {
+  isDuplicate: boolean;
+  matchedId?: string;
+  matchedDescription?: string;
+  matchedDate?: string;
+  matchedAmount?: number;
+}
 
-
-
+export interface ParsedPhotoItem {
+  id: string;
+  title: string;
+  amount: number;
+  type: 'expense' | 'receivable';
+  date: string;
+  categoryId?: string | null;
+  categoryName?: string | null;
+  paymentMethod?: 'cash' | 'gcash' | 'maya' | 'credit_card' | 'bank_transfer' | null;
+  creditCardId?: string | null;
+  creditCardName?: string | null;
+  savingsId?: string | null;
+  savingsName?: string | null;
+  borrowerName?: string | null;
+  contactId?: string | null;
+  dueDate?: string | null;
+  missingFields?: ('type' | 'borrower' | 'amount' | 'paymentMethod')[];
+  duplicateWarning?: DuplicateWarningInfo | null;
+}

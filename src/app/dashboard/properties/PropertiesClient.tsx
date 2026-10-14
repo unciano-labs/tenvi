@@ -47,6 +47,7 @@ import {
   Category,
   CreditCard,
   PropertyDocument,
+  Liability,
 } from '@/types';
 
 interface PropertiesClientProps {
@@ -56,6 +57,7 @@ interface PropertiesClientProps {
   categories: Category[];
   creditCards?: CreditCard[];
   documents?: PropertyDocument[];
+  liabilities?: Liability[];
 }
 
 export function PropertiesClient({
@@ -65,6 +67,7 @@ export function PropertiesClient({
   categories,
   creditCards = [],
   documents = [],
+  liabilities = [],
 }: PropertiesClientProps) {
   const [properties] = useState<Property[]>(initialProperties || propProperties || []);
   const [isAddPropertyModalOpen, setIsAddPropertyModalOpen] = useState(false);
@@ -194,6 +197,26 @@ export function PropertiesClient({
     };
   }, [properties, propertyFinancialsMap]);
 
+  // Liabilities map per property
+  const propertyLiabilitiesMap = useMemo(() => {
+    const map = new Map<string, number>();
+    (liabilities || []).forEach((l) => {
+      if (l.property_id && l.status === 'active') {
+        const cur = map.get(l.property_id) || 0;
+        map.set(l.property_id, cur + Number(l.current_principal_balance || 0));
+      }
+    });
+    return map;
+  }, [liabilities]);
+
+  const totalLiabilitiesBalance = useMemo(() => {
+    return (liabilities || [])
+      .filter((l) => l.status === 'active')
+      .reduce((acc, l) => acc + Number(l.current_principal_balance || 0), 0);
+  }, [liabilities]);
+
+  const netPortfolioEquity = Math.max(0, portfolioSummary.totalValuation - totalLiabilitiesBalance);
+
   // Document insights
   const documentInsights = useMemo(() => {
     const docsByProp = new Map<string, PropertyDocument[]>();
@@ -272,7 +295,7 @@ export function PropertiesClient({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground truncate">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Property & Asset Portfolio
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -318,13 +341,21 @@ export function PropertiesClient({
       </div>
 
       {/* Portfolio Overview Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           label="Total Portfolio Value"
           value={formatMoney(portfolioSummary.totalValuation)}
           subtext={`${properties.length} total assets (${portfolioSummary.activeCount} active)`}
           icon={Building2}
           variant="neutral"
+        />
+
+        <StatCard
+          label="Net Portfolio Equity"
+          value={formatMoney(netPortfolioEquity)}
+          subtext={`${formatMoney(totalLiabilitiesBalance)} debt liabilities`}
+          icon={ShieldCheck}
+          variant={netPortfolioEquity > 0 ? 'positive' : 'warning'}
         />
 
         <StatCard
@@ -359,11 +390,11 @@ export function PropertiesClient({
       {/* Monthly Commitments Quick Bar */}
       <Card className="p-6 shadow-xs overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1 min-w-0">
-          <div className="flex items-center gap-2 text-xs uppercase font-bold text-muted-foreground tracking-wider">
+          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             <ShieldCheck className="w-4 h-4 text-primary" />
             Monthly Run-Rate Commitments
           </div>
-          <div className="text-2xl font-extrabold text-foreground truncate">
+          <div className="text-2xl font-bold text-foreground">
             {formatMoney(portfolioSummary.monthlyCommitments)}
             <span className="text-xs font-normal text-muted-foreground ml-1.5">/ month required</span>
           </div>
@@ -375,19 +406,19 @@ export function PropertiesClient({
 
         <div className="flex items-center gap-4 flex-wrap">
           <div className="p-3.5 rounded-2xl bg-muted/60 min-w-[140px]">
-            <span className="text-xs font-bold text-muted-foreground block uppercase">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
               Total Monthly Loans
             </span>
-            <span className="text-base font-extrabold text-foreground">
+            <span className="text-base font-bold text-foreground">
               {formatMoney(portfolioSummary.totalMonthlyAmortization)}
             </span>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-muted/60 min-w-[140px]">
-            <span className="text-xs font-bold text-muted-foreground block uppercase">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
               Annual Insurance Total
             </span>
-            <span className="text-base font-extrabold text-foreground">
+            <span className="text-base font-bold text-foreground">
               {formatMoney(portfolioSummary.totalAnnualInsurance)}
             </span>
           </div>
@@ -601,6 +632,8 @@ export function PropertiesClient({
             const financials =
               propertyFinancialsMap.get(property.id) ??
               calculatePropertyFinancials(property, transactions);
+            const propDebt = propertyLiabilitiesMap.get(property.id) || 0;
+            const propEquity = Math.max(0, Number(property.estimated_value || 0) - propDebt);
             const Icon = getAssetIcon(property.property_type);
 
             return (
@@ -611,20 +644,20 @@ export function PropertiesClient({
                 {/* Header: Icon, Name, Identifier, Status */}
                 <div className="min-w-0">
                   <div className="flex items-start justify-between gap-3 mb-3 min-w-0">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                         <Icon className="w-6 h-6" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-base font-bold text-foreground leading-tight truncate">
+                        <h3 className="text-base font-semibold leading-snug text-foreground whitespace-normal break-words">
                           {property.name}
                         </h3>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge variant="soft" className="text-2xs font-bold uppercase tracking-wider shrink-0">
+                          <Badge variant="soft" className="text-xs font-medium uppercase tracking-wider shrink-0">
                             {property.property_type.replace('_', ' ')}
                           </Badge>
                           {property.identifier && (
-                            <Badge variant="outline" className="text-2xs font-bold uppercase tracking-wide shrink-0">
+                            <Badge variant="outline" className="text-xs font-medium uppercase tracking-wider shrink-0">
                               {property.identifier}
                             </Badge>
                           )}
@@ -657,15 +690,20 @@ export function PropertiesClient({
                     </div>
                   </div>
 
-                  {/* Valuation */}
+                  {/* Valuation & Net Equity */}
                   <div className="p-3.5 rounded-2xl bg-muted/60 mb-4 flex items-center justify-between gap-2 min-w-0">
                     <div className="min-w-0">
-                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
-                        Estimated Market Valuation
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
+                        Estimated Valuation
                       </span>
-                      <span className="text-lg font-extrabold text-foreground truncate block">
+                      <span className="text-2xl font-bold tracking-tight text-foreground block">
                         {formatMoney(property.estimated_value)}
                       </span>
+                      {propDebt > 0 && (
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 block mt-0.5">
+                          Net Equity: {formatMoney(propEquity)} ({formatMoney(propDebt)} loan)
+                        </span>
+                      )}
                     </div>
 
                     {property.status && (
@@ -677,7 +715,7 @@ export function PropertiesClient({
                             ? 'warning'
                             : 'soft'
                         }
-                        className="uppercase tracking-wider shrink-0"
+                        className="text-xs font-medium uppercase tracking-wider shrink-0"
                       >
                         {property.status}
                       </Badge>
@@ -688,27 +726,27 @@ export function PropertiesClient({
                   {financials && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center p-3 rounded-2xl bg-muted/40 mb-4 min-w-0">
                       <div className="min-w-0">
-                        <span className="text-xs font-bold text-muted-foreground uppercase block">
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
                           Income
                         </span>
-                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block truncate">
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 block">
                           +{formatMoney(financials.totalIncome)}
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <span className="text-xs font-bold text-muted-foreground uppercase block">
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
                           Expense
                         </span>
-                        <span className="text-xs font-bold text-rose-600 dark:text-rose-400 block truncate">
+                        <span className="text-xs font-medium text-rose-600 dark:text-rose-400 block">
                           -{formatMoney(financials.totalExpense)}
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <span className="text-xs font-bold text-muted-foreground uppercase block">
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
                           Net Cash
                         </span>
                         <span
-                          className={`text-xs font-extrabold block truncate ${
+                          className={`text-xs font-bold block ${
                             financials.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                           }`}
                         >
@@ -723,10 +761,10 @@ export function PropertiesClient({
                     {/* Monthly Amortization */}
                     {Number(property.monthly_amortization || 0) > 0 && (
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary/5 min-w-0 gap-2">
-                        <div className="flex items-center gap-1.5 font-medium truncate min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
-                          <span className="shrink-0">Monthly Amort:</span>
-                          <span className="font-bold truncate">{formatMoney(property.monthly_amortization)}</span>
+                          <span className="text-muted-foreground shrink-0">Monthly Amort:</span>
+                          <span className="font-medium text-foreground">{formatMoney(property.monthly_amortization)}</span>
                         </div>
                         {financials?.amortizationDue && (
                           <Badge
@@ -748,10 +786,10 @@ export function PropertiesClient({
                     {/* Annual Insurance Renewal */}
                     {Number(property.annual_insurance_amount || 0) > 0 && (
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/60 min-w-0 gap-2">
-                        <div className="flex items-center gap-1.5 font-medium truncate min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="shrink-0">Yearly Insurance:</span>
-                          <span className="font-bold truncate">{formatMoney(property.annual_insurance_amount)}</span>
+                          <span className="text-muted-foreground shrink-0">Yearly Insurance:</span>
+                          <span className="font-medium text-foreground">{formatMoney(property.annual_insurance_amount)}</span>
                         </div>
                         {financials?.insuranceRenewal.daysRemaining !== null && (
                           <Badge
@@ -773,8 +811,8 @@ export function PropertiesClient({
                     {/* Daily Boundary or Expected Rental */}
                     {Number(property.expected_income_daily || 0) > 0 && (
                       <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 text-xs min-w-0 gap-2">
-                        <span className="truncate">Expected Daily Boundary:</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <span className="text-muted-foreground">Expected Daily Boundary:</span>
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
                           {formatMoney(property.expected_income_daily)} / day
                         </span>
                       </div>
@@ -782,8 +820,8 @@ export function PropertiesClient({
 
                     {Number(property.expected_income_monthly || 0) > 0 && (
                       <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 text-xs min-w-0 gap-2">
-                        <span className="truncate">Expected Monthly Rent:</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <span className="text-muted-foreground">Expected Monthly Rent:</span>
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
                           {formatMoney(property.expected_income_monthly)} / mo
                         </span>
                       </div>
@@ -800,10 +838,10 @@ export function PropertiesClient({
 
                       return (
                         <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/60 text-xs min-w-0 gap-2">
-                          <div className="flex items-center gap-1.5 font-medium truncate min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0">
                             <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
-                            <span className="shrink-0">Documents:</span>
-                            <span className="font-bold truncate">
+                            <span className="text-muted-foreground shrink-0">Documents:</span>
+                            <span className="font-medium text-foreground">
                               {propDocs.length} {propDocs.length === 1 ? 'doc' : 'docs'}
                             </span>
                           </div>

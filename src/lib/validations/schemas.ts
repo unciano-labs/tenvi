@@ -11,24 +11,43 @@ export const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-export const transactionSchema = z.object({
-  kind: z.enum(['income', 'expense']),
-  amount: z.coerce.number().positive('Amount must be greater than zero'),
-  categoryId: z.string().uuid().optional().nullable(),
-  paymentMethod: z.enum([
-    'cash',
-    'credit_card',
-    'debit_card',
-    'gcash',
-    'maya',
-    'bank_transfer',
-  ]),
-  creditCardId: z.string().uuid().optional().nullable(),
-  savingsId: z.string().uuid().optional().nullable(),
-  propertyId: z.string().uuid().optional().nullable(),
-  occurredOn: z.string().min(1, 'Please select a date'),
-  note: z.string().max(300, 'Note is too long').optional().nullable(),
-});
+export const transactionSchema = z
+  .object({
+    kind: z.enum(['income', 'expense', 'transfer']),
+    amount: z.coerce.number().positive('Amount must be greater than zero'),
+    categoryId: z.string().uuid().optional().nullable(),
+    paymentMethod: z.enum([
+      'cash',
+      'credit_card',
+      'debit_card',
+      'gcash',
+      'maya',
+      'bank_transfer',
+    ]),
+    creditCardId: z.string().uuid().optional().nullable(),
+    savingsId: z.string().uuid().optional().nullable(),
+    transferToSavingsId: z.string().uuid().optional().nullable(),
+    propertyId: z.string().uuid().optional().nullable(),
+    occurredOn: z.string().min(1, 'Please select a date'),
+    note: z.string().max(300, 'Note is too long').optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      if (data.kind === 'transfer') {
+        if (!data.savingsId || !data.transferToSavingsId) {
+          return false;
+        }
+        if (data.savingsId === data.transferToSavingsId) {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: 'Transfer requires distinct source and destination accounts',
+      path: ['transferToSavingsId'],
+    }
+  );
 
 export const creditCardSchema = z.object({
   name: z.string().min(2, 'Card nickname is required (e.g. BDO Gold)'),
@@ -60,9 +79,18 @@ export const loanSchema = z.object({
   loanedOn: z.string().min(1, 'Date is required'),
   dueDate: z.string().optional().nullable(),
   isInstallment: z.boolean().default(false),
-  installmentMonths: z.coerce.number().optional().nullable(),
-  monthlyDueDay: z.coerce.number().min(1).max(31).optional().nullable(),
-  monthlyInterestRate: z.coerce.number().min(0, 'Interest rate cannot be negative').default(0).optional().nullable(),
+  installmentMonths: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined || Number(val) <= 0 ? null : Number(val)),
+    z.number().int().positive().nullable().optional()
+  ),
+  monthlyDueDay: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
+    z.number().int().min(1).max(31).nullable().optional()
+  ),
+  monthlyInterestRate: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? 0 : Number(val)),
+    z.number().min(0, 'Interest rate cannot be negative').default(0).optional().nullable()
+  ),
   creditCardId: z.string().uuid().optional().nullable(),
   downpaymentAmount: z.coerce.number().min(0, 'Downpayment cannot be negative').default(0).optional().nullable(),
   downpaymentPaymentMethod: z.string().default('cash').optional(),
@@ -167,6 +195,43 @@ export const cardStatementSchema = z.object({
   dueDate: z.string().min(1, 'Please provide the payment due date'),
   billedAmount: z.coerce.number().min(0, 'Billed amount cannot be negative'),
   minimumDue: z.coerce.number().min(0, 'Minimum due cannot be negative').default(0),
+});
+
+export const liabilitySchema = z.object({
+  name: z.string().min(2, 'Liability nickname is required (e.g. BPI Housing Loan)'),
+  lenderName: z.string().min(2, 'Lender or bank name is required (e.g. BPI, Metrobank)'),
+  liabilityType: z.enum([
+    'mortgage',
+    'auto_loan',
+    'personal_loan',
+    'student_loan',
+    'business_loan',
+    'other',
+  ]).default('mortgage'),
+  originalPrincipal: z.coerce.number().min(0, 'Original principal cannot be negative').default(0),
+  currentPrincipalBalance: z.coerce.number().min(0, 'Current principal balance cannot be negative'),
+  annualInterestRate: z.coerce.number().min(0, 'Interest rate cannot be negative').default(0),
+  termMonths: z.coerce.number().int().positive().optional().nullable(),
+  monthlyPayment: z.coerce.number().min(0, 'Monthly payment cannot be negative').default(0),
+  dueDay: z.coerce.number().int().min(1).max(31).optional().nullable(),
+  startDate: z.string().optional().nullable(),
+  propertyId: z.string().uuid().optional().nullable(),
+  status: z.enum(['active', 'paid_off', 'refinanced', 'defaulted']).default('active'),
+  notes: z.string().max(500).optional().nullable(),
+});
+
+export const updateLiabilitySchema = liabilitySchema.extend({
+  liabilityId: z.string().uuid('Invalid liability ID'),
+});
+
+export const liabilityPaymentSchema = z.object({
+  liabilityId: z.string().uuid('Invalid liability ID'),
+  amount: z.coerce.number().positive('Payment amount must be greater than zero'),
+  principalAmount: z.coerce.number().min(0).optional().nullable(),
+  interestAmount: z.coerce.number().min(0).optional().nullable(),
+  paidOn: z.string().min(1, 'Payment date is required'),
+  savingsAccountId: z.string().uuid().optional().nullable(),
+  note: z.string().max(200).optional().nullable(),
 });
 
 

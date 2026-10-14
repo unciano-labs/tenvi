@@ -24,7 +24,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
     redirect('/login');
   }
 
-  const [loanRes, contactsRes, cardsRes] = await Promise.all([
+  const [loanRes, contactsRes, cardsRes, propertiesRes] = await Promise.all([
     supabase
       .from('bili_loans')
       .select(`
@@ -38,6 +38,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
       .eq('id', id)
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user.id)
+      .is('deleted_at', null)
       .single(),
     supabase
       .from('bili_contacts')
@@ -51,6 +52,15 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user.id)
       .eq('is_active', true)
+      .is('deleted_at', null)
+      .order('name'),
+    supabase
+      .from('bili_properties')
+      .select('*')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .neq('status', 'sold')
       .order('name'),
   ]);
 
@@ -58,6 +68,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
   const error = loanRes.error;
   const contacts = contactsRes.data || [];
   const creditCards = cardsRes.data || [];
+  const properties = propertiesRes.data || [];
 
   if (error || !loan) {
     return (
@@ -150,6 +161,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
     <LoanDetailsClient
       initialLoan={loan}
       contacts={contacts}
+      properties={properties}
       creditCards={creditCards}
     />
   );

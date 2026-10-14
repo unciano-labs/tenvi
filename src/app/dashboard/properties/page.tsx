@@ -20,6 +20,7 @@ export default async function PropertiesPage() {
     .select('*')
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   // 2. Fetch property transactions (income and expense)
@@ -31,6 +32,7 @@ export default async function PropertiesPage() {
     `)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
+    .is('deleted_at', null)
     .not('property_id', 'is', null)
     .order('occurred_on', { ascending: false });
 
@@ -48,6 +50,7 @@ export default async function PropertiesPage() {
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
     .eq('is_active', true)
+    .is('deleted_at', null)
     .order('bank_name', { ascending: true });
 
   // 5. Fetch all property documents
@@ -61,6 +64,15 @@ export default async function PropertiesPage() {
     .eq('user_id', user.id)
     .order('expiry_date', { ascending: true, nullsFirst: false });
 
+  // 6. Fetch all liabilities
+  const { data: liabilities } = await supabase
+    .from('bili_liabilities')
+    .select('*')
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
   return (
     <PropertiesClient
       properties={properties || []}
@@ -68,6 +80,7 @@ export default async function PropertiesPage() {
       categories={categories || []}
       creditCards={creditCards || []}
       documents={documents || []}
+      liabilities={liabilities || []}
     />
   );
 

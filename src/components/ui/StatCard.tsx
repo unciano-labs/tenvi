@@ -48,26 +48,26 @@ export function StatCard({
   return (
     <div
       data-tour={dataTour}
-      className={`bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-shadow min-w-0 overflow-hidden ${className}`}
+      className={`bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-shadow min-w-0 ${className}`}
     >
       <div className="flex items-start justify-between gap-2 mb-3">
-        <span className="text-xs sm:text-xs font-bold text-muted-foreground uppercase tracking-wide leading-snug">
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
           {label}
         </span>
-        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${style.iconBg} ${style.iconText} flex items-center justify-center shrink-0`}>
-          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+        <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${style.iconBg} ${style.iconText} flex items-center justify-center shrink-0`}>
+          <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
         </div>
       </div>
 
       <div
-        className="text-xl sm:text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground mb-1 truncate leading-tight"
+        className="text-2xl font-bold text-foreground mb-1 leading-tight"
         title={value}
       >
         {value}
       </div>
 
       {subtext && (
-        <p className="text-xs text-muted-foreground font-medium truncate">
+        <p className="text-2xs sm:text-[11px] text-muted-foreground/80 font-normal mt-1">
           {subtext}
         </p>
       )}

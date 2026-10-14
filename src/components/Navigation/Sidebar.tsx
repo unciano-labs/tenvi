@@ -3,120 +3,210 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { logoutAction } from '@/app/actions/auth';
 import { TenviIcon } from '@/components/ui/TenviIcon';
 import {
   Sidebar as SidebarPrimitive,
   SidebarHeader,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarRail,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
-import { MAIN_NAV_ITEMS } from './nav-config';
-import { ThemeQuickToggle } from '@/components/ui/theme-toggle';
+import {
+  LayoutDashboard,
+  Wallet,
+  PiggyBank,
+  Building2,
+  Coins,
+  CreditCard,
+  HandCoins,
+  Receipt,
+  Settings,
+} from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface SidebarProps {
   userEmail?: string;
   userName?: string;
 }
 
+interface NavSection {
+  heading: string;
+  items: {
+    label: string;
+    description: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    heading: 'HOME',
+    items: [
+      {
+        label: 'Dashboard Overview',
+        description: 'See your complete net worth and summary in one glance',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    heading: 'MONEY FLOW',
+    items: [
+      {
+        label: 'Money In & Out',
+        description: 'View daily spending, income, and transfers',
+        href: '/dashboard/transactions',
+        icon: Wallet,
+      },
+      {
+        label: 'Savings & Cash',
+        description: 'Bank accounts, emergency funds, and cash on hand',
+        href: '/dashboard/savings',
+        icon: PiggyBank,
+      },
+    ],
+  },
+  {
+    heading: 'ASSETS & OWED',
+    items: [
+      {
+        label: 'Properties & Assets',
+        description: 'Real estate, vehicles, and physical valuations',
+        href: '/dashboard/properties',
+        icon: Building2,
+      },
+      {
+        label: 'Money Owed to Me',
+        description: 'Track receivables and money lent to friends/family',
+        href: '/dashboard/receivables',
+        icon: Coins,
+      },
+    ],
+  },
+  {
+    heading: 'DEBTS & BILLS',
+    items: [
+      {
+        label: 'Credit Cards',
+        description: 'Card balances, limits, and optimal card to swipe',
+        href: '/dashboard/cards',
+        icon: CreditCard,
+      },
+      {
+        label: 'Loans & Mortgages',
+        description: 'Amortization schedules and debt repayments',
+        href: '/dashboard/loans',
+        icon: HandCoins,
+      },
+      {
+        label: 'Split Bills',
+        description: 'Shared group dinners and trips with friends',
+        href: '/dashboard/splits',
+        icon: Receipt,
+      },
+    ],
+  },
+  {
+    heading: 'ACCOUNT',
+    items: [
+      {
+        label: 'Alerts & Settings',
+        description: 'Export data, notifications, and preferences',
+        href: '/dashboard/settings',
+        icon: Settings,
+      },
+    ],
+  },
+];
+
 export function Sidebar({ userEmail, userName }: SidebarProps) {
   const pathname = usePathname();
 
-  const navItems = MAIN_NAV_ITEMS.map((item) => ({
-    ...item,
-    active: item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href),
-  }));
-
   return (
-    <SidebarPrimitive collapsible="icon" className="shadow-card border-none bg-card">
-      <SidebarHeader className="p-4 sm:p-5">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
-          <TenviIcon className="size-10 rounded-2xl shrink-0 shadow-xs" />
-          <div className="group-data-[collapsible=icon]:hidden">
-            <div className="text-xl font-extrabold tracking-tight text-foreground">Tenvi</div>
-            <div className="text-xs text-muted-foreground font-medium">Personal Money Hub</div>
-          </div>
-        </Link>
-      </SidebarHeader>
-
-      <SidebarContent className="px-3">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1.5">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={item.active}
-                      tooltip={item.label}
-                      render={<Link href={item.href} aria-current={item.active ? 'page' : undefined} />}
-                      className={`h-11 rounded-2xl px-3.5 text-sm font-semibold transition-all ${
-                        item.active
-                          ? 'bg-primary text-primary-foreground shadow-xs'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                      }`}
-                    >
-                      <Icon className="size-5 shrink-0" />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="p-3 space-y-2">
-        {/* User Card with Icon-only Theme Toggle */}
-        <div className="p-2.5 rounded-2xl bg-muted/60 group-data-[collapsible=icon]:p-1.5 group-data-[collapsible=icon]:bg-transparent">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0 flex-1 group-data-[collapsible=icon]:justify-center">
-              <div className="size-8 rounded-xl bg-card text-foreground shadow-xs flex items-center justify-center shrink-0">
-                <User className="size-4" />
+    <TooltipProvider delay={200}>
+      <SidebarPrimitive collapsible="icon" className="border-r border-border/60 bg-sidebar text-sidebar-foreground shadow-xs">
+        {/* Brand Header */}
+        <SidebarHeader className="p-4 sm:p-5 pb-3 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:pb-2">
+          <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center">
+            <Link href="/dashboard" className="flex items-center gap-3 group">
+              <TenviIcon className="size-9 rounded-xl shrink-0 shadow-xs" />
+              <div className="group-data-[collapsible=icon]:hidden">
+                <div className="text-base font-bold tracking-tight text-foreground flex items-center gap-1.5">
+                  Tenvi
+                  <span className="text-[10px] leading-none font-semibold px-2 py-0.5 rounded-full bg-lightprimary text-primary whitespace-nowrap inline-flex items-center shrink-0">
+                    Personal
+                  </span>
+                </div>
+                <div className="text-2xs text-muted-foreground font-medium">Simple Wealth Hub</div>
               </div>
-              <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                <p className="text-xs font-bold text-foreground truncate">
-                  {userName || 'Account'}
-                </p>
-                <p className="text-2xs text-muted-foreground truncate">{userEmail}</p>
-              </div>
-            </div>
-            <div className="group-data-[collapsible=icon]:hidden shrink-0">
-              <ThemeQuickToggle />
-            </div>
+            </Link>
+            <SidebarTrigger className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer group-data-[collapsible=icon]:hidden size-8 rounded-lg" />
           </div>
-        </div>
+        </SidebarHeader>
 
-        {/* Collapsed view Theme Quick Toggle */}
-        <div className="hidden group-data-[collapsible=icon]:flex justify-center">
-          <ThemeQuickToggle />
-        </div>
+        {/* Categorized Navigation */}
+        <SidebarContent className="px-3 py-2 space-y-4">
+          {NAV_SECTIONS.map((section) => (
+            <SidebarGroup key={section.heading} className="p-0">
+              <SidebarGroupLabel className="px-3 text-3xs font-bold uppercase tracking-wider text-muted-foreground/70 group-data-[collapsible=icon]:hidden mb-1">
+                {section.heading}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu className="space-y-1">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive =
+                      item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href);
 
-        {/* Log Out Button */}
-        <form action={logoutAction} className="w-full">
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2.5 h-10 rounded-xl text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-          >
-            <LogOut className="size-4 shrink-0" />
-            <span className="group-data-[collapsible=icon]:hidden">Log Out</span>
-          </Button>
-        </form>
-      </SidebarFooter>
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <SidebarMenuButton
+                                isActive={isActive}
+                                tooltip={item.label}
+                                render={<Link href={item.href} aria-current={isActive ? 'page' : undefined} />}
+                                className={`h-10 rounded-lg px-3 text-xs font-semibold transition-all cursor-pointer ${
+                                  isActive
+                                    ? 'bg-lightprimary text-primary font-bold shadow-xs'
+                                    : 'text-muted-foreground hover:text-primary hover:bg-lightprimary/40'
+                                }`}
+                              />
+                            }
+                          >
+                            <Icon className="size-4 shrink-0" />
+                            <span className="group-data-[collapsible=icon]:hidden truncate">{item.label}</span>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-xs">
+                            <p className="font-semibold">{item.label}</p>
+                            <p className="text-2xs text-muted-foreground">{item.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
+        </SidebarContent>
 
-      <SidebarRail />
-    </SidebarPrimitive>
+        <SidebarRail />
+      </SidebarPrimitive>
+    </TooltipProvider>
   );
 }

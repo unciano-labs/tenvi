@@ -35,7 +35,14 @@ export default async function SettingsPage() {
     updated_at: new Date().toISOString(),
   };
 
-  const initialSettings = (settingsData as NotificationSettings) || defaultSettings;
+  // Prevent credential leakage in RSC Flight payload (CWE-312 / CWE-200)
+  const initialSettings: NotificationSettings = settingsData
+    ? {
+        ...(settingsData as NotificationSettings),
+        smtp_app_password: settingsData.smtp_app_password ? '[CONFIGURED]' : null,
+        httpsms_api_key: settingsData.httpsms_api_key ? '[CONFIGURED]' : null,
+      }
+    : defaultSettings;
 
   let logsData: NotificationLog[] = [];
   let logsCount = 0;

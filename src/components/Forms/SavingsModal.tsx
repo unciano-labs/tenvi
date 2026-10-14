@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { createSavingsAccountAction } from '@/app/actions/savings';
 import { toast } from 'sonner';
-import { PiggyBank, Loader2, Sparkles, Building2 } from 'lucide-react';
+import { PiggyBank, Loader2, Sparkles, Building2, Check } from 'lucide-react';
 import { PH_SAVINGS_INSTITUTIONS } from '@/lib/constants';
 import {
   ResponsiveDialog,
@@ -16,6 +16,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
+import {
+  CARD_ACCENTS,
+  CARD_THEMES,
+  CARD_PATTERNS,
+  CardAccentId,
+  CardPatternId,
+  CardPatternOverlay,
+  formatCardStyle,
+  parseCardStyle,
+  EmvChip,
+  ContactlessWave,
+} from '@/components/Cards/CardThemeTokens';
 
 interface SavingsModalProps {
   isOpen: boolean;
@@ -33,6 +45,7 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
   const [targetAmount, setTargetAmount] = useState('');
   const [interestRate, setInterestRate] = useState('');
   const [colorTheme, setColorTheme] = useState('emerald');
+  const [pattern, setPattern] = useState<CardPatternId>('none');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Determine institution object
@@ -58,6 +71,7 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
     }
 
     setIsSubmitting(true);
+    const packed = formatCardStyle(colorTheme as CardAccentId, 'visa', pattern);
     const res = await createSavingsAccountAction({
       name: name.trim() || finalInstitutionName,
       accountType,
@@ -66,7 +80,7 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
       currentBalance: currentBalance ? parseFloat(currentBalance) : 0,
       targetAmount: targetAmount ? parseFloat(targetAmount) : null,
       interestRate: interestRate ? parseFloat(interestRate) : null,
-      colorTheme,
+      colorTheme: packed,
     });
 
     setIsSubmitting(false);
@@ -84,13 +98,8 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
     }
   };
 
-  const colors = [
-    { id: 'emerald', name: 'Emerald', bg: 'bg-emerald-900' },
-    { id: 'indigo', name: 'Navy', bg: 'bg-indigo-900' },
-    { id: 'blue', name: 'Ocean', bg: 'bg-blue-900' },
-    { id: 'amber', name: 'Bronze', bg: 'bg-amber-900' },
-    { id: 'slate', name: 'Charcoal', bg: 'bg-slate-900' },
-  ];
+  const { theme } = parseCardStyle(colorTheme, name);
+  const parsedBalance = currentBalance ? parseFloat(currentBalance) : 0;
 
   return (
     <ResponsiveDialog
@@ -114,7 +123,61 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
           </div>
         </ResponsiveDialogHeader>
 
-        <ResponsiveDialogBody>
+        <ResponsiveDialogBody className="space-y-5">
+          {/* Live Card Preview */}
+          <div
+            className={`w-full rounded-[22px] p-4 sm:p-5 text-white border ${theme.borderColor} ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden transition-all duration-300 shadow-card flex flex-col justify-between`}
+            style={{ aspectRatio: '1.58 / 1', minHeight: '190px' }}
+          >
+            {/* Accent top highlight line */}
+            <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />
+
+            {/* Background Pattern Overlay */}
+            <CardPatternOverlay pattern={pattern} accentHex={theme.accentHex} />
+
+            <div className="relative z-10 flex items-start justify-between">
+              <div>
+                <h4 className="font-black text-xs sm:text-sm tracking-wider uppercase text-white/95">
+                  {finalInstitutionName || 'INSTITUTION'}
+                </h4>
+                <p className="text-[11px] text-white/70 font-medium">
+                  {name || 'Account Nickname'}
+                </p>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/90 border border-white/15 uppercase tracking-wider">
+                {accountType.replace('_', ' ')}
+              </span>
+            </div>
+
+            <div className="relative z-10 flex items-center justify-between my-auto py-1">
+              <div className="flex items-center gap-2">
+                <EmvChip />
+                <ContactlessWave />
+              </div>
+
+              <div className="text-right">
+                <span className="text-[10px] font-medium text-white/60 block tracking-wide uppercase">
+                  Current Stash:
+                </span>
+                <span className="text-lg sm:text-xl font-black text-white tracking-tight">
+                  ₱{parsedBalance.toLocaleString('en-PH')}
+                </span>
+              </div>
+            </div>
+
+            <div className="relative z-10 flex items-end justify-between pt-1">
+              <div className="font-mono text-xs font-semibold tracking-widest text-white/80">
+                {accountNumberLast4 ? `•••• •••• •••• ${accountNumberLast4}` : 'VAULT SAVINGS'}
+              </div>
+
+              {interestRate && parseFloat(interestRate) > 0 && (
+                <span className="text-[10px] font-bold text-amber-200 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-300/30">
+                  {interestRate}% p.a.
+                </span>
+              )}
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Institution Picker */}
             <div>
@@ -138,91 +201,86 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
                     )}
                   </optgroup>
                 ))}
+                <option value="Other Bank / Account">Other Bank / Account</option>
               </select>
+            </div>
 
-              {selectedInstitution === 'Other Bank / Account' && (
+            {/* Custom Institution Input */}
+            {selectedInstitution === 'Other Bank / Account' && (
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Account / Bank Name
+                </label>
                 <Input
                   type="text"
-                  required
-                  placeholder="Type custom bank or account name..."
+                  placeholder="e.g. GoTyme, Tonik, OwnBank"
                   value={customInstitution}
                   onChange={(e) => setCustomInstitution(e.target.value)}
-                  className="mt-2 text-sm"
-                  autoFocus
+                  className="min-h-12 h-12 text-sm"
+                  required
                 />
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Account Nickname */}
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Account / Goal Nickname
-              </label>
-              <Input
-                type="text"
-                required
-                placeholder="e.g. Emergency Fund, Japan Trip Stash, Payroll"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="text-sm"
-              />
-            </div>
-
+            {/* Nickname and Current Balance */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Current Balance */}
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Current Balance (PHP)
+                  Account Nickname
+                </label>
+                <Input
+                  type="text"
+                  placeholder="e.g. Emergency Fund, Daily Stash"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="min-h-12 h-12 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Current Balance
                 </label>
                 <MoneyInput
-                  required
                   placeholder="0.00"
                   value={currentBalance}
-                  onChange={(val) => setCurrentBalance(val)}
-                />
-              </div>
-
-              {/* Target Goal Amount (Optional) */}
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Target Goal (Optional)
-                </label>
-                <MoneyInput
-                  placeholder="e.g. 50,000.00"
-                  value={targetAmount}
-                  onChange={(val) => setTargetAmount(val)}
+                  onChange={setCurrentBalance}
+                  className="min-h-12 h-12 text-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Interest Rate */}
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  Interest Rate p.a. % (Optional)
-                </label>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    placeholder="e.g. 4.5, 6.0"
-                    value={interestRate}
-                    onChange={(e) => setInterestRate(e.target.value)}
-                    className="pr-8 text-sm"
-                  />
-                  <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-xs font-bold text-muted-foreground pointer-events-none">
-                    %
-                  </span>
-                </div>
-              </div>
-
-              {/* Account last 4 digits */}
+            {/* Target Amount & Interest Rate */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Last 4 Digits (Optional)
+                  Goal Target (Optional)
+                </label>
+                <MoneyInput
+                  placeholder="e.g. 100,000"
+                  value={targetAmount}
+                  onChange={setTargetAmount}
+                  className="min-h-12 h-12 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Interest Rate % p.a.
+                </label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="e.g. 4.5"
+                  value={interestRate}
+                  onChange={(e) => setInterestRate(e.target.value)}
+                  className="min-h-12 h-12 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Last 4 Digits
                 </label>
                 <Input
                   type="text"
@@ -230,30 +288,67 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
                   placeholder="e.g. 8821"
                   value={accountNumberLast4}
                   onChange={(e) => setAccountNumberLast4(e.target.value.replace(/\D/g, ''))}
-                  className="text-sm font-mono tracking-wider text-center"
+                  className="min-h-12 h-12 text-sm font-mono tracking-wider text-center"
                 />
               </div>
             </div>
 
-            {/* Color theme */}
+            {/* Accent Picker - 20 colors, scrollable, pure clickable circles without text */}
             <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Vault Color
+                </label>
+                <span className="text-3xs text-muted-foreground font-medium">Scroll for more &rarr;</span>
+              </div>
+              <div className="grid grid-rows-2 grid-flow-col auto-cols-max gap-2.5 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin scroll-smooth">
+                {Object.values(CARD_ACCENTS).map((acc) => {
+                  const isSelected = colorTheme === acc.id;
+                  return (
+                    <button
+                      key={acc.id}
+                      type="button"
+                      onClick={() => setColorTheme(acc.id)}
+                      className={`size-8 sm:size-9 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110 shadow-xs shrink-0 ${
+                        isSelected
+                          ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110 shadow-md'
+                          : 'hover:opacity-90'
+                      }`}
+                      style={{ backgroundColor: acc.accentHex }}
+                      title={acc.name}
+                      aria-label={acc.name}
+                    >
+                      {isSelected && <Check className="size-4 text-white drop-shadow stroke-[3]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Pattern Selector - 10 patterns */}
+            <div className="pt-2 border-t border-border/40">
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Card Color
+                Background Accent Pattern (10 options)
               </label>
-              <div className="flex items-center gap-3">
-                {colors.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setColorTheme(c.id)}
-                    className={`size-9 rounded-2xl ${c.bg} flex items-center justify-center transition-transform cursor-pointer ${
-                      colorTheme === c.id
-                        ? 'scale-110 shadow-md ring-2 ring-primary ring-offset-2'
-                        : 'opacity-80 hover:opacity-100'
-                    }`}
-                    title={c.name}
-                  />
-                ))}
+              <div className="grid grid-cols-5 gap-1.5">
+                {CARD_PATTERNS.map((p) => {
+                  const isSelected = pattern === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setPattern(p.id)}
+                      className={`h-9 px-1 rounded-xl border text-2xs font-semibold flex items-center justify-center cursor-pointer transition-all truncate ${
+                        isSelected
+                          ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
+                          : 'border-border/60 hover:bg-muted text-muted-foreground'
+                      }`}
+                      title={p.name}
+                    >
+                      {p.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -262,22 +357,22 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
                 type="button"
                 variant="soft"
                 onClick={onClose}
-                className="flex-1"
+                className="flex-1 min-h-12 h-12 font-semibold"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1"
+                className="flex-1 min-h-12 h-12 font-semibold"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Saving...
                   </>
                 ) : (
-                  'Add Savings'
+                  'Add Savings Account'
                 )}
               </Button>
             </div>

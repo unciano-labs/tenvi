@@ -1,4 +1,5 @@
 import { PaymentMethod } from '@/lib/constants';
+import { ParsedPhotoItem } from '@/types';
 
 export interface AvailableProperty {
   id: string;
@@ -31,6 +32,7 @@ export interface ParsedFinancialIntent {
   missingFields: ('amount' | 'paymentMethod' | 'creditCardId' | 'kind')[];
   isGreetingOrHelp?: boolean;
   confidence: number;
+  pendingPhotoItems?: ParsedPhotoItem[];
 }
 
 export interface AvailableCategory {

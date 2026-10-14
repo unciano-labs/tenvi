@@ -14,8 +14,8 @@ import {
   Mail,
   Percent,
 } from 'lucide-react';
-import type { Contact, CreditCard } from '@/types';
-import { INSTALLMENT_MONTHS_OPTIONS } from '@/lib/constants';
+import type { Contact, CreditCard, Property } from '@/types';
+import { INSTALLMENT_MONTHS_OPTIONS, getPropertyIcon } from '@/lib/constants';
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -33,6 +33,7 @@ interface LoanModalProps {
   isOpen: boolean;
   onClose: () => void;
   contacts: Contact[];
+  properties?: Property[];
   creditCards?: CreditCard[];
   defaultContactId?: string;
 }
@@ -55,6 +56,7 @@ export function LoanModal({
   isOpen,
   onClose,
   contacts,
+  properties = [],
   creditCards = [],
   defaultContactId,
 }: LoanModalProps) {
@@ -88,7 +90,8 @@ export function LoanModal({
   );
   const [dueDate, setDueDate] = useState('');
   const [isInstallment, setIsInstallment] = useState(true);
-  const [installmentMonths, setInstallmentMonths] = useState<number>(24);
+  const [installmentMonths, setInstallmentMonths] = useState<number | null>(null);
+  const [customMonthsInput, setCustomMonthsInput] = useState<string>('');
   const [monthlyDueDay, setMonthlyDueDay] = useState<number>(15);
   const [monthlyInterestRate, setMonthlyInterestRate] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -96,15 +99,25 @@ export function LoanModal({
   const parsedAmount = parseFloat(amount) || 0;
   const parsedDownpayment = parseFloat(downpaymentAmount) || 0;
   const principalToFinance = Math.max(0, parsedAmount - parsedDownpayment);
+  const hasDuration = Boolean(installmentMonths && installmentMonths > 0);
+
   const totalInterest =
-    isInstallment && monthlyInterestRate > 0 && installmentMonths > 0
-      ? principalToFinance * (monthlyInterestRate / 100) * installmentMonths
+    hasDuration && monthlyInterestRate > 0
+      ? principalToFinance * (monthlyInterestRate / 100) * (installmentMonths as number)
       : 0;
   const totalRepayable = principalToFinance + totalInterest;
 
+  const monthlyInterestOnly =
+    monthlyInterestRate > 0 ? principalToFinance * (monthlyInterestRate / 100) : 0;
+
   const estimatedMonthly =
-    isInstallment && installmentMonths > 0 && totalRepayable > 0
+    hasDuration && installmentMonths
       ? (totalRepayable / installmentMonths).toLocaleString('en-PH', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : monthlyInterestOnly > 0
+      ? monthlyInterestOnly.toLocaleString('en-PH', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })
@@ -122,17 +135,77 @@ export function LoanModal({
     }
   };
 
-  const handleContactChange = (selectedId: string) => {
-    setContactId(selectedId);
-    if (selectedId) {
+  const handleContactChange = (val: string) => {
+    if (!val) {
+      setContactId('');
       setNewContactName('');
-      const found = contacts.find((c) => c.id === selectedId);
+      setBorrowerPhone('');
+      setBorrowerEmail('');
+      return;
+    }
+    if (val.startsWith('prop:')) {
+      const propId = val.replace('prop:', '');
+      const prop = properties.find((p) => p.id === propId);
+      if (prop) {
+        const propFullName = `${prop.name}${prop.identifier ? ` (${prop.identifier})` : ''}`;
+        const matched = contacts.find(
+          (c) =>
+            c.name.toLowerCase() === prop.name.toLowerCase() ||
+            c.name.toLowerCase() === propFullName.toLowerCase()
+        );
+        if (matched) {
+          setContactId(matched.id);
+          setNewContactName('');
+          setBorrowerPhone(matched.phone || '');
+          setBorrowerEmail(matched.email || '');
+        } else {
+          setContactId('');
+          setNewContactName(propFullName);
+          setBorrowerPhone('');
+          setBorrowerEmail('');
+        }
+      }
+    } else {
+      setContactId(val);
+      setNewContactName('');
+      const found = contacts.find((c) => c.id === val);
       if (found) {
-        if (found.phone) setBorrowerPhone(found.phone);
-        if (found.email) setBorrowerEmail(found.email);
+        setBorrowerPhone(found.phone || '');
+        setBorrowerEmail(found.email || '');
+      } else {
+        setBorrowerPhone('');
+        setBorrowerEmail('');
       }
     }
   };
+
+  const selectedPropForContact = contactId
+    ? properties.find((p) => {
+        const c = contacts.find((cnt) => cnt.id === contactId);
+        if (!c) return false;
+        const propFullName = `${p.name}${p.identifier ? ` (${p.identifier})` : ''}`;
+        return (
+          p.name.toLowerCase() === c.name.toLowerCase() ||
+          propFullName.toLowerCase() === c.name.toLowerCase()
+        );
+      })
+    : null;
+
+  const selectedPropForName = newContactName
+    ? properties.find((p) => {
+        const propFullName = `${p.name}${p.identifier ? ` (${p.identifier})` : ''}`;
+        return (
+          p.name.toLowerCase() === newContactName.toLowerCase() ||
+          propFullName.toLowerCase() === newContactName.toLowerCase()
+        );
+      })
+    : null;
+
+  const selectValue = selectedPropForContact
+    ? `prop:${selectedPropForContact.id}`
+    : selectedPropForName
+    ? `prop:${selectedPropForName.id}`
+    : contactId || '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,7 +223,7 @@ export function LoanModal({
       return;
     }
 
-    if (isInstallment) {
+    if (isInstallment || monthlyInterestRate > 0) {
       if (!monthlyDueDay || monthlyDueDay < 1 || monthlyDueDay > 31) {
         toast.error('Please enter a monthly due day between 1 and 31.');
         return;
@@ -167,11 +240,11 @@ export function LoanModal({
       amount: parseFloat(amount),
       reason: reason.trim() || null,
       loanedOn,
-      dueDate: isInstallment ? null : dueDate || null,
+      dueDate: isInstallment && installmentMonths ? null : dueDate || null,
       isInstallment,
-      installmentMonths: isInstallment ? installmentMonths : null,
-      monthlyDueDay: isInstallment ? monthlyDueDay : null,
-      monthlyInterestRate: isInstallment ? monthlyInterestRate : null,
+      installmentMonths: isInstallment && installmentMonths ? installmentMonths : null,
+      monthlyDueDay: (isInstallment || monthlyInterestRate > 0) ? monthlyDueDay : null,
+      monthlyInterestRate: monthlyInterestRate > 0 ? monthlyInterestRate : null,
       creditCardId: creditCardId || null,
       downpaymentAmount: parsedDownpayment > 0 ? parsedDownpayment : null,
       downpaymentPaymentMethod,
@@ -184,7 +257,11 @@ export function LoanModal({
     } else {
       toast.success(
         isInstallment
-          ? `Installment loan recorded! (${installmentMonths} months schedule created)`
+          ? installmentMonths
+            ? `Installment loan recorded! (${installmentMonths} months schedule created)`
+            : `Monthly interest loan recorded! (Due every ${getOrdinalSuffix(monthlyDueDay || 15)})`
+          : monthlyInterestRate > 0
+          ? `Loan recorded with ${monthlyInterestRate}% monthly interest!`
           : 'Loan recorded successfully!'
       );
       setAmount('');
@@ -196,7 +273,8 @@ export function LoanModal({
       setCreditCardId('');
       setDownpaymentAmount('');
       setMonthlyInterestRate(0);
-      setIsInstallment(false);
+      setInstallmentMonths(null);
+      setCustomMonthsInput('');
       onClose();
     }
   };
@@ -230,18 +308,34 @@ export function LoanModal({
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 Who Owes You? (Person, Business, or Asset Entity)
               </label>
-              {contacts.length > 0 && (
+              {(contacts.length > 0 || properties.length > 0) && (
                 <select
-                  value={contactId}
+                  value={selectValue}
                   onChange={(e) => handleContactChange(e.target.value)}
                   className="h-10 w-full rounded-xl bg-muted/60 px-3 text-sm text-foreground outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring mb-2"
                 >
                   <option value="">-- Choose from existing contacts / entities --</option>
-                  {contacts.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                  {contacts.length > 0 && (
+                    <optgroup label="People & Contacts">
+                      {contacts.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          👤 {c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {properties.length > 0 && (
+                    <optgroup label="Properties & Assets">
+                      {properties.map((p) => {
+                        const label = `${p.name}${p.identifier ? ` (${p.identifier})` : ''}`;
+                        return (
+                          <option key={`prop:${p.id}`} value={`prop:${p.id}`}>
+                            {getPropertyIcon(p.property_type)} {label}
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  )}
                 </select>
               )}
 
@@ -255,7 +349,11 @@ export function LoanModal({
                 value={newContactName}
                 onChange={(e) => {
                   setNewContactName(e.target.value);
-                  if (e.target.value) setContactId('');
+                  if (e.target.value) {
+                    setContactId('');
+                    setBorrowerPhone('');
+                    setBorrowerEmail('');
+                  }
                 }}
                 className="w-full text-sm bg-muted/60"
               />
@@ -432,27 +530,75 @@ export function LoanModal({
             {/* Installment Options */}
             {isInstallment && (
               <div className="p-4 rounded-2xl bg-muted/60 space-y-4 animate-in fade-in duration-150">
-                {/* Term in Months */}
+                {/* Term in Months (Optional) */}
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-2">
-                    Duration (Number of Months)
-                  </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-primary" />
+                      Duration / Term (Optional)
+                    </label>
+                    <span className="text-2xs font-semibold text-muted-foreground">
+                      {installmentMonths ? `${installmentMonths} Months Fixed` : 'No fixed duration (Open-Ended)'}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInstallmentMonths(null);
+                        setCustomMonthsInput('');
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        installmentMonths === null
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'bg-card text-foreground hover:bg-muted border border-border/50'
+                      }`}
+                    >
+                      No Fixed Term (Open-Ended)
+                    </button>
                     {INSTALLMENT_MONTHS_OPTIONS.map((m) => (
                       <button
                         key={m}
                         type="button"
-                        onClick={() => setInstallmentMonths(m)}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        onClick={() => {
+                          setInstallmentMonths(m);
+                          setCustomMonthsInput(String(m));
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                           installmentMonths === m
                             ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'bg-card text-foreground hover:bg-muted'
+                            : 'bg-card text-foreground hover:bg-muted border border-border/50'
                         }`}
                       >
-                        {m} Months {m === 24 ? '⭐' : ''}
+                        {m} Mos
                       </button>
                     ))}
+                    <div className="flex items-center gap-1.5">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="120"
+                        placeholder="Custom mos"
+                        value={customMonthsInput}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCustomMonthsInput(val);
+                          const parsed = parseInt(val, 10);
+                          if (parsed && parsed > 0) {
+                            setInstallmentMonths(parsed);
+                          } else {
+                            setInstallmentMonths(null);
+                          }
+                        }}
+                        className="w-24 h-8 text-xs bg-card"
+                      />
+                    </div>
                   </div>
+                  <p className="text-2xs text-muted-foreground mt-1.5">
+                    {installmentMonths
+                      ? `Amortized equally across ${installmentMonths} monthly payments.`
+                      : 'Duration is optional. Select "No Fixed Term" if borrower only pays monthly interest without a fixed maturity.'}
+                  </p>
                 </div>
 
                 {/* Monthly Due Day */}
@@ -482,7 +628,7 @@ export function LoanModal({
                   <p className="text-xs text-muted-foreground mt-1">
                     {selectedCard
                       ? `Synchronized with ${selectedCard.name} payment due date (every ${getOrdinalSuffix(selectedCard.due_day)}).`
-                      : 'We automatically adjust for shorter months like February or 30-day months.'}
+                      : 'Due date automatically rolls over each month (adjusts for February / 30-day months).'}
                   </p>
                 </div>
 
@@ -494,7 +640,7 @@ export function LoanModal({
                     </label>
                     {monthlyInterestRate > 0 && (
                       <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
-                        {monthlyInterestRate}% / mo (+₱{totalInterest.toLocaleString('en-PH', { minimumFractionDigits: 2 })} interest)
+                        {monthlyInterestRate}% / mo {hasDuration ? `(+₱${totalInterest.toLocaleString('en-PH', { minimumFractionDigits: 2 })} interest)` : `(₱${monthlyInterestOnly.toLocaleString('en-PH', { minimumFractionDigits: 2 })} / mo interest)`}
                       </span>
                     )}
                   </div>
@@ -516,7 +662,7 @@ export function LoanModal({
                     <span className="text-xs font-bold text-muted-foreground">% / mo</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 mt-2">
-                    {[0, 1, 1.5, 2, 3].map((rate) => (
+                    {[0, 1, 1.5, 2, 3, 5].map((rate) => (
                       <button
                         key={rate}
                         type="button"
@@ -538,10 +684,12 @@ export function LoanModal({
                   <div className="p-3.5 rounded-xl bg-card shadow-sm space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">
-                        Calculated Monthly Due:
+                        {hasDuration ? 'Calculated Monthly Due:' : 'Monthly Interest Due:'}
                       </span>
                       <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
-                        {installmentMonths} equal payments
+                        {hasDuration
+                          ? `${installmentMonths} equal payments`
+                          : 'No fixed term (Monthly interest)'}
                       </span>
                     </div>
                     <div className="text-xl font-extrabold text-foreground">
@@ -565,13 +713,29 @@ export function LoanModal({
                       </div>
                       {monthlyInterestRate > 0 && (
                         <div className="flex justify-between text-indigo-700">
-                          <span>Total Interest ({monthlyInterestRate}% x {installmentMonths} mos):</span>
-                          <span className="font-semibold">+ ₱{totalInterest.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                          <span>
+                            {hasDuration
+                              ? `Total Interest (${monthlyInterestRate}% x ${installmentMonths} mos):`
+                              : 'Monthly Interest Rate:'}
+                          </span>
+                          <span className="font-semibold">
+                            {hasDuration
+                              ? `+ ₱${totalInterest.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
+                              : `${monthlyInterestRate}% / month`}
+                          </span>
                         </div>
                       )}
-                      <div className="flex justify-between font-bold text-foreground pt-1.5">
-                        <span>Total Repayable:</span>
-                        <span>₱{totalRepayable.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                      {hasDuration && (
+                        <div className="flex justify-between font-bold text-foreground pt-1.5">
+                          <span>Total Repayable:</span>
+                          <span>₱{totalRepayable.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-muted-foreground pt-1">
+                        <span>Payment Due Schedule:</span>
+                        <span className="font-medium text-foreground">
+                          Every {getOrdinalSuffix(monthlyDueDay || 15)} of the month
+                        </span>
                       </div>
                       {selectedCard && (
                         <div className="text-indigo-600 font-medium pt-1">
@@ -579,6 +743,83 @@ export function LoanModal({
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Flexible / One-Time with Optional Monthly Interest */}
+            {!isInstallment && (
+              <div className="p-4 rounded-2xl bg-muted/60 space-y-4 animate-in fade-in duration-150">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                      <Percent className="w-3.5 h-3.5 text-indigo-600" /> Monthly Interest Rate (%) (Optional)
+                    </label>
+                    {monthlyInterestRate > 0 && (
+                      <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
+                        {monthlyInterestRate}% / mo (₱{monthlyInterestOnly.toLocaleString('en-PH', { minimumFractionDigits: 2 })} / mo interest)
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={monthlyInterestRate}
+                      onChange={(e) =>
+                        setMonthlyInterestRate(
+                          Math.max(0, parseFloat(e.target.value) || 0)
+                        )
+                      }
+                      className="w-full text-sm bg-card"
+                      placeholder="0.00"
+                    />
+                    <span className="text-xs font-bold text-muted-foreground">% / mo</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {[0, 1, 1.5, 2, 3, 5].map((rate) => (
+                      <button
+                        key={rate}
+                        type="button"
+                        onClick={() => setMonthlyInterestRate(rate)}
+                        className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                          monthlyInterestRate === rate
+                            ? 'bg-primary text-primary-foreground shadow-xs'
+                            : 'bg-card hover:bg-muted text-foreground'
+                        }`}
+                      >
+                        {rate === 0 ? '0% (Interest-Free)' : `${rate}%`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {monthlyInterestRate > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground">
+                        Monthly Interest Due Day
+                      </label>
+                      <span className="text-xs font-bold text-primary">
+                        Due every {getOrdinalSuffix(monthlyDueDay || 15)}
+                      </span>
+                    </div>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={monthlyDueDay}
+                      onChange={(e) =>
+                        setMonthlyDueDay(
+                          Math.max(1, Math.min(31, parseInt(e.target.value) || 1))
+                        )
+                      }
+                      className="w-full text-sm bg-card"
+                      placeholder="e.g. 15 (due every 15th)"
+                    />
                   </div>
                 )}
               </div>

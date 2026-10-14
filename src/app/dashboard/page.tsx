@@ -32,6 +32,7 @@ export default async function DashboardPage() {
     { data: savings },
     { data: properties },
     { data: onboarding },
+    { data: liabilities },
   ] = await Promise.all([
     // 1. Categories
     supabase
@@ -47,7 +48,8 @@ export default async function DashboardPage() {
       .select('*')
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
-      .eq('is_active', true),
+      .eq('is_active', true)
+      .is('deleted_at', null),
 
     // 3. Recent Transactions
     supabase
@@ -56,10 +58,12 @@ export default async function DashboardPage() {
         *,
         category:bili_categories(*),
         credit_card:bili_credit_cards(*),
-        savings:bili_savings(*)
+        savings:savings_id(*),
+        transfer_to_savings:transfer_to_savings_id(*)
       `)
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
+      .is('deleted_at', null)
       .lte('occurred_on', todayISO)
       .order('occurred_on', { ascending: false })
       .order('created_at', { ascending: false })
@@ -73,7 +77,8 @@ export default async function DashboardPage() {
         contact:bili_contacts(*)
       `)
       .eq('website_id', WEBSITE_ID)
-      .eq('user_id', user?.id),
+      .eq('user_id', user?.id)
+      .is('deleted_at', null),
 
     // 5. Bill Splits
     supabase
@@ -95,7 +100,8 @@ export default async function DashboardPage() {
       .select('*')
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
-      .eq('is_active', true),
+      .eq('is_active', true)
+      .is('deleted_at', null),
 
     // 7. Properties & Assets
     supabase
@@ -103,6 +109,7 @@ export default async function DashboardPage() {
       .select('*')
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false }),
 
     // 8. User Onboarding Status
@@ -112,6 +119,15 @@ export default async function DashboardPage() {
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
       .maybeSingle(),
+
+    // 9. Liabilities
+    supabase
+      .from('bili_liabilities')
+      .select('*')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user?.id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false }),
   ]);
 
   return (
@@ -124,6 +140,7 @@ export default async function DashboardPage() {
       splits={splits || []}
       savings={savings || []}
       properties={properties || []}
+      liabilities={liabilities || []}
       initialOnboarding={onboarding || null}
     />
   );

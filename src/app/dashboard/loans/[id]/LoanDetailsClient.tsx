@@ -34,7 +34,7 @@ import {
   updateLoanBorrowerContactAction,
   sendLoanBorrowerReminderAction,
 } from '@/app/actions/loans';
-import { Loan, LoanInstallment, Contact, CreditCard as CreditCardType } from '@/types';
+import { Loan, LoanInstallment, Contact, CreditCard as CreditCardType, Property } from '@/types';
 import { formatMoney, formatDate, calculateLoanStatus } from '@/lib/finance/calculations';
 import { LoanPaymentModal } from '@/components/Forms/LoanPaymentModal';
 import { EditLoanModal } from '@/components/Forms/EditLoanModal';
@@ -57,6 +57,7 @@ import {
 interface LoanDetailsClientProps {
   initialLoan: Loan;
   contacts?: Contact[];
+  properties?: Property[];
   creditCards?: CreditCardType[];
 }
 
@@ -107,6 +108,7 @@ function getDueStatus(dueDateStr: string, isPaid: boolean) {
 export function LoanDetailsClient({
   initialLoan,
   contacts = [],
+  properties = [],
   creditCards = [],
 }: LoanDetailsClientProps) {
   const router = useRouter();
@@ -406,13 +408,15 @@ export function LoanDetailsClient({
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground">
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                   {loan.contact?.name || 'Borrower'}
                 </h1>
                 {loan.is_installment && (
                   <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 inline-flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
-                    {loan.installment_months} Months Installment
+                    {loan.installment_months
+                      ? `${loan.installment_months} Months Installment`
+                      : 'Open-Ended (Monthly Interest)'}
                   </span>
                 )}
                 {Number(loan.monthly_interest_rate || 0) > 0 && (
@@ -456,38 +460,38 @@ export function LoanDetailsClient({
         <div className="p-6 rounded-2xl bg-muted/60 space-y-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             <div>
-              <span className="text-xs text-muted-foreground font-medium block">
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
                 Remaining Balance
               </span>
-              <span className="text-3xl font-extrabold text-foreground">
+              <span className="text-2xl font-bold tracking-tight text-foreground">
                 {formatMoney(loan.balance_remaining)}
               </span>
             </div>
 
             <div>
-              <span className="text-xs text-muted-foreground font-medium block">
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
                 Total Purchase / Amount
               </span>
-              <span className="text-2xl font-bold text-foreground">
+              <span className="text-2xl font-bold tracking-tight text-foreground">
                 {formatMoney(loan.amount)}
               </span>
             </div>
 
             {Number(loan.downpayment_amount || 0) > 0 ? (
               <div>
-                <span className="text-xs text-muted-foreground font-medium block">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
                   Downpayment Paid
                 </span>
-                <span className="text-2xl font-bold text-emerald-500">
+                <span className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
                   {formatMoney(loan.downpayment_amount)}
                 </span>
               </div>
             ) : (
               <div>
-                <span className="text-xs text-muted-foreground font-medium block">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
                   Financed Principal
                 </span>
-                <span className="text-2xl font-bold text-foreground">
+                <span className="text-2xl font-bold tracking-tight text-foreground">
                   {formatMoney(loan.amount)}
                 </span>
               </div>
@@ -574,7 +578,7 @@ export function LoanDetailsClient({
 
               <div className="p-4 rounded-2xl bg-muted/60">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                  Monthly Due Amount
+                  {loan.installment_months ? 'Monthly Due Amount' : 'Monthly Interest Due'}
                 </span>
                 <span className="text-sm font-bold text-blue-500 mt-1 block">
                   {loan.monthly_amount ? formatMoney(loan.monthly_amount) : 'Calculated'}
@@ -586,7 +590,7 @@ export function LoanDetailsClient({
                   Installment Term
                 </span>
                 <span className="text-sm font-bold text-foreground mt-1 block">
-                  {loan.installment_months} Months
+                  {loan.installment_months ? `${loan.installment_months} Months` : 'No Fixed Term (Open-Ended)'}
                 </span>
               </div>
 
@@ -1342,13 +1346,17 @@ export function LoanDetailsClient({
                   Monthly Payment Schedule
                 </h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Generate a complete record of payments until the end of the loan (e.g. 24 months = 24 records).
+                  {Number(loan.monthly_interest_rate || 0) > 0 && !loan.installment_months
+                    ? 'This loan is open-ended with monthly interest payments. If you agree on a fixed duration later (e.g. 12 or 24 months), you can generate a fixed amortization schedule below.'
+                    : 'Generate a complete record of payments until the end of the loan (e.g. 24 months = 24 records).'}
                 </p>
               </div>
             </div>
 
             <span className="text-xs font-semibold px-3 py-1 rounded-full bg-muted text-muted-foreground shrink-0 self-start sm:self-auto">
-              No Schedule Yet
+              {Number(loan.monthly_interest_rate || 0) > 0 && !loan.installment_months
+                ? 'Open-Ended (Monthly Interest)'
+                : 'No Schedule Yet'}
             </span>
           </div>
 
@@ -1569,6 +1577,7 @@ export function LoanDetailsClient({
         onClose={() => setIsEditLoanModalOpen(false)}
         loan={loan}
         contacts={contacts}
+        properties={properties}
         creditCards={creditCards}
       />
     </div>

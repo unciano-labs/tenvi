@@ -109,7 +109,7 @@ export function SplitsClient({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground truncate">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Chipping In & Bill Splits
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -259,14 +259,14 @@ export function SplitsClient({
                     className="p-6 sm:p-7 shadow-xs overflow-hidden min-w-0 space-y-5"
                   >
                     {/* Header row */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 min-w-0">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap min-w-0">
-                          <h3 className="text-lg font-bold text-foreground truncate max-w-[280px] sm:max-w-none">
+                          <h3 className="text-base font-semibold leading-snug text-foreground whitespace-normal break-words">
                             {split.title}
                           </h3>
                           {allPaid && (
-                            <Badge variant="success" className="text-xs font-bold gap-1 shrink-0">
+                            <Badge variant="success" className="text-xs font-medium gap-1 shrink-0">
                               All Settled ✅
                             </Badge>
                           )}
@@ -275,18 +275,18 @@ export function SplitsClient({
                         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1 min-w-0">
                           <span>{formatDate(split.occurred_on)}</span>
                           {split.credit_card && (
-                            <Badge variant="soft" className="gap-1 font-medium shrink-0">
+                            <Badge variant="soft" className="gap-1 font-medium text-xs shrink-0">
                               <CardIcon className="w-3 h-3 text-primary" />
                               {split.credit_card.bank_name} (••{split.credit_card.last_4})
                             </Badge>
                           )}
-                          {split.note && <span className="truncate max-w-[200px]">• {split.note}</span>}
+                          {split.note && <span className="whitespace-normal break-words">• {split.note}</span>}
                         </div>
                       </div>
 
                       <div className="sm:text-right shrink-0">
-                        <span className="text-xs text-muted-foreground block">Total Bill</span>
-                        <span className="text-2xl font-extrabold text-foreground">
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">Total Bill</span>
+                        <span className="text-2xl font-bold tracking-tight text-foreground">
                           {formatMoney(split.total_amount)}
                         </span>
                       </div>
@@ -310,7 +310,7 @@ export function SplitsClient({
 
                     {/* Participants List */}
                     <div className="space-y-2 min-w-0">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         Participants
                       </p>
                       <div className="max-h-56 overflow-y-auto pr-1.5 bili-scrollbar">
@@ -325,10 +325,10 @@ export function SplitsClient({
                               }`}
                             >
                               <div className="min-w-0 flex-1">
-                                <p className="text-sm font-bold text-foreground truncate">
+                                <p className="text-sm font-semibold text-foreground whitespace-normal break-words">
                                   {p.contact?.name || 'Friend'}
                                 </p>
-                                <p className="text-xs font-extrabold text-muted-foreground truncate">
+                                <p className="text-xs font-medium text-foreground">
                                   {formatMoney(p.share_amount)}
                                 </p>
                               </div>
@@ -341,7 +341,7 @@ export function SplitsClient({
                                 onClick={() =>
                                   handleTogglePaid(split.id, p.id, p.is_paid)
                                 }
-                                className={`text-xs font-semibold rounded-xl shrink-0 ${
+                                className={`text-xs font-medium rounded-xl shrink-0 ${
                                   p.is_paid
                                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                                     : ''
