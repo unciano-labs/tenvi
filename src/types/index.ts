@@ -182,6 +182,9 @@ export type LiabilityType =
 
 export type LiabilityStatus = 'active' | 'paid_off' | 'refinanced' | 'defaulted';
 
+export type InterestRateType = 'annual' | 'monthly_addon';
+export type LinkedAccountType = 'credit_card' | 'savings';
+
 export interface Liability {
   id: string;
   website_id: string;
@@ -192,11 +195,19 @@ export interface Liability {
   original_principal: number;
   current_principal_balance: number;
   annual_interest_rate: number;
+  interest_rate_type?: InterestRateType;
+  interest_rate?: number;
   term_months?: number | null;
   monthly_payment: number;
+  is_amortization_overridden?: boolean;
   due_day?: number | null;
   start_date?: string | null;
   property_id?: string | null;
+  linked_account_type?: LinkedAccountType | null;
+  credit_card_id?: string | null;
+  savings_id?: string | null;
+  credit_card?: CreditCard | null;
+  savings?: SavingsAccount | null;
   status: LiabilityStatus;
   notes?: string | null;
   created_at: string;

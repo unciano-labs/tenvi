@@ -64,14 +64,27 @@ export default async function PropertiesPage() {
     .eq('user_id', user.id)
     .order('expiry_date', { ascending: true, nullsFirst: false });
 
-  // 6. Fetch all liabilities
+  // 6. Fetch all liabilities with linked account relations
   const { data: liabilities } = await supabase
     .from('bili_liabilities')
-    .select('*')
+    .select(`
+      *,
+      credit_card:bili_credit_cards(*),
+      savings:bili_savings(*)
+    `)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
+
+  // 7. Fetch user's liquid savings accounts
+  const { data: savingsAccounts } = await supabase
+    .from('bili_savings')
+    .select('*')
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .is('deleted_at', null)
+    .order('name', { ascending: true });
 
   return (
     <PropertiesClient
@@ -79,6 +92,7 @@ export default async function PropertiesPage() {
       transactions={propertyTransactions || []}
       categories={categories || []}
       creditCards={creditCards || []}
+      savingsAccounts={savingsAccounts || []}
       documents={documents || []}
       liabilities={liabilities || []}
     />

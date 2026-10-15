@@ -159,7 +159,11 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
   // 8. Fetch liabilities linked directly to this property
   const { data: liabilities } = await supabase
     .from('bili_liabilities')
-    .select('*')
+    .select(`
+      *,
+      credit_card:bili_credit_cards(*),
+      savings:bili_savings(*)
+    `)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
     .eq('property_id', id)

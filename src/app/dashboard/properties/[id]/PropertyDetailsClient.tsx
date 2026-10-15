@@ -844,10 +844,24 @@ export function PropertyDetailsClient({
                           {lib.status.replace('_', ' ')}
                         </Badge>
                       </div>
-                      <span className="text-xs text-muted-foreground block">
-                        Lender: <strong className="text-foreground">{lib.lender_name}</strong> •{' '}
-                        <span className="capitalize">{lib.liability_type.replace('_', ' ')}</span>
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                        <span className="text-xs text-muted-foreground">
+                          Lender: <strong className="text-foreground">{lib.lender_name}</strong> •{' '}
+                          <span className="capitalize">{lib.liability_type.replace('_', ' ')}</span>
+                        </span>
+                        {lib.credit_card && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-medium text-primary border-primary/30 flex items-center gap-1">
+                            <CreditCardIcon className="w-2.5 h-2.5" />
+                            {lib.credit_card.bank_name} {lib.credit_card.name} (•••• {lib.credit_card.last_4})
+                          </Badge>
+                        )}
+                        {lib.savings && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-medium text-emerald-600 dark:text-emerald-400 border-emerald-500/30 flex items-center gap-1">
+                            <Landmark className="w-2.5 h-2.5" />
+                            {lib.savings.institution_name} - {lib.savings.name}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
@@ -905,9 +919,16 @@ export function PropertyDetailsClient({
 
                     <div>
                       <span className="text-muted-foreground block text-[11px]">Monthly Amortization</span>
-                      <span className="text-base font-extrabold text-foreground">
-                        {formatMoney(lib.monthly_payment)}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base font-extrabold text-foreground">
+                          {formatMoney(lib.monthly_payment)}
+                        </span>
+                        {lib.is_amortization_overridden && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold uppercase tracking-wider">
+                            Override
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[10px] text-muted-foreground block">
                         {lib.due_day ? `Due ${lib.due_day}th of month` : 'No set due date'}
                       </span>
@@ -917,7 +938,12 @@ export function PropertyDetailsClient({
                   {!isPaidOff && (
                     <div className="pt-2 flex items-center justify-between gap-2 border-t border-border/50 flex-wrap">
                       <span className="text-[11px] text-muted-foreground">
-                        Rate: <strong>{lib.annual_interest_rate}% p.a.</strong>
+                        Rate:{' '}
+                        <strong>
+                          {lib.interest_rate_type === 'monthly_addon'
+                            ? `${lib.interest_rate ?? (Number(lib.annual_interest_rate) / 12).toFixed(2)}% / mo (Add-on)`
+                            : `${lib.interest_rate ?? lib.annual_interest_rate}% p.a.`}
+                        </strong>
                       </span>
                       <div className="flex items-center gap-1.5">
                         {Number(lib.term_months || 0) > 0 && (
@@ -1334,6 +1360,8 @@ export function PropertyDetailsClient({
         liability={editingLiability}
         defaultPropertyId={property.id}
         properties={allProperties}
+        creditCards={creditCards}
+        savingsAccounts={savingsAccounts}
       />
 
       {/* Record Liability Payment Dialog */}

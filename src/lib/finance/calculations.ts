@@ -1429,6 +1429,33 @@ export function calculateMonthlyAmortizationPayment(
 }
 
 /**
+ * Calculate monthly amortization payment based on interest rate input mode:
+ * - Monthly Add-on Rate: (Principal / Term in Months) + (Principal * (Monthly Rate / 100))
+ * - Annual Rate: Standard monthly amortization using Monthly Rate = Annual Rate / 12
+ */
+export function calculateLiabilityAmortization(params: {
+  principal: number;
+  interestRate: number;
+  termMonths: number;
+  rateType?: 'annual' | 'monthly_addon';
+}): number {
+  const p = Math.max(0, Number(params.principal || 0));
+  const n = Math.max(0, Math.round(Number(params.termMonths || 0)));
+  const rate = Math.max(0, Number(params.interestRate || 0));
+  const rateType = params.rateType || 'annual';
+
+  if (p === 0 || n === 0) return 0;
+
+  if (rateType === 'monthly_addon') {
+    const monthlyRateDecimal = rate / 100;
+    const monthlyPayment = p / n + p * monthlyRateDecimal;
+    return Number(monthlyPayment.toFixed(2));
+  }
+
+  return calculateMonthlyAmortizationPayment(p, rate, n);
+}
+
+/**
  * Generate full reducing-balance amortization schedule
  * Guarantees final period convergence to exactly 0.00
  */

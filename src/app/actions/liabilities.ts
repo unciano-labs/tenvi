@@ -31,15 +31,33 @@ export async function createLiabilityAction(data: LiabilityInput) {
     liabilityType,
     originalPrincipal,
     currentPrincipalBalance,
+    interestRateType,
+    interestRate,
     annualInterestRate,
     termMonths,
     monthlyPayment,
+    isAmortizationOverridden,
     dueDay,
     startDate,
     propertyId,
+    linkedAccountType,
+    creditCardId,
+    savingsId,
     status,
     notes,
   } = parsed.data;
+
+  // Resolve interest rate and backward-compatible annual rate
+  const rateType = interestRateType || 'annual';
+  const rateValue = interestRate ?? annualInterestRate ?? 0;
+  const effectiveAnnualRate =
+    rateType === 'monthly_addon' ? rateValue * 12 : rateValue;
+
+  const validLinkedType = linkedAccountType && (linkedAccountType === 'credit_card' || linkedAccountType === 'savings')
+    ? linkedAccountType
+    : null;
+  const validCreditCardId = validLinkedType === 'credit_card' && creditCardId ? creditCardId : null;
+  const validSavingsId = validLinkedType === 'savings' && savingsId ? savingsId : null;
 
   const { data: newLiability, error } = await supabase
     .from('bili_liabilities')
@@ -51,12 +69,18 @@ export async function createLiabilityAction(data: LiabilityInput) {
       liability_type: liabilityType,
       original_principal: originalPrincipal,
       current_principal_balance: currentPrincipalBalance,
-      annual_interest_rate: annualInterestRate,
+      annual_interest_rate: effectiveAnnualRate,
+      interest_rate_type: rateType,
+      interest_rate: rateValue,
       term_months: termMonths || null,
       monthly_payment: monthlyPayment || 0,
+      is_amortization_overridden: Boolean(isAmortizationOverridden),
       due_day: dueDay || null,
       start_date: startDate || null,
       property_id: propertyId || null,
+      linked_account_type: validLinkedType,
+      credit_card_id: validCreditCardId,
+      savings_id: validSavingsId,
       status: status || 'active',
       notes: notes || null,
     })
@@ -72,6 +96,13 @@ export async function createLiabilityAction(data: LiabilityInput) {
   revalidatePath('/dashboard/properties');
   if (propertyId) {
     revalidatePath(`/dashboard/properties/${propertyId}`);
+  }
+  if (validCreditCardId) {
+    revalidatePath('/dashboard/cards');
+    revalidatePath(`/dashboard/cards/${validCreditCardId}`);
+  }
+  if (validSavingsId) {
+    revalidatePath('/dashboard/savings');
   }
   return { success: true, id: newLiability.id };
 }
@@ -96,15 +127,32 @@ export async function updateLiabilityAction(data: any) {
     liabilityType,
     originalPrincipal,
     currentPrincipalBalance,
+    interestRateType,
+    interestRate,
     annualInterestRate,
     termMonths,
     monthlyPayment,
+    isAmortizationOverridden,
     dueDay,
     startDate,
     propertyId,
+    linkedAccountType,
+    creditCardId,
+    savingsId,
     status,
     notes,
   } = parsed.data;
+
+  const rateType = interestRateType || 'annual';
+  const rateValue = interestRate ?? annualInterestRate ?? 0;
+  const effectiveAnnualRate =
+    rateType === 'monthly_addon' ? rateValue * 12 : rateValue;
+
+  const validLinkedType = linkedAccountType && (linkedAccountType === 'credit_card' || linkedAccountType === 'savings')
+    ? linkedAccountType
+    : null;
+  const validCreditCardId = validLinkedType === 'credit_card' && creditCardId ? creditCardId : null;
+  const validSavingsId = validLinkedType === 'savings' && savingsId ? savingsId : null;
 
   const { error } = await supabase
     .from('bili_liabilities')
@@ -114,12 +162,18 @@ export async function updateLiabilityAction(data: any) {
       liability_type: liabilityType,
       original_principal: originalPrincipal,
       current_principal_balance: currentPrincipalBalance,
-      annual_interest_rate: annualInterestRate,
+      annual_interest_rate: effectiveAnnualRate,
+      interest_rate_type: rateType,
+      interest_rate: rateValue,
       term_months: termMonths || null,
       monthly_payment: monthlyPayment || 0,
+      is_amortization_overridden: Boolean(isAmortizationOverridden),
       due_day: dueDay || null,
       start_date: startDate || null,
       property_id: propertyId || null,
+      linked_account_type: validLinkedType,
+      credit_card_id: validCreditCardId,
+      savings_id: validSavingsId,
       status: status || 'active',
       notes: notes || null,
       updated_at: new Date().toISOString(),
@@ -137,6 +191,13 @@ export async function updateLiabilityAction(data: any) {
   revalidatePath('/dashboard/properties');
   if (propertyId) {
     revalidatePath(`/dashboard/properties/${propertyId}`);
+  }
+  if (validCreditCardId) {
+    revalidatePath('/dashboard/cards');
+    revalidatePath(`/dashboard/cards/${validCreditCardId}`);
+  }
+  if (validSavingsId) {
+    revalidatePath('/dashboard/savings');
   }
   return { success: true };
 }

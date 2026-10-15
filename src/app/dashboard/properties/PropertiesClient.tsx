@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { deletePropertyAction } from '@/app/actions/properties';
 import { toast } from 'sonner';
 import {
@@ -26,9 +27,11 @@ import {
   Trees,
   Wrench,
   Layers,
+  ShieldAlert,
 } from 'lucide-react';
 import { PropertyModal } from '@/components/Forms/PropertyModal';
 import { PropertyTransactionModal } from '@/components/Forms/PropertyTransactionModal';
+import { LiabilityModal } from '@/components/Forms/LiabilityModal';
 import { StatCard } from '@/components/ui/StatCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -46,6 +49,7 @@ import {
   Transaction,
   Category,
   CreditCard,
+  SavingsAccount,
   PropertyDocument,
   Liability,
 } from '@/types';
@@ -56,6 +60,7 @@ interface PropertiesClientProps {
   transactions: Transaction[];
   categories: Category[];
   creditCards?: CreditCard[];
+  savingsAccounts?: SavingsAccount[];
   documents?: PropertyDocument[];
   liabilities?: Liability[];
 }
@@ -66,12 +71,16 @@ export function PropertiesClient({
   transactions,
   categories,
   creditCards = [],
+  savingsAccounts = [],
   documents = [],
   liabilities = [],
 }: PropertiesClientProps) {
+  const router = useRouter();
   const [properties] = useState<Property[]>(initialProperties || propProperties || []);
   const [isAddPropertyModalOpen, setIsAddPropertyModalOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [isLiabilityModalOpen, setIsLiabilityModalOpen] = useState(false);
+  const [editingLiability, setEditingLiability] = useState<Liability | null>(null);
 
   // Quick Action Modal state (Property Transactions)
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
@@ -324,6 +333,20 @@ export function PropertiesClient({
           >
             <ArrowUpRight className="w-4 h-4 text-rose-600 dark:text-rose-400" />
             + Log Expense
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setEditingLiability(null);
+              setIsLiabilityModalOpen(true);
+            }}
+            className="rounded-xl gap-1.5 font-bold text-xs"
+          >
+            <ShieldAlert className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            + Add Mortgage / Debt
           </Button>
 
           <Button
@@ -924,6 +947,20 @@ export function PropertiesClient({
         defaultKind={txModalKind}
         categories={categories}
         creditCards={creditCards}
+      />
+
+      {/* Liability Modal */}
+      <LiabilityModal
+        isOpen={isLiabilityModalOpen}
+        onClose={() => {
+          setIsLiabilityModalOpen(false);
+          setEditingLiability(null);
+          router.refresh();
+        }}
+        liability={editingLiability}
+        properties={properties}
+        creditCards={creditCards}
+        savingsAccounts={savingsAccounts}
       />
     </div>
   );

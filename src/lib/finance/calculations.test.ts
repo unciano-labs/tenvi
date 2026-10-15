@@ -8,6 +8,7 @@ import {
   clampDayOfMonth,
   calculateTrueNetWorth,
   calculateMonthlyAmortizationPayment,
+  calculateLiabilityAmortization,
   calculateAmortizationSchedule,
   calculateNextAmortizationSplit,
   calculateStraightLineDepreciation,
@@ -224,6 +225,72 @@ describe('FIN-05: calculateTrueNetWorth()', () => {
     expect(result.totalLiabilities).toBe(0);
     expect(result.netWorth).toBe(0);
     expect(result.debtToAssetRatio).toBe(0);
+  });
+});
+
+describe('calculateLiabilityAmortization()', () => {
+  it('calculates monthly add-on rate amortization accurately', () => {
+    // Principal: 120,000, 12 months, 1% monthly add-on
+    // (120,000 / 12) + (120,000 * 0.01) = 10,000 + 1,200 = 11,200.00
+    const result = calculateLiabilityAmortization({
+      principal: 120000,
+      termMonths: 12,
+      interestRate: 1.0,
+      rateType: 'monthly_addon',
+    });
+    expect(result).toBe(11200.0);
+  });
+
+  it('calculates real-world credit-to-cash auto loan add-on amortization', () => {
+    // ₱700,000 principal, 60 months, 0.55% monthly add-on
+    // (700,000 / 60) + (700,000 * 0.0055) = 11,666.67 + 3,850 = 15,516.67
+    const result = calculateLiabilityAmortization({
+      principal: 700000,
+      termMonths: 60,
+      interestRate: 0.55,
+      rateType: 'monthly_addon',
+    });
+    expect(result).toBe(15516.67);
+  });
+
+  it('calculates standard annual rate compound reducing-balance amortization', () => {
+    // ₱1,000,000 at 6% annual for 10 years (120 months)
+    const result = calculateLiabilityAmortization({
+      principal: 1000000,
+      termMonths: 120,
+      interestRate: 6.0,
+      rateType: 'annual',
+    });
+    expect(result).toBe(11102.05);
+  });
+
+  it('handles 0% interest and edge cases gracefully', () => {
+    expect(
+      calculateLiabilityAmortization({
+        principal: 50000,
+        termMonths: 10,
+        interestRate: 0,
+        rateType: 'monthly_addon',
+      })
+    ).toBe(5000.0);
+
+    expect(
+      calculateLiabilityAmortization({
+        principal: 0,
+        termMonths: 12,
+        interestRate: 5,
+        rateType: 'annual',
+      })
+    ).toBe(0);
+
+    expect(
+      calculateLiabilityAmortization({
+        principal: 100000,
+        termMonths: 0,
+        interestRate: 5,
+        rateType: 'annual',
+      })
+    ).toBe(0);
   });
 });
 
