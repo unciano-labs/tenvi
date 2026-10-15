@@ -19,11 +19,10 @@ import {
 } from 'lucide-react';
 import { CreditCard } from '@/types';
 import {
-  calculateLiabilityAmortization,
-  calculateAmortizationSchedule,
   formatMoney,
   formatDate,
 } from '@/lib/finance/calculations';
+import { useInstallmentForm } from '@/hooks/useInstallmentForm';
 import { createCardInstallmentAction } from '@/app/actions/cards';
 import {
   ResponsiveDialog,
@@ -57,162 +56,89 @@ export function CardInstallmentModal({
 }: CardInstallmentModalProps) {
   const router = useRouter();
 
-  // Selected Card
-  const [selectedCardId, setSelectedCardId] = useState<string>(
-    defaultCreditCardId || (creditCards.length > 0 ? creditCards[0].id : '')
-  );
-
   // Form Fields
   const [merchantName, setMerchantName] = useState('');
-  const [principal, setPrincipal] = useState('');
-  const [termMonths, setTermMonths] = useState<string>('12');
-  const [monthlyAddonRate, setMonthlyAddonRate] = useState<string>('0');
-  const [transactionDate, setTransactionDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
-  const [firstBillingMonth, setFirstBillingMonth] = useState('');
-  const [monthlyAmortization, setMonthlyAmortization] = useState('');
-  const [isAmortizationOverridden, setIsAmortizationOverridden] = useState(false);
   const [notes, setNotes] = useState('');
 
   // UI state
   const [showSchedulePreview, setShowSchedulePreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [manualPaidNumbers, setManualPaidNumbers] = useState<number[] | null>(null);
 
-  // Target Credit Card
-  const targetCard = useMemo(() => {
-    return creditCards.find((c) => c.id === selectedCardId) || creditCards[0] || null;
-  }, [creditCards, selectedCardId]);
+  const {
+    principal,
+    setPrincipal,
+    termMonths,
+    setTermMonths,
+    interestRate: monthlyAddonRate,
+    setInterestRate: setMonthlyAddonRate,
+    monthlyAmortization,
+    setMonthlyAmortization,
+    isAmortizationOverridden,
+    setIsAmortizationOverridden,
+    resetAmortizationOverride,
+    transactionDate,
+    setTransactionDate,
+    firstBillingMonth,
+    setFirstBillingMonth,
+    creditCardId: selectedCardId,
+    setCreditCardId: setSelectedCardId,
+    targetCard,
+    effectiveDueDay: dueDay,
+    scheduleSummary,
+    togglePreviewTermPaid,
+    manualPaidNumbers,
+    setManualPaidNumbers,
+    resetForm,
+  } = useInstallmentForm({
+    creditCards,
+    initialValues: {
+      creditCardId: defaultCreditCardId || (creditCards.length > 0 ? creditCards[0].id : ''),
+      linkedAccountType: 'credit_card',
+      interestRateType: 'monthly_addon',
+      interestRate: '0',
+      termMonths: '12',
+      startDate: new Date().toISOString().split('T')[0],
+    },
+  });
 
-  const dueDay = targetCard?.due_day || 15;
+  const scheduleData = scheduleSummary.schedule.length > 0 ? scheduleSummary : null;
 
   // Reset or initialize state on open
   useEffect(() => {
     if (isOpen) {
-      if (defaultCreditCardId) {
-        setSelectedCardId(defaultCreditCardId);
-      } else if (creditCards.length > 0 && !selectedCardId) {
-        setSelectedCardId(creditCards[0].id);
-      }
       setMerchantName('');
-      setPrincipal('');
-      setTermMonths('12');
-      setMonthlyAddonRate('0');
-      setTransactionDate(new Date().toISOString().split('T')[0]);
-      setFirstBillingMonth('');
-      setMonthlyAmortization('');
-      setIsAmortizationOverridden(false);
       setNotes('');
       setShowSchedulePreview(false);
-      setManualPaidNumbers(null);
+      resetForm();
+      if (defaultCreditCardId) {
+        setSelectedCardId(defaultCreditCardId);
+      } else if (creditCards.length > 0) {
+        setSelectedCardId(creditCards[0].id);
+      }
     }
-  }, [isOpen, defaultCreditCardId, creditCards]);
-
-  // Recalculates amortization based on inputs
-  const recalculateAmortization = (
-    principalVal: string,
-    termVal: string,
-    rateVal: string
-  ) => {
-    const p = Number(principalVal) || 0;
-    const n = Number(termVal) || 0;
-    const rate = Number(rateVal) || 0;
-
-    if (p > 0 && n > 0) {
-      const computed = calculateLiabilityAmortization({
-        principal: p,
-        termMonths: n,
-        interestRate: rate,
-        rateType: 'monthly_addon',
-      });
-      setMonthlyAmortization(computed > 0 ? String(computed) : '');
-      setIsAmortizationOverridden(false);
-    } else {
-      setMonthlyAmortization('');
-      setIsAmortizationOverridden(false);
-    }
-  };
+  }, [isOpen, defaultCreditCardId, creditCards, resetForm, setSelectedCardId]);
 
   const handlePrincipalChange = (val: string) => {
     setPrincipal(val);
-    recalculateAmortization(val, termMonths, monthlyAddonRate);
   };
 
   const handleTermChange = (term: number | string) => {
-    const val = String(term);
-    setTermMonths(val);
+    setTermMonths(String(term));
     setManualPaidNumbers(null);
-    recalculateAmortization(principal, val, monthlyAddonRate);
   };
 
   const handleRateChange = (rateVal: string) => {
     setMonthlyAddonRate(rateVal);
-    recalculateAmortization(principal, termMonths, rateVal);
   };
 
   const handleResetAmortization = () => {
-    recalculateAmortization(principal, termMonths, monthlyAddonRate);
+    resetAmortizationOverride();
   };
-
-  // Preview Amortization Schedule
-  const scheduleData = useMemo(() => {
-    const p = Number(principal) || 0;
-    const n = Number(termMonths) || 0;
-    const r = Number(monthlyAddonRate) || 0;
-    const mPmt = Number(monthlyAmortization) || 0;
-
-    if (p <= 0 || n <= 0) return null;
-
-    let computedFirstDue: string | undefined = undefined;
-    if (firstBillingMonth) {
-      const parts = firstBillingMonth.split('-');
-      const y = parseInt(parts[0], 10);
-      const m = parseInt(parts[1], 10);
-      const daysInMonth = new Date(y, m, 0).getDate();
-      const clampedDay = Math.min(dueDay, daysInMonth);
-      computedFirstDue = `${y}-${String(m).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
-    }
-
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    return calculateAmortizationSchedule({
-      principal: p,
-      annualInterestRate: r * 12,
-      rateType: 'monthly_addon',
-      interestRate: r,
-      termMonths: n,
-      startDate: transactionDate || undefined,
-      firstPaymentDate: computedFirstDue,
-      monthlyDueDay: dueDay,
-      monthlyPayment: mPmt > 0 ? mPmt : undefined,
-      isAmortizationOverridden,
-      paidInstallmentNumbers: manualPaidNumbers,
-      asOfDate: todayStr,
-    });
-  }, [
-    principal,
-    termMonths,
-    monthlyAddonRate,
-    monthlyAmortization,
-    isAmortizationOverridden,
-    transactionDate,
-    firstBillingMonth,
-    dueDay,
-    manualPaidNumbers,
-  ]);
 
   const handleTogglePreviewPaid = (instNum: number) => {
-    const currentPaidSet = new Set(
-      scheduleData?.schedule.filter((r) => r.isPaid).map((r) => r.installmentNumber) || []
-    );
-    if (currentPaidSet.has(instNum)) {
-      currentPaidSet.delete(instNum);
-    } else {
-      currentPaidSet.add(instNum);
-    }
-    setManualPaidNumbers(Array.from(currentPaidSet).sort((a, b) => a - b));
+    togglePreviewTermPaid(instNum);
   };
+
 
   const pNum = Number(principal) || 0;
   const nNum = Number(termMonths) || 0;

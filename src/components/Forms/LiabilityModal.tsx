@@ -40,6 +40,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
 import { calculateLiabilityAmortization, formatMoney } from '@/lib/finance/calculations';
+import { useInstallmentForm } from '@/hooks/useInstallmentForm';
 import { cn } from '@/lib/utils';
 
 interface LiabilityModalProps {
@@ -77,74 +78,41 @@ export function LiabilityModal({
   const [liabilityType, setLiabilityType] = useState<LiabilityType>('mortgage');
   const [originalPrincipal, setOriginalPrincipal] = useState('');
   const [currentPrincipalBalance, setCurrentPrincipalBalance] = useState('');
-  const [rateType, setRateType] = useState<InterestRateType>('annual');
-  const [interestRate, setInterestRate] = useState('');
-  const [termMonths, setTermMonths] = useState('');
-  const [monthlyPayment, setMonthlyPayment] = useState('');
-  const [isAmortizationOverridden, setIsAmortizationOverridden] = useState(false);
-  const [dueDay, setDueDay] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [firstPaymentDate, setFirstPaymentDate] = useState('');
   const [propertyId, setPropertyId] = useState<string>('');
-  const [linkedAccountType, setLinkedAccountType] = useState<LinkedAccountType | ''>('');
-  const [creditCardId, setCreditCardId] = useState<string>('');
-  const [savingsId, setSavingsId] = useState<string>('');
   const [status, setStatus] = useState<'active' | 'paid_off' | 'refinanced' | 'defaulted'>('active');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (liability) {
-      setName(liability.name);
-      setLenderName(liability.lender_name);
-      setLiabilityType(liability.liability_type);
-      setOriginalPrincipal(
-        liability.original_principal ? String(liability.original_principal) : ''
-      );
-      setCurrentPrincipalBalance(
-        liability.current_principal_balance ? String(liability.current_principal_balance) : ''
-      );
-      const savedRateType = liability.interest_rate_type || 'annual';
-      setRateType(savedRateType);
-      const savedRate = liability.interest_rate ?? liability.annual_interest_rate;
-      setInterestRate(savedRate !== undefined && savedRate !== null ? String(savedRate) : '');
-      setTermMonths(liability.term_months ? String(liability.term_months) : '');
-      setMonthlyPayment(liability.monthly_payment ? String(liability.monthly_payment) : '');
-      setIsAmortizationOverridden(Boolean(liability.is_amortization_overridden));
-      setDueDay(liability.due_day ? String(liability.due_day) : '');
-      setStartDate(liability.start_date || '');
-      setFirstPaymentDate(liability.first_payment_date || '');
-      setPropertyId(liability.property_id || defaultPropertyId || '');
-      const initialLinkedType =
-        liability.linked_account_type ||
-        (liability.credit_card_id ? 'credit_card' : liability.savings_id ? 'savings' : '');
-      setLinkedAccountType(initialLinkedType);
-      setCreditCardId(liability.credit_card_id || '');
-      setSavingsId(liability.savings_id || '');
-      setStatus(liability.status || 'active');
-      setNotes(liability.notes || '');
-    } else {
-      setName('');
-      setLenderName('');
-      setLiabilityType('mortgage');
-      setOriginalPrincipal('');
-      setCurrentPrincipalBalance('');
-      setRateType('annual');
-      setInterestRate('');
-      setTermMonths('');
-      setMonthlyPayment('');
-      setIsAmortizationOverridden(false);
-      setDueDay('');
-      setStartDate('');
-      setFirstPaymentDate('');
-      setPropertyId(defaultPropertyId || '');
-      setLinkedAccountType('');
-      setCreditCardId('');
-      setSavingsId('');
-      setStatus('active');
-      setNotes('');
-    }
-  }, [liability, defaultPropertyId, isOpen]);
+  const {
+    termMonths,
+    setTermMonths,
+    interestRateType: rateType,
+    setInterestRateType,
+    interestRate,
+    setInterestRate,
+    monthlyAmortization: monthlyPayment,
+    setMonthlyAmortization: setMonthlyPayment,
+    isAmortizationOverridden,
+    setIsAmortizationOverridden,
+    transactionDate: startDate,
+    setTransactionDate: setStartDate,
+    firstPaymentDate,
+    setFirstPaymentDate,
+    dueDay,
+    setDueDay,
+    linkedAccountType,
+    setLinkedAccountType,
+    creditCardId,
+    setCreditCardId,
+    savingsId,
+    setSavingsId,
+    targetCard: selectedCard,
+    selectedSavings,
+    recalculateAmortization: hookRecalculateAmortization,
+  } = useInstallmentForm({
+    creditCards,
+    savingsAccounts,
+  });
 
   // Recalculates amortization based on the latest inputs
   const recalculateAmortization = (
@@ -154,25 +122,13 @@ export function LiabilityModal({
     rateVal: string,
     currentRateType: InterestRateType
   ) => {
-    const principal = Number(origPrincipalVal) > 0 ? Number(origPrincipalVal) : Number(curBalanceVal) || 0;
-    const term = Number(termVal) || 0;
-    const rate = Number(rateVal) || 0;
-
-    if (principal > 0 && term > 0) {
-      const computed = calculateLiabilityAmortization({
-        principal,
-        termMonths: term,
-        interestRate: rate,
-        rateType: currentRateType,
-      });
-      setMonthlyPayment(computed > 0 ? String(computed) : '');
-      setIsAmortizationOverridden(false);
-    }
+    const principal = Number(origPrincipalVal) > 0 ? origPrincipalVal : curBalanceVal;
+    hookRecalculateAmortization(principal, termVal, rateVal, currentRateType);
   };
 
   // Switch between Annual Rate and Monthly Add-on Rate
   const handleRateTypeChange = (newType: InterestRateType) => {
-    setRateType(newType);
+    setInterestRateType(newType);
     recalculateAmortization(originalPrincipal, currentPrincipalBalance, termMonths, interestRate, newType);
   };
 
@@ -202,21 +158,70 @@ export function LiabilityModal({
   // Handle credit card selection with automatic due date inheritance
   const handleCreditCardSelect = (cardId: string) => {
     setCreditCardId(cardId);
-    const selectedCard = creditCards.find((c) => c.id === cardId);
-    if (selectedCard && selectedCard.due_day) {
-      setDueDay(String(selectedCard.due_day));
+    const selCard = creditCards.find((c) => c.id === cardId);
+    if (selCard && selCard.due_day) {
+      setDueDay(String(selCard.due_day));
       setFirstPaymentDate((prev) => {
         if (!prev) return '';
         const parts = prev.split('-');
-        const dayStr = String(selectedCard.due_day).padStart(2, '0');
+        const dayStr = String(selCard.due_day).padStart(2, '0');
         return `${parts[0]}-${parts[1]}-${dayStr}`;
       });
-      toast.info(`Payment due day synced to Day ${selectedCard.due_day} (${selectedCard.bank_name} ${selectedCard.name})`);
+      toast.info(`Payment due day synced to Day ${selCard.due_day} (${selCard.bank_name} ${selCard.name})`);
     }
   };
 
-  const selectedCard = creditCards.find((c) => c.id === creditCardId);
-  const selectedSavings = savingsAccounts.find((s) => s.id === savingsId);
+  useEffect(() => {
+    if (liability) {
+      setName(liability.name);
+      setLenderName(liability.lender_name);
+      setLiabilityType(liability.liability_type);
+      setOriginalPrincipal(
+        liability.original_principal ? String(liability.original_principal) : ''
+      );
+      setCurrentPrincipalBalance(
+        liability.current_principal_balance ? String(liability.current_principal_balance) : ''
+      );
+      const savedRateType = liability.interest_rate_type || 'annual';
+      setInterestRateType(savedRateType);
+      const savedRate = liability.interest_rate ?? liability.annual_interest_rate;
+      setInterestRate(savedRate !== undefined && savedRate !== null ? String(savedRate) : '');
+      setTermMonths(liability.term_months ? String(liability.term_months) : '');
+      setMonthlyPayment(liability.monthly_payment ? String(liability.monthly_payment) : '');
+      setDueDay(liability.due_day ? String(liability.due_day) : '');
+      setStartDate(liability.start_date || '');
+      setFirstPaymentDate(liability.first_payment_date || '');
+      setPropertyId(liability.property_id || defaultPropertyId || '');
+      const initialLinkedType =
+        liability.linked_account_type ||
+        (liability.credit_card_id ? 'credit_card' : liability.savings_id ? 'savings' : '');
+      setLinkedAccountType(initialLinkedType);
+      setCreditCardId(liability.credit_card_id || '');
+      setSavingsId(liability.savings_id || '');
+      setStatus(liability.status || 'active');
+      setNotes(liability.notes || '');
+    } else {
+      setName('');
+      setLenderName('');
+      setLiabilityType('mortgage');
+      setOriginalPrincipal('');
+      setCurrentPrincipalBalance('');
+      setInterestRateType('annual');
+      setInterestRate('');
+      setTermMonths('');
+      setMonthlyPayment('');
+      setDueDay('');
+      setStartDate('');
+      setFirstPaymentDate('');
+      setPropertyId(defaultPropertyId || '');
+      setLinkedAccountType('');
+      setCreditCardId('');
+      setSavingsId('');
+      setStatus('active');
+      setNotes('');
+    }
+  }, [liability, defaultPropertyId, isOpen]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

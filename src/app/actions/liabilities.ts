@@ -11,7 +11,7 @@ import {
 } from '@/lib/validations/schemas';
 import { LiabilityInput, LiabilityPaymentInput } from '@/types';
 import { logAuditEntry } from '@/lib/audit/logger';
-import { calculateAmortizationSchedule } from '@/lib/finance/calculations';
+import { calculateAmortizationSchedule, applyInstallmentToggleToLiability } from '@/lib/finance/calculations';
 
 export async function createLiabilityAction(data: LiabilityInput) {
   const auth = await requireWebsiteUser();
@@ -484,53 +484,23 @@ export async function toggleLiabilityInstallmentPaidAction(
     return { error: 'Liability record not found.' };
   }
 
-  const currentPaid: number[] = Array.isArray(liability.paid_installment_numbers)
-    ? liability.paid_installment_numbers
-    : [];
-
-  let updatedPaid: number[];
-  if (isPaid) {
-    updatedPaid = Array.from(new Set([...currentPaid, installmentNumber])).sort((a, b) => a - b);
-  } else {
-    updatedPaid = currentPaid.filter((n) => n !== installmentNumber);
-  }
-
-  const principal = Number(liability.original_principal || liability.current_principal_balance || 0);
-  const annualRate = Number(liability.annual_interest_rate || 0);
-  const rateType = liability.interest_rate_type || 'annual';
-  const interestRate = Number(liability.interest_rate ?? liability.annual_interest_rate ?? 0);
-  const termMonths = Number(liability.term_months || 0);
-
-  const summary = calculateAmortizationSchedule({
-    principal,
-    annualInterestRate: annualRate,
-    termMonths,
-    startDate: liability.start_date || undefined,
-    monthlyDueDay: liability.due_day || 15,
-    rateType,
-    interestRate,
-    monthlyPayment: Number(liability.monthly_payment || 0),
-    isAmortizationOverridden: Boolean(liability.is_amortization_overridden),
-    firstPaymentDate: liability.first_payment_date || null,
-    paidInstallmentNumbers: updatedPaid,
-  });
-
-  const newStatus =
-    summary.unpaidCount === 0 && termMonths > 0
-      ? 'paid_off'
-      : 'active';
+  const syncResult = applyInstallmentToggleToLiability(liability, installmentNumber, isPaid);
+  const updatedPaid = syncResult.updatedPaidNumbers;
+  const newStatus = syncResult.newStatus;
+  const newRemainingBalance = syncResult.remainingUnpaidBalance;
 
   const { error: updateErr } = await supabase
     .from('bili_liabilities')
     .update({
       paid_installment_numbers: updatedPaid,
-      current_principal_balance: summary.remainingUnpaidBalance,
+      current_principal_balance: newRemainingBalance,
       status: newStatus,
       updated_at: new Date().toISOString(),
     })
     .eq('id', liabilityId)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id);
+
 
   if (updateErr) {
     console.error('Error toggling liability installment status:', updateErr);
@@ -545,7 +515,7 @@ export async function toggleLiabilityInstallmentPaidAction(
     newData: {
       toggledInstallment: installmentNumber,
       isPaid,
-      newRemainingBalance: summary.remainingUnpaidBalance,
+      newRemainingBalance,
       paidCount: updatedPaid.length,
     },
   });
@@ -564,7 +534,7 @@ export async function toggleLiabilityInstallmentPaidAction(
   return {
     success: true,
     paidInstallmentNumbers: updatedPaid,
-    currentPrincipalBalance: summary.remainingUnpaidBalance,
+    currentPrincipalBalance: newRemainingBalance,
     status: newStatus,
   };
 }

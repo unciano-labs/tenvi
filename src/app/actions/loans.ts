@@ -12,6 +12,7 @@ import {
   formatMoney,
   formatDate,
   InstallmentScheduleOptions,
+  applyInstallmentToggleToLoan,
 } from '@/lib/finance/calculations';
 import { normalizePhoneNumber } from './notifications';
 import {
@@ -423,24 +424,17 @@ export async function toggleLoanInstallmentPaidAction(
   // 3. Fetch all installments to recalculate loan balance
   const { data: allInstallments } = await supabase
     .from('bili_loan_installments')
-    .select('amount, is_paid')
+    .select('id, installment_number, amount, is_paid')
     .eq('loan_id', loanId)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id);
 
   if (allInstallments && allInstallments.length > 0) {
-    const unpaidAmount = allInstallments
-      .filter((i) => !i.is_paid)
-      .reduce((sum, i) => sum + Number(i.amount), 0);
-
-    const paidCount = allInstallments.filter((i) => i.is_paid).length;
-
-    let newStatus: 'unpaid' | 'partial' | 'paid' = 'unpaid';
-    if (unpaidAmount <= 0) {
-      newStatus = 'paid';
-    } else if (paidCount > 0) {
-      newStatus = 'partial';
-    }
+    const { unpaidAmount, newStatus } = applyInstallmentToggleToLoan(
+      allInstallments,
+      installmentId,
+      isPaid
+    );
 
     await supabase
       .from('bili_loans')
@@ -453,6 +447,7 @@ export async function toggleLoanInstallmentPaidAction(
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user.id);
   }
+
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/loans');

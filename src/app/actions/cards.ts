@@ -7,6 +7,7 @@ import { creditCardSchema, cardInstallmentSchema } from '@/lib/validations/schem
 import { requireWebsiteUser } from '@/lib/auth/guards';
 import { logAuditEntry } from '@/lib/audit/logger';
 import { calculateAmortizationSchedule } from '@/lib/finance/calculations';
+import { resolveFirstInstallmentDueDate } from '@/lib/finance/dateResolver';
 
 export async function createCreditCardAction(data: any) {
   const auth = await requireWebsiteUser();
@@ -453,7 +454,7 @@ export async function createCardInstallmentAction(data: any) {
   // 1. Fetch target card
   const { data: card, error: cardError } = await supabase
     .from('bili_credit_cards')
-    .select('id, name, bank_name, due_day, credit_limit')
+    .select('id, name, bank_name, due_day, statement_day, credit_limit')
     .eq('id', creditCardId)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
@@ -466,35 +467,13 @@ export async function createCardInstallmentAction(data: any) {
 
   const dueDay = card.due_day || 15;
 
-  // 2. Compute first payment date (locking day to card.due_day)
-  let firstPaymentDate: string;
-  if (firstBillingMonth && firstBillingMonth.trim()) {
-    const parts = firstBillingMonth.trim().split('-');
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10);
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const clampedDay = Math.min(dueDay, daysInMonth);
-    firstPaymentDate = `${year}-${String(month).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
-  } else {
-    // Default to the upcoming due date following the transaction date
-    const tx = new Date(transactionDate);
-    const txYear = tx.getFullYear();
-    const txMonth = tx.getMonth() + 1;
-    const txDay = tx.getDate();
-
-    let targetYear = txYear;
-    let targetMonth = txMonth;
-    if (txDay > dueDay) {
-      targetMonth += 1;
-      if (targetMonth > 12) {
-        targetMonth = 1;
-        targetYear += 1;
-      }
-    }
-    const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
-    const clampedDay = Math.min(dueDay, daysInMonth);
-    firstPaymentDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
-  }
+  // 2. Compute first payment date (locking day to card.due_day) using centralized dateResolver
+  const firstPaymentDate = resolveFirstInstallmentDueDate({
+    transactionDate,
+    dueDay,
+    statementDay: card.statement_day,
+    explicitFirstPaymentDate: firstBillingMonth ? `${firstBillingMonth}-01` : null,
+  });
 
   // Auto-mark past due dates as paid and calculate initial unpaid balance
   const scheduleSummary = calculateAmortizationSchedule({
