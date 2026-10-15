@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { WEBSITE_ID } from '@/lib/constants';
-import { creditCardSchema } from '@/lib/validations/schemas';
+import { creditCardSchema, cardInstallmentSchema } from '@/lib/validations/schemas';
 import { requireWebsiteUser } from '@/lib/auth/guards';
 import { logAuditEntry } from '@/lib/audit/logger';
 
@@ -420,5 +420,135 @@ export async function toggleCardReminderAction(id: string, remindersEnabled: boo
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/cards');
   return { success: true, remindersEnabled };
+}
+
+export async function createCardInstallmentAction(data: any) {
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
+  }
+  const user = auth.user;
+  const supabase = await createClient();
+
+  const parsed = cardInstallmentSchema.safeParse(data);
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message || 'Invalid installment details' };
+  }
+
+  const {
+    creditCardId,
+    merchantName,
+    principal,
+    termMonths,
+    monthlyAddonRate = 0,
+    transactionDate,
+    firstBillingMonth,
+    monthlyAmortization,
+    isAmortizationOverridden = false,
+    notes,
+  } = parsed.data;
+
+  // 1. Fetch target card
+  const { data: card, error: cardError } = await supabase
+    .from('bili_credit_cards')
+    .select('id, name, bank_name, due_day, credit_limit')
+    .eq('id', creditCardId)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .is('deleted_at', null)
+    .single();
+
+  if (cardError || !card) {
+    return { error: 'Credit card not found or inactive.' };
+  }
+
+  const dueDay = card.due_day || 15;
+
+  // 2. Compute first payment date (locking day to card.due_day)
+  let firstPaymentDate: string;
+  if (firstBillingMonth && firstBillingMonth.trim()) {
+    const parts = firstBillingMonth.trim().split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const clampedDay = Math.min(dueDay, daysInMonth);
+    firstPaymentDate = `${year}-${String(month).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
+  } else {
+    // Default to the upcoming due date following the transaction date
+    const tx = new Date(transactionDate);
+    const txYear = tx.getFullYear();
+    const txMonth = tx.getMonth() + 1;
+    const txDay = tx.getDate();
+
+    let targetYear = txYear;
+    let targetMonth = txMonth;
+    if (txDay > dueDay) {
+      targetMonth += 1;
+      if (targetMonth > 12) {
+        targetMonth = 1;
+        targetYear += 1;
+      }
+    }
+    const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+    const clampedDay = Math.min(dueDay, daysInMonth);
+    firstPaymentDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
+  }
+
+  // 3. Insert into bili_liabilities
+  const { data: newLiability, error: insertError } = await supabase
+    .from('bili_liabilities')
+    .insert({
+      website_id: WEBSITE_ID,
+      user_id: user.id,
+      name: merchantName,
+      lender_name: `${card.bank_name} - ${card.name}`,
+      liability_type: 'credit_card_installment',
+      original_principal: principal,
+      current_principal_balance: principal,
+      annual_interest_rate: (monthlyAddonRate || 0) * 12,
+      interest_rate_type: 'monthly_addon',
+      interest_rate: monthlyAddonRate || 0,
+      term_months: termMonths,
+      monthly_payment: monthlyAmortization,
+      is_amortization_overridden: Boolean(isAmortizationOverridden),
+      due_day: dueDay,
+      start_date: transactionDate,
+      first_payment_date: firstPaymentDate,
+      linked_account_type: 'credit_card',
+      credit_card_id: card.id,
+      status: 'active',
+      notes: notes || null,
+    })
+    .select('id')
+    .single();
+
+  if (insertError || !newLiability) {
+    console.error('Error inserting card installment liability:', insertError);
+    return { error: 'Failed to record installment transaction. Please try again.' };
+  }
+
+  // 4. Log audit entry
+  await logAuditEntry({
+    userId: user.id,
+    action: 'INSERT',
+    entityType: 'liability',
+    entityId: newLiability.id,
+    newData: {
+      name: merchantName,
+      creditCardId: card.id,
+      principal,
+      termMonths,
+      monthlyPayment: monthlyAmortization,
+      firstPaymentDate,
+    },
+  });
+
+  // 5. Revalidate affected paths
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/cards');
+  revalidatePath(`/dashboard/cards/${card.id}`);
+  revalidatePath('/dashboard/transactions');
+
+  return { success: true, id: newLiability.id };
 }
 

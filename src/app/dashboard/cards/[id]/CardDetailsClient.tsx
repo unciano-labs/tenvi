@@ -32,6 +32,7 @@ import {
 import { toast } from 'sonner';
 import { deleteCreditCardAction } from '@/app/actions/cards';
 import { deleteTransactionAction } from '@/app/actions/transactions';
+import { deleteLiabilityAction } from '@/app/actions/liabilities';
 import { CreditCard, Transaction, Category, Loan, Liability } from '@/types';
 import {
   formatMoney,
@@ -86,6 +87,10 @@ const AmortizationScheduleModal = dynamic(
   () => import('@/components/Forms/AmortizationScheduleModal').then((m) => m.AmortizationScheduleModal),
   { ssr: false }
 );
+const CardInstallmentModal = dynamic(
+  () => import('@/components/Forms/CardInstallmentModal').then((m) => m.CardInstallmentModal),
+  { ssr: false }
+);
 
 interface CardDetailsClientProps {
   card: CreditCard;
@@ -110,6 +115,7 @@ export function CardDetailsClient({
   const [deletingTxId, setDeletingTxId] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSwipeModalOpen, setIsSwipeModalOpen] = useState(false);
+  const [isInstallmentModalOpen, setIsInstallmentModalOpen] = useState(false);
   const [isUploadStatementOpen, setIsUploadStatementOpen] = useState(false);
   const [scheduleLiability, setScheduleLiability] = useState<Liability | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -119,6 +125,8 @@ export function CardDetailsClient({
   // Confirmation dialog state
   const [isDeleteCardOpen, setIsDeleteCardOpen] = useState(false);
   const [txToDelete, setTxToDelete] = useState<{ id: string; note?: string | null } | null>(null);
+  const [liabilityToDelete, setLiabilityToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deletingLiabilityId, setDeletingLiabilityId] = useState<string | null>(null);
 
   React.useEffect(() => {
     setCurrentTransactions(transactions);
@@ -165,6 +173,23 @@ export function CardDetailsClient({
       setCurrentTransactions(previous);
     } else {
       toast.success('Transaction removed successfully.');
+      router.refresh();
+    }
+  };
+
+  const handleConfirmDeleteLiability = async () => {
+    if (!liabilityToDelete) return;
+    const { id, name } = liabilityToDelete;
+    setLiabilityToDelete(null);
+    setDeletingLiabilityId(id);
+
+    const res = await deleteLiabilityAction(id);
+    setDeletingLiabilityId(null);
+
+    if (res?.error) {
+      toast.error(res.error);
+    } else {
+      toast.success(`"${name}" removed successfully.`);
       router.refresh();
     }
   };
@@ -288,22 +313,32 @@ export function CardDetailsClient({
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <div className="flex items-center gap-2 sm:gap-2.5 self-start sm:self-auto flex-wrap">
             <Button
               variant="soft"
               size="default"
               onClick={() => setIsEditModalOpen(true)}
-              className="min-h-12 h-12 px-4 font-semibold cursor-pointer"
+              className="min-h-11 h-11 sm:min-h-12 sm:h-12 px-3 sm:px-4 font-semibold cursor-pointer"
             >
               <Pencil className="mr-1.5 size-4 text-muted-foreground" />
               Edit Card
             </Button>
 
             <Button
+              variant="soft"
+              size="default"
+              onClick={() => setIsInstallmentModalOpen(true)}
+              className="min-h-11 h-11 sm:min-h-12 sm:h-12 px-3.5 sm:px-4 font-semibold cursor-pointer text-foreground hover:text-primary"
+            >
+              <Layers className="mr-1.5 size-4 text-primary" />
+              Add Installment
+            </Button>
+
+            <Button
               variant="primary"
               size="default"
               onClick={() => setIsSwipeModalOpen(true)}
-              className="min-h-12 h-12 px-5 font-semibold cursor-pointer shadow-none"
+              className="min-h-11 h-11 sm:min-h-12 sm:h-12 px-4 sm:px-5 font-semibold cursor-pointer shadow-none"
             >
               <Plus className="mr-1.5 size-4" />
               Log Card Swipe
@@ -470,7 +505,32 @@ export function CardDetailsClient({
       </div>
 
       {/* 3. Card Installments & Linked Loans */}
-      {(linkedLoans.length > 0 || linkedLiabilities.length > 0) && (
+      {linkedLoans.length === 0 && linkedLiabilities.length === 0 ? (
+        <Card className="shadow-card">
+          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Layers className="size-4" />
+              </div>
+              <div>
+                <p className="font-bold text-foreground">Card Installment Plans</p>
+                <p className="text-muted-foreground text-xs">
+                  Track 0% interest promos, BNPL purchases, or bank loans deducted from this credit limit.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="soft"
+              size="sm"
+              onClick={() => setIsInstallmentModalOpen(true)}
+              className="text-xs font-bold shrink-0 self-start sm:self-auto cursor-pointer"
+            >
+              <Plus className="mr-1 size-3.5" />
+              Record Installment
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
         <Card className="shadow-card">
           <CardHeader className="pb-3 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -487,9 +547,20 @@ export function CardDetailsClient({
               </div>
             </div>
 
-            <Badge variant="secondary" className="text-xs font-medium">
-              {formatMoney(totalSwipedLoansRemaining)} remaining
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs font-medium hidden sm:inline-flex">
+                {formatMoney(totalSwipedLoansRemaining)} remaining
+              </Badge>
+              <Button
+                variant="soft"
+                size="sm"
+                onClick={() => setIsInstallmentModalOpen(true)}
+                className="text-xs font-semibold h-8 cursor-pointer"
+              >
+                <Plus className="mr-1 size-3.5" />
+                Add Installment
+              </Button>
+            </div>
           </CardHeader>
 
           <CardContent>
@@ -522,7 +593,7 @@ export function CardDetailsClient({
                 return (
                   <div
                     key={lib.id}
-                    className="p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-all border border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                    className="group p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-all border border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                   >
                     <div className="flex items-start gap-3 min-w-0">
                       <div className="size-9 rounded-xl bg-background border border-border/60 flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/40 transition-colors">
@@ -530,6 +601,8 @@ export function CardDetailsClient({
                           <Building2 className="size-4 text-emerald-500" />
                         ) : lib.liability_type === 'auto_loan' ? (
                           <Car className="size-4 text-blue-500" />
+                        ) : lib.liability_type === 'credit_card_installment' ? (
+                          <Layers className="size-4 text-primary" />
                         ) : (
                           <Landmark className="size-4 text-amber-500" />
                         )}
@@ -542,6 +615,11 @@ export function CardDetailsClient({
                           {totalTerms > 0 && (
                             <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-bold bg-primary/10 text-primary border-primary/25">
                               INSTALLMENT {currentTermIndex} OF {totalTerms}
+                            </Badge>
+                          )}
+                          {lib.liability_type === 'credit_card_installment' && (
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-semibold bg-primary/15 text-primary border-primary/30">
+                              Card Plan
                             </Badge>
                           )}
                           {lib.property?.name && (
@@ -589,16 +667,34 @@ export function CardDetailsClient({
                       </div>
                     </div>
 
-                    <div className="text-right sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-border/40">
-                      <div>
-                        <span className="font-extrabold text-foreground block text-sm sm:text-xs">
-                          {formatMoney(remainingBalance)}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground hidden sm:block">
-                          Remaining balance
-                        </span>
+                    <div className="text-right sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-border/40 gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <span className="font-extrabold text-foreground block text-sm sm:text-xs">
+                            {formatMoney(remainingBalance)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground hidden sm:block">
+                            Remaining balance
+                          </span>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={deletingLiabilityId === lib.id}
+                          onClick={() => setLiabilityToDelete({ id: lib.id, name: lib.name })}
+                          className="opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity size-7 rounded-lg text-muted-foreground hover:text-destructive cursor-pointer"
+                          aria-label="Delete installment"
+                        >
+                          {deletingLiabilityId === lib.id ? (
+                            <Loader2 className="size-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="size-3.5" />
+                          )}
+                        </Button>
                       </div>
-                      <span className="text-[10px] text-muted-foreground font-medium sm:mt-1">
+                      <span className="text-[10px] text-muted-foreground font-medium">
                         {remainingTerms > 0 ? `${remainingTerms} mos left` : 'Completed'}
                       </span>
                     </div>
@@ -1112,6 +1208,26 @@ export function CardDetailsClient({
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={!!liabilityToDelete} onOpenChange={(open) => !open && setLiabilityToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this installment plan?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove &quot;{liabilityToDelete?.name}&quot;? The remaining balance will be released back to your available credit limit.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeleteLiability}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove Plan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Modals */}
       {isSwipeModalOpen && (
         <TransactionModal
@@ -1121,6 +1237,16 @@ export function CardDetailsClient({
           creditCards={allCards}
           defaultCreditCardId={card.id}
           defaultPaymentMethod="credit_card"
+        />
+      )}
+
+      {isInstallmentModalOpen && (
+        <CardInstallmentModal
+          isOpen={isInstallmentModalOpen}
+          onClose={() => setIsInstallmentModalOpen(false)}
+          creditCards={allCards && allCards.length > 0 ? allCards : [card]}
+          defaultCreditCardId={card.id}
+          onSuccess={() => router.refresh()}
         />
       )}
 

@@ -178,6 +178,7 @@ export type LiabilityType =
   | 'personal_loan'
   | 'student_loan'
   | 'business_loan'
+  | 'credit_card_installment'
   | 'other';
 
 export type LiabilityStatus = 'active' | 'paid_off' | 'refinanced' | 'defaulted';

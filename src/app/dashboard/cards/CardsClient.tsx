@@ -31,7 +31,7 @@ import { PayTheseSoonPanel, DueSoonCardItem } from '@/components/Cards/PayTheseS
 import { BestCardTodayPanel } from '@/components/Cards/BestCardTodayPanel';
 import { CardsToolbar, CardSortOption } from '@/components/Cards/CardsToolbar';
 import { CreditCardTile, CardSpendingSummary } from '@/components/Cards/CreditCardTile';
-import { Bell, Plus, CreditCard as CardIcon } from 'lucide-react';
+import { Bell, Plus, CreditCard as CardIcon, Layers } from 'lucide-react';
 
 // Lazy-load modals for optimal performance & LCP (TNV-030)
 const CreditCardModal = dynamic(
@@ -41,6 +41,11 @@ const CreditCardModal = dynamic(
 
 const TransactionModal = dynamic(
   () => import('@/components/Forms/TransactionModal').then((mod) => mod.TransactionModal),
+  { ssr: false }
+);
+
+const CardInstallmentModal = dynamic(
+  () => import('@/components/Forms/CardInstallmentModal').then((mod) => mod.CardInstallmentModal),
   { ssr: false }
 );
 
@@ -75,6 +80,8 @@ export function CardsClient({
   const [editingCard, setEditingCard] = useState<CreditCard | null>(null);
   const [isSwipeModalOpen, setIsSwipeModalOpen] = useState(false);
   const [selectedSwipeCardId, setSelectedSwipeCardId] = useState<string>('');
+  const [isInstallmentModalOpen, setIsInstallmentModalOpen] = useState(false);
+  const [selectedInstallmentCardId, setSelectedInstallmentCardId] = useState<string>('');
   const [removedCardIds, setRemovedCardIds] = useState<string[]>([]);
   const [paidStatementIds, setPaidStatementIds] = useState<string[]>([]);
 
@@ -354,7 +361,7 @@ export function CardsClient({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto flex-wrap sm:flex-nowrap">
           <Button
             variant="soft"
             size="default"
@@ -364,6 +371,19 @@ export function CardsClient({
           >
             <Bell className="mr-1.5 sm:mr-2 size-4 text-muted-foreground shrink-0" />
             Reminders
+          </Button>
+
+          <Button
+            variant="soft"
+            size="default"
+            onClick={() => {
+              setSelectedInstallmentCardId(activeCards[0]?.id || '');
+              setIsInstallmentModalOpen(true);
+            }}
+            className="flex-1 sm:flex-initial min-h-11 h-11 sm:min-h-12 sm:h-12 px-3.5 sm:px-4 font-semibold cursor-pointer text-foreground hover:text-primary active:scale-[0.99] transition-transform"
+          >
+            <Layers className="mr-1.5 size-4 text-primary shrink-0" />
+            Add Installment
           </Button>
 
           <Button
@@ -538,6 +558,18 @@ export function CardsClient({
           }}
           defaultCreditCardId={selectedSwipeCardId}
           categories={categories}
+          creditCards={activeCards}
+        />
+      )}
+
+      {isInstallmentModalOpen && (
+        <CardInstallmentModal
+          isOpen={isInstallmentModalOpen}
+          onClose={() => {
+            setIsInstallmentModalOpen(false);
+            setSelectedInstallmentCardId('');
+          }}
+          defaultCreditCardId={selectedInstallmentCardId}
           creditCards={activeCards}
         />
       )}

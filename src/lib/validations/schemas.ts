@@ -206,6 +206,7 @@ export const liabilitySchema = z.object({
     'personal_loan',
     'student_loan',
     'business_loan',
+    'credit_card_installment',
     'other',
   ]).default('mortgage'),
   originalPrincipal: z.coerce.number().min(0, 'Original principal cannot be negative').default(0),
@@ -239,6 +240,19 @@ export const liabilityPaymentSchema = z.object({
   paidOn: z.string().min(1, 'Payment date is required'),
   savingsAccountId: z.string().uuid().optional().nullable(),
   note: z.string().max(200).optional().nullable(),
+});
+
+export const cardInstallmentSchema = z.object({
+  creditCardId: z.string().uuid('Please select a valid credit card'),
+  merchantName: z.string().min(2, 'Merchant / transaction name is required (e.g. Apple Store)'),
+  principal: z.coerce.number().positive('Total purchase amount must be greater than 0'),
+  termMonths: z.coerce.number().int().min(1, 'Term must be at least 1 month'),
+  monthlyAddonRate: z.coerce.number().min(0, 'Monthly rate cannot be negative').default(0),
+  transactionDate: z.string().min(1, 'Please select the transaction date'),
+  firstBillingMonth: z.string().optional().nullable().or(z.literal('')),
+  monthlyAmortization: z.coerce.number().min(0, 'Monthly amortization cannot be negative'),
+  isAmortizationOverridden: z.boolean().default(false),
+  notes: z.string().max(500).optional().nullable(),
 });
 
 

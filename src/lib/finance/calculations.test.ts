@@ -653,6 +653,64 @@ describe('calculateCardSpending()', () => {
     expect(result.availableToSpend).toBe(100000); // 200000 - 100000
     expect(result.utilizationPercent).toBe(50);
   });
+
+  it('deducts credit_card_installment liability from available credit limit', () => {
+    const card = { id: 'card-inst', credit_limit: 150000 };
+    const transactions = [
+      { id: '1', credit_card_id: 'card-inst', kind: 'expense', amount: 15000, loan_id: null },
+    ];
+    // Active 0% installment for ₱72,000 purchase
+    const liabilities = [
+      {
+        id: 'inst-1',
+        credit_card_id: 'card-inst',
+        liability_type: 'credit_card_installment',
+        current_principal_balance: 72000,
+        status: 'active',
+      },
+    ];
+
+    const result = calculateCardSpending(card, transactions, [], liabilities);
+    expect(result.directSpend).toBe(15000);
+    expect(result.loansSpend).toBe(72000);
+    expect(result.totalUsed).toBe(87000); // 15000 + 72000
+    expect(result.availableToSpend).toBe(63000); // 150000 - 87000
+    expect(result.utilizationPercent).toBe(58); // 87000 / 150000 = 58%
+  });
+
+  it('generates 0% installment promo schedule with zero interest charges across all terms', () => {
+    // 60,000 principal at 0% add-on for 12 months with Day 27 card due date
+    const summary = calculateAmortizationSchedule({
+      principal: 60000,
+      annualInterestRate: 0,
+      rateType: 'monthly_addon',
+      interestRate: 0,
+      termMonths: 12,
+      startDate: '2026-10-05',
+      monthlyDueDay: 27,
+    });
+
+    expect(summary.schedule.length).toBe(12);
+    expect(summary.totalPrincipal).toBe(60000);
+    expect(summary.totalInterest).toBe(0);
+    expect(summary.totalPayment).toBe(60000);
+    expect(summary.monthlyPayment).toBe(5000);
+
+    // Verify first installment
+    const firstRow = summary.schedule[0];
+    expect(firstRow.installmentNumber).toBe(1);
+    expect(firstRow.dueDate).toBe('2026-10-27');
+    expect(firstRow.paymentAmount).toBe(5000);
+    expect(firstRow.principalAmount).toBe(5000);
+    expect(firstRow.interestAmount).toBe(0);
+    expect(firstRow.remainingBalance).toBe(55000);
+
+    // Verify final installment
+    const finalRow = summary.schedule[11];
+    expect(finalRow.installmentNumber).toBe(12);
+    expect(finalRow.dueDate).toBe('2027-09-27');
+    expect(finalRow.remainingBalance).toBe(0);
+  });
 });
 
 

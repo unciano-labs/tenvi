@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { liabilitySchema, updateLiabilitySchema } from './schemas';
+import { liabilitySchema, updateLiabilitySchema, cardInstallmentSchema } from './schemas';
 
 describe('liabilitySchema validation - Account Linking, Rate Types & Amortization Override', () => {
   it('validates liability linked to a credit card with monthly add-on rate', () => {
@@ -107,5 +107,83 @@ describe('liabilitySchema validation - Account Linking, Rate Types & Amortizatio
 
     const res = updateLiabilitySchema.safeParse(data);
     expect(res.success).toBe(true);
+  });
+
+  it('validates liability with credit_card_installment liabilityType', () => {
+    const cardId = '123e4567-e89b-12d3-a456-426614174000';
+    const data = {
+      name: 'Power Mac Center - iPhone 16 Pro',
+      lenderName: 'BPI Platinum Rewards',
+      liabilityType: 'credit_card_installment',
+      originalPrincipal: 72000,
+      currentPrincipalBalance: 72000,
+      interestRateType: 'monthly_addon',
+      interestRate: 0,
+      termMonths: 24,
+      monthlyPayment: 3000,
+      creditCardId: cardId,
+      linkedAccountType: 'credit_card',
+      dueDay: 27,
+      startDate: '2026-10-16',
+      firstPaymentDate: '2026-11-27',
+      status: 'active',
+    };
+
+    const res = liabilitySchema.safeParse(data);
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.data.liabilityType).toBe('credit_card_installment');
+      expect(res.data.interestRate).toBe(0);
+      expect(res.data.monthlyPayment).toBe(3000);
+    }
+  });
+});
+
+describe('cardInstallmentSchema validation', () => {
+  it('validates a standard 0% installment transaction promo', () => {
+    const cardId = '123e4567-e89b-12d3-a456-426614174000';
+    const data = {
+      creditCardId: cardId,
+      merchantName: 'Abenson (Carrier Inverter AC)',
+      principal: 48000,
+      termMonths: 12,
+      monthlyAddonRate: 0,
+      transactionDate: '2026-10-16',
+      firstBillingMonth: '',
+      monthlyAmortization: 4000,
+      isAmortizationOverridden: false,
+    };
+
+    const res = cardInstallmentSchema.safeParse(data);
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.data.principal).toBe(48000);
+      expect(res.data.monthlyAddonRate).toBe(0);
+      expect(res.data.monthlyAmortization).toBe(4000);
+    }
+  });
+
+  it('validates an installment with monthly add-on rate and BNPL first billing month', () => {
+    const cardId = '123e4567-e89b-12d3-a456-426614174000';
+    const data = {
+      creditCardId: cardId,
+      merchantName: 'Metrobank Cash2Go',
+      principal: 100000,
+      termMonths: 24,
+      monthlyAddonRate: 0.55,
+      transactionDate: '2026-10-16',
+      firstBillingMonth: '2026-12',
+      monthlyAmortization: 4716.67,
+      isAmortizationOverridden: true,
+      notes: 'Promo code CASH2GO2026',
+    };
+
+    const res = cardInstallmentSchema.safeParse(data);
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.data.monthlyAddonRate).toBe(0.55);
+      expect(res.data.firstBillingMonth).toBe('2026-12');
+      expect(res.data.isAmortizationOverridden).toBe(true);
+    }
   });
 });
