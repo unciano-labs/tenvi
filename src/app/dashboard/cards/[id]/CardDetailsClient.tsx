@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -82,6 +82,10 @@ const StatementUploadModal = dynamic(
   () => import('@/components/Forms/StatementUploadModal').then((m) => m.StatementUploadModal),
   { ssr: false }
 );
+const AmortizationScheduleModal = dynamic(
+  () => import('@/components/Forms/AmortizationScheduleModal').then((m) => m.AmortizationScheduleModal),
+  { ssr: false }
+);
 
 interface CardDetailsClientProps {
   card: CreditCard;
@@ -107,6 +111,7 @@ export function CardDetailsClient({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSwipeModalOpen, setIsSwipeModalOpen] = useState(false);
   const [isUploadStatementOpen, setIsUploadStatementOpen] = useState(false);
+  const [scheduleLiability, setScheduleLiability] = useState<Liability | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllCutoffs, setShowAllCutoffs] = useState(false);
   const [collapsedStatements, setCollapsedStatements] = useState<Record<string, boolean>>({});
@@ -225,6 +230,36 @@ export function CardDetailsClient({
       if (!searchQuery.trim()) return true;
       return group.transactions.length > 0;
     });
+
+  // Active installment commitments from card-linked liabilities
+  const activeCycleInstallments = useMemo(() => {
+    return (linkedLiabilities || [])
+      .filter((lib) => lib.status !== 'paid_off' && Number(lib.current_principal_balance) > 0 && Number(lib.monthly_payment) > 0)
+      .map((lib) => {
+        const remainingBalance = Number(lib.current_principal_balance || 0);
+        const monthlyPayment = Number(lib.monthly_payment || 0);
+        const totalTerms = Number(lib.term_months || 0);
+
+        let remainingTerms = 0;
+        let currentTermIndex = 1;
+        if (totalTerms > 0 && monthlyPayment > 0) {
+          remainingTerms = Math.min(
+            totalTerms,
+            Math.max(1, Math.ceil(remainingBalance / monthlyPayment))
+          );
+          currentTermIndex = Math.min(totalTerms, Math.max(1, totalTerms - remainingTerms + 1));
+        }
+
+        return {
+          lib,
+          remainingBalance,
+          monthlyPayment,
+          totalTerms,
+          remainingTerms,
+          currentTermIndex,
+        };
+      });
+  }, [linkedLiabilities]);
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-150 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 md:pb-12">
@@ -465,16 +500,19 @@ export function CardDetailsClient({
                 const remainingBalance = Number(lib.current_principal_balance || 0);
                 const originalPrincipal = Number(lib.original_principal || 0);
                 const monthlyPayment = Number(lib.monthly_payment || 0);
+                const totalTerms = Number(lib.term_months || 0);
 
-                let remainingTermsText = '';
-                if (lib.term_months && monthlyPayment > 0 && !isPaid) {
-                  const estimatedRemaining = Math.min(
-                    lib.term_months,
+                let remainingTerms = 0;
+                let currentTermIndex = 1;
+                if (totalTerms > 0 && monthlyPayment > 0 && !isPaid) {
+                  remainingTerms = Math.min(
+                    totalTerms,
                     Math.max(1, Math.ceil(remainingBalance / monthlyPayment))
                   );
-                  remainingTermsText = `${estimatedRemaining} of ${lib.term_months} mos left`;
-                } else if (lib.term_months) {
-                  remainingTermsText = `${lib.term_months} mos total`;
+                  currentTermIndex = Math.min(totalTerms, Math.max(1, totalTerms - remainingTerms + 1));
+                } else if (totalTerms > 0) {
+                  remainingTerms = isPaid ? 0 : totalTerms;
+                  currentTermIndex = isPaid ? totalTerms : 1;
                 }
 
                 const targetUrl = lib.property_id
@@ -482,10 +520,9 @@ export function CardDetailsClient({
                   : '/dashboard/properties';
 
                 return (
-                  <Link
+                  <div
                     key={lib.id}
-                    href={targetUrl}
-                    className="p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-all border border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group text-xs"
+                    className="p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-all border border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                   >
                     <div className="flex items-start gap-3 min-w-0">
                       <div className="size-9 rounded-xl bg-background border border-border/60 flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/40 transition-colors">
@@ -499,9 +536,14 @@ export function CardDetailsClient({
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                          <p className="font-bold text-foreground truncate">
                             {lib.name}
                           </p>
+                          {totalTerms > 0 && (
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-bold bg-primary/10 text-primary border-primary/25">
+                              INSTALLMENT {currentTermIndex} OF {totalTerms}
+                            </Badge>
+                          )}
                           {lib.property?.name && (
                             <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-normal bg-background/50">
                               <Building2 className="size-2.5 mr-1" />
@@ -512,11 +554,7 @@ export function CardDetailsClient({
                             <Badge variant="soft" className="bg-emerald-500/10 text-emerald-600 text-[10px] py-0 px-1.5">
                               Paid Off
                             </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-mono">
-                              {lib.liability_type.replace('_', ' ').toUpperCase()}
-                            </Badge>
-                          )}
+                          ) : null}
                         </div>
                         <div className="flex items-center gap-2.5 text-muted-foreground mt-1 flex-wrap">
                           {monthlyPayment > 0 && (
@@ -524,13 +562,29 @@ export function CardDetailsClient({
                               {formatMoney(monthlyPayment)} <span className="font-normal text-muted-foreground">/ mo</span>
                             </span>
                           )}
-                          {remainingTermsText && (
-                            <span className="flex items-center gap-1 text-muted-foreground">
-                              <Calendar className="size-3" />
-                              {remainingTermsText}
-                            </span>
-                          )}
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <Clock className="size-3 text-primary" />
+                            Due Day {lib.due_day || card.due_day || 15}
+                          </span>
                           <span>Original: {formatMoney(originalPrincipal)}</span>
+                        </div>
+                        <div className="pt-1.5 flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setScheduleLiability(lib)}
+                            className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <Calendar className="size-3" />
+                            View Amortization Schedule →
+                          </button>
+                          {lib.property_id && (
+                            <Link
+                              href={targetUrl}
+                              className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              Asset View →
+                            </Link>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -544,11 +598,11 @@ export function CardDetailsClient({
                           Remaining balance
                         </span>
                       </div>
-                      <span className="text-xs text-primary font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform sm:mt-1">
-                        View Loan →
+                      <span className="text-[10px] text-muted-foreground font-medium sm:mt-1">
+                        {remainingTerms > 0 ? `${remainingTerms} mos left` : 'Completed'}
                       </span>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
 
@@ -735,6 +789,10 @@ export function CardDetailsClient({
           <div className="space-y-4">
             {visibleGroups.map((group) => {
               const isCollapsed = collapsedStatements[group.statementKey] ?? false;
+              const isRelevantCycle = group.isCurrentCycle || group.status === 'billed_due_soon';
+              const cycleInstallmentTotal = isRelevantCycle
+                ? activeCycleInstallments.reduce((sum, item) => sum + item.monthlyPayment, 0)
+                : 0;
 
               return (
                 <Card key={group.statementKey} className="shadow-card overflow-hidden">
@@ -773,8 +831,13 @@ export function CardDetailsClient({
                             Statement Total
                           </span>
                           <span className="text-sm sm:text-base font-extrabold text-foreground">
-                            {formatMoney(group.netSpend)}
+                            {formatMoney(group.netSpend + cycleInstallmentTotal)}
                           </span>
+                          {cycleInstallmentTotal > 0 && (
+                            <span className="text-[10px] text-muted-foreground block font-medium">
+                              incl. {formatMoney(cycleInstallmentTotal)} installments
+                            </span>
+                          )}
                         </div>
 
                         <Button
@@ -796,11 +859,70 @@ export function CardDetailsClient({
                     {/* Statement Transactions List */}
                     {!isCollapsed && (
                       <div className="space-y-2 pt-1">
+                        {/* Active Card Installment Billings */}
+                        {isRelevantCycle && activeCycleInstallments.length > 0 && (
+                          <div className="space-y-1.5 pb-1">
+                            {activeCycleInstallments.map((inst) => (
+                              <div
+                                key={`cycle-inst-${inst.lib.id}`}
+                                className="group p-3 rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors flex items-start justify-between text-xs gap-3 min-w-0"
+                              >
+                                <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                  <div className="p-1.5 rounded-xl bg-card shadow-xs shrink-0 text-primary mt-0.5">
+                                    <Layers className="size-3.5" />
+                                  </div>
+                                  <div className="min-w-0 flex-1 space-y-0.5">
+                                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                      <span className="font-bold text-foreground truncate">
+                                        {inst.lib.name}
+                                      </span>
+                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-bold bg-primary/15 text-primary border-primary/30">
+                                        INSTALLMENT {inst.currentTermIndex} OF {inst.totalTerms}
+                                      </Badge>
+                                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-card text-muted-foreground shadow-xs shrink-0">
+                                        Loan Installment
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                                      <span>Due: <strong className="text-foreground">{group.dueDateFormatted}</strong></span>
+                                      <span>•</span>
+                                      <span>Remaining bal: {formatMoney(inst.remainingBalance)}</span>
+                                    </div>
+                                    <div className="pt-0.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => setScheduleLiability(inst.lib)}
+                                        className="inline-flex items-center gap-1 text-2xs font-semibold text-primary hover:underline cursor-pointer"
+                                      >
+                                        <Calendar className="size-2.5" />
+                                        View Amortization Schedule →
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="shrink-0 flex items-center gap-2 text-right pt-0.5">
+                                  <div className="text-right">
+                                    <span className="text-xs sm:text-sm font-extrabold whitespace-nowrap text-foreground block">
+                                      -{formatMoney(inst.monthlyPayment)}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground block font-medium">
+                                      {inst.remainingTerms} mos left
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
                         {group.transactions.length === 0 ? (
                           <div className="p-4 rounded-2xl bg-muted/60 text-center space-y-1.5">
                             <p className="text-xs text-muted-foreground">
                               {group.isCurrentCycle
-                                ? 'No purchases recorded in this statement cycle yet. Charges logged after your bill is made will appear here.'
+                                ? isRelevantCycle && activeCycleInstallments.length > 0
+                                  ? 'No additional purchases recorded in this statement cycle.'
+                                  : 'No purchases recorded in this statement cycle yet. Charges logged after your bill is made will appear here.'
                                 : 'No purchases recorded for this statement period.'}
                             </p>
                             {group.isCurrentCycle && (
@@ -1016,6 +1138,14 @@ export function CardDetailsClient({
           onClose={() => setIsUploadStatementOpen(false)}
           card={card}
           categories={categories}
+        />
+      )}
+
+      {scheduleLiability && (
+        <AmortizationScheduleModal
+          isOpen={Boolean(scheduleLiability)}
+          onClose={() => setScheduleLiability(null)}
+          liability={scheduleLiability}
         />
       )}
     </div>

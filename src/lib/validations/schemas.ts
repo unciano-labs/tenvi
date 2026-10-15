@@ -218,6 +218,7 @@ export const liabilitySchema = z.object({
   isAmortizationOverridden: z.boolean().default(false),
   dueDay: z.coerce.number().int().min(1).max(31).optional().nullable(),
   startDate: z.string().optional().nullable(),
+  firstPaymentDate: z.string().optional().nullable().or(z.literal('')),
   propertyId: z.string().uuid().optional().nullable().or(z.literal('')),
   linkedAccountType: z.enum(['credit_card', 'savings']).optional().nullable().or(z.literal('')),
   creditCardId: z.string().uuid().optional().nullable().or(z.literal('')),

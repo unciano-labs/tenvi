@@ -1503,10 +1503,20 @@ export function calculateAmortizationSchedule(params: {
   termMonths: number;
   startDate?: string;
   monthlyDueDay?: number;
+  rateType?: 'annual' | 'monthly_addon';
+  interestRate?: number;
+  monthlyPayment?: number;
+  isAmortizationOverridden?: boolean;
+  firstPaymentDate?: string | null;
 }): AmortizationSummary {
   const principal = Math.max(0, Number(params.principal || 0));
   const termMonths = Math.max(0, Math.round(Number(params.termMonths || 0)));
   const annualRate = Math.max(0, Number(params.annualInterestRate || 0));
+  const rateType = params.rateType || 'annual';
+  const interestRate =
+    params.interestRate !== undefined && params.interestRate !== null
+      ? Math.max(0, Number(params.interestRate))
+      : annualRate;
   const startDateStr = params.startDate || new Date().toISOString().split('T')[0];
   const dueDay = params.monthlyDueDay ? Math.min(31, Math.max(1, params.monthlyDueDay)) : 15;
 
@@ -1520,12 +1530,47 @@ export function calculateAmortizationSchedule(params: {
     };
   }
 
-  const monthlyRate = annualRate > 0 ? annualRate / 100 / 12 : 0;
-  const regularPayment = calculateMonthlyAmortizationPayment(principal, annualRate, termMonths);
+  // 1. Determine standard or user-overridden monthly payment
+  let regularPayment: number;
+  if (params.isAmortizationOverridden && params.monthlyPayment && params.monthlyPayment > 0) {
+    regularPayment = Number(Number(params.monthlyPayment).toFixed(2));
+  } else if (rateType === 'monthly_addon') {
+    regularPayment = calculateLiabilityAmortization({
+      principal,
+      interestRate,
+      termMonths,
+      rateType: 'monthly_addon',
+    });
+  } else {
+    regularPayment = calculateMonthlyAmortizationPayment(principal, annualRate, termMonths);
+  }
 
-  const startDate = new Date(startDateStr);
-  let currentYear = startDate.getFullYear();
-  let currentMonth = startDate.getMonth();
+  // 2. Determine initial payment cycle (supporting BNPL and credit card due day inheritance)
+  let startCycleYear: number;
+  let startCycleMonth: number; // 0-indexed
+
+  if (params.firstPaymentDate && params.firstPaymentDate.trim()) {
+    // Buy Now, Pay Later: explicit start month / date
+    const cleanFpd = params.firstPaymentDate.trim();
+    const parts = cleanFpd.split('-').map(Number);
+    startCycleYear = parts[0];
+    startCycleMonth = parts[1] - 1; // 0-indexed
+  } else {
+    // Default to upcoming due date following loan approval/start date
+    const [startYear, startMonth1, startDay] = startDateStr.split('-').map(Number);
+    startCycleYear = startYear;
+    startCycleMonth = startMonth1 - 1; // 0-indexed
+
+    // If the loan start day is strictly after this month's due day, the payment
+    // falls into the following month. Otherwise, it is due on this month's due day!
+    if (startDay > dueDay) {
+      startCycleMonth += 1;
+      if (startCycleMonth > 11) {
+        startCycleMonth = 0;
+        startCycleYear += 1;
+      }
+    }
+  }
 
   let remainingPrincipal = principal;
   let cumulativeInterest = 0;
@@ -1533,31 +1578,51 @@ export function calculateAmortizationSchedule(params: {
   const schedule: AmortizationScheduleRow[] = [];
 
   for (let i = 1; i <= termMonths; i++) {
-    currentMonth += 1;
-    if (currentMonth > 11) {
-      currentMonth = 0;
-      currentYear += 1;
-    }
-    const maxDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const clampedDay = Math.min(dueDay, maxDaysInMonth);
-    const dueDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
+    const monthOffset = i - 1;
+    const cycleYear = startCycleYear + Math.floor((startCycleMonth + monthOffset) / 12);
+    const cycleMonth = (startCycleMonth + monthOffset) % 12;
 
-    const interestAmount = monthlyRate > 0 ? Number((remainingPrincipal * monthlyRate).toFixed(2)) : 0;
+    const maxDaysInMonth = new Date(cycleYear, cycleMonth + 1, 0).getDate();
+    const clampedDay = Math.min(dueDay, maxDaysInMonth);
+    const dueDate = `${cycleYear}-${String(cycleMonth + 1).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
+
+    let interestAmount = 0;
     let principalAmount = 0;
     let paymentAmount = 0;
 
-    if (i === termMonths) {
-      // Final month converges balance exactly to 0
-      principalAmount = remainingPrincipal;
-      paymentAmount = Number((principalAmount + interestAmount).toFixed(2));
-      remainingPrincipal = 0;
-    } else {
-      principalAmount = Number((regularPayment - interestAmount).toFixed(2));
-      if (principalAmount > remainingPrincipal) {
+    if (rateType === 'monthly_addon') {
+      // Monthly Add-on Rate: fixed monthly interest charge
+      const monthlyRateDecimal = interestRate / 100;
+      interestAmount = Number((principal * monthlyRateDecimal).toFixed(2));
+
+      if (i === termMonths) {
+        // Final period absorbs any fractional centavo variance
         principalAmount = remainingPrincipal;
+        paymentAmount = Number((principalAmount + interestAmount).toFixed(2));
+        remainingPrincipal = 0;
+      } else {
+        const standardPrincipal = Number((principal / termMonths).toFixed(2));
+        principalAmount = Math.min(remainingPrincipal, standardPrincipal);
+        paymentAmount = Number((principalAmount + interestAmount).toFixed(2));
+        remainingPrincipal = Number((remainingPrincipal - principalAmount).toFixed(2));
       }
-      paymentAmount = regularPayment;
-      remainingPrincipal = Number((remainingPrincipal - principalAmount).toFixed(2));
+    } else {
+      // Annual Reducing-Balance Rate
+      const monthlyRate = annualRate > 0 ? annualRate / 100 / 12 : 0;
+      interestAmount = monthlyRate > 0 ? Number((remainingPrincipal * monthlyRate).toFixed(2)) : 0;
+
+      if (i === termMonths) {
+        principalAmount = remainingPrincipal;
+        paymentAmount = Number((principalAmount + interestAmount).toFixed(2));
+        remainingPrincipal = 0;
+      } else {
+        principalAmount = Number((regularPayment - interestAmount).toFixed(2));
+        if (principalAmount > remainingPrincipal) {
+          principalAmount = remainingPrincipal;
+        }
+        paymentAmount = regularPayment;
+        remainingPrincipal = Number((remainingPrincipal - principalAmount).toFixed(2));
+      }
     }
 
     cumulativeInterest = Number((cumulativeInterest + interestAmount).toFixed(2));

@@ -33,9 +33,17 @@ export function AmortizationScheduleModal({
 
     const principal = Number(liability.original_principal || liability.current_principal_balance || 0);
     const annualRate = Number(liability.annual_interest_rate || 0);
+    const rateType = liability.interest_rate_type || 'annual';
+    const interestRate =
+      liability.interest_rate !== undefined && liability.interest_rate !== null
+        ? Number(liability.interest_rate)
+        : annualRate;
     const termMonths = Number(liability.term_months || 0);
     const startDate = liability.start_date || undefined;
     const dueDay = liability.due_day || 15;
+    const monthlyPayment = Number(liability.monthly_payment || 0);
+    const isAmortizationOverridden = Boolean(liability.is_amortization_overridden);
+    const firstPaymentDate = liability.first_payment_date || undefined;
 
     if (principal <= 0 || termMonths <= 0) return null;
 
@@ -45,6 +53,11 @@ export function AmortizationScheduleModal({
       termMonths,
       startDate,
       monthlyDueDay: dueDay,
+      rateType,
+      interestRate,
+      monthlyPayment,
+      isAmortizationOverridden,
+      firstPaymentDate,
     });
   }, [liability]);
 
@@ -59,7 +72,9 @@ export function AmortizationScheduleModal({
             Amortization Schedule: {liability.name}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            Reducing-balance payment schedule separating principal reduction from financing interest charges.
+            {liability.interest_rate_type === 'monthly_addon'
+              ? 'Fixed add-on rate payment schedule with steady monthly amortization.'
+              : 'Reducing-balance payment schedule separating principal reduction from financing interest charges.'}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -79,11 +94,18 @@ export function AmortizationScheduleModal({
             <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
               <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
                 <Percent className="w-3 h-3 text-amber-500" />
-                Annual Rate
+                {liability.interest_rate_type === 'monthly_addon' ? 'Monthly Rate' : 'Annual Rate'}
               </span>
               <span className="text-sm font-black text-foreground block">
-                {liability.annual_interest_rate}% p.a.
+                {liability.interest_rate_type === 'monthly_addon'
+                  ? `${liability.interest_rate}% / mo`
+                  : `${liability.annual_interest_rate}% p.a.`}
               </span>
+              {liability.interest_rate_type === 'monthly_addon' && (
+                <span className="text-[10px] text-muted-foreground block font-medium">
+                  {liability.annual_interest_rate}% p.a.
+                </span>
+              )}
             </div>
 
             <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">

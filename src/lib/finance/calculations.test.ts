@@ -370,6 +370,102 @@ describe('Task 3.1: Reducing-Balance Amortization Mathematical Engine', () => {
     expect(zeroSplit.interestPortion).toBe(0);
     expect(zeroSplit.newBalance).toBe(0);
   });
+
+  it('handles monthly add-on interest rate schedules correctly with perfect zero convergence', () => {
+    // 700,000 principal at 0.55% / mo add-on for 60 months
+    // Fixed monthly interest = 700,000 * (0.55 / 100) = 3,850.00
+    // Monthly principal = 700,000 / 60 = 11,666.67
+    // Total monthly payment = 15,516.67
+    const summary = calculateAmortizationSchedule({
+      principal: 700000,
+      annualInterestRate: 0.55,
+      rateType: 'monthly_addon',
+      interestRate: 0.55,
+      termMonths: 60,
+      startDate: '2026-10-05',
+      monthlyDueDay: 27,
+    });
+
+    expect(summary.schedule.length).toBe(60);
+    expect(summary.totalPrincipal).toBe(700000);
+    expect(summary.totalInterest).toBe(231000); // 3850 * 60 = 231,000
+    expect(summary.totalPayment).toBe(931000);
+
+    // Verify first installment due date inherits credit card day 27 in current month
+    const firstRow = summary.schedule[0];
+    expect(firstRow.installmentNumber).toBe(1);
+    expect(firstRow.dueDate).toBe('2026-10-27');
+    expect(firstRow.interestAmount).toBe(3850);
+    expect(firstRow.principalAmount).toBe(11666.67);
+    expect(firstRow.paymentAmount).toBe(15516.67);
+
+    // Verify second installment
+    expect(summary.schedule[1].dueDate).toBe('2026-11-27');
+
+    // Verify final installment convergence
+    const finalRow = summary.schedule[59];
+    expect(finalRow.installmentNumber).toBe(60);
+    expect(finalRow.remainingBalance).toBe(0);
+  });
+
+  it('inherits credit card due day accurately based on approval date vs due day', () => {
+    // Case 1: Approved before card due day (Oct 5 with due day 27) -> First due is Oct 27
+    const scheduleBefore = calculateAmortizationSchedule({
+      principal: 100000,
+      annualInterestRate: 6,
+      termMonths: 12,
+      startDate: '2026-10-05',
+      monthlyDueDay: 27,
+    });
+    expect(scheduleBefore.schedule[0].dueDate).toBe('2026-10-27');
+    expect(scheduleBefore.schedule[1].dueDate).toBe('2026-11-27');
+
+    // Case 2: Approved after card due day (Oct 28 with due day 27) -> First due is Nov 27
+    const scheduleAfter = calculateAmortizationSchedule({
+      principal: 100000,
+      annualInterestRate: 6,
+      termMonths: 12,
+      startDate: '2026-10-28',
+      monthlyDueDay: 27,
+    });
+    expect(scheduleAfter.schedule[0].dueDate).toBe('2026-11-27');
+  });
+
+  it('supports Buy Now Pay Later (BNPL) with custom firstPaymentDate', () => {
+    // Approved Oct 5, 2026, but customer opts to start payments in Dec 2026
+    const bnplSchedule = calculateAmortizationSchedule({
+      principal: 150000,
+      annualInterestRate: 0.55,
+      rateType: 'monthly_addon',
+      interestRate: 0.55,
+      termMonths: 12,
+      startDate: '2026-10-05',
+      firstPaymentDate: '2026-12-27',
+      monthlyDueDay: 27,
+    });
+
+    expect(bnplSchedule.schedule.length).toBe(12);
+    expect(bnplSchedule.schedule[0].dueDate).toBe('2026-12-27');
+    expect(bnplSchedule.schedule[1].dueDate).toBe('2027-01-27');
+    expect(bnplSchedule.schedule[11].dueDate).toBe('2027-11-27');
+    expect(bnplSchedule.schedule[11].remainingBalance).toBe(0);
+  });
+
+  it('respects manually overridden monthly amortization in schedule breakdown', () => {
+    const overriddenSchedule = calculateAmortizationSchedule({
+      principal: 700000,
+      annualInterestRate: 6.6,
+      termMonths: 60,
+      startDate: '2026-10-05',
+      monthlyDueDay: 27,
+      monthlyPayment: 13729.12,
+      isAmortizationOverridden: true,
+    });
+
+    expect(overriddenSchedule.monthlyPayment).toBe(13729.12);
+    expect(overriddenSchedule.schedule[0].paymentAmount).toBe(13729.12);
+    expect(overriddenSchedule.schedule[59].remainingBalance).toBe(0);
+  });
 });
 
 describe('Task 3.2: Vehicle & Asset Straight-Line Depreciation Engine', () => {

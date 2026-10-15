@@ -202,6 +202,7 @@ export interface Liability {
   is_amortization_overridden?: boolean;
   due_day?: number | null;
   start_date?: string | null;
+  first_payment_date?: string | null;
   property_id?: string | null;
   linked_account_type?: LinkedAccountType | null;
   credit_card_id?: string | null;

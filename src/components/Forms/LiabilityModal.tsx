@@ -84,6 +84,7 @@ export function LiabilityModal({
   const [isAmortizationOverridden, setIsAmortizationOverridden] = useState(false);
   const [dueDay, setDueDay] = useState('');
   const [startDate, setStartDate] = useState('');
+  const [firstPaymentDate, setFirstPaymentDate] = useState('');
   const [propertyId, setPropertyId] = useState<string>('');
   const [linkedAccountType, setLinkedAccountType] = useState<LinkedAccountType | ''>('');
   const [creditCardId, setCreditCardId] = useState<string>('');
@@ -112,6 +113,7 @@ export function LiabilityModal({
       setIsAmortizationOverridden(Boolean(liability.is_amortization_overridden));
       setDueDay(liability.due_day ? String(liability.due_day) : '');
       setStartDate(liability.start_date || '');
+      setFirstPaymentDate(liability.first_payment_date || '');
       setPropertyId(liability.property_id || defaultPropertyId || '');
       const initialLinkedType =
         liability.linked_account_type ||
@@ -134,6 +136,7 @@ export function LiabilityModal({
       setIsAmortizationOverridden(false);
       setDueDay('');
       setStartDate('');
+      setFirstPaymentDate('');
       setPropertyId(defaultPropertyId || '');
       setLinkedAccountType('');
       setCreditCardId('');
@@ -202,6 +205,12 @@ export function LiabilityModal({
     const selectedCard = creditCards.find((c) => c.id === cardId);
     if (selectedCard && selectedCard.due_day) {
       setDueDay(String(selectedCard.due_day));
+      setFirstPaymentDate((prev) => {
+        if (!prev) return '';
+        const parts = prev.split('-');
+        const dayStr = String(selectedCard.due_day).padStart(2, '0');
+        return `${parts[0]}-${parts[1]}-${dayStr}`;
+      });
       toast.info(`Payment due day synced to Day ${selectedCard.due_day} (${selectedCard.bank_name} ${selectedCard.name})`);
     }
   };
@@ -245,6 +254,7 @@ export function LiabilityModal({
         isAmortizationOverridden,
         dueDay: dueDay ? Number(dueDay) : null,
         startDate: startDate || null,
+        firstPaymentDate: firstPaymentDate || null,
         propertyId: propertyId ? propertyId : null,
         linkedAccountType: linkedAccountType || null,
         creditCardId: linkedAccountType === 'credit_card' && creditCardId ? creditCardId : null,
@@ -688,6 +698,39 @@ export function LiabilityModal({
                     : 'Day between 1 and 31 when payment is due each month.'}
                 </span>
               </div>
+            </div>
+
+            {/* Start Payment Month (Buy Now, Pay Later Support) */}
+            <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/50 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-primary" />
+                  First Payment Month / BNPL (Optional)
+                </label>
+                <span className="text-[10px] text-muted-foreground font-semibold px-2 py-0.5 rounded-md bg-muted">
+                  Buy Now, Pay Later
+                </span>
+              </div>
+              <Input
+                type="month"
+                value={firstPaymentDate ? firstPaymentDate.substring(0, 7) : ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (!val) {
+                    setFirstPaymentDate('');
+                    return;
+                  }
+                  const safeDay = dueDay ? String(dueDay).padStart(2, '0') : '15';
+                  setFirstPaymentDate(`${val}-${safeDay}`);
+                }}
+                className="rounded-2xl bg-background"
+                placeholder="YYYY-MM"
+              />
+              <span className="text-[11px] text-muted-foreground block">
+                {firstPaymentDate
+                  ? `Installment schedule begins in ${new Date(firstPaymentDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} on Day ${dueDay || 15}.`
+                  : `Leave blank to default to upcoming Day ${dueDay || 15} following approval date (${startDate || 'today'}).`}
+              </span>
             </div>
 
             {/* Notes */}
