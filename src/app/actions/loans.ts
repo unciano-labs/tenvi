@@ -241,7 +241,8 @@ export async function createLoanAction(data: any) {
       amount: item.amount,
       principal_amount: item.principalAmount || null,
       interest_amount: item.interestAmount || null,
-      is_paid: false,
+      is_paid: Boolean(item.isPaid),
+      paid_on: item.isPaid ? item.dueDate : null,
     }));
 
     const { error: instErr } = await supabase
@@ -250,6 +251,36 @@ export async function createLoanAction(data: any) {
 
     if (instErr) {
       console.error('Error creating installment schedule:', instErr);
+    }
+
+    // Auto-mark past installments and reconcile parent loan balance
+    const paidRows = installmentRows.filter((r) => r.is_paid);
+    const unpaidRows = installmentRows.filter((r) => !r.is_paid);
+    const unpaidAmount = unpaidRows.reduce((sum, r) => sum + Number(r.amount), 0);
+
+    if (paidRows.length > 0) {
+      const paymentRows = paidRows.map((p) => ({
+        website_id: WEBSITE_ID,
+        user_id: user.id,
+        loan_id: newLoan.id,
+        amount: p.amount,
+        payment_method: 'cash',
+        paid_on: p.due_date,
+        note: `Installment Month #${p.installment_number}`,
+      }));
+      await supabase.from('bili_loan_payments').insert(paymentRows);
+
+      const updatedStatus = unpaidAmount <= 0 ? 'paid' : 'partial';
+      await supabase
+        .from('bili_loans')
+        .update({
+          balance_remaining: unpaidAmount,
+          status: updatedStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', newLoan.id)
+        .eq('website_id', WEBSITE_ID)
+        .eq('user_id', user.id);
     }
   }
 

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -9,13 +10,25 @@ import {
   ResponsiveDialogDescription,
 } from '@/components/ui/responsive-dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Liability } from '@/types';
 import {
   calculateAmortizationSchedule,
   formatMoney,
   formatDate,
 } from '@/lib/finance/calculations';
-import { Calendar, DollarSign, Percent, TrendingDown } from 'lucide-react';
+import { toggleLiabilityInstallmentPaidAction } from '@/app/actions/liabilities';
+import { toast } from 'sonner';
+import {
+  Calendar,
+  DollarSign,
+  TrendingDown,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Layers,
+  Loader2,
+} from 'lucide-react';
 
 interface AmortizationScheduleModalProps {
   isOpen: boolean;
@@ -28,6 +41,26 @@ export function AmortizationScheduleModal({
   onClose,
   liability,
 }: AmortizationScheduleModalProps) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [localPaidNumbers, setLocalPaidNumbers] = useState<number[] | null>(null);
+  const [togglingNum, setTogglingNum] = useState<number | null>(null);
+
+  // Sync local paid status when liability changes or dialog opens
+  useEffect(() => {
+    if (liability) {
+      setLocalPaidNumbers(
+        Array.isArray(liability.paid_installment_numbers)
+          ? liability.paid_installment_numbers
+          : null
+      );
+    } else {
+      setLocalPaidNumbers(null);
+    }
+  }, [liability, isOpen]);
+
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+
   const scheduleData = useMemo(() => {
     if (!liability) return null;
 
@@ -58,8 +91,57 @@ export function AmortizationScheduleModal({
       monthlyPayment,
       isAmortizationOverridden,
       firstPaymentDate,
+      paidInstallmentNumbers: localPaidNumbers,
+      asOfDate: todayStr,
     });
-  }, [liability]);
+  }, [liability, localPaidNumbers, todayStr]);
+
+  const handleTogglePaid = async (installmentNumber: number, nextIsPaid: boolean) => {
+    if (!liability) return;
+    setTogglingNum(installmentNumber);
+
+    // Compute optimistic new list of paid installment numbers
+    const currentPaidSet = new Set(
+      scheduleData?.schedule.filter((r) => r.isPaid).map((r) => r.installmentNumber) || []
+    );
+    if (nextIsPaid) {
+      currentPaidSet.add(installmentNumber);
+    } else {
+      currentPaidSet.delete(installmentNumber);
+    }
+    const nextPaidList = Array.from(currentPaidSet).sort((a, b) => a - b);
+    setLocalPaidNumbers(nextPaidList);
+
+    try {
+      const res = await toggleLiabilityInstallmentPaidAction(
+        liability.id,
+        installmentNumber,
+        nextIsPaid
+      );
+      if (res?.error) {
+        toast.error(res.error);
+        // Rollback
+        setLocalPaidNumbers(
+          Array.isArray(liability.paid_installment_numbers)
+            ? liability.paid_installment_numbers
+            : null
+        );
+      } else {
+        toast.success(
+          nextIsPaid
+            ? `Month #${installmentNumber} marked as paid!`
+            : `Month #${installmentNumber} marked as unpaid.`
+        );
+        startTransition(() => {
+          router.refresh();
+        });
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update installment status.');
+    } finally {
+      setTogglingNum(null);
+    }
+  };
 
   if (!liability) return null;
 
@@ -73,8 +155,8 @@ export function AmortizationScheduleModal({
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
             {liability.interest_rate_type === 'monthly_addon'
-              ? 'Fixed add-on rate payment schedule with steady monthly amortization.'
-              : 'Reducing-balance payment schedule separating principal reduction from financing interest charges.'}
+              ? 'Fixed add-on rate payment schedule with steady monthly amortization. Click any status to toggle Paid/Unpaid.'
+              : 'Reducing-balance payment schedule. Click any status to toggle Paid/Unpaid and immediately sync balance.'}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -84,37 +166,39 @@ export function AmortizationScheduleModal({
             <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
               <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
                 <DollarSign className="w-3 h-3 text-primary" />
+                Remaining Balance
+              </span>
+              <span className="text-sm font-black text-foreground block">
+                {formatMoney(scheduleData.remainingUnpaidBalance)}
+              </span>
+              <span className="text-[10px] text-muted-foreground block font-medium">
+                {scheduleData.unpaidCount} terms remaining
+              </span>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
+                <Layers className="w-3 h-3 text-indigo-500" />
+                Terms Paid
+              </span>
+              <span className="text-sm font-black text-foreground block">
+                {scheduleData.paidCount} of {liability.term_months || scheduleData.schedule.length} paid
+              </span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-semibold">
+                {formatMoney(scheduleData.paidPrincipal)} paid prin
+              </span>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-amber-500" />
                 Monthly PMT
               </span>
               <span className="text-sm font-black text-foreground block">
                 {formatMoney(scheduleData.monthlyPayment)}
               </span>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                <Percent className="w-3 h-3 text-amber-500" />
-                {liability.interest_rate_type === 'monthly_addon' ? 'Monthly Rate' : 'Annual Rate'}
-              </span>
-              <span className="text-sm font-black text-foreground block">
-                {liability.interest_rate_type === 'monthly_addon'
-                  ? `${liability.interest_rate}% / mo`
-                  : `${liability.annual_interest_rate}% p.a.`}
-              </span>
-              {liability.interest_rate_type === 'monthly_addon' && (
-                <span className="text-[10px] text-muted-foreground block font-medium">
-                  {liability.annual_interest_rate}% p.a.
-                </span>
-              )}
-            </div>
-
-            <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-indigo-500" />
-                Total Interest
-              </span>
-              <span className="text-sm font-black text-amber-600 dark:text-amber-400 block">
-                {formatMoney(scheduleData.totalInterest)}
+              <span className="text-[10px] text-muted-foreground block font-medium">
+                Due Day {liability.due_day || 15}
               </span>
             </div>
 
@@ -125,6 +209,9 @@ export function AmortizationScheduleModal({
               </span>
               <span className="text-sm font-black text-foreground block">
                 {formatMoney(scheduleData.totalPayment)}
+              </span>
+              <span className="text-[10px] text-amber-600 dark:text-amber-400 block font-medium">
+                {formatMoney(scheduleData.totalInterest)} int
               </span>
             </div>
           </div>
@@ -145,6 +232,7 @@ export function AmortizationScheduleModal({
                 <tr className="font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
                   <th className="py-2.5 px-3">#</th>
                   <th className="py-2.5 px-3">Due Date</th>
+                  <th className="py-2.5 px-3 text-center">Status</th>
                   <th className="py-2.5 px-3 text-right">Payment</th>
                   <th className="py-2.5 px-3 text-right">Principal</th>
                   <th className="py-2.5 px-3 text-right">Interest</th>
@@ -152,31 +240,78 @@ export function AmortizationScheduleModal({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40 font-medium">
-                {scheduleData.schedule.map((row) => (
-                  <tr
-                    key={row.installmentNumber}
-                    className="hover:bg-muted/40 transition-colors"
-                  >
-                    <td className="py-2 px-3 text-muted-foreground font-semibold">
-                      {row.installmentNumber}
-                    </td>
-                    <td className="py-2 px-3 text-foreground whitespace-nowrap">
-                      {formatDate(row.dueDate)}
-                    </td>
-                    <td className="py-2 px-3 text-right font-bold text-foreground">
-                      {formatMoney(row.paymentAmount)}
-                    </td>
-                    <td className="py-2 px-3 text-right text-emerald-600 dark:text-emerald-400 font-semibold">
-                      {formatMoney(row.principalAmount)}
-                    </td>
-                    <td className="py-2 px-3 text-right text-amber-600 dark:text-amber-400 font-semibold">
-                      {formatMoney(row.interestAmount)}
-                    </td>
-                    <td className="py-2 px-3 text-right text-foreground font-bold">
-                      {formatMoney(row.remainingBalance)}
-                    </td>
-                  </tr>
-                ))}
+                {scheduleData.schedule.map((row) => {
+                  const isPast = row.dueDate < todayStr;
+                  const isBusy = togglingNum === row.installmentNumber;
+
+                  return (
+                    <tr
+                      key={row.installmentNumber}
+                      className={`hover:bg-muted/40 transition-colors ${
+                        row.isPaid ? 'opacity-80 bg-muted/20' : ''
+                      }`}
+                    >
+                      <td className="py-2 px-3 text-muted-foreground font-semibold">
+                        {row.installmentNumber}
+                      </td>
+                      <td className="py-2 px-3 text-foreground whitespace-nowrap">
+                        {formatDate(row.dueDate)}
+                      </td>
+                      <td className="py-2 px-3 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={() => handleTogglePaid(row.installmentNumber, !row.isPaid)}
+                          className="inline-flex items-center gap-1 cursor-pointer transition-transform active:scale-95 disabled:opacity-50"
+                          title="Click to toggle Paid / Unpaid"
+                        >
+                          {isBusy ? (
+                            <Badge variant="outline" className="text-3xs py-0.5 px-2 bg-muted">
+                              <Loader2 className="size-3 animate-spin mr-1" />
+                              Saving...
+                            </Badge>
+                          ) : row.isPaid ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 text-3xs font-bold py-0.5 px-2"
+                            >
+                              <CheckCircle2 className="size-3 mr-1" />
+                              Paid
+                            </Badge>
+                          ) : isPast ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 text-3xs font-bold py-0.5 px-2"
+                            >
+                              <AlertCircle className="size-3 mr-1" />
+                              Unpaid
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="bg-muted text-muted-foreground border-border/60 hover:bg-muted/80 text-3xs font-medium py-0.5 px-2"
+                            >
+                              <Clock className="size-3 mr-1" />
+                              Upcoming
+                            </Badge>
+                          )}
+                        </button>
+                      </td>
+                      <td className="py-2 px-3 text-right font-bold text-foreground">
+                        {formatMoney(row.paymentAmount)}
+                      </td>
+                      <td className="py-2 px-3 text-right text-emerald-600 dark:text-emerald-400 font-semibold">
+                        {formatMoney(row.principalAmount)}
+                      </td>
+                      <td className="py-2 px-3 text-right text-amber-600 dark:text-amber-400 font-semibold">
+                        {formatMoney(row.interestAmount)}
+                      </td>
+                      <td className="py-2 px-3 text-right text-foreground font-bold">
+                        {formatMoney(row.remainingBalance)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

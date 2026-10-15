@@ -78,6 +78,7 @@ export function CardInstallmentModal({
   // UI state
   const [showSchedulePreview, setShowSchedulePreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [manualPaidNumbers, setManualPaidNumbers] = useState<number[] | null>(null);
 
   // Target Credit Card
   const targetCard = useMemo(() => {
@@ -104,6 +105,7 @@ export function CardInstallmentModal({
       setIsAmortizationOverridden(false);
       setNotes('');
       setShowSchedulePreview(false);
+      setManualPaidNumbers(null);
     }
   }, [isOpen, defaultCreditCardId, creditCards]);
 
@@ -140,6 +142,7 @@ export function CardInstallmentModal({
   const handleTermChange = (term: number | string) => {
     const val = String(term);
     setTermMonths(val);
+    setManualPaidNumbers(null);
     recalculateAmortization(principal, val, monthlyAddonRate);
   };
 
@@ -171,6 +174,8 @@ export function CardInstallmentModal({
       computedFirstDue = `${y}-${String(m).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
     }
 
+    const todayStr = new Date().toISOString().split('T')[0];
+
     return calculateAmortizationSchedule({
       principal: p,
       annualInterestRate: r * 12,
@@ -182,6 +187,8 @@ export function CardInstallmentModal({
       monthlyDueDay: dueDay,
       monthlyPayment: mPmt > 0 ? mPmt : undefined,
       isAmortizationOverridden,
+      paidInstallmentNumbers: manualPaidNumbers,
+      asOfDate: todayStr,
     });
   }, [
     principal,
@@ -192,7 +199,20 @@ export function CardInstallmentModal({
     transactionDate,
     firstBillingMonth,
     dueDay,
+    manualPaidNumbers,
   ]);
+
+  const handleTogglePreviewPaid = (instNum: number) => {
+    const currentPaidSet = new Set(
+      scheduleData?.schedule.filter((r) => r.isPaid).map((r) => r.installmentNumber) || []
+    );
+    if (currentPaidSet.has(instNum)) {
+      currentPaidSet.delete(instNum);
+    } else {
+      currentPaidSet.add(instNum);
+    }
+    setManualPaidNumbers(Array.from(currentPaidSet).sort((a, b) => a - b));
+  };
 
   const pNum = Number(principal) || 0;
   const nNum = Number(termMonths) || 0;
@@ -223,6 +243,11 @@ export function CardInstallmentModal({
 
     const finalAmortization = Number(monthlyAmortization) || (pNum / nNum + fixedMonthlyInterest);
 
+    const resolvedPaidNumbers =
+      manualPaidNumbers !== null
+        ? manualPaidNumbers
+        : scheduleData?.schedule.filter((r) => r.isPaid).map((r) => r.installmentNumber) || [];
+
     setIsSubmitting(true);
     try {
       const res = await createCardInstallmentAction({
@@ -236,6 +261,7 @@ export function CardInstallmentModal({
         monthlyAmortization: Number(finalAmortization.toFixed(2)),
         isAmortizationOverridden,
         notes: notes.trim() || null,
+        paidInstallmentNumbers: resolvedPaidNumbers,
       });
 
       if (res?.error) {
@@ -529,21 +555,32 @@ export function CardInstallmentModal({
                   </span>
                 </div>
                 <div>
-                  <span className="text-2xs text-muted-foreground block font-medium">Total Interest</span>
-                  <span className={`font-extrabold block ${scheduleData.totalInterest === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {scheduleData.totalInterest === 0 ? '₱0.00 (0%)' : formatMoney(scheduleData.totalInterest)}
+                  <span className="text-2xs text-muted-foreground block font-medium">Remaining Balance</span>
+                  <span className="font-extrabold text-foreground block">
+                    {formatMoney(scheduleData.remainingUnpaidBalance)}
                   </span>
+                  <span className="text-3xs text-muted-foreground block font-medium">
+                    {scheduleData.unpaidCount} terms remaining
+                  </span>
+                </div>
+                <div>
+                  <span className="text-2xs text-muted-foreground block font-medium">Paid Terms</span>
+                  <span className="font-extrabold text-foreground block">
+                    {scheduleData.paidCount} of {scheduleData.schedule.length} paid
+                  </span>
+                  {scheduleData.paidCount > 0 && (
+                    <span className="text-3xs text-emerald-600 dark:text-emerald-400 block font-semibold">
+                      {formatMoney(scheduleData.paidPrincipal)} paid prin
+                    </span>
+                  )}
                 </div>
                 <div>
                   <span className="text-2xs text-muted-foreground block font-medium">Total Repayment</span>
                   <span className="font-extrabold text-foreground block">
                     {formatMoney(scheduleData.totalPayment)}
                   </span>
-                </div>
-                <div>
-                  <span className="text-2xs text-muted-foreground block font-medium">First Due Date</span>
-                  <span className="font-bold text-foreground block">
-                    {scheduleData.schedule[0] ? formatDate(scheduleData.schedule[0].dueDate) : '—'}
+                  <span className="text-3xs text-amber-600 dark:text-amber-400 block font-medium">
+                    {scheduleData.totalInterest === 0 ? '0% Promo' : `${formatMoney(scheduleData.totalInterest)} int`}
                   </span>
                 </div>
               </div>
@@ -559,7 +596,7 @@ export function CardInstallmentModal({
                 >
                   <span className="flex items-center gap-1.5">
                     <Calendar className="size-3.5 text-primary" />
-                    Preview Payment Schedule ({scheduleData.schedule.length} installments)
+                    Preview Payment Schedule ({scheduleData.schedule.length} installments) • Click status to toggle
                   </span>
                   {showSchedulePreview ? (
                     <ChevronUp className="size-4 text-muted-foreground" />
@@ -569,30 +606,72 @@ export function CardInstallmentModal({
                 </button>
 
                 {showSchedulePreview && (
-                  <div className="p-3 bg-card border-t border-border/40 max-h-48 overflow-y-auto space-y-1">
-                    <div className="grid grid-cols-4 text-3xs font-bold uppercase tracking-wider text-muted-foreground pb-1 border-b border-border/40 px-2">
+                  <div className="p-3 bg-card border-t border-border/40 max-h-56 overflow-y-auto space-y-1">
+                    <div className="grid grid-cols-5 text-3xs font-bold uppercase tracking-wider text-muted-foreground pb-1.5 border-b border-border/40 px-2">
                       <span>Term</span>
                       <span>Due Date</span>
+                      <span className="text-center">Status</span>
                       <span className="text-right">Payment</span>
                       <span className="text-right">Remaining</span>
                     </div>
-                    {scheduleData.schedule.map((row) => (
-                      <div
-                        key={row.installmentNumber}
-                        className="grid grid-cols-4 text-xs py-1.5 px-2 hover:bg-muted/40 rounded-lg transition-colors"
-                      >
-                        <span className="font-semibold text-foreground">
-                          {row.installmentNumber} of {scheduleData.schedule.length}
-                        </span>
-                        <span className="text-muted-foreground">{formatDate(row.dueDate)}</span>
-                        <span className="text-right font-bold text-foreground">
-                          {formatMoney(row.paymentAmount)}
-                        </span>
-                        <span className="text-right text-muted-foreground font-mono">
-                          {formatMoney(row.remainingBalance)}
-                        </span>
-                      </div>
-                    ))}
+                    {scheduleData.schedule.map((row) => {
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const isPast = row.dueDate < todayStr;
+
+                      return (
+                        <div
+                          key={row.installmentNumber}
+                          className={`grid grid-cols-5 items-center text-xs py-1.5 px-2 hover:bg-muted/40 rounded-lg transition-colors ${
+                            row.isPaid ? 'opacity-80 bg-muted/20' : ''
+                          }`}
+                        >
+                          <span className="font-semibold text-foreground">
+                            {row.installmentNumber} of {scheduleData.schedule.length}
+                          </span>
+                          <span className="text-muted-foreground">{formatDate(row.dueDate)}</span>
+                          <div className="text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePreviewPaid(row.installmentNumber)}
+                              className="inline-flex items-center cursor-pointer transition-transform active:scale-95"
+                              title="Click to toggle Paid / Unpaid"
+                            >
+                              {row.isPaid ? (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 text-3xs font-bold py-0.5 px-1.5"
+                                >
+                                  <CheckCircle2 className="size-3 mr-1" />
+                                  Paid
+                                </Badge>
+                              ) : isPast ? (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 text-3xs font-bold py-0.5 px-1.5"
+                                >
+                                  <AlertCircle className="size-3 mr-1" />
+                                  Unpaid
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-muted text-muted-foreground border-border/60 hover:bg-muted/80 text-3xs font-medium py-0.5 px-1.5"
+                                >
+                                  <Clock className="size-3 mr-1" />
+                                  Upcoming
+                                </Badge>
+                              )}
+                            </button>
+                          </div>
+                          <span className="text-right font-bold text-foreground">
+                            {formatMoney(row.paymentAmount)}
+                          </span>
+                          <span className="text-right text-muted-foreground font-mono">
+                            {formatMoney(row.remainingBalance)}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

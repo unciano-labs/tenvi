@@ -166,12 +166,16 @@ export interface InstallmentScheduleItem {
   principalAmount?: number;
   interestAmount?: number;
   statementDate?: string; // YYYY-MM-DD (when card statement day is provided)
+  isPaid?: boolean;
 }
 
 export interface InstallmentScheduleOptions {
   monthlyInterestRate?: number | null;
   cardStatementDay?: number | null;
   cardDueDay?: number | null;
+  asOfDate?: string;
+  paidInstallmentNumbers?: number[];
+  paidCount?: number;
 }
 
 /**
@@ -273,6 +277,14 @@ export function generateInstallmentSchedule(
     const iAmt = interestShares[i - 1] ?? 0;
     const totalInstAmt = Number((pAmt + iAmt).toFixed(2));
 
+    const todayStr = options?.asOfDate || new Date().toISOString().split('T')[0];
+    const isPaid =
+      options?.paidInstallmentNumbers !== undefined
+        ? options.paidInstallmentNumbers.includes(i)
+        : options?.paidCount !== undefined
+        ? i <= options.paidCount
+        : dueDateStr < todayStr;
+
     schedule.push({
       installmentNumber: i,
       dueDate: dueDateStr,
@@ -280,6 +292,7 @@ export function generateInstallmentSchedule(
       principalAmount: pAmt,
       interestAmount: iAmt,
       statementDate: statementDateStr,
+      isPaid,
     });
   }
 
@@ -1432,6 +1445,7 @@ export interface AmortizationScheduleRow {
   remainingBalance: number;
   cumulativeInterest: number;
   cumulativePrincipal: number;
+  isPaid?: boolean;
 }
 
 export interface AmortizationSummary {
@@ -1440,6 +1454,11 @@ export interface AmortizationSummary {
   totalInterest: number;
   totalPrincipal: number;
   schedule: AmortizationScheduleRow[];
+  paidCount: number;
+  unpaidCount: number;
+  paidPrincipal: number;
+  unpaidPrincipal: number;
+  remainingUnpaidBalance: number;
 }
 
 /**
@@ -1508,6 +1527,8 @@ export function calculateAmortizationSchedule(params: {
   monthlyPayment?: number;
   isAmortizationOverridden?: boolean;
   firstPaymentDate?: string | null;
+  paidInstallmentNumbers?: number[] | null;
+  asOfDate?: string;
 }): AmortizationSummary {
   const principal = Math.max(0, Number(params.principal || 0));
   const termMonths = Math.max(0, Math.round(Number(params.termMonths || 0)));
@@ -1527,6 +1548,11 @@ export function calculateAmortizationSchedule(params: {
       totalInterest: 0,
       totalPrincipal: 0,
       schedule: [],
+      paidCount: 0,
+      unpaidCount: 0,
+      paidPrincipal: 0,
+      unpaidPrincipal: 0,
+      remainingUnpaidBalance: 0,
     };
   }
 
@@ -1576,6 +1602,8 @@ export function calculateAmortizationSchedule(params: {
   let cumulativeInterest = 0;
   let cumulativePrincipal = 0;
   const schedule: AmortizationScheduleRow[] = [];
+
+  const todayStr = params.asOfDate || new Date().toISOString().split('T')[0];
 
   for (let i = 1; i <= termMonths; i++) {
     const monthOffset = i - 1;
@@ -1628,6 +1656,11 @@ export function calculateAmortizationSchedule(params: {
     cumulativeInterest = Number((cumulativeInterest + interestAmount).toFixed(2));
     cumulativePrincipal = Number((cumulativePrincipal + principalAmount).toFixed(2));
 
+    const isPaid =
+      params.paidInstallmentNumbers !== undefined && params.paidInstallmentNumbers !== null
+        ? params.paidInstallmentNumbers.includes(i)
+        : dueDate < todayStr;
+
     schedule.push({
       installmentNumber: i,
       dueDate,
@@ -1637,10 +1670,28 @@ export function calculateAmortizationSchedule(params: {
       remainingBalance: Math.max(0, remainingPrincipal),
       cumulativeInterest,
       cumulativePrincipal,
+      isPaid,
     });
   }
 
   const totalPayment = Number((cumulativePrincipal + cumulativeInterest).toFixed(2));
+
+  let paidCount = 0;
+  let unpaidCount = 0;
+  let paidPrincipal = 0;
+  let unpaidPrincipal = 0;
+
+  for (const row of schedule) {
+    if (row.isPaid) {
+      paidCount += 1;
+      paidPrincipal = Number((paidPrincipal + row.principalAmount).toFixed(2));
+    } else {
+      unpaidCount += 1;
+      unpaidPrincipal = Number((unpaidPrincipal + row.principalAmount).toFixed(2));
+    }
+  }
+
+  const remainingUnpaidBalance = Number(Math.max(0, unpaidPrincipal).toFixed(2));
 
   return {
     monthlyPayment: regularPayment,
@@ -1648,6 +1699,11 @@ export function calculateAmortizationSchedule(params: {
     totalInterest: cumulativeInterest,
     totalPrincipal: cumulativePrincipal,
     schedule,
+    paidCount,
+    unpaidCount,
+    paidPrincipal,
+    unpaidPrincipal,
+    remainingUnpaidBalance,
   };
 }
 

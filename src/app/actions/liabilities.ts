@@ -11,6 +11,7 @@ import {
 } from '@/lib/validations/schemas';
 import { LiabilityInput, LiabilityPaymentInput } from '@/types';
 import { logAuditEntry } from '@/lib/audit/logger';
+import { calculateAmortizationSchedule } from '@/lib/finance/calculations';
 
 export async function createLiabilityAction(data: LiabilityInput) {
   const auth = await requireWebsiteUser();
@@ -46,6 +47,7 @@ export async function createLiabilityAction(data: LiabilityInput) {
     savingsId,
     status,
     notes,
+    paidInstallmentNumbers,
   } = parsed.data;
 
   // Resolve interest rate and backward-compatible annual rate
@@ -60,6 +62,43 @@ export async function createLiabilityAction(data: LiabilityInput) {
   const validCreditCardId = validLinkedType === 'credit_card' && creditCardId ? creditCardId : null;
   const validSavingsId = validLinkedType === 'savings' && savingsId ? savingsId : null;
 
+  // Auto-mark past due installments as paid and sync balance
+  let resolvedPaidNumbers: number[] = [];
+  let resolvedCurrentBalance = currentPrincipalBalance;
+  let resolvedStatus = status || 'active';
+
+  if (termMonths && termMonths > 0 && originalPrincipal > 0) {
+    const summary = calculateAmortizationSchedule({
+      principal: originalPrincipal,
+      annualInterestRate: effectiveAnnualRate,
+      termMonths,
+      startDate: startDate || undefined,
+      monthlyDueDay: dueDay || 15,
+      rateType,
+      interestRate: rateValue,
+      monthlyPayment: monthlyPayment || 0,
+      isAmortizationOverridden: Boolean(isAmortizationOverridden),
+      firstPaymentDate: firstPaymentDate || null,
+      paidInstallmentNumbers: paidInstallmentNumbers || null,
+    });
+
+    resolvedPaidNumbers =
+      paidInstallmentNumbers !== undefined && paidInstallmentNumbers !== null
+        ? paidInstallmentNumbers
+        : summary.schedule.filter((s) => s.isPaid).map((s) => s.installmentNumber);
+
+    if (
+      resolvedPaidNumbers.length > 0 &&
+      (currentPrincipalBalance === originalPrincipal || paidInstallmentNumbers !== undefined)
+    ) {
+      resolvedCurrentBalance = summary.remainingUnpaidBalance;
+    }
+
+    if (resolvedPaidNumbers.length >= termMonths) {
+      resolvedStatus = 'paid_off';
+    }
+  }
+
   const { data: newLiability, error } = await supabase
     .from('bili_liabilities')
     .insert({
@@ -69,7 +108,7 @@ export async function createLiabilityAction(data: LiabilityInput) {
       lender_name: lenderName,
       liability_type: liabilityType,
       original_principal: originalPrincipal,
-      current_principal_balance: currentPrincipalBalance,
+      current_principal_balance: resolvedCurrentBalance,
       annual_interest_rate: effectiveAnnualRate,
       interest_rate_type: rateType,
       interest_rate: rateValue,
@@ -83,7 +122,8 @@ export async function createLiabilityAction(data: LiabilityInput) {
       linked_account_type: validLinkedType,
       credit_card_id: validCreditCardId,
       savings_id: validSavingsId,
-      status: status || 'active',
+      status: resolvedStatus,
+      paid_installment_numbers: resolvedPaidNumbers,
       notes: notes || null,
     })
     .select('id')
@@ -418,4 +458,113 @@ export async function recordLiabilityPaymentAction(data: LiabilityPaymentInput) 
   }
 
   return { success: true, newBalance, status: newStatus };
+}
+
+export async function toggleLiabilityInstallmentPaidAction(
+  liabilityId: string,
+  installmentNumber: number,
+  isPaid: boolean
+) {
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized' };
+  }
+  const user = auth.user;
+  const supabase = await createClient();
+
+  const { data: liability, error: fetchErr } = await supabase
+    .from('bili_liabilities')
+    .select('*')
+    .eq('id', liabilityId)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .single();
+
+  if (fetchErr || !liability) {
+    return { error: 'Liability record not found.' };
+  }
+
+  const currentPaid: number[] = Array.isArray(liability.paid_installment_numbers)
+    ? liability.paid_installment_numbers
+    : [];
+
+  let updatedPaid: number[];
+  if (isPaid) {
+    updatedPaid = Array.from(new Set([...currentPaid, installmentNumber])).sort((a, b) => a - b);
+  } else {
+    updatedPaid = currentPaid.filter((n) => n !== installmentNumber);
+  }
+
+  const principal = Number(liability.original_principal || liability.current_principal_balance || 0);
+  const annualRate = Number(liability.annual_interest_rate || 0);
+  const rateType = liability.interest_rate_type || 'annual';
+  const interestRate = Number(liability.interest_rate ?? liability.annual_interest_rate ?? 0);
+  const termMonths = Number(liability.term_months || 0);
+
+  const summary = calculateAmortizationSchedule({
+    principal,
+    annualInterestRate: annualRate,
+    termMonths,
+    startDate: liability.start_date || undefined,
+    monthlyDueDay: liability.due_day || 15,
+    rateType,
+    interestRate,
+    monthlyPayment: Number(liability.monthly_payment || 0),
+    isAmortizationOverridden: Boolean(liability.is_amortization_overridden),
+    firstPaymentDate: liability.first_payment_date || null,
+    paidInstallmentNumbers: updatedPaid,
+  });
+
+  const newStatus =
+    summary.unpaidCount === 0 && termMonths > 0
+      ? 'paid_off'
+      : 'active';
+
+  const { error: updateErr } = await supabase
+    .from('bili_liabilities')
+    .update({
+      paid_installment_numbers: updatedPaid,
+      current_principal_balance: summary.remainingUnpaidBalance,
+      status: newStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', liabilityId)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id);
+
+  if (updateErr) {
+    console.error('Error toggling liability installment status:', updateErr);
+    return { error: 'Failed to update installment status.' };
+  }
+
+  await logAuditEntry({
+    userId: user.id,
+    action: 'UPDATE',
+    entityType: 'liability',
+    entityId: liabilityId,
+    newData: {
+      toggledInstallment: installmentNumber,
+      isPaid,
+      newRemainingBalance: summary.remainingUnpaidBalance,
+      paidCount: updatedPaid.length,
+    },
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/cards');
+  if (liability.credit_card_id) {
+    revalidatePath(`/dashboard/cards/${liability.credit_card_id}`);
+  }
+  revalidatePath('/dashboard/properties');
+  if (liability.property_id) {
+    revalidatePath(`/dashboard/properties/${liability.property_id}`);
+  }
+  revalidatePath('/dashboard/transactions');
+
+  return {
+    success: true,
+    paidInstallmentNumbers: updatedPaid,
+    currentPrincipalBalance: summary.remainingUnpaidBalance,
+    status: newStatus,
+  };
 }

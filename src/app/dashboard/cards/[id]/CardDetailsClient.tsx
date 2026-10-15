@@ -265,15 +265,11 @@ export function CardDetailsClient({
         const monthlyPayment = Number(lib.monthly_payment || 0);
         const totalTerms = Number(lib.term_months || 0);
 
-        let remainingTerms = 0;
-        let currentTermIndex = 1;
-        if (totalTerms > 0 && monthlyPayment > 0) {
-          remainingTerms = Math.min(
-            totalTerms,
-            Math.max(1, Math.ceil(remainingBalance / monthlyPayment))
-          );
-          currentTermIndex = Math.min(totalTerms, Math.max(1, totalTerms - remainingTerms + 1));
-        }
+        const paidCount = Array.isArray(lib.paid_installment_numbers)
+          ? lib.paid_installment_numbers.length
+          : 0;
+        const remainingTerms = Math.max(0, totalTerms - paidCount);
+        const currentTermIndex = Math.min(totalTerms, paidCount + 1);
 
         return {
           lib,
@@ -282,6 +278,7 @@ export function CardDetailsClient({
           totalTerms,
           remainingTerms,
           currentTermIndex,
+          paidCount,
         };
       });
   }, [linkedLiabilities]);
@@ -573,18 +570,13 @@ export function CardDetailsClient({
                 const monthlyPayment = Number(lib.monthly_payment || 0);
                 const totalTerms = Number(lib.term_months || 0);
 
-                let remainingTerms = 0;
-                let currentTermIndex = 1;
-                if (totalTerms > 0 && monthlyPayment > 0 && !isPaid) {
-                  remainingTerms = Math.min(
-                    totalTerms,
-                    Math.max(1, Math.ceil(remainingBalance / monthlyPayment))
-                  );
-                  currentTermIndex = Math.min(totalTerms, Math.max(1, totalTerms - remainingTerms + 1));
-                } else if (totalTerms > 0) {
-                  remainingTerms = isPaid ? 0 : totalTerms;
-                  currentTermIndex = isPaid ? totalTerms : 1;
-                }
+                const paidCount = Array.isArray(lib.paid_installment_numbers)
+                  ? lib.paid_installment_numbers.length
+                  : isPaid
+                  ? totalTerms
+                  : 0;
+                const remainingTerms = Math.max(0, totalTerms - paidCount);
+                const currentTermIndex = Math.min(totalTerms, paidCount + 1);
 
                 const targetUrl = lib.property_id
                   ? `/dashboard/properties/${lib.property_id}`
@@ -614,7 +606,7 @@ export function CardDetailsClient({
                           </p>
                           {totalTerms > 0 && (
                             <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-bold bg-primary/10 text-primary border-primary/25">
-                              INSTALLMENT {currentTermIndex} OF {totalTerms}
+                              {paidCount} OF {totalTerms} PAID
                             </Badge>
                           )}
                           {lib.liability_type === 'credit_card_installment' && (
@@ -973,7 +965,7 @@ export function CardDetailsClient({
                                         {inst.lib.name}
                                       </span>
                                       <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-bold bg-primary/15 text-primary border-primary/30">
-                                        INSTALLMENT {inst.currentTermIndex} OF {inst.totalTerms}
+                                        {inst.paidCount} OF {inst.totalTerms} PAID
                                       </Badge>
                                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-card text-muted-foreground shadow-xs shrink-0">
                                         Loan Installment

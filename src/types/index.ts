@@ -211,6 +211,7 @@ export interface Liability {
   credit_card?: CreditCard | null;
   savings?: SavingsAccount | null;
   status: LiabilityStatus;
+  paid_installment_numbers?: number[] | null;
   notes?: string | null;
   created_at: string;
   updated_at: string;

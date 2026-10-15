@@ -226,6 +226,7 @@ export const liabilitySchema = z.object({
   savingsId: z.string().uuid().optional().nullable().or(z.literal('')),
   status: z.enum(['active', 'paid_off', 'refinanced', 'defaulted']).default('active'),
   notes: z.string().max(500).optional().nullable(),
+  paidInstallmentNumbers: z.array(z.number()).optional().nullable(),
 });
 
 export const updateLiabilitySchema = liabilitySchema.extend({
@@ -253,6 +254,7 @@ export const cardInstallmentSchema = z.object({
   monthlyAmortization: z.coerce.number().min(0, 'Monthly amortization cannot be negative'),
   isAmortizationOverridden: z.boolean().default(false),
   notes: z.string().max(500).optional().nullable(),
+  paidInstallmentNumbers: z.array(z.number()).optional().nullable(),
 });
 
 

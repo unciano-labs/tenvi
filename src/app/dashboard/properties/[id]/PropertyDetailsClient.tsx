@@ -910,11 +910,15 @@ export function PropertyDetailsClient({
                       <span className="text-base font-extrabold text-foreground">
                         {formatMoney(lib.current_principal_balance)}
                       </span>
-                      {Number(lib.original_principal || 0) > 0 && (
+                      {Number(lib.term_months || 0) > 0 ? (
+                        <span className="text-[10px] text-muted-foreground block">
+                          {(lib.paid_installment_numbers?.length ?? (isPaidOff ? lib.term_months : 0))} of {lib.term_months} terms paid
+                        </span>
+                      ) : Number(lib.original_principal || 0) > 0 ? (
                         <span className="text-[10px] text-muted-foreground block">
                           of {formatMoney(lib.original_principal)}
                         </span>
-                      )}
+                      ) : null}
                     </div>
 
                     <div>

@@ -127,7 +127,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
         installment_number: item.installmentNumber,
         due_date: item.dueDate,
         amount: item.amount,
-        is_paid: false,
+        is_paid: Boolean(item.isPaid),
       }));
 
       const { data: inserted } = await supabase

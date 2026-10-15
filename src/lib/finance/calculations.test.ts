@@ -711,6 +711,125 @@ describe('calculateCardSpending()', () => {
     expect(finalRow.dueDate).toBe('2027-09-27');
     expect(finalRow.remainingBalance).toBe(0);
   });
+
+  describe('Installment Schedule Auto-Paid & Manual Status Handling', () => {
+    it('automatically marks past due dates as Paid and future dates as Unpaid on backdated schedule', () => {
+      // 12-month loan starting 2026-05-10, asOfDate 2026-10-16, dueDay 25
+      // Installments:
+      // Month 1: 2026-05-25 (Past -> Paid)
+      // Month 2: 2026-06-25 (Past -> Paid)
+      // Month 3: 2026-07-25 (Past -> Paid)
+      // Month 4: 2026-08-25 (Past -> Paid)
+      // Month 5: 2026-09-25 (Past -> Paid)
+      // Month 6: 2026-10-25 (Future -> Unpaid)
+      // Months 7-12: Future -> Unpaid
+      const summary = calculateAmortizationSchedule({
+        principal: 120000,
+        annualInterestRate: 0,
+        rateType: 'monthly_addon',
+        interestRate: 0,
+        termMonths: 12,
+        startDate: '2026-05-10',
+        monthlyDueDay: 25,
+        asOfDate: '2026-10-16',
+      });
+
+      expect(summary.schedule.length).toBe(12);
+      expect(summary.paidCount).toBe(5);
+      expect(summary.unpaidCount).toBe(7);
+      expect(summary.paidPrincipal).toBe(50000); // 5 * 10,000
+      expect(summary.unpaidPrincipal).toBe(70000); // 7 * 10,000
+      expect(summary.remainingUnpaidBalance).toBe(70000);
+
+      // Verify row statuses
+      expect(summary.schedule[0].isPaid).toBe(true);
+      expect(summary.schedule[4].isPaid).toBe(true);
+      expect(summary.schedule[5].isPaid).toBe(false);
+      expect(summary.schedule[11].isPaid).toBe(false);
+    });
+
+    it('respects manual paid / unpaid toggles override over date-based status', () => {
+      // Suppose Month 5 was NOT paid yet, but borrower pre-paid Month 6 in advance
+      const summary = calculateAmortizationSchedule({
+        principal: 120000,
+        annualInterestRate: 0,
+        rateType: 'monthly_addon',
+        interestRate: 0,
+        termMonths: 12,
+        startDate: '2026-05-10',
+        monthlyDueDay: 25,
+        asOfDate: '2026-10-16',
+        paidInstallmentNumbers: [1, 2, 3, 4, 6], // 5 excluded (unpaid), 6 included (advance paid)
+      });
+
+      expect(summary.paidCount).toBe(5);
+      expect(summary.unpaidCount).toBe(7);
+      expect(summary.schedule[4].installmentNumber).toBe(5);
+      expect(summary.schedule[4].isPaid).toBe(false); // Overridden to unpaid
+      expect(summary.schedule[5].installmentNumber).toBe(6);
+      expect(summary.schedule[5].isPaid).toBe(true); // Overridden to paid
+      expect(summary.remainingUnpaidBalance).toBe(70000);
+    });
+
+    it('syncs remaining balance and credit limit utilization when installments are paid off', () => {
+      const card: any = {
+        id: 'card-1',
+        name: 'Platinum Mastercard',
+        credit_limit: 100000,
+        due_day: 25,
+        statement_day: 10,
+      };
+
+      // 60,000 purchase over 6 months (10,000 / mo)
+      // Initially, months 1 and 2 are paid -> remaining unpaid principal is 40,000
+      const liabilitiesInitial: any = [
+        {
+          id: 'lib-1',
+          name: 'MacBook Pro',
+          original_principal: 60000,
+          current_principal_balance: 40000, // 4 terms unpaid
+          term_months: 6,
+          monthly_payment: 10000,
+          paid_installment_numbers: [1, 2],
+          status: 'active',
+          credit_card_id: 'card-1',
+        },
+      ];
+
+      const spendBefore = calculateCardSpending(card, [], [], liabilitiesInitial);
+      expect(spendBefore.loansSpend).toBe(40000);
+      expect(spendBefore.availableToSpend).toBe(60000); // 100,000 - 40,000
+
+      // Now month 3 is toggled as paid -> remaining principal is 30,000
+      const summaryAfter = calculateAmortizationSchedule({
+        principal: 60000,
+        annualInterestRate: 0,
+        rateType: 'monthly_addon',
+        interestRate: 0,
+        termMonths: 6,
+        startDate: '2026-07-01',
+        monthlyDueDay: 25,
+        paidInstallmentNumbers: [1, 2, 3],
+      });
+
+      expect(summaryAfter.paidCount).toBe(3);
+      expect(summaryAfter.unpaidCount).toBe(3);
+      expect(summaryAfter.remainingUnpaidBalance).toBe(30000);
+
+      const liabilitiesUpdated: any = [
+        {
+          ...liabilitiesInitial[0],
+          current_principal_balance: summaryAfter.remainingUnpaidBalance,
+          paid_installment_numbers: [1, 2, 3],
+        },
+      ];
+
+      const spendAfter = calculateCardSpending(card, [], [], liabilitiesUpdated);
+      // Available credit limit increases immediately by the paid installment's principal!
+      expect(spendAfter.loansSpend).toBe(30000);
+      expect(spendAfter.availableToSpend).toBe(70000); // 10,000 released back to card!
+    });
+  });
 });
 
 

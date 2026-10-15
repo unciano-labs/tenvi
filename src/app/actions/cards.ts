@@ -6,6 +6,7 @@ import { WEBSITE_ID } from '@/lib/constants';
 import { creditCardSchema, cardInstallmentSchema } from '@/lib/validations/schemas';
 import { requireWebsiteUser } from '@/lib/auth/guards';
 import { logAuditEntry } from '@/lib/audit/logger';
+import { calculateAmortizationSchedule } from '@/lib/finance/calculations';
 
 export async function createCreditCardAction(data: any) {
   const auth = await requireWebsiteUser();
@@ -446,6 +447,7 @@ export async function createCardInstallmentAction(data: any) {
     monthlyAmortization,
     isAmortizationOverridden = false,
     notes,
+    paidInstallmentNumbers,
   } = parsed.data;
 
   // 1. Fetch target card
@@ -494,6 +496,29 @@ export async function createCardInstallmentAction(data: any) {
     firstPaymentDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
   }
 
+  // Auto-mark past due dates as paid and calculate initial unpaid balance
+  const scheduleSummary = calculateAmortizationSchedule({
+    principal,
+    termMonths,
+    rateType: 'monthly_addon',
+    interestRate: monthlyAddonRate || 0,
+    annualInterestRate: (monthlyAddonRate || 0) * 12,
+    monthlyPayment: monthlyAmortization,
+    isAmortizationOverridden: Boolean(isAmortizationOverridden),
+    firstPaymentDate,
+    monthlyDueDay: dueDay,
+    paidInstallmentNumbers: paidInstallmentNumbers || null,
+  });
+
+  const resolvedPaidNumbers =
+    paidInstallmentNumbers !== undefined && paidInstallmentNumbers !== null
+      ? paidInstallmentNumbers
+      : scheduleSummary.schedule.filter((s) => s.isPaid).map((s) => s.installmentNumber);
+
+  const resolvedCurrentBalance = scheduleSummary.remainingUnpaidBalance;
+  const resolvedStatus =
+    resolvedPaidNumbers.length >= termMonths && termMonths > 0 ? 'paid_off' : 'active';
+
   // 3. Insert into bili_liabilities
   const { data: newLiability, error: insertError } = await supabase
     .from('bili_liabilities')
@@ -504,7 +529,7 @@ export async function createCardInstallmentAction(data: any) {
       lender_name: `${card.bank_name} - ${card.name}`,
       liability_type: 'credit_card_installment',
       original_principal: principal,
-      current_principal_balance: principal,
+      current_principal_balance: resolvedCurrentBalance,
       annual_interest_rate: (monthlyAddonRate || 0) * 12,
       interest_rate_type: 'monthly_addon',
       interest_rate: monthlyAddonRate || 0,
@@ -516,7 +541,8 @@ export async function createCardInstallmentAction(data: any) {
       first_payment_date: firstPaymentDate,
       linked_account_type: 'credit_card',
       credit_card_id: card.id,
-      status: 'active',
+      status: resolvedStatus,
+      paid_installment_numbers: resolvedPaidNumbers,
       notes: notes || null,
     })
     .select('id')
