@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createLoanAction } from '@/app/actions/loans';
 import { toast } from 'sonner';
 import {
@@ -65,18 +65,29 @@ export function LoanModal({
   const [borrowerPhone, setBorrowerPhone] = useState('');
   const [borrowerEmail, setBorrowerEmail] = useState('');
 
+  // Track open state transition to prevent resetting on typing
+  const prevOpenRef = useRef(false);
+  const prevContactIdRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
-    if (defaultContactId) {
-      setContactId(defaultContactId);
-      setNewContactName('');
-      const found = contacts.find((c) => c.id === defaultContactId);
-      if (found) {
-        if (found.phone) setBorrowerPhone(found.phone);
-        if (found.email) setBorrowerEmail(found.email);
+    const isNewOpen = isOpen && !prevOpenRef.current;
+    const defaultContactChanged = defaultContactId !== prevContactIdRef.current;
+
+    if (isOpen && (isNewOpen || defaultContactChanged)) {
+      if (defaultContactId) {
+        setContactId(defaultContactId);
+        setNewContactName('');
+        const found = contacts.find((c) => c.id === defaultContactId);
+        if (found) {
+          if (found.phone) setBorrowerPhone(found.phone);
+          if (found.email) setBorrowerEmail(found.email);
+        }
+      } else {
+        setContactId('');
       }
-    } else {
-      setContactId('');
+      prevContactIdRef.current = defaultContactId;
     }
+    prevOpenRef.current = isOpen;
   }, [defaultContactId, isOpen, contacts]);
 
   const [notifyBorrower, setNotifyBorrower] = useState(true);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createTransactionAction } from '@/app/actions/transactions';
 import { toast } from 'sonner';
 import {
@@ -56,8 +56,11 @@ export function PropertyTransactionModal({
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Track open state transition to prevent resetting on typing
+  const prevOpenRef = useRef(false);
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevOpenRef.current) {
       setKind(defaultKind);
       if (defaultPropertyId) {
         setPropertyId(defaultPropertyId);
@@ -68,7 +71,8 @@ export function PropertyTransactionModal({
       setNote('');
       setOccurredOn(new Date().toISOString().split('T')[0]);
     }
-  }, [isOpen, defaultKind, defaultPropertyId, properties]);
+    prevOpenRef.current = isOpen;
+  }, [isOpen, defaultKind, defaultPropertyId, properties, propertyId]);
 
   const filteredCategories = categories.filter((c) => c.kind === kind);
   const selectedProperty = properties.find((p) => p.id === propertyId);

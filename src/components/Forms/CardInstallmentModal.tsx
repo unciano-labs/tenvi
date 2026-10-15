@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -64,6 +64,16 @@ export function CardInstallmentModal({
   const [showSchedulePreview, setShowSchedulePreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Memoized initial values so it doesn't create a new object on every render
+  const initialFormValues = useMemo(() => ({
+    creditCardId: defaultCreditCardId || (creditCards.length > 0 ? creditCards[0].id : ''),
+    linkedAccountType: 'credit_card' as const,
+    interestRateType: 'monthly_addon' as const,
+    interestRate: '0',
+    termMonths: '12',
+    startDate: new Date().toISOString().split('T')[0],
+  }), [defaultCreditCardId, creditCards]);
+
   const {
     principal,
     setPrincipal,
@@ -91,21 +101,16 @@ export function CardInstallmentModal({
     resetForm,
   } = useInstallmentForm({
     creditCards,
-    initialValues: {
-      creditCardId: defaultCreditCardId || (creditCards.length > 0 ? creditCards[0].id : ''),
-      linkedAccountType: 'credit_card',
-      interestRateType: 'monthly_addon',
-      interestRate: '0',
-      termMonths: '12',
-      startDate: new Date().toISOString().split('T')[0],
-    },
+    initialValues: initialFormValues,
   });
 
   const scheduleData = scheduleSummary.schedule.length > 0 ? scheduleSummary : null;
 
-  // Reset or initialize state on open
+  // Track modal open transition so we only reset form when modal transitions from closed to open
+  const prevOpenRef = useRef(false);
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevOpenRef.current) {
       setMerchantName('');
       setNotes('');
       setShowSchedulePreview(false);
@@ -116,6 +121,7 @@ export function CardInstallmentModal({
         setSelectedCardId(creditCards[0].id);
       }
     }
+    prevOpenRef.current = isOpen;
   }, [isOpen, defaultCreditCardId, creditCards, resetForm, setSelectedCardId]);
 
   const handlePrincipalChange = (val: string) => {

@@ -60,39 +60,50 @@ export function PropertyDocumentModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (documentToEdit) {
-      setDocumentType(documentToEdit.document_type || 'other');
-      setTitle(documentToEdit.title || '');
-      setDocumentNumber(documentToEdit.document_number || '');
-      setIssueDate(documentToEdit.issue_date || '');
-      setExpiryDate(documentToEdit.expiry_date || '');
-      setNotifyBeforeDays(documentToEdit.notify_before_days || 30);
-      setNotifyEmail(documentToEdit.notify_email ?? true);
-      setNotifySms(documentToEdit.notify_sms ?? false);
-      setNotes(documentToEdit.notes || '');
-      setSelectedFile(null);
-    } else {
-      // Default to appropriate preset based on property type
-      const defaultType: PropertyDocumentType =
-        property.property_type === 'vehicle'
-          ? 'or_cr'
-          : property.property_type === 'real_estate' || property.property_type === 'land'
-          ? 'tax_declaration'
-          : 'insurance_policy';
+  // Track open state transition to prevent resetting on typing
+  const prevOpenRef = useRef(false);
+  const prevDocIdRef = useRef<string | undefined>(undefined);
 
-      setDocumentType(defaultType);
-      const preset = DOCUMENT_TYPE_PRESETS.find((p) => p.value === defaultType);
-      setTitle(preset ? `${property.name} ${preset.label.split('(')[0].trim()}` : `${property.name} Document`);
-      setDocumentNumber(property.identifier || '');
-      setIssueDate('');
-      setExpiryDate('');
-      setNotifyBeforeDays(30);
-      setNotifyEmail(true);
-      setNotifySms(false);
-      setNotes('');
-      setSelectedFile(null);
+  useEffect(() => {
+    const isNewOpen = isOpen && !prevOpenRef.current;
+    const docChanged = documentToEdit?.id !== prevDocIdRef.current;
+
+    if (isOpen && (isNewOpen || docChanged)) {
+      if (documentToEdit) {
+        setDocumentType(documentToEdit.document_type || 'other');
+        setTitle(documentToEdit.title || '');
+        setDocumentNumber(documentToEdit.document_number || '');
+        setIssueDate(documentToEdit.issue_date || '');
+        setExpiryDate(documentToEdit.expiry_date || '');
+        setNotifyBeforeDays(documentToEdit.notify_before_days || 30);
+        setNotifyEmail(documentToEdit.notify_email ?? true);
+        setNotifySms(documentToEdit.notify_sms ?? false);
+        setNotes(documentToEdit.notes || '');
+        setSelectedFile(null);
+      } else {
+        // Default to appropriate preset based on property type
+        const defaultType: PropertyDocumentType =
+          property.property_type === 'vehicle'
+            ? 'or_cr'
+            : property.property_type === 'real_estate' || property.property_type === 'land'
+            ? 'tax_declaration'
+            : 'insurance_policy';
+
+        setDocumentType(defaultType);
+        const preset = DOCUMENT_TYPE_PRESETS.find((p) => p.value === defaultType);
+        setTitle(preset ? `${property.name} ${preset.label.split('(')[0].trim()}` : `${property.name} Document`);
+        setDocumentNumber(property.identifier || '');
+        setIssueDate('');
+        setExpiryDate('');
+        setNotifyBeforeDays(30);
+        setNotifyEmail(true);
+        setNotifySms(false);
+        setNotes('');
+        setSelectedFile(null);
+      }
+      prevDocIdRef.current = documentToEdit?.id;
     }
+    prevOpenRef.current = isOpen;
   }, [documentToEdit, property, isOpen]);
 
   const handleDocumentTypeChange = (newType: PropertyDocumentType) => {

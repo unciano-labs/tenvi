@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { CreditCard, SavingsAccount, InterestRateType, LinkedAccountType } from '@/types';
 import {
   calculateLiabilityAmortization,
@@ -32,6 +32,16 @@ export interface UseInstallmentFormOptions {
 
 export function useInstallmentForm(options: UseInstallmentFormOptions = {}) {
   const { creditCards = [], savingsAccounts = [], initialValues } = options;
+
+  // Stable references for options to prevent callback invalidation
+  const initialValuesRef = useRef(initialValues);
+  initialValuesRef.current = initialValues;
+
+  const creditCardsRef = useRef(creditCards);
+  creditCardsRef.current = creditCards;
+
+  const savingsAccountsRef = useRef(savingsAccounts);
+  savingsAccountsRef.current = savingsAccounts;
 
   const [principal, setPrincipal] = useState<string>(
     initialValues?.principal !== undefined && initialValues.principal !== null
@@ -89,6 +99,24 @@ export function useInstallmentForm(options: UseInstallmentFormOptions = {}) {
     initialValues?.paidInstallmentNumbers || null
   );
 
+  // Keep a ref of live values for calculation without invalidating callbacks
+  const formValuesRef = useRef({
+    principal,
+    termMonths,
+    interestRate,
+    interestRateType,
+    monthlyAmortization,
+    isAmortizationOverridden,
+  });
+  formValuesRef.current = {
+    principal,
+    termMonths,
+    interestRate,
+    interestRateType,
+    monthlyAmortization,
+    isAmortizationOverridden,
+  };
+
   // Selected entities
   const targetCard = useMemo(() => {
     return creditCards.find((c) => c.id === creditCardId) || null;
@@ -107,24 +135,25 @@ export function useInstallmentForm(options: UseInstallmentFormOptions = {}) {
     return !isNaN(parsed) && parsed >= 1 && parsed <= 31 ? parsed : 15;
   }, [linkedAccountType, targetCard, dueDay]);
 
-  // Recalculates amortization based on inputs
+  // Recalculates amortization based on inputs with full stability
   const recalculateAmortization = useCallback(
     (
-      pVal: string = principal,
-      nVal: string = termMonths,
-      rVal: string = interestRate,
-      type: InterestRateType = interestRateType
+      pVal?: string,
+      nVal?: string,
+      rVal?: string,
+      type?: InterestRateType
     ) => {
-      const p = Number(pVal) || 0;
-      const n = Number(nVal) || 0;
-      const r = Number(rVal) || 0;
+      const p = Number(pVal !== undefined ? pVal : formValuesRef.current.principal) || 0;
+      const n = Number(nVal !== undefined ? nVal : formValuesRef.current.termMonths) || 0;
+      const r = Number(rVal !== undefined ? rVal : formValuesRef.current.interestRate) || 0;
+      const t = type !== undefined ? type : formValuesRef.current.interestRateType;
 
       if (p > 0 && n > 0) {
         const computed = calculateLiabilityAmortization({
           principal: p,
           termMonths: n,
           interestRate: r,
-          rateType: type,
+          rateType: t,
         });
         setMonthlyAmortizationState(computed > 0 ? String(computed) : '');
         setIsAmortizationOverridden(false);
@@ -133,44 +162,109 @@ export function useInstallmentForm(options: UseInstallmentFormOptions = {}) {
         setIsAmortizationOverridden(false);
       }
     },
-    [principal, termMonths, interestRate, interestRateType]
+    []
   );
 
-  // Setters with auto-recalculation
-  const handlePrincipalChange = (val: string) => {
+  // Setters with auto-recalculation (stable function references)
+  const handlePrincipalChange = useCallback((val: string) => {
     setPrincipal(val);
-    if (!isAmortizationOverridden) {
-      recalculateAmortization(val, termMonths, interestRate, interestRateType);
+    if (!formValuesRef.current.isAmortizationOverridden) {
+      const p = Number(val) || 0;
+      const n = Number(formValuesRef.current.termMonths) || 0;
+      const r = Number(formValuesRef.current.interestRate) || 0;
+      if (p > 0 && n > 0) {
+        const computed = calculateLiabilityAmortization({
+          principal: p,
+          termMonths: n,
+          interestRate: r,
+          rateType: formValuesRef.current.interestRateType,
+        });
+        setMonthlyAmortizationState(computed > 0 ? String(computed) : '');
+      } else {
+        setMonthlyAmortizationState('');
+      }
     }
-  };
+  }, []);
 
-  const handleTermMonthsChange = (val: string) => {
+  const handleTermMonthsChange = useCallback((val: string) => {
     setTermMonths(val);
-    if (!isAmortizationOverridden) {
-      recalculateAmortization(principal, val, interestRate, interestRateType);
+    if (!formValuesRef.current.isAmortizationOverridden) {
+      const p = Number(formValuesRef.current.principal) || 0;
+      const n = Number(val) || 0;
+      const r = Number(formValuesRef.current.interestRate) || 0;
+      if (p > 0 && n > 0) {
+        const computed = calculateLiabilityAmortization({
+          principal: p,
+          termMonths: n,
+          interestRate: r,
+          rateType: formValuesRef.current.interestRateType,
+        });
+        setMonthlyAmortizationState(computed > 0 ? String(computed) : '');
+      } else {
+        setMonthlyAmortizationState('');
+      }
     }
-  };
+  }, []);
 
-  const handleInterestRateChange = (val: string) => {
+  const handleInterestRateChange = useCallback((val: string) => {
     setInterestRate(val);
-    if (!isAmortizationOverridden) {
-      recalculateAmortization(principal, termMonths, val, interestRateType);
+    if (!formValuesRef.current.isAmortizationOverridden) {
+      const p = Number(formValuesRef.current.principal) || 0;
+      const n = Number(formValuesRef.current.termMonths) || 0;
+      const r = Number(val) || 0;
+      if (p > 0 && n > 0) {
+        const computed = calculateLiabilityAmortization({
+          principal: p,
+          termMonths: n,
+          interestRate: r,
+          rateType: formValuesRef.current.interestRateType,
+        });
+        setMonthlyAmortizationState(computed > 0 ? String(computed) : '');
+      } else {
+        setMonthlyAmortizationState('');
+      }
     }
-  };
+  }, []);
 
-  const handleInterestRateTypeChange = (newType: InterestRateType) => {
+  const handleInterestRateTypeChange = useCallback((newType: InterestRateType) => {
     setInterestRateType(newType);
-    recalculateAmortization(principal, termMonths, interestRate, newType);
-  };
+    const p = Number(formValuesRef.current.principal) || 0;
+    const n = Number(formValuesRef.current.termMonths) || 0;
+    const r = Number(formValuesRef.current.interestRate) || 0;
+    if (p > 0 && n > 0) {
+      const computed = calculateLiabilityAmortization({
+        principal: p,
+        termMonths: n,
+        interestRate: r,
+        rateType: newType,
+      });
+      setMonthlyAmortizationState(computed > 0 ? String(computed) : '');
+      setIsAmortizationOverridden(false);
+    }
+  }, []);
 
-  const handleMonthlyAmortizationChange = (val: string) => {
+  const handleMonthlyAmortizationChange = useCallback((val: string) => {
     setMonthlyAmortizationState(val);
     setIsAmortizationOverridden(true);
-  };
+  }, []);
 
-  const resetAmortizationOverride = () => {
-    recalculateAmortization(principal, termMonths, interestRate, interestRateType);
-  };
+  const resetAmortizationOverride = useCallback(() => {
+    setIsAmortizationOverridden(false);
+    const p = Number(formValuesRef.current.principal) || 0;
+    const n = Number(formValuesRef.current.termMonths) || 0;
+    const r = Number(formValuesRef.current.interestRate) || 0;
+    if (p > 0 && n > 0) {
+      const computed = calculateLiabilityAmortization({
+        principal: p,
+        termMonths: n,
+        interestRate: r,
+        rateType: formValuesRef.current.interestRateType,
+      });
+      setMonthlyAmortizationState(computed > 0 ? String(computed) : '');
+    } else {
+      setMonthlyAmortizationState('');
+    }
+  }, []);
 
   // Resolve effective first payment date
   const resolvedFirstPaymentDate = useMemo(() => {
@@ -202,33 +296,33 @@ export function useInstallmentForm(options: UseInstallmentFormOptions = {}) {
     });
   }, [firstBillingMonth, firstPaymentDate, transactionDate, effectiveDueDay, targetCard]);
 
-  // Credit Card selection handler
-  const handleCreditCardSelect = (cardId: string) => {
+  // Credit Card selection handler (stable)
+  const handleCreditCardSelect = useCallback((cardId: string) => {
     setCreditCardId(cardId);
-    const card = creditCards.find((c) => c.id === cardId);
+    const card = creditCardsRef.current.find((c) => c.id === cardId);
     if (card && card.due_day) {
       setDueDayState(String(card.due_day));
     }
-  };
+  }, []);
 
-  // Linked account type change handler
-  const handleLinkedAccountTypeChange = (type: LinkedAccountType | '') => {
+  // Linked account type change handler (stable)
+  const handleLinkedAccountTypeChange = useCallback((type: LinkedAccountType | '') => {
     setLinkedAccountType(type);
     if (type === 'credit_card') {
       setSavingsId('');
-      if (creditCards.length > 0 && !creditCardId) {
-        handleCreditCardSelect(creditCards[0].id);
+      if (creditCardsRef.current.length > 0) {
+        handleCreditCardSelect(creditCardsRef.current[0].id);
       }
     } else if (type === 'savings') {
       setCreditCardId('');
-      if (savingsAccounts.length > 0 && !savingsId) {
-        setSavingsId(savingsAccounts[0].id);
+      if (savingsAccountsRef.current.length > 0) {
+        setSavingsId(savingsAccountsRef.current[0].id);
       }
     } else {
       setCreditCardId('');
       setSavingsId('');
     }
-  };
+  }, [handleCreditCardSelect]);
 
   // Live schedule preview calculation
   const scheduleSummary: AmortizationSummary = useMemo(() => {
@@ -278,41 +372,47 @@ export function useInstallmentForm(options: UseInstallmentFormOptions = {}) {
     manualPaidNumbers,
   ]);
 
-  // Toggle preview term paid status
-  const togglePreviewTermPaid = (termNumber: number) => {
-    const currentPaid: number[] =
-      manualPaidNumbers !== null
-        ? manualPaidNumbers
-        : scheduleSummary.schedule
-            .filter((s) => s.isPaid)
-            .map((s) => s.installmentNumber);
+  const scheduleSummaryRef = useRef(scheduleSummary);
+  scheduleSummaryRef.current = scheduleSummary;
 
-    if (currentPaid.includes(termNumber)) {
-      setManualPaidNumbers(currentPaid.filter((n) => n !== termNumber));
-    } else {
-      setManualPaidNumbers([...currentPaid, termNumber].sort((a, b) => a - b));
-    }
-  };
+  // Toggle preview term paid status (stable)
+  const togglePreviewTermPaid = useCallback((termNumber: number) => {
+    setManualPaidNumbers((prev) => {
+      const currentPaid =
+        prev !== null
+          ? prev
+          : scheduleSummaryRef.current.schedule
+              .filter((s) => s.isPaid)
+              .map((s) => s.installmentNumber);
 
-  // Reset form to initial state
+      if (currentPaid.includes(termNumber)) {
+        return currentPaid.filter((n) => n !== termNumber);
+      } else {
+        return [...currentPaid, termNumber].sort((a, b) => a - b);
+      }
+    });
+  }, []);
+
+  // Reset form to initial state (stable)
   const resetForm = useCallback(() => {
-    setPrincipal(initialValues?.principal !== undefined ? String(initialValues.principal) : '');
-    setTermMonths(initialValues?.termMonths !== undefined ? String(initialValues.termMonths) : '12');
-    setInterestRateType(initialValues?.interestRateType || 'monthly_addon');
-    setInterestRate(initialValues?.interestRate !== undefined ? String(initialValues.interestRate) : '0');
+    const init = initialValuesRef.current;
+    setPrincipal(init?.principal !== undefined && init.principal !== null ? String(init.principal) : '');
+    setTermMonths(init?.termMonths !== undefined && init.termMonths !== null ? String(init.termMonths) : '12');
+    setInterestRateType(init?.interestRateType || 'monthly_addon');
+    setInterestRate(init?.interestRate !== undefined && init.interestRate !== null ? String(init.interestRate) : '0');
     setMonthlyAmortizationState(
-      initialValues?.monthlyAmortization !== undefined ? String(initialValues.monthlyAmortization) : ''
+      init?.monthlyAmortization !== undefined && init.monthlyAmortization !== null ? String(init.monthlyAmortization) : ''
     );
-    setIsAmortizationOverridden(Boolean(initialValues?.isAmortizationOverridden));
-    setTransactionDate(initialValues?.startDate || new Date().toISOString().split('T')[0]);
-    setFirstBillingMonth(initialValues?.firstBillingMonth || '');
-    setFirstPaymentDate(initialValues?.firstPaymentDate || '');
-    setDueDayState(initialValues?.dueDay !== undefined ? String(initialValues.dueDay) : '');
-    setLinkedAccountType(initialValues?.linkedAccountType || '');
-    setCreditCardId(initialValues?.creditCardId || '');
-    setSavingsId(initialValues?.savingsId || '');
-    setManualPaidNumbers(initialValues?.paidInstallmentNumbers || null);
-  }, [initialValues]);
+    setIsAmortizationOverridden(Boolean(init?.isAmortizationOverridden));
+    setTransactionDate(init?.startDate || new Date().toISOString().split('T')[0]);
+    setFirstBillingMonth(init?.firstBillingMonth || '');
+    setFirstPaymentDate(init?.firstPaymentDate || '');
+    setDueDayState(init?.dueDay !== undefined && init.dueDay !== null ? String(init.dueDay) : '');
+    setLinkedAccountType(init?.linkedAccountType || '');
+    setCreditCardId(init?.creditCardId || '');
+    setSavingsId(init?.savingsId || '');
+    setManualPaidNumbers(init?.paidInstallmentNumbers || null);
+  }, []);
 
   return {
     // State

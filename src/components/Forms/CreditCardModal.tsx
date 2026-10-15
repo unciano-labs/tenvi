@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useTransition, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -117,31 +117,42 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
     },
   });
 
+  // Track open state transition to prevent resetting on typing
+  const prevOpenRef = useRef(false);
+  const prevCardIdRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
-    if (card) {
-      const isKnownBank = (PH_CREDIT_CARD_BANKS as readonly string[]).includes(card.bank_name);
-      form.reset({
-        bankName: isKnownBank ? card.bank_name : 'Other Bank',
-        customBank: isKnownBank ? '' : card.bank_name,
-        name: card.name || '',
-        last4: card.last_4 || '',
-        creditLimit: card.credit_limit ? String(card.credit_limit) : '',
-        statementDay: Number(card.statement_day || 15),
-        dueDay: Number(card.due_day || 5),
-        colorTheme: card.color_theme || '#0f172a',
-      });
-    } else {
-      form.reset({
-        bankName: PH_CREDIT_CARD_BANKS[0],
-        customBank: '',
-        name: '',
-        last4: '',
-        creditLimit: '',
-        statementDay: 15,
-        dueDay: 5,
-        colorTheme: '#0f172a',
-      });
+    const isNewOpen = isOpen && !prevOpenRef.current;
+    const cardChanged = card?.id !== prevCardIdRef.current;
+
+    if (isOpen && (isNewOpen || cardChanged)) {
+      if (card) {
+        const isKnownBank = (PH_CREDIT_CARD_BANKS as readonly string[]).includes(card.bank_name);
+        form.reset({
+          bankName: isKnownBank ? card.bank_name : 'Other Bank',
+          customBank: isKnownBank ? '' : card.bank_name,
+          name: card.name || '',
+          last4: card.last_4 || '',
+          creditLimit: card.credit_limit ? String(card.credit_limit) : '',
+          statementDay: Number(card.statement_day || 15),
+          dueDay: Number(card.due_day || 5),
+          colorTheme: card.color_theme || '#0f172a',
+        });
+      } else {
+        form.reset({
+          bankName: PH_CREDIT_CARD_BANKS[0],
+          customBank: '',
+          name: '',
+          last4: '',
+          creditLimit: '',
+          statementDay: 15,
+          dueDay: 5,
+          colorTheme: '#0f172a',
+        });
+      }
+      prevCardIdRef.current = card?.id;
     }
+    prevOpenRef.current = isOpen;
   }, [card, isOpen, form]);
 
   const watchedBank = form.watch('bankName');

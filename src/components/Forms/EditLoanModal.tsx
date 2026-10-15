@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { updateLoanAction } from '@/app/actions/loans';
 import { toast } from 'sonner';
 import {
@@ -91,27 +91,38 @@ export function EditLoanModal({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Track open state transition to prevent resetting on typing
+  const prevOpenRef = useRef(false);
+  const prevLoanIdRef = useRef<string | undefined>(undefined);
+
   // Sync state whenever modal opens or loan changes
   useEffect(() => {
-    if (loan) {
-      setContactId(loan.contact_id || '');
-      setNewContactName('');
-      setBorrowerPhone(loan.borrower_phone || loan.contact?.phone || '');
-      setBorrowerEmail(loan.borrower_email || loan.contact?.email || '');
-      setNotifyBorrower(loan.notify_borrower !== false);
-      setAmount(String(loan.amount || ''));
-      setCreditCardId(loan.credit_card_id || '');
-      setDownpaymentAmount(loan.downpayment_amount ? String(loan.downpayment_amount) : '');
-      setReason(loan.reason || '');
-      setLoanedOn(loan.loaned_on || new Date().toISOString().split('T')[0]);
-      setDueDate(loan.due_date || '');
-      setIsInstallment(loan.is_installment);
-      setInstallmentMonths(loan.installment_months || null);
-      setMonthlyDueDay(loan.monthly_due_day || 15);
-      setMonthlyInterestRate(
-        loan.monthly_interest_rate != null ? String(loan.monthly_interest_rate) : '0'
-      );
+    const isNewOpen = isOpen && !prevOpenRef.current;
+    const loanChanged = loan?.id !== prevLoanIdRef.current;
+
+    if (isOpen && (isNewOpen || loanChanged)) {
+      if (loan) {
+        setContactId(loan.contact_id || '');
+        setNewContactName('');
+        setBorrowerPhone(loan.borrower_phone || loan.contact?.phone || '');
+        setBorrowerEmail(loan.borrower_email || loan.contact?.email || '');
+        setNotifyBorrower(loan.notify_borrower !== false);
+        setAmount(String(loan.amount || ''));
+        setCreditCardId(loan.credit_card_id || '');
+        setDownpaymentAmount(loan.downpayment_amount ? String(loan.downpayment_amount) : '');
+        setReason(loan.reason || '');
+        setLoanedOn(loan.loaned_on || new Date().toISOString().split('T')[0]);
+        setDueDate(loan.due_date || '');
+        setIsInstallment(loan.is_installment);
+        setInstallmentMonths(loan.installment_months || null);
+        setMonthlyDueDay(loan.monthly_due_day || 15);
+        setMonthlyInterestRate(
+          loan.monthly_interest_rate != null ? String(loan.monthly_interest_rate) : '0'
+        );
+      }
+      prevLoanIdRef.current = loan?.id;
     }
+    prevOpenRef.current = isOpen;
   }, [loan, isOpen]);
 
   // When credit card selection changes, automatically synchronize due day to card's due_day
