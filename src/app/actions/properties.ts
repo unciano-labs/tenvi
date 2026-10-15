@@ -7,6 +7,7 @@ import { requireWebsiteUser } from '@/lib/auth/guards';
 import { propertySchema } from '@/lib/validations/schemas';
 import { PropertyInput } from '@/types';
 import { logAuditEntry } from '@/lib/audit/logger';
+import { syncPropertyLoanAmortization } from '@/lib/finance/calculations';
 
 export async function createPropertyAction(data: PropertyInput) {
   const auth = await requireWebsiteUser();
@@ -133,6 +134,10 @@ export async function updatePropertyAction(id: string, data: PropertyInput) {
   if (error) {
     console.error('Error updating property:', error);
     return { error: 'Failed to update property.' };
+  }
+
+  if (!monthlyAmortization || monthlyAmortization === 0) {
+    await syncPropertyLoanAmortization(supabase, id);
   }
 
   revalidatePath('/dashboard');

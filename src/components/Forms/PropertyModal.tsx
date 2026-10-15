@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPropertyAction, updatePropertyAction } from '@/app/actions/properties';
 import { toast } from 'sonner';
 import {
@@ -8,8 +8,9 @@ import {
   Car,
   ShieldCheck,
   Loader2,
+  Landmark,
 } from 'lucide-react';
-import { Property, PropertyType, PropertyStatus } from '@/types';
+import { Property, PropertyType, PropertyStatus, Liability } from '@/types';
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -26,6 +27,7 @@ interface PropertyModalProps {
   isOpen: boolean;
   onClose: () => void;
   property?: Property | null;
+  liabilities?: Liability[];
 }
 
 const PROPERTY_TYPES: { value: PropertyType; label: string; icon: string }[] = [
@@ -45,8 +47,25 @@ const THEME_OPTIONS = [
   { value: 'slate', label: 'Charcoal', bg: '#0f172a' },
 ];
 
-export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps) {
+export function PropertyModal({ isOpen, onClose, property, liabilities }: PropertyModalProps) {
   const isEditing = !!property;
+  const prevOpenRef = useRef(false);
+  const prevPropertyIdRef = useRef<string | null>(null);
+
+  const linkedLiabilities = useMemo(() => {
+    if (!property?.id || !liabilities) return [];
+    return liabilities.filter((l) => l.property_id === property.id && l.status === 'active');
+  }, [property?.id, liabilities]);
+
+  const autoComputedLoanAmortization = useMemo(() => {
+    return linkedLiabilities.reduce((sum, l) => sum + Number(l.monthly_payment || 0), 0);
+  }, [linkedLiabilities]);
+
+  const autoComputedDueDay = useMemo(() => {
+    return (
+      linkedLiabilities.find((l) => l.due_day && l.due_day >= 1 && l.due_day <= 31)?.due_day ?? null
+    );
+  }, [linkedLiabilities]);
 
   const [name, setName] = useState('');
   const [propertyType, setPropertyType] = useState<PropertyType>('vehicle');
@@ -66,6 +85,13 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    const justOpened = isOpen && !prevOpenRef.current;
+    const propertyChanged = (property?.id ?? null) !== prevPropertyIdRef.current;
+    prevOpenRef.current = isOpen;
+    prevPropertyIdRef.current = property?.id ?? null;
+
+    if (!justOpened && !propertyChanged) return;
+
     if (property) {
       setName(property.name);
       setPropertyType(property.property_type);
@@ -73,12 +99,21 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
       setEstimatedValue(property.estimated_value ? String(property.estimated_value) : '');
       setPurchasePrice(property.purchase_price ? String(property.purchase_price) : '');
       setPurchaseDate(property.purchase_date || '');
-      setMonthlyAmortization(
-        property.monthly_amortization ? String(property.monthly_amortization) : ''
-      );
-      setAmortizationDueDay(
-        property.amortization_due_day ? String(property.amortization_due_day) : ''
-      );
+
+      const effectiveAmort = property.monthly_amortization
+        ? String(property.monthly_amortization)
+        : autoComputedLoanAmortization > 0
+        ? String(autoComputedLoanAmortization)
+        : '';
+      setMonthlyAmortization(effectiveAmort);
+
+      const effectiveDueDay = property.amortization_due_day
+        ? String(property.amortization_due_day)
+        : autoComputedDueDay
+        ? String(autoComputedDueDay)
+        : '';
+      setAmortizationDueDay(effectiveDueDay);
+
       setAnnualInsuranceAmount(
         property.annual_insurance_amount ? String(property.annual_insurance_amount) : ''
       );
@@ -109,7 +144,7 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
       setStatus('active');
       setNotes('');
     }
-  }, [property, isOpen]);
+  }, [property, isOpen, autoComputedLoanAmortization, autoComputedDueDay]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -269,6 +304,40 @@ export function PropertyModal({ isOpen, onClose, property }: PropertyModalProps)
                   Fixed Obligations (Amortization & Insurance)
                 </h4>
               </div>
+
+              {linkedLiabilities.length > 0 && (
+                <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between font-bold text-blue-950 dark:text-blue-200">
+                    <span className="flex items-center gap-1.5">
+                      <Landmark className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      Auto-computed from {linkedLiabilities.length} active loan record{linkedLiabilities.length === 1 ? '' : 's'}:
+                    </span>
+                    <span className="text-sm font-black text-blue-600 dark:text-blue-400">
+                      ₱{autoComputedLoanAmortization.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-blue-800/80 dark:text-blue-300/80">
+                    Active mortgages and debt liabilities secured against this asset automatically determine this commitment. You can leave this field or set a custom override below.
+                  </p>
+                  {autoComputedDueDay && (
+                    <div className="text-[11px] font-semibold text-blue-700 dark:text-blue-400">
+                      Primary Due Day: {autoComputedDueDay}th of the month
+                    </div>
+                  )}
+                  {(!monthlyAmortization || Number(monthlyAmortization.replace(/,/g, '')) !== autoComputedLoanAmortization) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMonthlyAmortization(String(autoComputedLoanAmortization));
+                        if (autoComputedDueDay) setAmortizationDueDay(String(autoComputedDueDay));
+                      }}
+                      className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1 mt-1"
+                    >
+                      ↺ Use auto-computed loan values
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">

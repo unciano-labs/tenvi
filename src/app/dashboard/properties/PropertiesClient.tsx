@@ -130,10 +130,10 @@ export function PropertiesClient({
   const propertyFinancialsMap = useMemo(() => {
     const map = new Map<string, ReturnType<typeof calculatePropertyFinancials>>();
     properties.forEach((p) => {
-      map.set(p.id, calculatePropertyFinancials(p, transactions));
+      map.set(p.id, calculatePropertyFinancials(p, transactions, liabilities));
     });
     return map;
-  }, [properties, transactions]);
+  }, [properties, transactions, liabilities]);
 
   // Global Portfolio Overview Calculations
   const portfolioSummary = useMemo(() => {
@@ -168,7 +168,7 @@ export function PropertiesClient({
           urgentObligations.push({
             property: p,
             type: 'amortization',
-            amount: p.monthly_amortization || 0,
+            amount: fin.monthlyAmortization,
             label: fin.amortizationDue.label,
             urgency: fin.amortizationDue.urgency,
             daysRemaining: fin.amortizationDue.daysRemaining,
@@ -659,7 +659,7 @@ export function PropertiesClient({
           {filteredProperties.map((property) => {
             const financials =
               propertyFinancialsMap.get(property.id) ??
-              calculatePropertyFinancials(property, transactions);
+              calculatePropertyFinancials(property, transactions, liabilities);
             const propDebt = propertyLiabilitiesMap.get(property.id) || 0;
             const propEquity = Math.max(0, Number(property.estimated_value || 0) - propDebt);
             const Icon = getAssetIcon(property.property_type);
@@ -787,12 +787,19 @@ export function PropertiesClient({
                   {/* Commitments & Targets */}
                   <div className="space-y-2 text-xs min-w-0">
                     {/* Monthly Amortization */}
-                    {Number(property.monthly_amortization || 0) > 0 && (
+                    {Number(financials?.monthlyAmortization ?? property.monthly_amortization ?? 0) > 0 && (
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary/5 min-w-0 gap-2">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
                           <span className="text-muted-foreground shrink-0">Monthly Amort:</span>
-                          <span className="font-medium text-foreground">{formatMoney(property.monthly_amortization)}</span>
+                          <span className="font-medium text-foreground">
+                            {formatMoney(financials?.monthlyAmortization ?? property.monthly_amortization)}
+                          </span>
+                          {financials?.computedFromLoans && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-semibold bg-primary/10 text-primary border-primary/30 shrink-0">
+                              Auto ({financials.linkedLoanCount})
+                            </Badge>
+                          )}
                         </div>
                         {financials?.amortizationDue && (
                           <Badge
@@ -936,6 +943,7 @@ export function PropertiesClient({
           setEditingProperty(null);
         }}
         property={editingProperty}
+        liabilities={liabilities}
       />
 
       {/* Property Transaction Modal (Income & Expense) */}

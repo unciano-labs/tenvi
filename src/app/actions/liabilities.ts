@@ -11,7 +11,11 @@ import {
 } from '@/lib/validations/schemas';
 import { LiabilityInput, LiabilityPaymentInput } from '@/types';
 import { logAuditEntry } from '@/lib/audit/logger';
-import { calculateAmortizationSchedule, applyInstallmentToggleToLiability } from '@/lib/finance/calculations';
+import {
+  calculateAmortizationSchedule,
+  applyInstallmentToggleToLiability,
+  syncPropertyLoanAmortization,
+} from '@/lib/finance/calculations';
 
 export async function createLiabilityAction(data: LiabilityInput) {
   const auth = await requireWebsiteUser();
@@ -137,6 +141,7 @@ export async function createLiabilityAction(data: LiabilityInput) {
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/properties');
   if (propertyId) {
+    await syncPropertyLoanAmortization(supabase, propertyId);
     revalidatePath(`/dashboard/properties/${propertyId}`);
   }
   if (validCreditCardId) {
@@ -243,9 +248,11 @@ export async function updateLiabilityAction(data: any) {
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/properties');
   if (propertyId) {
+    await syncPropertyLoanAmortization(supabase, propertyId);
     revalidatePath(`/dashboard/properties/${propertyId}`);
   }
   if (previousLiability?.property_id && previousLiability.property_id !== propertyId) {
+    await syncPropertyLoanAmortization(supabase, previousLiability.property_id);
     revalidatePath(`/dashboard/properties/${previousLiability.property_id}`);
   }
   if (previousLiability?.credit_card_id) {
@@ -307,6 +314,7 @@ export async function deleteLiabilityAction(id: string) {
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/properties');
   if (liability?.property_id) {
+    await syncPropertyLoanAmortization(supabase, liability.property_id);
     revalidatePath(`/dashboard/properties/${liability.property_id}`);
   }
   if (liability?.credit_card_id) {
@@ -446,6 +454,7 @@ export async function recordLiabilityPaymentAction(data: LiabilityPaymentInput) 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/properties');
   if (liability.property_id) {
+    await syncPropertyLoanAmortization(supabase, liability.property_id);
     revalidatePath(`/dashboard/properties/${liability.property_id}`);
   }
   if (liability.credit_card_id) {
@@ -527,6 +536,7 @@ export async function toggleLiabilityInstallmentPaidAction(
   }
   revalidatePath('/dashboard/properties');
   if (liability.property_id) {
+    await syncPropertyLoanAmortization(supabase, liability.property_id);
     revalidatePath(`/dashboard/properties/${liability.property_id}`);
   }
   revalidatePath('/dashboard/transactions');

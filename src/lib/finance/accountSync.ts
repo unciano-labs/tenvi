@@ -350,3 +350,128 @@ export function applyInstallmentToggleToLoan(
     newStatus,
   };
 }
+
+/**
+ * Compute total active monthly loan amortization and primary due day for a property
+ * based on its active loan records (liabilities or payables).
+ */
+export function calculatePropertyLoanAmortization(
+  liabilities: Array<{
+    property_id?: string | null;
+    status?: string | null;
+    monthly_payment?: number | string | null;
+    due_day?: number | null;
+  }> = [],
+  propertyId: string,
+  loans: Array<{
+    status?: string | null;
+    is_installment?: boolean;
+    monthly_amount?: number | string | null;
+    monthly_due_day?: number | null;
+  }> = []
+): {
+  monthlyAmortization: number;
+  dueDay: number | null;
+  activeLoanCount: number;
+} {
+  const activeLiabilities = (liabilities || []).filter(
+    (l) => l.property_id === propertyId && l.status === 'active'
+  );
+
+  const activeLoans = (loans || []).filter(
+    (l) =>
+      l.status !== 'paid' &&
+      Boolean(l.is_installment) &&
+      Number(l.monthly_amount || 0) > 0
+  );
+
+  const liabilityAmort = activeLiabilities.reduce(
+    (acc, l) => acc + Number(l.monthly_payment || 0),
+    0
+  );
+  const loanAmort = activeLoans.reduce(
+    (acc, l) => acc + Number(l.monthly_amount || 0),
+    0
+  );
+
+  const firstDueDay =
+    activeLiabilities.find((l) => l.due_day && l.due_day >= 1 && l.due_day <= 31)?.due_day ??
+    activeLoans.find((l) => l.monthly_due_day && l.monthly_due_day >= 1 && l.monthly_due_day <= 31)?.monthly_due_day ??
+    null;
+
+  return {
+    monthlyAmortization: liabilityAmort + loanAmort,
+    dueDay: firstDueDay,
+    activeLoanCount: activeLiabilities.length + activeLoans.length,
+  };
+}
+
+/**
+ * Automatically syncs the computed monthly loan amortization and due day from active loan records
+ * to the bili_properties table.
+ */
+export async function syncPropertyLoanAmortization(
+  supabase: any,
+  propertyId: string
+): Promise<{ monthlyAmortization: number; dueDay: number | null } | null> {
+  if (!propertyId) return null;
+
+  try {
+    const { data: activeLiabilities, error } = await supabase
+      .from('bili_liabilities')
+      .select('id, monthly_payment, due_day, status')
+      .eq('property_id', propertyId)
+      .eq('status', 'active')
+      .is('deleted_at', null);
+
+    if (error) {
+      console.error('Error fetching liabilities for property sync:', error);
+      return null;
+    }
+
+    if (activeLiabilities && activeLiabilities.length > 0) {
+      const totalMonthlyAmortization = activeLiabilities.reduce(
+        (acc: number, l: any) => acc + Number(l.monthly_payment || 0),
+        0
+      );
+      const firstDueDay =
+        activeLiabilities.find((l: any) => l.due_day && l.due_day >= 1 && l.due_day <= 31)?.due_day ||
+        null;
+
+      await supabase
+        .from('bili_properties')
+        .update({
+          monthly_amortization: totalMonthlyAmortization,
+          ...(firstDueDay ? { amortization_due_day: firstDueDay } : {}),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', propertyId);
+
+      return { monthlyAmortization: totalMonthlyAmortization, dueDay: firstDueDay };
+    } else {
+      // Check if all liabilities for this property are now paid_off
+      const { data: allLiabilities } = await supabase
+        .from('bili_liabilities')
+        .select('id, status')
+        .eq('property_id', propertyId)
+        .is('deleted_at', null);
+
+      if (allLiabilities && allLiabilities.length > 0) {
+        await supabase
+          .from('bili_properties')
+          .update({
+            monthly_amortization: 0,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', propertyId);
+
+        return { monthlyAmortization: 0, dueDay: null };
+      }
+    }
+  } catch (err) {
+    console.error('Unexpected error in syncPropertyLoanAmortization:', err);
+  }
+
+  return null;
+}
+

@@ -420,6 +420,8 @@ import {
   calculateCardSpending,
   calculateCardLimitImpact,
   calculateSavingsImpact,
+  calculatePropertyLoanAmortization,
+  syncPropertyLoanAmortization,
   formulateSavingsDeduction,
   applyInstallmentToggleToLiability,
   applyInstallmentToggleToLoan,
@@ -428,6 +430,8 @@ export {
   calculateCardSpending,
   calculateCardLimitImpact,
   calculateSavingsImpact,
+  calculatePropertyLoanAmortization,
+  syncPropertyLoanAmortization,
   formulateSavingsDeduction,
   applyInstallmentToggleToLiability,
   applyInstallmentToggleToLoan,
@@ -732,6 +736,15 @@ export interface PropertyFinancials {
   expectedMonthlyIncome: number;
   amortizationDue: DueDateInfo | null;
   insuranceRenewal: InsuranceRenewalInfo;
+  computedFromLoans?: boolean;
+  linkedLoanCount?: number;
+  activeLoansSummary?: Array<{
+    id: string;
+    name: string;
+    lenderName: string;
+    monthlyPayment: number;
+    dueDay?: number | null;
+  }>;
 }
 
 export function calculatePropertyFinancials(
@@ -748,6 +761,24 @@ export function calculatePropertyFinancials(
     property_id?: string | null;
     kind: 'income' | 'expense' | 'transfer';
     amount: number | string;
+  }>,
+  liabilities?: Array<{
+    id?: string;
+    property_id?: string | null;
+    name?: string;
+    lender_name?: string;
+    status?: string | null;
+    monthly_payment?: number | string | null;
+    due_day?: number | null;
+  }>,
+  loans?: Array<{
+    id?: string;
+    reason?: string | null;
+    status?: string | null;
+    is_installment?: boolean;
+    monthly_amount?: number | string | null;
+    monthly_due_day?: number | null;
+    due_date?: string | null;
   }>
 ): PropertyFinancials {
   const propTx = transactions.filter((t) => t.property_id === property.id);
@@ -768,14 +799,95 @@ export function calculatePropertyFinancials(
     }
   }
 
-  const monthlyAmortization = Number(property.monthly_amortization || 0);
+  // 1. Check for active loan records (mortgages/debt liabilities and installment payables)
+  const activeLiabilities = (liabilities || []).filter(
+    (l) => l.property_id === property.id && l.status === 'active'
+  );
+
+  const activeLoans = (loans || []).filter(
+    (l) =>
+      l.status !== 'paid' &&
+      Boolean(l.is_installment) &&
+      Number(l.monthly_amount || 0) > 0
+  );
+
+  const hasLinkedLoans = activeLiabilities.length > 0 || activeLoans.length > 0;
+
+  let monthlyAmortization = 0;
+  let computedFromLoans = false;
+  let linkedLoanCount = 0;
+  let activeLoansSummary: PropertyFinancials['activeLoansSummary'] = [];
+  let amortizationDue: DueDateInfo | null = null;
+
+  if (hasLinkedLoans) {
+    const liabilityAmort = activeLiabilities.reduce(
+      (sum, l) => sum + Number(l.monthly_payment || 0),
+      0
+    );
+    const loanAmort = activeLoans.reduce(
+      (sum, l) => sum + Number(l.monthly_amount || 0),
+      0
+    );
+
+    monthlyAmortization = liabilityAmort + loanAmort;
+    computedFromLoans = true;
+    linkedLoanCount = activeLiabilities.length + activeLoans.length;
+
+    activeLoansSummary = [
+      ...activeLiabilities.map((l) => ({
+        id: l.id || '',
+        name: l.name || 'Mortgage / Loan',
+        lenderName: l.lender_name || '',
+        monthlyPayment: Number(l.monthly_payment || 0),
+        dueDay: l.due_day ?? null,
+      })),
+      ...activeLoans.map((l) => ({
+        id: l.id || '',
+        name: l.reason || 'Asset Loan / Advance',
+        lenderName: 'Asset Payable',
+        monthlyPayment: Number(l.monthly_amount || 0),
+        dueDay: l.monthly_due_day ?? null,
+      })),
+    ];
+
+    // Resolve earliest upcoming due date among active loans
+    let candidateDueDays: number[] = [];
+    activeLiabilities.forEach((l) => {
+      if (l.due_day && l.due_day >= 1 && l.due_day <= 31) {
+        candidateDueDays.push(l.due_day);
+      }
+    });
+    activeLoans.forEach((l) => {
+      if (l.monthly_due_day && l.monthly_due_day >= 1 && l.monthly_due_day <= 31) {
+        candidateDueDays.push(l.monthly_due_day);
+      }
+    });
+
+    if (candidateDueDays.length > 0) {
+      let earliestDue: DueDateInfo | null = null;
+      for (const day of candidateDueDays) {
+        const info = calculateNextDueDate(day);
+        if (!earliestDue || info.daysRemaining < earliestDue.daysRemaining) {
+          earliestDue = info;
+        }
+      }
+      amortizationDue = earliestDue;
+    } else if (property.amortization_due_day) {
+      amortizationDue = calculateNextDueDate(property.amortization_due_day);
+    }
+  } else {
+    // Fallback to manual property inputs
+    monthlyAmortization = Number(property.monthly_amortization || 0);
+    computedFromLoans = false;
+    linkedLoanCount = 0;
+    activeLoansSummary = [];
+    amortizationDue = property.amortization_due_day
+      ? calculateNextDueDate(property.amortization_due_day)
+      : null;
+  }
+
   const annualInsurance = Number(property.annual_insurance_amount || 0);
   const monthlyCommitment = monthlyAmortization + annualInsurance / 12;
-
-  const amortizationDue = property.amortization_due_day
-    ? calculateNextDueDate(property.amortization_due_day)
-    : null;
-
   const insuranceRenewal = calculateInsuranceRenewal(property.insurance_renewal_date);
 
   return {
@@ -791,6 +903,9 @@ export function calculatePropertyFinancials(
     expectedMonthlyIncome: Number(property.expected_income_monthly || 0),
     amortizationDue,
     insuranceRenewal,
+    computedFromLoans,
+    linkedLoanCount,
+    activeLoansSummary,
   };
 }
 
@@ -1264,6 +1379,7 @@ export type {
   AmortizationScheduleRow,
   AmortizationSummary,
 } from './amortizationEngine';
+
 
 // ============================================================================
 // ASSET VALUATION & STRAIGHT-LINE DEPRECIATION ENGINE (Task 3.2)

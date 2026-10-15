@@ -13,6 +13,8 @@ import {
   calculateNextAmortizationSplit,
   calculateStraightLineDepreciation,
   calculateCardSpending,
+  calculatePropertyFinancials,
+  calculatePropertyLoanAmortization,
 } from './calculations';
 
 describe('TNV-015: getTodayManila()', () => {
@@ -831,5 +833,155 @@ describe('calculateCardSpending()', () => {
     });
   });
 });
+
+describe('calculatePropertyFinancials() with loan records', () => {
+  const property = {
+    id: 'prop-1',
+    name: 'Condo Unit 402',
+    monthly_amortization: 15000,
+    amortization_due_day: 10,
+    annual_insurance_amount: 24000,
+    insurance_renewal_date: '2027-05-15',
+  };
+
+  const sampleTransactions = [
+    { property_id: 'prop-1', kind: 'income' as const, amount: 35000 },
+    { property_id: 'prop-1', kind: 'expense' as const, amount: 5000 },
+  ];
+
+  it('falls back to property manual fields when no loan records exist', () => {
+    const fin = calculatePropertyFinancials(property, sampleTransactions, []);
+    expect(fin.monthlyAmortization).toBe(15000);
+    expect(fin.computedFromLoans).toBe(false);
+    expect(fin.linkedLoanCount).toBe(0);
+    expect(fin.monthlyCommitment).toBe(15000 + 24000 / 12);
+    expect(fin.amortizationDue).not.toBeNull();
+  });
+
+  it('automatically computes monthly loan amortization from single active liability', () => {
+    const liabilities = [
+      {
+        id: 'lib-1',
+        property_id: 'prop-1',
+        name: 'BDO Mortgage',
+        lender_name: 'BDO Unibank',
+        status: 'active',
+        monthly_payment: 28500,
+        due_day: 15,
+      },
+    ];
+
+    const fin = calculatePropertyFinancials(property, sampleTransactions, liabilities);
+    expect(fin.monthlyAmortization).toBe(28500);
+    expect(fin.computedFromLoans).toBe(true);
+    expect(fin.linkedLoanCount).toBe(1);
+    expect(fin.activeLoansSummary).toHaveLength(1);
+    expect(fin.activeLoansSummary![0]).toEqual({
+      id: 'lib-1',
+      name: 'BDO Mortgage',
+      lenderName: 'BDO Unibank',
+      monthlyPayment: 28500,
+      dueDay: 15,
+    });
+    expect(fin.monthlyCommitment).toBe(28500 + 24000 / 12);
+  });
+
+  it('automatically sums multiple active loan records and resolves due dates', () => {
+    const liabilities = [
+      {
+        id: 'lib-1',
+        property_id: 'prop-1',
+        name: '1st Mortgage',
+        lender_name: 'BDO',
+        status: 'active',
+        monthly_payment: 25000,
+        due_day: 15,
+      },
+      {
+        id: 'lib-2',
+        property_id: 'prop-1',
+        name: 'Home Improvement Financing',
+        lender_name: 'Security Bank',
+        status: 'active',
+        monthly_payment: 12000,
+        due_day: 5,
+      },
+      // Paid off liability should NOT be counted in active amortization
+      {
+        id: 'lib-3',
+        property_id: 'prop-1',
+        name: 'Settled Bridge Loan',
+        lender_name: 'Metrobank',
+        status: 'paid_off',
+        monthly_payment: 8000,
+        due_day: 20,
+      },
+      // Other property liability should NOT be counted
+      {
+        id: 'lib-4',
+        property_id: 'prop-2',
+        name: 'Other Car Loan',
+        lender_name: 'BPI',
+        status: 'active',
+        monthly_payment: 18000,
+        due_day: 25,
+      },
+    ];
+
+    const fin = calculatePropertyFinancials(property, sampleTransactions, liabilities);
+    expect(fin.monthlyAmortization).toBe(37000); // 25,000 + 12,000 (excluding 8,000 paid_off)
+    expect(fin.computedFromLoans).toBe(true);
+    expect(fin.linkedLoanCount).toBe(2);
+    expect(fin.activeLoansSummary).toHaveLength(2);
+  });
+
+  it('factors in installment payables if present', () => {
+    const payables = [
+      {
+        id: 'loan-1',
+        reason: 'Solar Panel Advance',
+        status: 'unpaid',
+        is_installment: true,
+        monthly_amount: 6000,
+        monthly_due_day: 20,
+      },
+      {
+        id: 'loan-2',
+        reason: 'Paid Cash Advance',
+        status: 'paid',
+        is_installment: true,
+        monthly_amount: 4000,
+      },
+    ];
+
+    const fin = calculatePropertyFinancials(property, sampleTransactions, [], payables);
+    expect(fin.monthlyAmortization).toBe(6000);
+    expect(fin.computedFromLoans).toBe(true);
+    expect(fin.linkedLoanCount).toBe(1);
+  });
+
+  it('calculatePropertyLoanAmortization helper returns exact totals and first due day', () => {
+    const liabilities = [
+      {
+        property_id: 'prop-1',
+        status: 'active',
+        monthly_payment: 32000,
+        due_day: 18,
+      },
+      {
+        property_id: 'prop-1',
+        status: 'active',
+        monthly_payment: 8000,
+        due_day: 22,
+      },
+    ];
+
+    const result = calculatePropertyLoanAmortization(liabilities, 'prop-1');
+    expect(result.monthlyAmortization).toBe(40000);
+    expect(result.dueDay).toBe(18);
+    expect(result.activeLoanCount).toBe(2);
+  });
+});
+
 
 

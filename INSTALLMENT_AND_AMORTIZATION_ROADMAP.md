@@ -240,8 +240,12 @@ Audit and refactor every page and table displaying installment schedules across 
   - Audit Section 3 ("Active Installments & Financing Plans") in [`CardDetailsClient.tsx`](file:///Users/jeunciano/Workstation/Bili/src/app/dashboard/cards/%5Bid%5D/CardDetailsClient.tsx).
   - Verify term progress badge format (e.g., `4 OF 12 PAID`).
   - Verify that opening [`AmortizationScheduleModal.tsx`](file:///Users/jeunciano/Workstation/Bili/src/components/Forms/AmortizationScheduleModal.tsx) allows instant status toggling and immediately updates the card's available limit upon modal close.
-- [x] **Task 5.2**: **Properties & Mortgages Module (`/dashboard/properties/[id]`)**:
-  - Audit mortgage cards in [`PropertyDetailsClient.tsx`](file:///Users/jeunciano/Workstation/Bili/src/app/dashboard/properties/%5Bid%5D/PropertyDetailsClient.tsx).
+- [x] **Task 5.2**: **Properties & Mortgages Module (`/dashboard/properties/[id]`, `/dashboard/properties`)**:
+  - Automatically compute property Monthly Loan Amortization from active linked loan records (`bili_liabilities` & asset payables) in `calculatePropertyFinancials`.
+  - Support multi-loan aggregation (properties with multiple mortgages/auto financing) and exclude paid-off loans.
+  - Automatically synchronize computed amortization and primary due day into `bili_properties` via `syncPropertyLoanAmortization`.
+  - Display auto-computed loan badge (`Auto ({N} loans)`) and individual loan breakdowns on property details card and portfolio view.
+  - Provide auto-computed indicator and fallback sync in [`PropertyModal.tsx`](file:///Users/jeunciano/Workstation/Bili/src/components/Forms/PropertyModal.tsx).
   - Ensure terms progress displays accurately (`X of Y terms paid`).
   - Confirm `AmortizationScheduleModal` operates seamlessly with live server revalidation.
 - [x] **Task 5.3**: **Loans & Receivables Module (`/dashboard/loans/[id]`, `/dashboard/receivables`)**:

@@ -155,10 +155,10 @@ export function PropertyDetailsClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [isDeletingTxId, setIsDeletingTxId] = useState<string | null>(null);
 
-  // Financial calculations
+  // Financial calculations (automatically factoring in linked mortgages/liabilities & payables)
   const financials = useMemo(() => {
-    return calculatePropertyFinancials(property, transactions);
-  }, [property, transactions]);
+    return calculatePropertyFinancials(property, transactions, liabilities, payables);
+  }, [property, transactions, liabilities, payables]);
 
   // Debt & Equity calculations
   const totalLinkedLiabilities = useMemo(() => {
@@ -538,20 +538,43 @@ export function PropertyDetailsClient({
             {/* Monthly Amortization */}
             <div className="p-4 rounded-2xl bg-blue-500/10 text-foreground flex items-center justify-between gap-4">
               <div className="space-y-1">
-                <span className="text-xs font-bold text-blue-900 dark:text-blue-300 block">
-                  Monthly Loan Amortization
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-blue-900 dark:text-blue-300 block">
+                    Monthly Loan Amortization
+                  </span>
+                  {financials.computedFromLoans && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-semibold bg-blue-100/80 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border-blue-300/50">
+                      Auto-computed ({financials.linkedLoanCount} loan{financials.linkedLoanCount === 1 ? '' : 's'})
+                    </Badge>
+                  )}
+                </div>
                 <span className="text-xl font-extrabold text-blue-950 dark:text-blue-200 block">
-                  {formatMoney(property.monthly_amortization)}
+                  {formatMoney(financials.monthlyAmortization)}
                   <span className="text-xs font-normal text-blue-700 dark:text-blue-400 ml-1">/ month</span>
                 </span>
                 <div className="text-xs text-blue-800 dark:text-blue-300">
                   {property.amortization_due_day ? (
                     <span>Due every {property.amortization_due_day}th of the month</span>
+                  ) : financials.amortizationDue ? (
+                    <span>Next Due: {formatDate(financials.amortizationDue.nextDueDate)} ({financials.amortizationDue.label})</span>
                   ) : (
                     <span>No fixed due day set</span>
                   )}
                 </div>
+                {/* Active Loans summary pills */}
+                {financials.activeLoansSummary && financials.activeLoansSummary.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap pt-1 text-[11px]">
+                    {financials.activeLoansSummary.map((loan) => (
+                      <span
+                        key={loan.id}
+                        className="inline-flex items-center gap-1 bg-blue-100/70 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 px-2 py-0.5 rounded-lg font-medium border border-blue-200/60 dark:border-blue-800/50"
+                      >
+                        {loan.lenderName || loan.name}: {formatMoney(loan.monthlyPayment)}/mo
+                        {loan.dueDay ? ` (Due ${loan.dueDay}th)` : ''}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="text-right shrink-0">
@@ -570,7 +593,7 @@ export function PropertyDetailsClient({
                 ) : (
                   <span className="text-xs text-muted-foreground">N/A</span>
                 )}
-                {Number(property.monthly_amortization || 0) > 0 && (
+                {Number(financials.monthlyAmortization || 0) > 0 && (
                   <button
                     onClick={() => handleOpenTx('expense')}
                     className="block text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline mt-1.5 cursor-pointer"
@@ -1337,6 +1360,7 @@ export function PropertyDetailsClient({
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         property={property}
+        liabilities={liabilities}
       />
 
       {/* Property Transaction Modal */}
