@@ -1,7 +1,7 @@
 // Tenvi Progressive Web App Service Worker
-const CACHE_NAME = 'tenvi-pwa-v2';
+const CACHE_NAME = 'tenvi-pwa-v3';
 
-// Core static assets to pre-cache on install
+// Core static shell assets to pre-cache on install (never include /_next/ dynamic chunks)
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
@@ -27,7 +27,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event: Clean up obsolete caches and claim clients immediately
+// Activate event: Clean up all obsolete caches (including v1, v2) and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
@@ -43,7 +43,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event: Strategy router satisfying PWA criteria without stale financial data
+// Fetch event: Strategy router satisfying PWA criteria without intercepting Next.js internal chunks
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
@@ -52,19 +52,15 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (!url.protocol.startsWith('http')) return;
 
-  // 0. Completely bypass Service Worker in local development and for Turbopack/HMR to prevent stale chunk caching
-  if (
+  // 1. Bypass Service Worker entirely for:
+  // - Next.js internal paths (/_next/*) to prevent stale chunk errors and module factory mismatches
+  // - Local development (localhost, 127.0.0.1, custom port)
+  // - APIs, Supabase, Google endpoints, and Server Actions
+  const isBypass =
+    url.pathname.startsWith('/_next/') ||
     url.hostname === 'localhost' ||
     url.hostname === '127.0.0.1' ||
-    url.pathname.includes('turbopack') ||
-    url.pathname.startsWith('/_next/webpack-hmr') ||
-    url.pathname.startsWith('/_next/static/development')
-  ) {
-    return;
-  }
-
-  // 1. Bypass Service Worker entirely for dynamic data, Supabase, APIs, Next.js server actions
-  const isBypassRoute =
+    Boolean(url.port) ||
     url.pathname.startsWith('/api/') ||
     url.pathname.includes('/auth/') ||
     url.hostname.includes('supabase.co') ||
@@ -72,17 +68,17 @@ self.addEventListener('fetch', (event) => {
     request.headers.get('accept')?.includes('application/json') ||
     request.headers.get('next-action') !== null;
 
-  if (isBypassRoute) {
+  if (isBypass) {
     return;
   }
 
-  // 2. Static Immutable Assets (Next.js chunks, fonts, images): Cache-first with network fallback
+  // 2. Static Visual Assets (icons, images, fonts): Cache-first with network fallback
   const isStaticAsset =
-    url.pathname.startsWith('/_next/static/') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.jpg') ||
     url.pathname.endsWith('.svg') ||
     url.pathname.endsWith('.ico') ||
+    url.pathname.endsWith('.webp') ||
     url.pathname.endsWith('.woff2');
 
   if (isStaticAsset) {
@@ -124,7 +120,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 4. Fallback for other GET requests
+  // 4. Default: Network with cache fallback
   event.respondWith(
     caches.match(request).then((cached) => cached || fetch(request))
   );

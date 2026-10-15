@@ -12,7 +12,8 @@ export function PwaRegister() {
     const isDev =
       process.env.NODE_ENV === 'development' ||
       window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1';
+      window.location.hostname === '127.0.0.1' ||
+      Boolean(window.location.port);
 
     if (isDev) {
       // In local development, unregister any active service workers and clear caches
@@ -26,6 +27,17 @@ export function PwaRegister() {
         });
       }
       return;
+    }
+
+    // In production, actively clear obsolete caches that may have captured old Next.js chunks
+    if ('caches' in window) {
+      caches.keys().then((keys) => {
+        keys.forEach((key) => {
+          if (key === 'tenvi-pwa-v1' || key === 'tenvi-pwa-v2') {
+            caches.delete(key);
+          }
+        });
+      });
     }
 
     const registerSW = async () => {
