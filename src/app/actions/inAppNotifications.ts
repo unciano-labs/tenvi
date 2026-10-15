@@ -20,7 +20,9 @@ export interface InAppNotification {
 /**
  * Retrieves the latest in-app notifications for the current authenticated user.
  */
-export async function getInAppNotificationsAction(): Promise<{
+export async function getInAppNotificationsAction(options?: {
+  limit?: number;
+}): Promise<{
   notifications: InAppNotification[];
   unreadCount: number;
   error?: string;
@@ -33,6 +35,8 @@ export async function getInAppNotificationsAction(): Promise<{
     return { notifications: [], unreadCount: 0 };
   }
 
+  const queryLimit = Math.min(Math.max(options?.limit || 50, 1), 100);
+
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -41,7 +45,7 @@ export async function getInAppNotificationsAction(): Promise<{
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(20);
+      .limit(queryLimit);
 
     if (error) throw error;
 
