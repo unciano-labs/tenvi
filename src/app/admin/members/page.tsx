@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
+import Link from 'next/link';
 import {
   Users,
   Search,
@@ -20,6 +21,7 @@ import {
   Wallet,
   Clock,
   RotateCcw,
+  Megaphone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -162,16 +164,26 @@ export default function AdminMembersPage() {
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fetchMembers()}
-          disabled={loading}
-          className="gap-1.5 self-start sm:self-auto cursor-pointer"
-        >
-          <RotateCcw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchMembers()}
+            disabled={loading}
+            className="gap-1.5 cursor-pointer"
+          >
+            <RotateCcw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            render={<Link href="/admin/broadcast" />}
+            size="sm"
+            className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs cursor-pointer"
+          >
+            <Megaphone className="size-3.5" />
+            Email Blast to All
+          </Button>
+        </div>
       </div>
 
       {/* Filter & Search Bar */}

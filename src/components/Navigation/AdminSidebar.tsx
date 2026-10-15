@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   LogOut,
   ShieldAlert,
+  Megaphone,
 } from 'lucide-react';
 import { TenviIcon } from '@/components/ui/TenviIcon';
 import { logoutAction } from '@/app/actions/auth';
@@ -29,6 +30,12 @@ export const ADMIN_NAV_ITEMS = [
     href: '/admin/members',
     icon: Users,
     description: 'Manage accounts & inspect audit trails',
+  },
+  {
+    label: 'Email Broadcast',
+    href: '/admin/broadcast',
+    icon: Megaphone,
+    description: 'Send announcements & email blasts to members',
   },
   {
     label: 'Feedback Inbox',
