@@ -47,6 +47,7 @@ const TransactionModal = dynamic(
 interface CardsClientProps {
   creditCards: CreditCard[];
   linkedLoans?: any[];
+  linkedLiabilities?: any[];
   cardTransactions?: any[];
   categories?: Category[];
   initialSpendingMap?: Record<string, CardSpendingSummary>;
@@ -62,6 +63,7 @@ interface CardsClientProps {
 export function CardsClient({
   creditCards,
   linkedLoans = [],
+  linkedLiabilities = [],
   cardTransactions = [],
   categories = [],
   initialSpendingMap,
@@ -121,12 +123,12 @@ export function CardsClient({
     }
 
     activeCards.forEach((card) => {
-      const spending = calculateCardSpending(card, cardTransactions, linkedLoans);
+      const spending = calculateCardSpending(card, cardTransactions, linkedLoans, linkedLiabilities);
       map.set(card.id, spending);
     });
 
     return map;
-  }, [activeCards, cardTransactions, linkedLoans, initialSpendingMap, removedCardIds]);
+  }, [activeCards, cardTransactions, linkedLoans, linkedLiabilities, initialSpendingMap, removedCardIds]);
 
   // Overall totals
   const totalLimit = useMemo(() => {
@@ -155,8 +157,8 @@ export function CardsClient({
   // Optimal card to swipe calculation (memoized)
   const optimalResult = useMemo(() => {
     if (initialOptimalResult && removedCardIds.length === 0) return initialOptimalResult;
-    return calculateOptimalCardToSwipe(activeCards, cardTransactions, linkedLoans);
-  }, [activeCards, cardTransactions, linkedLoans, initialOptimalResult, removedCardIds]);
+    return calculateOptimalCardToSwipe(activeCards, cardTransactions, linkedLoans, linkedLiabilities);
+  }, [activeCards, cardTransactions, linkedLoans, linkedLiabilities, initialOptimalResult, removedCardIds]);
 
   // Pay These Soon items (balances due within 3 days or overdue, excluding paid items)
   const dueSoonCards = useMemo(() => {

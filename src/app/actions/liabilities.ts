@@ -154,6 +154,15 @@ export async function updateLiabilityAction(data: any) {
   const validCreditCardId = validLinkedType === 'credit_card' && creditCardId ? creditCardId : null;
   const validSavingsId = validLinkedType === 'savings' && savingsId ? savingsId : null;
 
+  // Fetch previous liability to know if a credit card was previously linked
+  const { data: previousLiability } = await supabase
+    .from('bili_liabilities')
+    .select('credit_card_id, property_id')
+    .eq('id', liabilityId)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
   const { error } = await supabase
     .from('bili_liabilities')
     .update({
@@ -191,6 +200,13 @@ export async function updateLiabilityAction(data: any) {
   revalidatePath('/dashboard/properties');
   if (propertyId) {
     revalidatePath(`/dashboard/properties/${propertyId}`);
+  }
+  if (previousLiability?.property_id && previousLiability.property_id !== propertyId) {
+    revalidatePath(`/dashboard/properties/${previousLiability.property_id}`);
+  }
+  if (previousLiability?.credit_card_id) {
+    revalidatePath('/dashboard/cards');
+    revalidatePath(`/dashboard/cards/${previousLiability.credit_card_id}`);
   }
   if (validCreditCardId) {
     revalidatePath('/dashboard/cards');
@@ -246,6 +262,16 @@ export async function deleteLiabilityAction(id: string) {
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/properties');
+  if (liability?.property_id) {
+    revalidatePath(`/dashboard/properties/${liability.property_id}`);
+  }
+  if (liability?.credit_card_id) {
+    revalidatePath('/dashboard/cards');
+    revalidatePath(`/dashboard/cards/${liability.credit_card_id}`);
+  }
+  if (liability?.savings_id) {
+    revalidatePath('/dashboard/savings');
+  }
   return { success: true };
 }
 
@@ -378,7 +404,11 @@ export async function recordLiabilityPaymentAction(data: LiabilityPaymentInput) 
   if (liability.property_id) {
     revalidatePath(`/dashboard/properties/${liability.property_id}`);
   }
-  if (savingsAccountId) {
+  if (liability.credit_card_id) {
+    revalidatePath('/dashboard/cards');
+    revalidatePath(`/dashboard/cards/${liability.credit_card_id}`);
+  }
+  if (savingsAccountId || liability.savings_id) {
     revalidatePath('/dashboard/savings');
     revalidatePath('/dashboard/transactions');
   }

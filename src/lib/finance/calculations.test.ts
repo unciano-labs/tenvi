@@ -520,6 +520,43 @@ describe('calculateCardSpending()', () => {
     expect(result.totalUsed).toBe(7000);
     expect(result.availableToSpend).toBe(43000);
   });
+
+  it('deducts card-linked mortgages and debt liabilities from available credit limit', () => {
+    // Card with ₱100,000 credit limit
+    const card = { id: 'card-c', credit_limit: 100000 };
+    const transactions = [
+      { id: '1', credit_card_id: 'card-c', kind: 'expense', amount: 10000, loan_id: null },
+    ];
+    // Active Credit2Cash loan on card with ₱60,000 remaining principal
+    const liabilities = [
+      { id: 'lib-1', credit_card_id: 'card-c', current_principal_balance: 60000, status: 'active' },
+      { id: 'lib-2', credit_card_id: 'card-c', current_principal_balance: 0, status: 'paid_off' },
+      { id: 'lib-3', credit_card_id: 'other-card', current_principal_balance: 20000, status: 'active' },
+    ];
+
+    const result = calculateCardSpending(card, transactions, [], liabilities);
+    expect(result.directSpend).toBe(10000);
+    expect(result.loansSpend).toBe(60000); // Only active liability on this card
+    expect(result.totalUsed).toBe(70000); // 10000 + 60000
+    expect(result.availableToSpend).toBe(30000); // 100000 - 70000
+    expect(result.utilizationPercent).toBe(70); // 70% utilization
+  });
+
+  it('aggregates both p2p loans and mortgage liabilities linked to the same card', () => {
+    const card = { id: 'card-d', credit_limit: 200000 };
+    const p2pLoans = [
+      { id: 'p2p-1', credit_card_id: 'card-d', balance_remaining: 25000, status: 'active' },
+    ];
+    const liabilities = [
+      { id: 'lib-1', credit_card_id: 'card-d', current_principal_balance: 75000, status: 'active' },
+    ];
+
+    const result = calculateCardSpending(card, [], p2pLoans, liabilities);
+    expect(result.loansSpend).toBe(100000); // 25000 + 75000
+    expect(result.totalUsed).toBe(100000);
+    expect(result.availableToSpend).toBe(100000); // 200000 - 100000
+    expect(result.utilizationPercent).toBe(50);
+  });
 });
 
 

@@ -26,6 +26,7 @@ export default async function CardsPage() {
     { data: creditCards },
     { data: statements },
     { data: loans },
+    { data: liabilities },
     { data: transactions },
     { data: categories },
   ] = await Promise.all([
@@ -48,6 +49,14 @@ export default async function CardsPage() {
     supabase
       .from('bili_loans')
       .select('id, amount, balance_remaining, reason, credit_card_id, status, contact:bili_contacts(name)')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user?.id)
+      .is('deleted_at', null)
+      .not('credit_card_id', 'is', null),
+
+    supabase
+      .from('bili_liabilities')
+      .select('id, name, lender_name, liability_type, original_principal, current_principal_balance, term_months, monthly_payment, due_day, credit_card_id, status')
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
       .is('deleted_at', null)
@@ -95,7 +104,7 @@ export default async function CardsPage() {
   cardsWithStatements.forEach((card) => {
     totalLimit += Number(card.credit_limit || 0);
 
-    const spending = calculateCardSpending(card, transactions || [], loans || []);
+    const spending = calculateCardSpending(card, transactions || [], loans || [], liabilities || []);
     totalUsed += spending.totalUsed;
     boughtForOthers += spending.loansSpend;
 
@@ -106,7 +115,9 @@ export default async function CardsPage() {
   const initialOptimalResult = calculateOptimalCardToSwipe(
     cardsWithStatements,
     transactions || [],
-    loans || []
+    loans || [],
+    undefined,
+    liabilities || []
   );
 
   // Server-computed pay these soon items (hidden if all cards paid or no dues incoming in 3 days)
@@ -142,6 +153,7 @@ export default async function CardsPage() {
     <CardsClient
       creditCards={cardsWithStatements}
       linkedLoans={loans || []}
+      linkedLiabilities={liabilities || []}
       cardTransactions={transactions || []}
       categories={categories || []}
       initialSpendingMap={spendingMap}

@@ -91,6 +91,19 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
     .eq('credit_card_id', id)
     .is('deleted_at', null);
 
+  // 3b. Fetch mortgages / liabilities linked to this credit card
+  const { data: liabilities } = await supabase
+    .from('bili_liabilities')
+    .select(`
+      *,
+      property:bili_properties(id, name, property_type)
+    `)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .eq('credit_card_id', id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
   // 4. Fetch categories for modal
   const { data: categories } = await supabase
     .from('bili_categories')
@@ -112,6 +125,7 @@ export default async function CardDetailPage({ params }: CardDetailPageProps) {
       card={card}
       transactions={transactions || []}
       linkedLoans={loans || []}
+      linkedLiabilities={liabilities || []}
       categories={categories || []}
       allCards={allCards || []}
     />

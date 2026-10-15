@@ -297,6 +297,9 @@ export async function createLoanAction(data: any) {
   revalidatePath('/dashboard/receivables');
   revalidatePath('/dashboard/transactions');
   revalidatePath('/dashboard/cards');
+  if (creditCardId) {
+    revalidatePath(`/dashboard/cards/${creditCardId}`);
+  }
   return { success: true, loanId: newLoan.id };
 }
 
@@ -315,7 +318,7 @@ export async function toggleLoanInstallmentPaidAction(
   // Fetch installment details and borrower name for transaction traceability
   const { data: installment } = await supabase
     .from('bili_loan_installments')
-    .select('*, loan:bili_loans(id, contact:bili_contacts(name))')
+    .select('*, loan:bili_loans(id, credit_card_id, contact:bili_contacts(name))')
     .eq('id', installmentId)
     .eq('loan_id', loanId)
     .single();
@@ -425,6 +428,11 @@ export async function toggleLoanInstallmentPaidAction(
   revalidatePath('/dashboard/receivables');
   revalidatePath('/dashboard/transactions');
   revalidatePath(`/dashboard/loans/${loanId}`);
+  const cardId = (installment as any)?.loan?.credit_card_id;
+  if (cardId) {
+    revalidatePath('/dashboard/cards');
+    revalidatePath(`/dashboard/cards/${cardId}`);
+  }
   return { success: true };
 }
 
@@ -446,7 +454,7 @@ export async function recordLoanPaymentAction(data: any) {
   // Fetch current loan
   const { data: loan, error: fetchErr } = await supabase
     .from('bili_loans')
-    .select('id, amount, balance_remaining, contact:bili_contacts(name)')
+    .select('id, amount, balance_remaining, credit_card_id, contact:bili_contacts(name)')
     .eq('id', loanId)
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
@@ -511,6 +519,10 @@ export async function recordLoanPaymentAction(data: any) {
   revalidatePath('/dashboard/receivables');
   revalidatePath('/dashboard/transactions');
   revalidatePath(`/dashboard/loans/${loanId}`);
+  if (loan.credit_card_id) {
+    revalidatePath('/dashboard/cards');
+    revalidatePath(`/dashboard/cards/${loan.credit_card_id}`);
+  }
   return { success: true };
 }
 
@@ -568,6 +580,9 @@ export async function deleteLoanAction(id: string) {
   revalidatePath('/dashboard/receivables');
   revalidatePath('/dashboard/transactions');
   revalidatePath('/dashboard/cards');
+  if (loan?.credit_card_id) {
+    revalidatePath(`/dashboard/cards/${loan.credit_card_id}`);
+  }
   return { success: true };
 }
 
@@ -708,6 +723,10 @@ export async function setupLoanInstallmentsAction({
   revalidatePath('/dashboard/loans');
   revalidatePath('/dashboard/receivables');
   revalidatePath(`/dashboard/loans/${loanId}`);
+  if (loan.credit_card_id) {
+    revalidatePath('/dashboard/cards');
+    revalidatePath(`/dashboard/cards/${loan.credit_card_id}`);
+  }
   return { success: true, count: schedule.length };
 }
 
@@ -1014,6 +1033,12 @@ export async function updateLoanAction(data: any) {
   revalidatePath('/dashboard/receivables');
   revalidatePath(`/dashboard/loans/${loanId}`);
   revalidatePath('/dashboard/cards');
+  if (creditCardId) {
+    revalidatePath(`/dashboard/cards/${creditCardId}`);
+  }
+  if (existingLoan.credit_card_id && existingLoan.credit_card_id !== creditCardId) {
+    revalidatePath(`/dashboard/cards/${existingLoan.credit_card_id}`);
+  }
   revalidatePath('/dashboard/transactions');
 
   return { success: true };

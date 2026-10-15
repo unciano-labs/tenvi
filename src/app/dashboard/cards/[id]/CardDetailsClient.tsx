@@ -24,11 +24,15 @@ import {
   UploadCloud,
   Loader2,
   AlertTriangle,
+  Building2,
+  Car,
+  Landmark,
+  Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { deleteCreditCardAction } from '@/app/actions/cards';
 import { deleteTransactionAction } from '@/app/actions/transactions';
-import { CreditCard, Transaction, Category, Loan } from '@/types';
+import { CreditCard, Transaction, Category, Loan, Liability } from '@/types';
 import {
   formatMoney,
   formatDate,
@@ -83,6 +87,7 @@ interface CardDetailsClientProps {
   card: CreditCard;
   transactions: Transaction[];
   linkedLoans?: Loan[];
+  linkedLiabilities?: Liability[];
   categories: Category[];
   allCards: CreditCard[];
 }
@@ -91,6 +96,7 @@ export function CardDetailsClient({
   card,
   transactions,
   linkedLoans = [],
+  linkedLiabilities = [],
   categories,
   allCards,
 }: CardDetailsClientProps) {
@@ -127,14 +133,14 @@ export function CardDetailsClient({
     totalUsed: totalUtilized,
     availableToSpend: availablePower,
     utilizationPercent,
-  } = calculateCardSpending(card, currentTransactions, linkedLoans);
+  } = calculateCardSpending(card, currentTransactions, linkedLoans, linkedLiabilities);
   const creditLimit = Number(card.credit_limit || 0);
   const usageInfo = getUsageLevel(utilizationPercent);
   const dueInfo = calculateNextDueDate(card.due_day);
   const urgencyInfo = getCardUrgency(dueInfo.nextDueDate, totalUtilized);
 
   // Float calculation for today
-  const floatResult = calculateOptimalCardToSwipe([card], currentTransactions, linkedLoans, new Date());
+  const floatResult = calculateOptimalCardToSwipe([card], currentTransactions, linkedLoans, new Date(), linkedLiabilities);
   const thisCardRec = floatResult.bestCard;
 
   const handleConfirmDeleteTx = async () => {
@@ -412,7 +418,7 @@ export function CardDetailsClient({
                   <>
                     Direct purchases: <strong className="text-foreground">{formatMoney(totalDirectSpend)}</strong> ({currentTransactions.length})
                     {totalSwipedLoansRemaining > 0 && (
-                      <span className="text-warning-soft-foreground font-medium"> • {formatMoney(totalSwipedLoansRemaining)} bought for others</span>
+                      <span className="text-warning-soft-foreground font-medium"> • {formatMoney(totalSwipedLoansRemaining)} in loans & installments</span>
                     )}
                   </>
                 ) : (
@@ -428,20 +434,20 @@ export function CardDetailsClient({
         </Card>
       </div>
 
-      {/* 3. Bought for Others / Connected Installment Loans */}
-      {linkedLoans.length > 0 && (
+      {/* 3. Card Installments & Linked Loans */}
+      {(linkedLoans.length > 0 || linkedLiabilities.length > 0) && (
         <Card className="shadow-card">
           <CardHeader className="pb-3 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <HandCoins className="size-4" />
+                <Layers className="size-4" />
               </div>
               <div>
                 <CardTitle className="text-base font-semibold leading-snug">
-                  Bought for Others on this Card ({linkedLoans.length})
+                  Card Installments & Linked Loans ({linkedLoans.length + linkedLiabilities.length})
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Purchases charged to this card line that friends/relatives are paying back.
+                  Active mortgages, asset loans, and installment purchases tied to this credit limit.
                 </CardDescription>
               </div>
             </div>
@@ -453,30 +459,176 @@ export function CardDetailsClient({
 
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {linkedLoans.map((loan) => (
-                <Link
-                  key={loan.id}
-                  href={`/dashboard/loans/${loan.id}`}
-                  className="p-3 rounded-2xl bg-muted/60 hover:bg-muted transition-colors flex items-center justify-between group text-xs"
-                >
-                  <div className="min-w-0 pr-2">
-                    <p className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                      {loan.contact?.name || 'Borrower'} {loan.reason ? `• ${loan.reason}` : ''}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Original: {formatMoney(loan.amount)}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="font-extrabold text-foreground block">
-                      {formatMoney(loan.balance_remaining)}
-                    </span>
-                    <span className="text-xs text-primary font-semibold">
-                      Schedule →
-                    </span>
-                  </div>
-                </Link>
-              ))}
+              {/* Linked Mortgages & Financed Liabilities */}
+              {linkedLiabilities.map((lib) => {
+                const isPaid = lib.status === 'paid_off' || Number(lib.current_principal_balance) <= 0;
+                const remainingBalance = Number(lib.current_principal_balance || 0);
+                const originalPrincipal = Number(lib.original_principal || 0);
+                const monthlyPayment = Number(lib.monthly_payment || 0);
+
+                let remainingTermsText = '';
+                if (lib.term_months && monthlyPayment > 0 && !isPaid) {
+                  const estimatedRemaining = Math.min(
+                    lib.term_months,
+                    Math.max(1, Math.ceil(remainingBalance / monthlyPayment))
+                  );
+                  remainingTermsText = `${estimatedRemaining} of ${lib.term_months} mos left`;
+                } else if (lib.term_months) {
+                  remainingTermsText = `${lib.term_months} mos total`;
+                }
+
+                const targetUrl = lib.property_id
+                  ? `/dashboard/properties/${lib.property_id}`
+                  : '/dashboard/properties';
+
+                return (
+                  <Link
+                    key={lib.id}
+                    href={targetUrl}
+                    className="p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-all border border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group text-xs"
+                  >
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="size-9 rounded-xl bg-background border border-border/60 flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/40 transition-colors">
+                        {lib.liability_type === 'mortgage' ? (
+                          <Building2 className="size-4 text-emerald-500" />
+                        ) : lib.liability_type === 'auto_loan' ? (
+                          <Car className="size-4 text-blue-500" />
+                        ) : (
+                          <Landmark className="size-4 text-amber-500" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                            {lib.name}
+                          </p>
+                          {lib.property?.name && (
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-normal bg-background/50">
+                              <Building2 className="size-2.5 mr-1" />
+                              {lib.property.name}
+                            </Badge>
+                          )}
+                          {isPaid ? (
+                            <Badge variant="soft" className="bg-emerald-500/10 text-emerald-600 text-[10px] py-0 px-1.5">
+                              Paid Off
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-mono">
+                              {lib.liability_type.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2.5 text-muted-foreground mt-1 flex-wrap">
+                          {monthlyPayment > 0 && (
+                            <span className="font-semibold text-foreground">
+                              {formatMoney(monthlyPayment)} <span className="font-normal text-muted-foreground">/ mo</span>
+                            </span>
+                          )}
+                          {remainingTermsText && (
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Calendar className="size-3" />
+                              {remainingTermsText}
+                            </span>
+                          )}
+                          <span>Original: {formatMoney(originalPrincipal)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-border/40">
+                      <div>
+                        <span className="font-extrabold text-foreground block text-sm sm:text-xs">
+                          {formatMoney(remainingBalance)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground hidden sm:block">
+                          Remaining balance
+                        </span>
+                      </div>
+                      <span className="text-xs text-primary font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform sm:mt-1">
+                        View Loan →
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+
+              {/* Linked P2P Loans / Swipes */}
+              {linkedLoans.map((loan) => {
+                const isPaid = loan.status === 'paid' || Number(loan.balance_remaining) <= 0;
+                const remainingBalance = Number(loan.balance_remaining || 0);
+                const originalAmount = Number(loan.amount || 0);
+                const monthlyAmort = loan.monthly_amount || (loan.installment_months ? originalAmount / loan.installment_months : null);
+
+                let remainingTermsText = '';
+                if (loan.installment_months && monthlyAmort && !isPaid) {
+                  const estimatedRemaining = Math.min(
+                    loan.installment_months,
+                    Math.max(1, Math.ceil(remainingBalance / monthlyAmort))
+                  );
+                  remainingTermsText = `${estimatedRemaining} of ${loan.installment_months} mos left`;
+                } else if (loan.installment_months) {
+                  remainingTermsText = `${loan.installment_months} mos total`;
+                }
+
+                return (
+                  <Link
+                    key={loan.id}
+                    href={`/dashboard/loans/${loan.id}`}
+                    className="p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-all border border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group text-xs"
+                  >
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="size-9 rounded-xl bg-background border border-border/60 flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/40 transition-colors">
+                        <HandCoins className="size-4 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                            {loan.contact?.name || 'Borrower'} {loan.reason ? `• ${loan.reason}` : ''}
+                          </p>
+                          {loan.is_installment && (
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-primary/5 text-primary border-primary/20">
+                              INSTALLMENT
+                            </Badge>
+                          )}
+                          {isPaid ? (
+                            <Badge variant="soft" className="bg-emerald-500/10 text-emerald-600 text-[10px] py-0 px-1.5">
+                              Paid
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <div className="flex items-center gap-2.5 text-muted-foreground mt-1 flex-wrap">
+                          {monthlyAmort && monthlyAmort > 0 && (
+                            <span className="font-semibold text-foreground">
+                              {formatMoney(monthlyAmort)} <span className="font-normal text-muted-foreground">/ mo</span>
+                            </span>
+                          )}
+                          {remainingTermsText && (
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Calendar className="size-3" />
+                              {remainingTermsText}
+                            </span>
+                          )}
+                          <span>Original: {formatMoney(originalAmount)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-border/40">
+                      <div>
+                        <span className="font-extrabold text-foreground block text-sm sm:text-xs">
+                          {formatMoney(remainingBalance)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground hidden sm:block">
+                          Remaining balance
+                        </span>
+                      </div>
+                      <span className="text-xs text-primary font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform sm:mt-1">
+                        Schedule →
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

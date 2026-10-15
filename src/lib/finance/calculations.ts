@@ -536,6 +536,8 @@ export interface OptimalCardResult {
 export interface CardSpendingSummary {
   directSpend: number;
   loansSpend: number;
+  p2pLoansSpend?: number;
+  liabilitiesSpend?: number;
   totalUsed: number;
   availableToSpend: number;
   utilizationPercent: number;
@@ -552,14 +554,15 @@ export interface CardSpendingSummary {
  * Rules:
  * 1. directSpend: sum of expense transactions with this card, excluding loan-linked expenses (!t.loan_id)
  *    to prevent double counting with loan balances.
- * 2. loansSpend: sum of unpaid loan balances (status !== 'paid') swiped on this card.
+ * 2. loansSpend: sum of active/unpaid loan balances (p2p loans and mortgage/debt liabilities) linked to this card.
  * 3. totalUsed = directSpend + loansSpend.
  * 4. availableToSpend = Math.max(0, creditLimit - totalUsed).
  */
 export function calculateCardSpending(
   card: { id: string; credit_limit?: number | string | null },
   transactions: Array<{ credit_card_id?: string | null; kind?: string | null; amount?: number | string | null; loan_id?: string | null }> = [],
-  loans: Array<{ credit_card_id?: string | null; balance_remaining?: number | string | null; status?: string | null }> = []
+  loans: Array<{ id?: string; credit_card_id?: string | null; balance_remaining?: number | string | null; current_principal_balance?: number | string | null; status?: string | null }> = [],
+  liabilities: Array<{ id?: string; credit_card_id?: string | null; current_principal_balance?: number | string | null; status?: string | null }> = []
 ): CardSpendingSummary {
   const cardId = card?.id;
   const creditLimit = Number(card?.credit_limit || 0);
@@ -573,22 +576,42 @@ export function calculateCardSpending(
     })
     .reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
-  const hasAnyLoanCardId = (loans || []).some((l) => Boolean(l.credit_card_id));
-  const loansSpend = (loans || [])
-    .filter((l) => {
-      if (hasAnyLoanCardId && l.credit_card_id !== cardId) return false;
-      return l.status !== 'paid';
-    })
-    .reduce((sum, l) => sum + Number(l.balance_remaining || 0), 0);
+  const countedIds = new Set<string>();
 
-  const totalUsed = directSpend + loansSpend;
+  const hasAnyLoanCardId = (loans || []).some((l) => Boolean(l.credit_card_id));
+  let p2pLoansSpend = 0;
+  (loans || []).forEach((l) => {
+    if (hasAnyLoanCardId && l.credit_card_id !== cardId) return;
+    const isPaid = l.status === 'paid' || l.status === 'paid_off';
+    if (!isPaid) {
+      if (l.id) countedIds.add(l.id);
+      const balance = Number(l.current_principal_balance ?? l.balance_remaining ?? 0);
+      p2pLoansSpend += balance;
+    }
+  });
+
+  const hasAnyLiabilityCardId = (liabilities || []).some((l) => Boolean(l.credit_card_id));
+  let liabilitiesSpend = 0;
+  (liabilities || []).forEach((lib) => {
+    if (lib.id && countedIds.has(lib.id)) return;
+    if (hasAnyLiabilityCardId && lib.credit_card_id !== cardId) return;
+    const isPaid = lib.status === 'paid_off' || Number(lib.current_principal_balance || 0) <= 0;
+    if (!isPaid) {
+      liabilitiesSpend += Number(lib.current_principal_balance || 0);
+    }
+  });
+
+  const totalLoansSpend = p2pLoansSpend + liabilitiesSpend;
+  const totalUsed = directSpend + totalLoansSpend;
   const availableToSpend = Math.max(0, creditLimit - totalUsed);
   const utilizationPercent =
     creditLimit > 0 ? Math.min(100, Math.round((totalUsed / creditLimit) * 100)) : 0;
 
   return {
     directSpend,
-    loansSpend,
+    loansSpend: totalLoansSpend,
+    p2pLoansSpend,
+    liabilitiesSpend,
     totalUsed,
     availableToSpend,
     utilizationPercent,
@@ -603,8 +626,23 @@ export function calculateOptimalCardToSwipe(
   cards: any[],
   transactions: any[] = [],
   linkedLoans: any[] = [],
-  referenceDate: Date = getTodayManila()
+  referenceDateOrLiabilities?: Date | any[],
+  optionalLiabilities?: any[]
 ): OptimalCardResult {
+  let referenceDate: Date;
+  let linkedLiabilities: any[] = [];
+
+  if (referenceDateOrLiabilities instanceof Date) {
+    referenceDate = referenceDateOrLiabilities;
+    linkedLiabilities = optionalLiabilities || [];
+  } else if (Array.isArray(referenceDateOrLiabilities)) {
+    referenceDate = getTodayManila();
+    linkedLiabilities = referenceDateOrLiabilities;
+  } else {
+    referenceDate = getTodayManila();
+    linkedLiabilities = optionalLiabilities || [];
+  }
+
   const activeCards = (cards || []).filter((c) => c && c.is_active !== false);
 
   const formatISO = (d: Date) =>
@@ -693,7 +731,7 @@ export function calculateOptimalCardToSwipe(
       totalUsed: totalUtilized,
       availableToSpend: availablePower,
       utilizationPercent,
-    } = calculateCardSpending(card, transactions, linkedLoans);
+    } = calculateCardSpending(card, transactions, linkedLoans, linkedLiabilities);
 
     // Determine recommendation tier and advice
     let recommendationTier: 'optimal' | 'good' | 'caution' = 'good';
