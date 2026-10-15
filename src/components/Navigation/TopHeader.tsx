@@ -12,8 +12,12 @@ import {
   Download, 
   HelpCircle,
   User,
-  ChevronDown
+  ChevronDown,
+  ShieldAlert,
+  MessageSquare,
+  LifeBuoy,
 } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
 import { TenviIcon } from '@/components/ui/TenviIcon';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,15 +46,18 @@ import { logoutAction } from '@/app/actions/auth';
 import { ThemeQuickToggle } from '@/components/ui/theme-toggle';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { GlobalSearchDialog } from './GlobalSearchDialog';
+import { FeedbackModal } from '@/components/Forms/FeedbackModal';
 
 interface TopHeaderProps {
   userName: string;
   userEmail: string;
+  userRole?: 'admin' | 'member';
 }
 
-export function TopHeader({ userName, userEmail }: TopHeaderProps) {
+export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const pathname = usePathname();
   const initial = (userName || userEmail || 'U').charAt(0).toUpperCase();
 
@@ -184,6 +191,18 @@ export function TopHeader({ userName, userEmail }: TopHeaderProps) {
 
         {/* Right side controls */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Quick-Switch to Admin Panel for Administrators */}
+          {userRole === 'admin' && (
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-2xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition-colors shadow-xs"
+              title="Switch to Admin Control Plane"
+            >
+              <ShieldAlert className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="hidden sm:inline">Admin Panel</span>
+            </Link>
+          )}
+
           {/* Friendly helper tooltip for non-tech users */}
           <Tooltip>
             <TooltipTrigger
@@ -219,27 +238,8 @@ export function TopHeader({ userName, userEmail }: TopHeaderProps) {
             </TooltipContent>
           </Tooltip>
 
-          {/* Notification Bell */}
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  nativeButton={false}
-                  render={<Link href="/dashboard/settings" />}
-                  className="relative size-8 sm:size-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
-                  aria-label="Alerts and reminders"
-                />
-              }
-            >
-              <Bell className="size-4" />
-              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              View bill reminders and notifications
-            </TooltipContent>
-          </Tooltip>
+          {/* Real-time In-App Notification Bell */}
+          <NotificationBell />
 
           {/* User Profile Dropdown Menu */}
           <DropdownMenu>
@@ -259,8 +259,8 @@ export function TopHeader({ userName, userEmail }: TopHeaderProps) {
                 <span className="text-xs font-bold text-foreground leading-tight max-w-[100px] truncate">
                   {userName || 'Account'}
                 </span>
-                <span className="text-3xs text-muted-foreground leading-none">
-                  Member
+                <span className={`text-3xs leading-none ${userRole === 'admin' ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-muted-foreground'}`}>
+                  {userRole === 'admin' ? 'Administrator' : 'Member'}
                 </span>
               </div>
               <ChevronDown className="size-3 text-muted-foreground ml-0.5" />
@@ -268,10 +268,31 @@ export function TopHeader({ userName, userEmail }: TopHeaderProps) {
 
             <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl shadow-lift border border-border/60">
               <DropdownMenuLabel className="px-2 py-1.5">
-                <p className="text-xs font-bold text-foreground truncate">{userName}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-foreground truncate">{userName}</p>
+                  {userRole === 'admin' && (
+                    <span className="px-1.5 py-0.5 text-3xs font-extrabold bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded">
+                      ADMIN
+                    </span>
+                  )}
+                </div>
                 <p className="text-2xs text-muted-foreground font-normal truncate">{userEmail}</p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-1.5" />
+
+              {/* Admin Mode Switcher Item */}
+              {userRole === 'admin' && (
+                <>
+                  <DropdownMenuItem
+                    className="rounded-lg px-2 py-1.5 text-xs text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 hover:bg-amber-500/20 transition-colors cursor-pointer"
+                    render={<Link href="/admin" />}
+                  >
+                    <ShieldAlert className="size-3.5 mr-2 text-amber-600 dark:text-amber-400" />
+                    <span>Admin Control Plane</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="my-1.5" />
+                </>
+              )}
 
               <DropdownMenuItem
                 className="rounded-lg px-2 py-1.5 text-xs text-foreground hover:bg-lightprimary hover:text-primary transition-colors cursor-pointer"
@@ -297,6 +318,22 @@ export function TopHeader({ userName, userEmail }: TopHeaderProps) {
                 <span>Settings & Notifications</span>
               </DropdownMenuItem>
 
+              <DropdownMenuItem
+                className="rounded-lg px-2 py-1.5 text-xs text-foreground hover:bg-lightprimary hover:text-primary transition-colors cursor-pointer"
+                render={<Link href="/dashboard/support" />}
+              >
+                <LifeBuoy className="size-3.5 mr-2 text-primary" />
+                <span>Support & Tickets</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                className="rounded-lg px-2 py-1.5 text-xs text-foreground hover:bg-lightprimary hover:text-primary transition-colors cursor-pointer"
+                onClick={() => setFeedbackOpen(true)}
+              >
+                <MessageSquare className="size-3.5 mr-2 text-primary" />
+                <span>Report Bug / Feedback</span>
+              </DropdownMenuItem>
+
               <DropdownMenuSeparator className="my-1.5" />
 
               <form action={logoutAction} className="w-full">
@@ -315,6 +352,9 @@ export function TopHeader({ userName, userEmail }: TopHeaderProps) {
 
       {/* Global Spotlight / Command Search Dialog */}
       <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+
+      {/* Direct Feedback & Bug Reporting Modal */}
+      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </TooltipProvider>
   );
 }

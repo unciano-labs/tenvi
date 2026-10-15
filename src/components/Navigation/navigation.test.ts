@@ -2,8 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { MAIN_NAV_ITEMS, MOBILE_BOTTOM_NAV_ITEMS } from './nav-config';
 
 describe('Navigation Items (TNV-008 & TNV-009)', () => {
-  it('contains exactly 9 main navigation items', () => {
-    expect(MAIN_NAV_ITEMS).toHaveLength(9);
+  it('contains exactly 10 main navigation items', () => {
+    expect(MAIN_NAV_ITEMS).toHaveLength(10);
+  });
+
+  it('has Support & Tickets in main navigation', () => {
+    const supportItem = MAIN_NAV_ITEMS.find((item) => item.href === '/dashboard/support');
+    expect(supportItem).toBeDefined();
+    expect(supportItem?.label).toBe('Support & Tickets');
   });
 
   it('contains no duplicate href targets', () => {

@@ -9,6 +9,7 @@ import {
   Receipt,
   Settings,
   Bell,
+  LifeBuoy,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -73,6 +74,12 @@ export const MAIN_NAV_ITEMS: NavItemConfig[] = [
     mobileLabel: 'Alerts',
     href: '/dashboard/settings',
     icon: Settings,
+  },
+  {
+    label: 'Support & Tickets',
+    mobileLabel: 'Support',
+    href: '/dashboard/support',
+    icon: LifeBuoy,
   },
 ];
 

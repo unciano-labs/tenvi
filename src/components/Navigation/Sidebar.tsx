@@ -27,6 +27,7 @@ import {
   HandCoins,
   Receipt,
   Settings,
+  LifeBuoy,
 } from 'lucide-react';
 import {
   Tooltip,
@@ -127,6 +128,12 @@ const NAV_SECTIONS: NavSection[] = [
         description: 'Export data, notifications, and preferences',
         href: '/dashboard/settings',
         icon: Settings,
+      },
+      {
+        label: 'Support & Tickets',
+        description: 'Report bugs, request features, and track support',
+        href: '/dashboard/support',
+        icon: LifeBuoy,
       },
     ],
   },

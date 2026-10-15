@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/Navigation/Sidebar';
 import { MobileNav } from '@/components/Navigation/MobileNav';
 import { TopHeader } from '@/components/Navigation/TopHeader';
 import { TenviAIChat } from '@/components/AI/TenviAIChat';
-import { checkUserWebsiteMembership, getAuthenticatedUser } from '@/lib/auth/guards';
+import { checkUserWebsiteMembership, getAuthenticatedUser, getWebsiteUserRole } from '@/lib/auth/guards';
 import { WEBSITE_ID } from '@/lib/constants';
 
 export default async function DashboardLayout({
@@ -40,6 +40,7 @@ export default async function DashboardLayout({
 
   const userEmail = user.email || '';
   const userName = (user.user_metadata?.full_name as string) || userEmail.split('@')[0];
+  const userRole = await getWebsiteUserRole(user.id, WEBSITE_ID);
 
   const supabase = await createClient();
   const [{ data: contacts }, { data: properties }] = await Promise.all([
@@ -70,7 +71,7 @@ export default async function DashboardLayout({
           className="flex-1 h-full min-h-0 min-w-0 w-full max-w-full overflow-y-auto overflow-x-hidden overscroll-contain"
         >
           {/* Sticky Top Header with search, theme switch, notifications, and profile dropdown */}
-          <TopHeader userName={userName} userEmail={userEmail} />
+          <TopHeader userName={userName} userEmail={userEmail} userRole={userRole} />
 
           <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 py-4 sm:py-8 pb-36 pb-[calc(9rem+env(safe-area-inset-bottom,0px))] md:pb-28 min-w-0">
             {children}
