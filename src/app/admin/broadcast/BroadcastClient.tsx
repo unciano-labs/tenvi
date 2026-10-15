@@ -230,7 +230,7 @@ export function BroadcastClient() {
               <>
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">
-                  Live Gmail SMTP
+                  Live Gmail SMTP {stats.smtpUser ? `(${stats.smtpUser})` : ''}
                 </span>
               </>
             ) : (
@@ -610,6 +610,10 @@ export function BroadcastClient() {
                 In-app notification bell alert will also be triggered
               </p>
             )}
+            <div className="pt-2 text-3xs text-muted-foreground flex items-center gap-1.5 border-t border-border/40">
+              <ShieldCheck className="size-3 text-emerald-500 shrink-0" />
+              <span>Anti-ban pacing active: sends with 1.5s interval delay to protect Gmail reputation.</span>
+            </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2">

@@ -48,6 +48,91 @@ export function getGmailSmtpConfig(customUser?: string | null, customPass?: stri
 }
 
 /**
+ * Resolves active platform Gmail SMTP credentials by checking:
+ * 1. Current admin user's bili_notification_settings
+ * 2. Any admin's bili_notification_settings for this website
+ * 3. Environment variables (GMAIL_USER, GMAIL_APP_PASSWORD)
+ */
+export async function getAdminPlatformSmtpConfig(adminUserId?: string): Promise<{
+  user: string;
+  pass: string;
+  fromName: string;
+  isConfigured: boolean;
+  source: 'database' | 'environment' | 'unconfigured';
+}> {
+  // 1. Try DB lookup via Admin client
+  try {
+    const { createAdminClient } = await import('@/lib/supabase/server');
+    const { WEBSITE_ID } = await import('@/lib/constants');
+    const admin = createAdminClient();
+
+    // Check specific admin user first
+    if (adminUserId) {
+      const { data: userSettings } = await admin
+        .from('bili_notification_settings')
+        .select('smtp_email, smtp_app_password')
+        .eq('website_id', WEBSITE_ID)
+        .eq('user_id', adminUserId)
+        .not('smtp_email', 'is', null)
+        .not('smtp_app_password', 'is', null)
+        .maybeSingle();
+
+      if (userSettings?.smtp_email?.trim() && userSettings?.smtp_app_password?.trim()) {
+        return {
+          user: userSettings.smtp_email.trim(),
+          pass: userSettings.smtp_app_password.trim(),
+          fromName: process.env.GMAIL_FROM_NAME || 'Tenvi',
+          isConfigured: true,
+          source: 'database',
+        };
+      }
+    }
+
+    // Check any admin / user settings in this website with configured SMTP
+    const { data: anyAdminSettings } = await admin
+      .from('bili_notification_settings')
+      .select('smtp_email, smtp_app_password')
+      .eq('website_id', WEBSITE_ID)
+      .not('smtp_email', 'is', null)
+      .not('smtp_app_password', 'is', null)
+      .limit(1)
+      .maybeSingle();
+
+    if (anyAdminSettings?.smtp_email?.trim() && anyAdminSettings?.smtp_app_password?.trim()) {
+      return {
+        user: anyAdminSettings.smtp_email.trim(),
+        pass: anyAdminSettings.smtp_app_password.trim(),
+        fromName: process.env.GMAIL_FROM_NAME || 'Tenvi',
+        isConfigured: true,
+        source: 'database',
+      };
+    }
+  } catch (dbErr) {
+    console.warn('[getAdminPlatformSmtpConfig] DB lookup error:', dbErr);
+  }
+
+  // 2. Fall back to environment variables
+  const envConfig = getGmailSmtpConfig();
+  if (envConfig.isConfigured) {
+    return {
+      user: envConfig.user,
+      pass: envConfig.pass,
+      fromName: envConfig.fromName,
+      isConfigured: true,
+      source: 'environment',
+    };
+  }
+
+  return {
+    user: '',
+    pass: '',
+    fromName: process.env.GMAIL_FROM_NAME || 'Tenvi',
+    isConfigured: false,
+    source: 'unconfigured',
+  };
+}
+
+/**
  * Creates a Nodemailer transporter for Gmail SMTP
  */
 function createGmailTransporter(user: string, pass: string) {

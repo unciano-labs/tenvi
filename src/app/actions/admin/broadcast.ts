@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireWebsiteAdmin } from '@/lib/auth/guards';
 import { createAdminClient } from '@/lib/supabase/server';
 import { WEBSITE_ID, ADMIN_EMAIL, isUserAdmin } from '@/lib/constants';
-import { sendGmailEmail, getGmailSmtpConfig } from '@/lib/notifications/email';
+import { sendGmailEmail, getGmailSmtpConfig, getAdminPlatformSmtpConfig } from '@/lib/notifications/email';
 import { sendMemberInAppNotification } from '@/app/actions/inAppNotifications';
 
 import {
@@ -49,7 +49,7 @@ export async function getBroadcastStatsAction(): Promise<{
 
   try {
     const admin = createAdminClient();
-    const smtp = getGmailSmtpConfig();
+    const smtp = await getAdminPlatformSmtpConfig(auth.user.id);
 
     // 1. Fetch total broadcasts and sum of sent_count
     const { data: broadcasts } = await admin
@@ -179,6 +179,16 @@ export async function sendEmailBroadcastAction(
   try {
     const admin = createAdminClient();
 
+    // 0. Resolve active Platform Gmail SMTP credentials
+    const smtp = await getAdminPlatformSmtpConfig(auth.user.id);
+    if (!smtp.isConfigured) {
+      return {
+        success: false,
+        error:
+          'Gmail SMTP credentials are not configured. Please set your Gmail address and 16-character App Password in Settings or environment variables.',
+      };
+    }
+
     // 1. Resolve recipients list
     interface Recipient {
       user_id: string;
@@ -259,67 +269,74 @@ export async function sendEmailBroadcastAction(
     const broadcastId = broadcastRecord.id;
 
     // 3. Dispatch Emails & In-App Notifications
+    // Paced delivery: 1,500ms interval delay between sends to protect sender reputation & prevent Google anti-spam bans
+    const INTERVAL_DELAY_MS = audience === 'test_only' ? 0 : 1500;
     let sentCount = 0;
     let simulatedCount = 0;
     let failedCount = 0;
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // Process in sequential chunks of 5
-    const CHUNK_SIZE = 5;
-    for (let i = 0; i < recipients.length; i += CHUNK_SIZE) {
-      const chunk = recipients.slice(i, i + CHUNK_SIZE);
+    for (let i = 0; i < recipients.length; i++) {
+      const r = recipients[i];
 
-      await Promise.allSettled(
-        chunk.map(async (r) => {
-          const emailHtml = generateBroadcastEmailHtml({
-            subject: subject.trim(),
-            message: message.trim(),
-            category,
-            recipientName: r.full_name,
-          });
+      // Pacing delay between successive outgoing emails (prevents burst rate-limiting)
+      if (i > 0 && INTERVAL_DELAY_MS > 0) {
+        await new Promise((resolve) => setTimeout(resolve, INTERVAL_DELAY_MS));
+      }
 
-          // Dispatch email
-          const result = await sendGmailEmail({
-            to: r.email,
-            subject: subject.trim(),
-            text: message.trim(),
-            html: emailHtml,
-          });
+      const emailHtml = generateBroadcastEmailHtml({
+        subject: subject.trim(),
+        message: message.trim(),
+        category,
+        recipientName: r.full_name,
+      });
 
-          if (result.status === 'sent') sentCount++;
-          else if (result.status === 'simulated') simulatedCount++;
-          else failedCount++;
+      // Dispatch real email via configured Gmail SMTP
+      const result = await sendGmailEmail({
+        to: r.email,
+        subject: subject.trim(),
+        text: message.trim(),
+        html: emailHtml,
+        customUser: smtp.user,
+        customPass: smtp.pass,
+      });
 
-          // Log in bili_notification_logs
-          try {
-            await admin.from('bili_notification_logs').insert({
-              website_id: WEBSITE_ID,
-              user_id: r.user_id,
-              channel: 'email',
-              recipient: r.email,
-              email_subject: subject.trim(),
-              message_body: message.trim(),
-              status: result.status,
-              sent_date: todayStr,
-              error_message: result.error || null,
-            });
-          } catch (logErr) {
-            console.error('[sendEmailBroadcastAction] Notification log insert error:', logErr);
-          }
+      if (result.status === 'sent') sentCount++;
+      else if (result.status === 'simulated') simulatedCount++;
+      else failedCount++;
 
-          // Optional in-app notification
-          if (send_in_app && audience !== 'test_only') {
-            await sendMemberInAppNotification(
-              r.user_id,
-              `Announcement: ${subject.trim()}`,
-              message.trim().slice(0, 110) + (message.length > 110 ? '...' : ''),
-              '/dashboard',
-              'system'
-            );
-          }
-        })
-      );
+      // Log in bili_notification_logs
+      try {
+        await admin.from('bili_notification_logs').insert({
+          website_id: WEBSITE_ID,
+          user_id: r.user_id,
+          channel: 'email',
+          recipient: r.email,
+          email_subject: subject.trim(),
+          message_body: message.trim(),
+          status: result.status,
+          sent_date: todayStr,
+          error_message: result.error || null,
+        });
+      } catch (logErr) {
+        console.error('[sendEmailBroadcastAction] Notification log insert error:', logErr);
+      }
+
+      // Optional in-app notification
+      if (send_in_app && audience !== 'test_only') {
+        try {
+          await sendMemberInAppNotification(
+            r.user_id,
+            `Announcement: ${subject.trim()}`,
+            message.trim().slice(0, 110) + (message.length > 110 ? '...' : ''),
+            '/dashboard',
+            'system'
+          );
+        } catch (notifErr) {
+          console.error('[sendEmailBroadcastAction] In-app notification error:', notifErr);
+        }
+      }
     }
 
     // 4. Update final delivery stats on broadcast record

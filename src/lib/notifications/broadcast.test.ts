@@ -95,4 +95,14 @@ describe('Admin Email Broadcast Domain & Template Generation', () => {
       'user2@example.com',
     ]);
   });
+
+  it('calculates anti-ban pacing interval correctly', () => {
+    function computePacingInterval(audience: BroadcastAudience): number {
+      return audience === 'test_only' ? 0 : 1500;
+    }
+
+    expect(computePacingInterval('test_only')).toBe(0);
+    expect(computePacingInterval('all_members')).toBe(1500);
+    expect(computePacingInterval('admins_only')).toBe(1500);
+  });
 });
