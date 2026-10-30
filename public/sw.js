@@ -1,5 +1,5 @@
 // Tenvi Progressive Web App Service Worker
-const CACHE_NAME = 'tenvi-pwa-v3';
+const CACHE_NAME = 'tenvi-pwa-v4';
 
 // Core static shell assets to pre-cache on install (never include /_next/ dynamic chunks)
 const PRECACHE_ASSETS = [
@@ -53,9 +53,14 @@ self.addEventListener('fetch', (event) => {
   if (!url.protocol.startsWith('http')) return;
 
   // 1. Bypass Service Worker entirely for:
+  // - Cross-origin / third-party requests (e.g., widgets, CDNs, external APIs)
   // - Next.js internal paths (/_next/*) to prevent stale chunk errors and module factory mismatches
   // - Local development (localhost, 127.0.0.1, custom port)
   // - APIs, Supabase, Google endpoints, and Server Actions
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   const isBypass =
     url.pathname.startsWith('/_next/') ||
     url.hostname === 'localhost' ||

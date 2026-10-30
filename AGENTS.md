@@ -412,7 +412,7 @@ npm run lint
 - Verifying Next.js 16 proxy routing, multi-tenant auth guards, and ADR 0001 design rule compliance across active modules.
 
 ### Recent Changes (Max 5)
-1. `[2026-10-30]`: Landing page voice widget fix: Configured Content-Security-Policy (`script-src`, `frame-src`, `connect-src`) and Permissions-Policy (`microphone`) in `next.config.ts` to allow `https://telli-six.vercel.app`, and rendered `<script async>` directly in `src/app/page.tsx`. (Files: `next.config.ts`, `src/app/page.tsx`, `AGENTS.md`).
+1. `[2026-10-30]`: PWA Service Worker bypass & CSP fix: Bypassed cross-origin requests (`url.origin !== self.location.origin`) in `public/sw.js` (bumped to `tenvi-pwa-v4`), allowlisted `https://telli-six.vercel.app` in `next.config.ts` (`script-src`, `frame-src`, `connect-src`, `Permissions-Policy: microphone`), and rendered `<script async>` directly in `src/app/page.tsx`. (Files: `public/sw.js`, `src/components/PWA/PwaRegister.tsx`, `next.config.ts`, `src/app/page.tsx`, `AGENTS.md`).
 2. `[2026-10-16]`: Synchronized agent protocols: Generated `/AGENTS.md` and synced `/CLAUDE.md` with complete architectural, routing, security, and styling rules. (Files: `AGENTS.md`, `CLAUDE.md`).
 3. `[2026-10-16]`: Cleaned project root documentation: Moved reference architectural plans, audit findings, and roadmaps into `docs/` and updated calculation import references. (Files: `docs/*`, `src/lib/finance/calculations.ts`).
 4. `[2026-10-16]`: Property loan auto-amortization: Auto-computed monthly amortization from linked loan records into properties and details modals. (Files: `src/app/actions/properties.ts`, `src/lib/finance/accountSync.ts`, `src/components/Forms/PropertyModal.tsx`).

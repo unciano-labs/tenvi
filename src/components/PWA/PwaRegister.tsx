@@ -33,7 +33,7 @@ export function PwaRegister() {
     if ('caches' in window) {
       caches.keys().then((keys) => {
         keys.forEach((key) => {
-          if (key === 'tenvi-pwa-v1' || key === 'tenvi-pwa-v2') {
+          if (key === 'tenvi-pwa-v1' || key === 'tenvi-pwa-v2' || key === 'tenvi-pwa-v3') {
             caches.delete(key);
           }
         });
