@@ -21,6 +21,7 @@ import {
 
 import { ThemeQuickToggle } from '@/components/ui/theme-toggle';
 import { buttonVariants } from '@/components/ui/button';
+import { VoiceAgentWidget } from '@/components/Widgets/VoiceAgentWidget';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 
@@ -113,12 +114,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden flex flex-col selection:bg-slate-200 dark:selection:bg-slate-800">
-      {/* Voice Agent Widget */}
-      <script
-        src="https://telli-six.vercel.app/widget.js"
-        data-key="wk_SL5rtc77Z1lM-xX1"
-        async
-      />
+      {/* Authorized Voice Agent Widget */}
+      <VoiceAgentWidget currentPath="/" />
 
       {/* JSON-LD Structured Data */}
       <script

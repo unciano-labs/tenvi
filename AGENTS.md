@@ -187,7 +187,8 @@ npm run lint
 │   │   ├── Settings/             # Profile, security, notification, and SMTP settings forms
 │   │   ├── shared/               # Reusable domain-agnostic widgets (currency display, badges)
 │   │   ├── theme-provider.tsx    # Next-themes wrapper
-│   │   └── ui/                   # Base UI / shadcn borderless primitive design system
+│   │   ├── ui/                   # Base UI / shadcn borderless primitive design system
+│   │   └── Widgets/              # Approved external widget components & security guards
 │   ├── hooks/                    # Reusable React hooks
 │   │   ├── use-mobile.ts         # Viewport breakpoint detection (< 768px)
 │   │   ├── useInstallmentForm.ts # Shared calculation & schedule generation hook for modals
@@ -408,15 +409,15 @@ npm run lint
 > **Agent Protocol:** This section must be reviewed and updated by the AI agent at the end of EVERY turn modifying code. Keep the rolling recent changes log capped at the 5 most recent entries (delete the oldest when adding a new one).
 
 ### Current Focus
-- Integrated Telli voice support widget on landing page and maintaining high-precision wealth platform infrastructure.
+- Enforcing strict external widget allowlisting and CSP boundaries while maintaining high-precision wealth platform infrastructure.
 - Verifying Next.js 16 proxy routing, multi-tenant auth guards, and ADR 0001 design rule compliance across active modules.
 
 ### Recent Changes (Max 5)
-1. `[2026-10-30]`: PWA Service Worker bypass & CSP fix: Bypassed cross-origin requests (`url.origin !== self.location.origin`) in `public/sw.js` (bumped to `tenvi-pwa-v4`), allowlisted `https://telli-six.vercel.app` in `next.config.ts` (`script-src`, `frame-src`, `connect-src`, `Permissions-Policy: microphone`), and rendered `<script async>` directly in `src/app/page.tsx`. (Files: `public/sw.js`, `src/components/PWA/PwaRegister.tsx`, `next.config.ts`, `src/app/page.tsx`, `AGENTS.md`).
-2. `[2026-10-16]`: Synchronized agent protocols: Generated `/AGENTS.md` and synced `/CLAUDE.md` with complete architectural, routing, security, and styling rules. (Files: `AGENTS.md`, `CLAUDE.md`).
-3. `[2026-10-16]`: Cleaned project root documentation: Moved reference architectural plans, audit findings, and roadmaps into `docs/` and updated calculation import references. (Files: `docs/*`, `src/lib/finance/calculations.ts`).
-4. `[2026-10-16]`: Property loan auto-amortization: Auto-computed monthly amortization from linked loan records into properties and details modals. (Files: `src/app/actions/properties.ts`, `src/lib/finance/accountSync.ts`, `src/components/Forms/PropertyModal.tsx`).
-5. `[2026-10-16]`: Modal keystroke wipe fix: Guarded modal open-state transitions with `prevOpenRef` and stabilized handlers in `useInstallmentForm` to prevent state erasure while typing. (Files: `src/hooks/useInstallmentForm.ts`, `src/components/Forms/*.tsx`).
+1. `[2026-10-31]`: Hardened widget security & allowlist: Built runtime widget validator (`isWidgetAllowed`), created `VoiceAgentWidget` component, restricted execution to authorized paths, and tightened Content-Security-Policy with `object-src 'none'`, `base-uri 'self'`, and `form-action 'self'`. (Files: `src/lib/config/widgets.ts`, `src/components/Widgets/VoiceAgentWidget.tsx`, `next.config.ts`, `src/app/page.tsx`, `AGENTS.md`).
+2. `[2026-10-30]`: PWA Service Worker bypass & CSP fix: Bypassed cross-origin requests (`url.origin !== self.location.origin`) in `public/sw.js` (bumped to `tenvi-pwa-v4`), allowlisted `https://telli-six.vercel.app` in `next.config.ts` (`script-src`, `frame-src`, `connect-src`, `Permissions-Policy: microphone`), and rendered `<script async>` directly in `src/app/page.tsx`. (Files: `public/sw.js`, `src/components/PWA/PwaRegister.tsx`, `next.config.ts`, `src/app/page.tsx`, `AGENTS.md`).
+3. `[2026-10-16]`: Synchronized agent protocols: Generated `/AGENTS.md` and synced `/CLAUDE.md` with complete architectural, routing, security, and styling rules. (Files: `AGENTS.md`, `CLAUDE.md`).
+4. `[2026-10-16]`: Cleaned project root documentation: Moved reference architectural plans, audit findings, and roadmaps into `docs/` and updated calculation import references. (Files: `docs/*`, `src/lib/finance/calculations.ts`).
+5. `[2026-10-16]`: Property loan auto-amortization: Auto-computed monthly amortization from linked loan records into properties and details modals. (Files: `src/app/actions/properties.ts`, `src/lib/finance/accountSync.ts`, `src/components/Forms/PropertyModal.tsx`).
 
 ### Known Issues & Tech Debt
 1. **ESLint 9 Flat Config Migration:** `npm run lint` fails because ESLint v9 expects `eslint.config.mjs` (flat configuration) while the project currently lacks the migrated config file.
