@@ -1,6 +1,6 @@
 /**
  * Pure calculation facades for Tenvi
- * Adopted from MVP_ARCHITECTURE_REF.md - Single source of truth for business math
+ * Adopted from docs/MVP_ARCHITECTURE_REF.md - Single source of truth for business math
  */
 
 import { CURRENCY_SYMBOL } from '@/lib/constants';

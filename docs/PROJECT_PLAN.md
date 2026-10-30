@@ -392,8 +392,10 @@ Bili/
 ├── .env.local                          # Supabase, Website ID, Role ID, PayMongo keys
 ├── package.json                        # Next.js 15/16, React 19, Tailwind v4, Zod, Sonner
 ├── tsconfig.json                       # strict: true, noUncheckedIndexedAccess: true
-├── PROJECT_PLAN.md                     # This plan
-├── MVP_ARCHITECTURE_REF.md             # Cleaned reference guide
+├── docs/
+│   ├── PROJECT_PLAN.md                     # This plan
+│   ├── MVP_ARCHITECTURE_REF.md             # Cleaned reference guide
+│   └── ...
 ├── supabase/
 │   ├── migrations/
 │   │   └── 20260927_bili_core_schema.sql # DDL, Indexes, RLS for all bili_* tables
