@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Script from 'next/script';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { TenviIcon } from '@/components/ui/TenviIcon';
@@ -115,10 +114,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden flex flex-col selection:bg-slate-200 dark:selection:bg-slate-800">
       {/* Voice Agent Widget */}
-      <Script
+      <script
         src="https://telli-six.vercel.app/widget.js"
         data-key="wk_SL5rtc77Z1lM-xX1"
-        strategy="afterInteractive"
+        async
       />
 
       {/* JSON-LD Structured Data */}

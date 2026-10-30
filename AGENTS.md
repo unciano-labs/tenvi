@@ -412,7 +412,7 @@ npm run lint
 - Verifying Next.js 16 proxy routing, multi-tenant auth guards, and ADR 0001 design rule compliance across active modules.
 
 ### Recent Changes (Max 5)
-1. `[2026-10-30]`: Landing page voice widget: Injected Telli voice agent script (`telli-six.vercel.app/widget.js`) with data key `wk_SL5rtc77Z1lM-xX1` using `next/script` (`afterInteractive`). (Files: `src/app/page.tsx`, `AGENTS.md`).
+1. `[2026-10-30]`: Landing page voice widget fix: Switched from `next/script` to direct React 19 `<script ... async>` in Server Component so the tag is rendered in initial HTML, and expanded CSP `allowed_origins` for key `wk_SL5rtc77Z1lM-xX1` to include `https://tenvi.app` and `localhost`. (Files: `src/app/page.tsx`, `AGENTS.md`).
 2. `[2026-10-16]`: Synchronized agent protocols: Generated `/AGENTS.md` and synced `/CLAUDE.md` with complete architectural, routing, security, and styling rules. (Files: `AGENTS.md`, `CLAUDE.md`).
 3. `[2026-10-16]`: Cleaned project root documentation: Moved reference architectural plans, audit findings, and roadmaps into `docs/` and updated calculation import references. (Files: `docs/*`, `src/lib/finance/calculations.ts`).
 4. `[2026-10-16]`: Property loan auto-amortization: Auto-computed monthly amortization from linked loan records into properties and details modals. (Files: `src/app/actions/properties.ts`, `src/lib/finance/accountSync.ts`, `src/components/Forms/PropertyModal.tsx`).
