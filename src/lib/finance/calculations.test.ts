@@ -1049,6 +1049,69 @@ describe('groupTransactionsByStatementDate: Statement Month Cycles & Dropdown Gr
     expect(oct.transactions[0].id).toBe('tx-3');
     expect(oct.netSpend).toBe(1500);
   });
+
+  it('correctly maps linked card installment liabilities (e.g. iPhone 17 Pro with Nov 1 due date) to the October statement cycle', () => {
+    const mockLiability = {
+      id: 'lib-iphone',
+      name: 'Iphone 17 Pro (Mine)',
+      category: 'gadget',
+      lender_name: 'BPI Special Installment',
+      original_principal: 54000,
+      current_principal_balance: 45000,
+      monthly_payment: 4500,
+      interest_rate: 0,
+      term_months: 12,
+      first_payment_date: '2026-11-01',
+      due_day: 1,
+      status: 'active',
+      paid_installment_numbers: [],
+    };
+
+    // Card statement day = 15, payment due day = 1.
+    // Since due day (1) <= statement day (15), the bill generated on Oct 15 is payable on Nov 1.
+    // Therefore, the installment due on Nov 1 must belong to the October (2026-10) statement!
+    const groups = groupTransactionsByStatementDate([], 15, 1, refDate, [], [mockLiability]);
+
+    const oct = groups.find((g) => g.statementKey === '2026-10');
+    expect(oct).toBeDefined();
+    expect(oct?.installments).toHaveLength(1);
+    expect(oct?.installments[0].name).toBe('Iphone 17 Pro (Mine)');
+    expect(oct?.installments[0].amount).toBe(4500);
+    expect(oct?.installments[0].dueDate).toBe('2026-11-01');
+    expect(oct?.installments[0].installmentNumber).toBe(1);
+    expect(oct?.totalInstallments).toBe(4500);
+
+    // November statement cycle (cut off Nov 15, due Dec 1) should have installment #2
+    const nov = groups.find((g) => g.statementKey === '2026-11');
+    expect(nov).toBeDefined();
+    expect(nov?.installments).toHaveLength(1);
+    expect(nov?.installments[0].installmentNumber).toBe(2);
+    expect(nov?.installments[0].dueDate).toBe('2026-12-01');
+    expect(nov?.totalInstallments).toBe(4500);
+  });
+
+  it('correctly maps linked swiped loans to their statement cycles', () => {
+    const mockLoan = {
+      id: 'loan-1',
+      amount: 30000,
+      balance_remaining: 20000,
+      is_installment: true,
+      installment_months: 6,
+      monthly_amount: 5000,
+      monthly_due_day: 1,
+      loaned_on: '2026-10-02',
+      reason: 'MacBook for brother',
+      contact: { name: 'Alex' },
+    };
+
+    const groups = groupTransactionsByStatementDate([], 15, 1, refDate, [mockLoan], []);
+    const oct = groups.find((g) => g.statementKey === '2026-10');
+    expect(oct).toBeDefined();
+    expect(oct?.installments.some((i) => i.sourceType === 'loan' && i.sourceId === 'loan-1')).toBe(true);
+    const loanInst = oct?.installments.find((i) => i.sourceId === 'loan-1');
+    expect(loanInst?.amount).toBe(5000);
+    expect(loanInst?.name).toContain('Alex');
+  });
 });
 
 

@@ -52,7 +52,7 @@ import {
 } from "@/components/ui/theme-toggle";
 import { CardDetailsClient } from "@/app/dashboard/cards/[id]/CardDetailsClient";
 import { TransactionModal, ParsedCardItem } from "@/components/Forms/TransactionModal";
-import { CreditCard, Transaction, Category } from "@/types";
+import { CreditCard, Transaction, Category, Liability } from "@/types";
 
 const mockCard: CreditCard = {
   id: "test-card-1",
@@ -128,6 +128,29 @@ const mockTransactions: Transaction[] = [
     occurred_on: "2026-09-08",
     created_at: "2026-09-08T09:15:00Z",
     category: mockCategories[3],
+  },
+];
+
+const mockLinkedLiabilities: Liability[] = [
+  {
+    id: "lib-iphone-17",
+    website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953",
+    user_id: "user-1",
+    credit_card_id: "test-card-1",
+    name: "Iphone 17 Pro (Mine)",
+    liability_type: "credit_card_installment",
+    lender_name: "Power Mac Center 0% Installment",
+    original_principal: 78000,
+    current_principal_balance: 65000,
+    monthly_payment: 6500,
+    interest_rate: 0,
+    annual_interest_rate: 0,
+    term_months: 12,
+    first_payment_date: "2026-11-01",
+    due_day: 1,
+    status: "active",
+    created_at: "2026-10-01T00:00:00Z",
+    updated_at: "2026-10-01T00:00:00Z",
   },
 ];
 
@@ -439,6 +462,7 @@ export default function DevUiDemoPage() {
           <CardDetailsClient
             card={mockCard}
             transactions={mockTransactions}
+            linkedLiabilities={mockLinkedLiabilities}
             categories={mockCategories}
             allCards={[mockCard]}
           />

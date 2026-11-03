@@ -139,14 +139,18 @@ export function CardDetailsClient({
     setCurrentTransactions(transactions);
   }, [transactions]);
 
-  // Group transactions into statement cycles
+  // Group transactions and installments into statement cycles
   const statementGroups = useMemo(() => {
     return groupTransactionsByStatementDate(
       currentTransactions,
       card.statement_day,
-      card.due_day
+      card.due_day,
+      new Date(),
+      12,
+      linkedLoans,
+      linkedLiabilities
     );
-  }, [currentTransactions, card.statement_day, card.due_day]);
+  }, [currentTransactions, card.statement_day, card.due_day, linkedLoans, linkedLiabilities]);
 
   // Current calendar month's statement key (e.g. '2026-11')
   const currentMonthKey = useMemo(() => {
@@ -175,13 +179,15 @@ export function CardDetailsClient({
         label = `${monthName} (Unbilled Cycle)`;
       }
 
+      const totalItems = g.transactions.length + (g.installments?.length || 0);
+
       return {
         key: g.statementKey,
         label,
         monthName,
         isCurrentMonth: g.isCurrentMonth,
         isCurrentCycle: g.isCurrentCycle,
-        txCount: g.transactions.length,
+        txCount: totalItems,
       };
     });
   }, [statementGroups]);
@@ -271,10 +277,14 @@ export function CardDetailsClient({
   };
 
 
-  // 1. All statement cycles that actually have transactions or are active/current
+  // 1. All statement cycles that actually have transactions or installments or are active/current
   const cutoffsWithTransactions = useMemo(() => {
     return statementGroups.filter(
-      (g) => g.transactions.length > 0 || g.isCurrentMonth || g.isCurrentCycle
+      (g) =>
+        g.transactions.length > 0 ||
+        (g.installments && g.installments.length > 0) ||
+        g.isCurrentMonth ||
+        g.isCurrentCycle
     );
   }, [statementGroups]);
 
@@ -306,52 +316,43 @@ export function CardDetailsClient({
           const amtMatch = String(tx.amount || '').includes(query);
           return noteMatch || catMatch || amtMatch;
         });
+        const filteredInsts = (group.installments || []).filter((inst) => {
+          const nameMatch = (inst.name || '').toLowerCase().includes(query);
+          const contactMatch = (inst.lenderOrContact || '').toLowerCase().includes(query);
+          const amtMatch = String(inst.amount || '').includes(query);
+          return nameMatch || contactMatch || amtMatch;
+        });
         return {
           ...group,
           transactions: filteredTxs,
+          installments: filteredInsts,
         };
       })
-      .filter((group) => group.transactions.length > 0);
+      .filter((group) => group.transactions.length > 0 || (group.installments && group.installments.length > 0));
   }, [statementGroups, selectedStatementMonth, cutoffsWithTransactions, searchQuery]);
 
-  // Check if search query matches transactions in other statement months
+  // Check if search query matches transactions or installments in other statement months
   const hasMatchesInOtherMonths = useMemo(() => {
     if (!searchQuery.trim() || selectedStatementMonth === 'all') return false;
     const query = searchQuery.toLowerCase();
-    return currentTransactions.some((tx) => {
+    const txMatch = currentTransactions.some((tx) => {
       const noteMatch = (tx.note || '').toLowerCase().includes(query);
       const catMatch = (tx.category?.name || '').toLowerCase().includes(query);
       const amtMatch = String(tx.amount || '').includes(query);
       return noteMatch || catMatch || amtMatch;
     });
-  }, [searchQuery, selectedStatementMonth, currentTransactions]);
+    if (txMatch) return true;
+    return statementGroups.some((g) =>
+      (g.installments || []).some(
+        (inst) =>
+          (inst.name || '').toLowerCase().includes(query) ||
+          (inst.lenderOrContact || '').toLowerCase().includes(query) ||
+          String(inst.amount || '').includes(query)
+      )
+    );
+  }, [searchQuery, selectedStatementMonth, currentTransactions, statementGroups]);
 
-  // Active installment commitments from card-linked liabilities
-  const activeCycleInstallments = useMemo(() => {
-    return (linkedLiabilities || [])
-      .filter((lib) => lib.status !== 'paid_off' && Number(lib.current_principal_balance) > 0 && Number(lib.monthly_payment) > 0)
-      .map((lib) => {
-        const remainingBalance = Number(lib.current_principal_balance || 0);
-        const monthlyPayment = Number(lib.monthly_payment || 0);
-        const totalTerms = Number(lib.term_months || 0);
 
-        const paidCount = Array.isArray(lib.paid_installment_numbers)
-          ? lib.paid_installment_numbers.length
-          : 0;
-        const remainingTerms = Math.max(0, totalTerms - paidCount);
-        const currentTermIndex = Math.min(totalTerms, paidCount + 1);
-
-        return {
-          lib,
-          remainingBalance,
-          monthlyPayment,
-          totalTerms,
-          remainingTerms,
-          currentTermIndex,
-          paidCount,
-        };
-      });
-  }, [linkedLiabilities]);
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-150 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 md:pb-12">
@@ -1005,10 +1006,10 @@ export function CardDetailsClient({
           <div className="space-y-4">
             {visibleGroups.map((group) => {
               const isCollapsed = collapsedStatements[group.statementKey] ?? false;
-              const isRelevantCycle = group.isCurrentCycle || group.status === 'billed_due_soon';
-              const cycleInstallmentTotal = isRelevantCycle
-                ? activeCycleInstallments.reduce((sum, item) => sum + item.monthlyPayment, 0)
-                : 0;
+              const cycleInstallmentTotal =
+                group.totalInstallments ||
+                (group.installments || []).reduce((sum, item) => sum + item.amount, 0);
+              const hasInstallments = Boolean(group.installments && group.installments.length > 0);
 
               return (
                 <Card key={group.statementKey} className="shadow-card overflow-hidden">
@@ -1075,84 +1076,123 @@ export function CardDetailsClient({
                     {/* Statement Transactions List */}
                     {!isCollapsed && (
                       <div className="space-y-2 pt-1">
-                        {/* Active Card Installment Billings */}
-                        {isRelevantCycle && activeCycleInstallments.length > 0 && (
+                        {/* Statement Installment Commitments */}
+                        {hasInstallments && (
                           <div className="space-y-1.5 pb-1">
-                            {activeCycleInstallments.map((inst) => (
-                              <div
-                                key={`cycle-inst-${inst.lib.id}`}
-                                className="group p-3 rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors flex items-start justify-between text-xs gap-3 min-w-0"
-                              >
-                                <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                                  <div className="p-1.5 rounded-xl bg-card shadow-xs shrink-0 text-primary mt-0.5">
-                                    <Layers className="size-3.5" />
+                            {group.installments.map((inst) => {
+                              const isPaid = inst.isPaid;
+                              return (
+                                <div
+                                  key={inst.id}
+                                  className="group p-3 rounded-2xl bg-primary/5 hover:bg-primary/10 transition-colors flex items-start justify-between text-xs gap-3 min-w-0"
+                                >
+                                  <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                    <div className="p-1.5 rounded-xl bg-card shadow-xs shrink-0 text-primary mt-0.5">
+                                      <Layers className="size-3.5" />
+                                    </div>
+                                    <div className="min-w-0 flex-1 space-y-0.5">
+                                      <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                        <span className="font-bold text-foreground truncate">
+                                          {inst.name}
+                                        </span>
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px] py-0 px-1.5 font-bold bg-primary/15 text-primary border-0"
+                                        >
+                                          {inst.installmentNumber} OF {inst.totalTerms} {isPaid ? 'PAID' : 'SCHEDULED'}
+                                        </Badge>
+                                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-card text-muted-foreground shadow-xs shrink-0">
+                                          {inst.sourceType === 'loan' ? 'Lent Loan' : 'Card Installment'}
+                                        </span>
+                                        {inst.lenderOrContact && (
+                                          <span className="text-[10px] text-muted-foreground truncate">
+                                            ({inst.lenderOrContact})
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                                        <span>
+                                          Due: <strong className="text-foreground">{inst.dueDateFormatted || group.dueDateFormatted}</strong>
+                                        </span>
+                                        {inst.remainingBalance > 0 && (
+                                          <>
+                                            <span>•</span>
+                                            <span>Remaining bal: {formatMoney(inst.remainingBalance)}</span>
+                                          </>
+                                        )}
+                                      </div>
+                                      <div className="pt-0.5 flex items-center gap-3">
+                                        {inst.rawLiability && (
+                                          <button
+                                            type="button"
+                                            onClick={() => setScheduleLiability(inst.rawLiability)}
+                                            className="inline-flex items-center gap-1 text-2xs font-semibold text-primary hover:underline cursor-pointer"
+                                          >
+                                            <Calendar className="size-2.5" />
+                                            View Amortization Schedule →
+                                          </button>
+                                        )}
+                                        {inst.sourceType === 'loan' && inst.sourceId && (
+                                          <Link
+                                            href={`/dashboard/loans/${inst.sourceId}`}
+                                            className="inline-flex items-center gap-1 text-2xs font-semibold text-primary hover:underline cursor-pointer"
+                                          >
+                                            View Loan Details →
+                                          </Link>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="min-w-0 flex-1 space-y-0.5">
-                                    <div className="flex items-center gap-2 flex-wrap min-w-0">
-                                      <span className="font-bold text-foreground truncate">
-                                        {inst.lib.name}
-                                      </span>
-                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-bold bg-primary/15 text-primary border-primary/30">
-                                        {inst.paidCount} OF {inst.totalTerms} PAID
-                                      </Badge>
-                                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-card text-muted-foreground shadow-xs shrink-0">
-                                        Loan Installment
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                                      <span>Due: <strong className="text-foreground">{group.dueDateFormatted}</strong></span>
-                                      <span>•</span>
-                                      <span>Remaining bal: {formatMoney(inst.remainingBalance)}</span>
-                                    </div>
-                                    <div className="pt-0.5">
-                                      <button
-                                        type="button"
-                                        onClick={() => setScheduleLiability(inst.lib)}
-                                        className="inline-flex items-center gap-1 text-2xs font-semibold text-primary hover:underline cursor-pointer"
-                                      >
-                                        <Calendar className="size-2.5" />
-                                        View Amortization Schedule →
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
 
-                                <div className="shrink-0 flex items-center gap-2 text-right pt-0.5">
-                                  <div className="text-right">
-                                    <span className="text-xs sm:text-sm font-extrabold whitespace-nowrap text-foreground block">
-                                      -{formatMoney(inst.monthlyPayment)}
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground block font-medium">
-                                      {inst.remainingTerms} mos left
-                                    </span>
+                                  <div className="shrink-0 flex items-center gap-2 text-right pt-0.5">
+                                    <div className="text-right">
+                                      <span className="text-xs sm:text-sm font-extrabold whitespace-nowrap text-foreground block">
+                                        -{formatMoney(inst.amount)}
+                                      </span>
+                                      <span className="text-[10px] text-muted-foreground block font-medium">
+                                        {Math.max(0, inst.totalTerms - inst.installmentNumber)} mos left
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
 
                         {group.transactions.length === 0 ? (
-                          <div className="p-4 rounded-2xl bg-muted/60 text-center space-y-1.5">
-                            <p className="text-xs text-muted-foreground">
-                              {group.isCurrentCycle
-                                ? isRelevantCycle && activeCycleInstallments.length > 0
-                                  ? 'No additional purchases recorded in this statement cycle.'
-                                  : 'No purchases recorded in this statement cycle yet. Charges logged after your bill is made will appear here.'
-                                : 'No purchases recorded for this statement period.'}
-                            </p>
-                            {group.isCurrentCycle && (
+                          !hasInstallments ? (
+                            <div className="p-4 rounded-2xl bg-muted/60 text-center space-y-1.5">
+                              <p className="text-xs text-muted-foreground">
+                                {group.isCurrentCycle
+                                  ? 'No purchases recorded in this statement cycle yet. Charges logged after your bill is made will appear here.'
+                                  : 'No purchases recorded for this statement period.'}
+                              </p>
+                              {group.isCurrentCycle && (
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  onClick={() => setIsSwipeModalOpen(true)}
+                                  className="text-xs font-bold text-primary p-0 h-auto cursor-pointer"
+                                >
+                                  <Plus className="mr-1 size-3.5" />
+                                  Log a swipe for this cycle
+                                </Button>
+                              )}
+                            </div>
+                          ) : group.isCurrentCycle ? (
+                            <div className="pt-1 flex justify-end">
                               <Button
-                                variant="link"
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => setIsSwipeModalOpen(true)}
-                                className="text-xs font-bold text-primary p-0 h-auto cursor-pointer"
+                                className="text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
                               >
                                 <Plus className="mr-1 size-3.5" />
                                 Log a swipe for this cycle
                               </Button>
-                            )}
-                          </div>
+                            </div>
+                          ) : null
                         ) : (
                           <div className="max-h-80 overflow-y-auto pr-1 space-y-1.5">
                             {group.transactions.map((tx) => (

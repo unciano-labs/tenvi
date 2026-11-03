@@ -5,6 +5,8 @@
 
 import { CURRENCY_SYMBOL } from '@/lib/constants';
 import { convertCurrency } from './fx';
+import { calculateAmortizationSchedule } from './amortizationEngine';
+import { resolveFirstInstallmentDueDate } from './dateResolver';
 
 /**
  * Format numbers into Philippine Peso currency strings
@@ -162,6 +164,26 @@ export function calculateSplitShares(
 export type { InstallmentScheduleItem, InstallmentScheduleOptions } from './amortizationEngine';
 export { generateInstallmentSchedule } from './amortizationEngine';
 
+export interface StatementInstallmentItem {
+  id: string;
+  sourceType: 'liability' | 'loan';
+  sourceId: string;
+  name: string;
+  lenderOrContact: string;
+  installmentNumber: number;
+  totalTerms: number;
+  amount: number;
+  principalAmount?: number;
+  interestAmount?: number;
+  dueDate: string;
+  dueDateFormatted: string;
+  isPaid: boolean;
+  remainingBalance: number;
+  notes?: string | null;
+  rawLiability?: any;
+  rawLoan?: any;
+}
+
 export interface StatementGroup {
   statementKey: string;
   statementDate: string; // YYYY-MM-DD
@@ -182,6 +204,8 @@ export interface StatementGroup {
   totalIncome: number;
   netSpend: number;
   transactions: any[];
+  installments: StatementInstallmentItem[];
+  totalInstallments: number;
 }
 
 /**
@@ -193,8 +217,22 @@ export function groupTransactionsByStatementDate(
   statementDay: number,
   dueDay: number,
   referenceDate: Date = new Date(),
-  pastMonthsCount: number = 12
+  pastMonthsCount: number | any[] = 12,
+  linkedLoans: any[] = [],
+  linkedLiabilities: any[] = []
 ): StatementGroup[] {
+  let effectivePastMonths = 12;
+  let effectiveLoans = linkedLoans;
+  let effectiveLiabilities = linkedLiabilities;
+
+  if (Array.isArray(pastMonthsCount)) {
+    effectivePastMonths = 12;
+    effectiveLoans = pastMonthsCount;
+    effectiveLiabilities = Array.isArray(linkedLoans) ? linkedLoans : [];
+  } else if (typeof pastMonthsCount === 'number') {
+    effectivePastMonths = pastMonthsCount;
+  }
+
   const safeStatementDay = Math.max(1, Math.min(31, Number(statementDay) || 15));
   const safeDueDay = Math.max(1, Math.min(31, Number(dueDay) || 5));
 
@@ -313,6 +351,8 @@ export function groupTransactionsByStatementDate(
       totalIncome: 0,
       netSpend: 0,
       transactions: [] as any[],
+      installments: [] as StatementInstallmentItem[],
+      totalInstallments: 0,
     };
   };
 
@@ -328,7 +368,7 @@ export function groupTransactionsByStatementDate(
   }
 
   // Pre-populate past statement cycles (default past 12 months)
-  for (let i = 1; i <= pastMonthsCount; i++) {
+  for (let i = 1; i <= effectivePastMonths; i++) {
     let pastMonth = todayMonth - i;
     let pastYear = todayYear;
     while (pastMonth < 0) {
@@ -381,6 +421,254 @@ export function groupTransactionsByStatementDate(
     }
   }
 
+  // Helper to map an installment payment due date to its billing statement cutoff cycle
+  const getStatementKeyForDueDate = (dueDateStr: string): string => {
+    const parts = dueDateStr.split('-').map(Number);
+    if (parts.length < 3) return '';
+    const dueY = parts[0];
+    const dueM = parts[1] - 1; // 0-indexed month
+
+    let stmtM = dueM;
+    let stmtY = dueY;
+
+    if (safeDueDay <= safeStatementDay) {
+      // Due day is on or before statement cutoff (e.g. statement on 15th, due on 1st/5th):
+      // The statement cutoff date occurred in the previous month!
+      stmtM -= 1;
+      if (stmtM < 0) {
+        stmtM = 11;
+        stmtY -= 1;
+      }
+    } else {
+      // Due day is after statement cutoff in the same month (e.g. statement on 5th, due on 25th)
+      stmtM = dueM;
+      stmtY = dueY;
+    }
+
+    return `${stmtY}-${String(stmtM + 1).padStart(2, '0')}`;
+  };
+
+  const getStatementKeyForStatementDate = (stmtDateStr: string): string => {
+    const parts = stmtDateStr.split('-').map(Number);
+    if (parts.length < 3) return '';
+    const txY = parts[0];
+    const txM = parts[1] - 1;
+    const txD = parts[2];
+
+    let cycleM = txM;
+    let cycleY = txY;
+    if (txD > safeStatementDay) {
+      cycleM += 1;
+      if (cycleM > 11) {
+        cycleM = 0;
+        cycleY += 1;
+      }
+    }
+    return `${cycleY}-${String(cycleM + 1).padStart(2, '0')}`;
+  };
+
+  // Group card installments and liabilities into their respective statement cycles
+  for (const lib of effectiveLiabilities) {
+    if (!lib) continue;
+    const principal = Number(lib.original_principal || lib.current_principal_balance || 0);
+    const termMonths = Number(lib.term_months || 0);
+    const annualRate = Number(lib.annual_interest_rate || 0);
+    const rateType = lib.interest_rate_type || 'annual';
+    const interestRate =
+      lib.interest_rate !== undefined && lib.interest_rate !== null
+        ? Number(lib.interest_rate)
+        : annualRate;
+    const monthlyPayment = Number(lib.monthly_payment || 0);
+    const isAmortizationOverridden = Boolean(lib.is_amortization_overridden);
+    const firstPaymentDate = lib.first_payment_date || undefined;
+    const dueDay = lib.due_day || safeDueDay;
+    const startDate = lib.start_date || undefined;
+
+    if (termMonths > 0 && (principal > 0 || monthlyPayment > 0)) {
+      const scheduleResult = calculateAmortizationSchedule({
+        principal,
+        annualInterestRate: annualRate,
+        termMonths,
+        startDate,
+        monthlyDueDay: dueDay,
+        rateType,
+        interestRate,
+        monthlyPayment,
+        isAmortizationOverridden,
+        firstPaymentDate,
+        paidInstallmentNumbers: lib.paid_installment_numbers,
+        asOfDate: formatISO(referenceDate),
+      });
+
+      for (const row of scheduleResult.schedule) {
+        const stmtKey = getStatementKeyForDueDate(row.dueDate);
+        if (!stmtKey) continue;
+
+        let group = groupsMap.get(stmtKey);
+        if (!group) {
+          const [sY, sM] = stmtKey.split('-').map(Number);
+          group = helperBuildCycle(sY, sM - 1);
+          groupsMap.set(stmtKey, group);
+        }
+
+        const instItem: StatementInstallmentItem = {
+          id: `lib-${lib.id}-${row.installmentNumber}`,
+          sourceType: 'liability',
+          sourceId: lib.id,
+          name: lib.name,
+          lenderOrContact: lib.lender_name || 'Credit Card Installment',
+          installmentNumber: row.installmentNumber,
+          totalTerms: termMonths,
+          amount: row.paymentAmount,
+          principalAmount: row.principalAmount,
+          interestAmount: row.interestAmount,
+          dueDate: row.dueDate,
+          dueDateFormatted: formatDate(row.dueDate),
+          isPaid: Boolean(row.isPaid),
+          remainingBalance: row.remainingBalance,
+          notes: lib.notes,
+          rawLiability: lib,
+        };
+
+        group.installments.push(instItem);
+        group.totalInstallments = Number((group.totalInstallments + instItem.amount).toFixed(2));
+      }
+    } else if (monthlyPayment > 0 && lib.status !== 'paid_off') {
+      // Ongoing recurring liability commitment
+      for (const group of groupsMap.values()) {
+        const instItem: StatementInstallmentItem = {
+          id: `lib-${lib.id}-${group.statementKey}`,
+          sourceType: 'liability',
+          sourceId: lib.id,
+          name: lib.name,
+          lenderOrContact: lib.lender_name || 'Credit Card Installment',
+          installmentNumber: 1,
+          totalTerms: 1,
+          amount: monthlyPayment,
+          dueDate: group.dueDate,
+          dueDateFormatted: group.dueDateFormatted,
+          isPaid: false,
+          remainingBalance: Number(lib.current_principal_balance || 0),
+          notes: lib.notes,
+          rawLiability: lib,
+        };
+        group.installments.push(instItem);
+        group.totalInstallments = Number((group.totalInstallments + instItem.amount).toFixed(2));
+      }
+    }
+  }
+
+  // Group swiped loans into their respective statement cycles
+  for (const loan of effectiveLoans) {
+    if (!loan) continue;
+    const termMonths = Number(loan.installment_months || 0);
+    const totalAmount = Number(loan.amount || 0);
+    const monthlyAmount = Number(
+      loan.monthly_amount || (termMonths > 0 ? totalAmount / termMonths : totalAmount)
+    );
+    const dueDay = Number(loan.monthly_due_day || safeDueDay);
+    const loanedOn = loan.loaned_on || loan.created_at?.split('T')[0] || '';
+
+    if (loan.is_installment && termMonths > 0 && (totalAmount > 0 || monthlyAmount > 0)) {
+      if (Array.isArray(loan.installments) && loan.installments.length > 0) {
+        for (const inst of loan.installments) {
+          const instDueDate = inst.due_date || '';
+          const stmtKey = inst.statement_date
+            ? getStatementKeyForStatementDate(inst.statement_date)
+            : getStatementKeyForDueDate(instDueDate);
+          if (!stmtKey) continue;
+
+          let group = groupsMap.get(stmtKey);
+          if (!group) {
+            const [sY, sM] = stmtKey.split('-').map(Number);
+            group = helperBuildCycle(sY, sM - 1);
+            groupsMap.set(stmtKey, group);
+          }
+
+          const instItem: StatementInstallmentItem = {
+            id: `loan-${loan.id}-${inst.installment_number || 1}`,
+            sourceType: 'loan',
+            sourceId: loan.id,
+            name: loan.contact?.name
+              ? `${loan.contact.name} - ${loan.reason || 'Loan'}`
+              : (loan.reason || 'Personal Loan'),
+            lenderOrContact: loan.contact?.name || 'Swiped Loan',
+            installmentNumber: inst.installment_number || 1,
+            totalTerms: termMonths,
+            amount: Number(inst.amount || monthlyAmount),
+            principalAmount: Number(inst.principal_amount || 0),
+            interestAmount: Number(inst.interest_amount || 0),
+            dueDate: instDueDate,
+            dueDateFormatted: formatDate(instDueDate),
+            isPaid: Boolean(inst.is_paid),
+            remainingBalance: Number(loan.balance_remaining || 0),
+            rawLoan: loan,
+          };
+
+          group.installments.push(instItem);
+          group.totalInstallments = Number((group.totalInstallments + instItem.amount).toFixed(2));
+        }
+      } else {
+        const firstPaymentDate = resolveFirstInstallmentDueDate({
+          transactionDate: loanedOn,
+          dueDay,
+          statementDay: safeStatementDay,
+        });
+
+        const sched = calculateAmortizationSchedule({
+          principal: totalAmount,
+          annualInterestRate:
+            Number(loan.total_interest || 0) > 0 && totalAmount > 0
+              ? (Number(loan.total_interest) / totalAmount / (termMonths / 12)) * 100
+              : 0,
+          termMonths,
+          startDate: loanedOn,
+          monthlyDueDay: dueDay,
+          rateType: 'annual',
+          monthlyPayment: monthlyAmount,
+          firstPaymentDate,
+          asOfDate: formatISO(referenceDate),
+        });
+
+        for (const row of sched.schedule) {
+          const stmtKey = getStatementKeyForDueDate(row.dueDate);
+          if (!stmtKey) continue;
+
+          let group = groupsMap.get(stmtKey);
+          if (!group) {
+            const [sY, sM] = stmtKey.split('-').map(Number);
+            group = helperBuildCycle(sY, sM - 1);
+            groupsMap.set(stmtKey, group);
+          }
+
+          const isPaid = Boolean(loan.status === 'paid' || row.isPaid);
+          const instItem: StatementInstallmentItem = {
+            id: `loan-${loan.id}-${row.installmentNumber}`,
+            sourceType: 'loan',
+            sourceId: loan.id,
+            name: loan.contact?.name
+              ? `${loan.contact.name} - ${loan.reason || 'Loan'}`
+              : (loan.reason || 'Personal Loan'),
+            lenderOrContact: loan.contact?.name || 'Swiped Loan',
+            installmentNumber: row.installmentNumber,
+            totalTerms: termMonths,
+            amount: row.paymentAmount,
+            principalAmount: row.principalAmount,
+            interestAmount: row.interestAmount,
+            dueDate: row.dueDate,
+            dueDateFormatted: formatDate(row.dueDate),
+            isPaid,
+            remainingBalance: row.remainingBalance,
+            rawLoan: loan,
+          };
+
+          group.installments.push(instItem);
+          group.totalInstallments = Number((group.totalInstallments + instItem.amount).toFixed(2));
+        }
+      }
+    }
+  }
+
   // Sort transactions inside each group newest first
   for (const group of groupsMap.values()) {
     group.transactions.sort((a, b) => {
@@ -388,6 +676,11 @@ export function groupTransactionsByStatementDate(
       const dateB = b.occurred_on || b.created_at || '';
       return dateB.localeCompare(dateA);
     });
+
+    // Sort installments in each group by dueDate ascending
+    group.installments.sort((a, b) =>
+      a.dueDate.localeCompare(b.dueDate) || a.installmentNumber - b.installmentNumber
+    );
   }
 
   // Convert map to array and sort statement cycles descending (newest statement cutoff first)
