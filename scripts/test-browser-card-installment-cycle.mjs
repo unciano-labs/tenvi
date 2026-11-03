@@ -208,6 +208,7 @@ async function main() {
         hasIphone: allText.includes('Iphone 17 Pro (Mine)'),
         hasAirPods: allText.includes('Power Mac Center AirPods Pro'),
         hasRustans: allText.includes("Rustan's Supermarket Groceries"),
+        hasDuplicateSwipe: allText.includes('Duplicate Swipe'),
         octCardFound: Boolean(octStatementCard),
         instData,
         statementTotal,
@@ -230,8 +231,16 @@ async function main() {
     if (octDetails.hasRustans) {
       throw new Error('FAILED: November transaction (Rustans) should NOT appear in October statement!');
     }
+    if (octDetails.hasDuplicateSwipe) {
+      throw new Error('FAILED: Duplicate transaction with same loan ID ("Duplicate Swipe") should be HIDDEN!');
+    }
+    if (octDetails.statementTotal !== '₱25,000.00') {
+      throw new Error(`FAILED: Statement total should be ₱25,000.00 without duplicate loan/transaction, but got: ${octDetails.statementTotal}`);
+    }
 
     console.log('✅ PASS: "Iphone 17 Pro (Mine)" is clearly displayed in October statement cycle!');
+    console.log('✅ PASS: Duplicate transaction with same loan ID is HIDDEN!');
+    console.log(`✅ PASS: Statement Total is accurately ₱25,000.00 (not doubled to ₱31,500.00)!`);
     console.log('Installment row details:', octDetails.instData);
 
     // 4. Test "All Statement Months"

@@ -1006,10 +1006,33 @@ export function CardDetailsClient({
           <div className="space-y-4">
             {visibleGroups.map((group) => {
               const isCollapsed = collapsedStatements[group.statementKey] ?? false;
-              const cycleInstallmentTotal =
-                group.totalInstallments ||
-                (group.installments || []).reduce((sum, item) => sum + item.amount, 0);
-              const hasInstallments = Boolean(group.installments && group.installments.length > 0);
+
+              // Deduplicate loans and transactions inside this cycle:
+              // If loan ID is the same, hide duplicate loan or transaction, and do not add to total
+              const seenCycleLoanIds = new Set<string>();
+
+              const displayInstallments = (group.installments || []).filter((inst) => {
+                const loanId = (inst.sourceId || '').trim();
+                if (!loanId) return true;
+                if (seenCycleLoanIds.has(loanId)) return false; // Duplicate loan in this cycle - hide!
+                seenCycleLoanIds.add(loanId);
+                return true;
+              });
+
+              const displayTransactions = (group.transactions || []).filter((tx) => {
+                const loanId = (tx.loan_id || '').trim();
+                if (!loanId) return true;
+                if (seenCycleLoanIds.has(loanId)) return false; // Duplicate loan/transaction with same loan ID - hide!
+                seenCycleLoanIds.add(loanId);
+                return true;
+              });
+
+              const cycleInstallmentTotal = displayInstallments.reduce((sum, item) => sum + item.amount, 0);
+              const cycleNetSpend = displayTransactions.reduce((sum, tx) => {
+                const amt = Number(tx.amount || 0);
+                return tx.kind === 'expense' ? sum + amt : sum - amt;
+              }, 0);
+              const hasInstallments = displayInstallments.length > 0;
 
               return (
                 <Card key={group.statementKey} className="shadow-card overflow-hidden">
@@ -1048,7 +1071,7 @@ export function CardDetailsClient({
                             Statement Total
                           </span>
                           <span className="text-sm sm:text-base font-extrabold text-foreground">
-                            {formatMoney(group.netSpend + cycleInstallmentTotal)}
+                            {formatMoney(cycleNetSpend + cycleInstallmentTotal)}
                           </span>
                           {cycleInstallmentTotal > 0 && (
                             <span className="text-[10px] text-muted-foreground block font-medium">
@@ -1079,7 +1102,7 @@ export function CardDetailsClient({
                         {/* Statement Installment Commitments */}
                         {hasInstallments && (
                           <div className="space-y-1.5 pb-1">
-                            {group.installments.map((inst) => {
+                            {displayInstallments.map((inst) => {
                               const isPaid = inst.isPaid;
                               return (
                                 <div
@@ -1160,7 +1183,7 @@ export function CardDetailsClient({
                           </div>
                         )}
 
-                        {group.transactions.length === 0 ? (
+                        {displayTransactions.length === 0 ? (
                           !hasInstallments ? (
                             <div className="p-4 rounded-2xl bg-muted/60 text-center space-y-1.5">
                               <p className="text-xs text-muted-foreground">
@@ -1195,7 +1218,7 @@ export function CardDetailsClient({
                           ) : null
                         ) : (
                           <div className="max-h-80 overflow-y-auto pr-1 space-y-1.5">
-                            {group.transactions.map((tx) => (
+                            {displayTransactions.map((tx) => (
                               <div
                                 key={tx.id}
                                 className="group p-3 rounded-2xl bg-muted/60 hover:bg-muted transition-colors flex items-start justify-between text-xs gap-3 min-w-0"

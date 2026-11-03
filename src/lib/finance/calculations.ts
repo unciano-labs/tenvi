@@ -669,8 +669,69 @@ export function groupTransactionsByStatementDate(
     }
   }
 
-  // Sort transactions inside each group newest first
+  // Deduplicate loans and transactions inside each statement cycle group:
+  // If loan ID is the same, hide duplicate loan or transaction, and do not add to total
   for (const group of groupsMap.values()) {
+    // 1. Deduplicate installments in this cycle by loan/liability sourceId
+    const seenInstallmentSourceIds = new Set<string>();
+    const uniqueInstallments: StatementInstallmentItem[] = [];
+    let deduplicatedTotalInstallments = 0;
+
+    for (const inst of group.installments) {
+      const sourceId = inst.sourceId?.trim() || '';
+      if (sourceId) {
+        if (seenInstallmentSourceIds.has(sourceId)) {
+          // Duplicate loan or liability installment in this cycle - omit and don't add to total
+          continue;
+        }
+        seenInstallmentSourceIds.add(sourceId);
+      }
+      uniqueInstallments.push(inst);
+      deduplicatedTotalInstallments = Number((deduplicatedTotalInstallments + inst.amount).toFixed(2));
+    }
+    group.installments = uniqueInstallments;
+    group.totalInstallments = deduplicatedTotalInstallments;
+
+    // 2. Deduplicate transactions in this cycle against loans and other transactions with same loan_id:
+    // If tx.loan_id matches an installment already in this cycle, or duplicates another transaction with same loan_id:
+    // hide the duplicate transaction and do not add it to totalExpenses or netSpend.
+    const seenTxLoanIds = new Set<string>();
+    const uniqueTransactions: any[] = [];
+    let deduplicatedExpenses = 0;
+    let deduplicatedIncome = 0;
+    let deduplicatedNetSpend = 0;
+
+    for (const tx of group.transactions) {
+      const loanId = (tx.loan_id || '').trim();
+      if (loanId) {
+        // If loanId matches an installment already in this statement cycle, transaction is duplicate of the loan
+        if (seenInstallmentSourceIds.has(loanId)) {
+          continue; // Hide duplicate transaction, don't add to total
+        }
+        // If another transaction in this cycle already has this loanId, it's a duplicate transaction
+        if (seenTxLoanIds.has(loanId)) {
+          continue; // Hide duplicate transaction, don't add to total
+        }
+        seenTxLoanIds.add(loanId);
+      }
+
+      uniqueTransactions.push(tx);
+      const amt = Number(tx.amount || 0);
+      if (tx.kind === 'expense') {
+        deduplicatedExpenses += amt;
+        deduplicatedNetSpend += amt;
+      } else if (tx.kind === 'income') {
+        deduplicatedIncome += amt;
+        deduplicatedNetSpend -= amt;
+      }
+    }
+
+    group.transactions = uniqueTransactions;
+    group.totalExpenses = deduplicatedExpenses;
+    group.totalIncome = deduplicatedIncome;
+    group.netSpend = Number(deduplicatedNetSpend.toFixed(2));
+
+    // Sort transactions inside each group newest first
     group.transactions.sort((a, b) => {
       const dateA = a.occurred_on || a.created_at || '';
       const dateB = b.occurred_on || b.created_at || '';

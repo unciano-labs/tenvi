@@ -1112,6 +1112,90 @@ describe('groupTransactionsByStatementDate: Statement Month Cycles & Dropdown Gr
     expect(loanInst?.amount).toBe(5000);
     expect(loanInst?.name).toContain('Alex');
   });
+
+  it('deduplicates when loan installment and transaction share the same loan_id: hides duplicate transaction and excludes it from netSpend', () => {
+    const mockLoan = {
+      id: 'loan-iphone-shared',
+      amount: 60000,
+      balance_remaining: 50000,
+      is_installment: true,
+      installment_months: 12,
+      monthly_amount: 5000,
+      monthly_due_day: 1,
+      loaned_on: '2026-10-05',
+      reason: 'Iphone 17 Pro',
+      contact: { name: 'Self' },
+    };
+
+    // Transaction logged with the same loan_id in the October statement cycle (cutoff Oct 15)
+    const transactions = [
+      {
+        id: 'tx-loan-swipe',
+        amount: 5000,
+        kind: 'expense',
+        occurred_on: '2026-10-05',
+        note: 'Iphone 17 Pro - (01/12)',
+        loan_id: 'loan-iphone-shared',
+      },
+      {
+        id: 'tx-normal-grocery',
+        amount: 2500,
+        kind: 'expense',
+        occurred_on: '2026-10-10',
+        note: 'Groceries',
+        loan_id: null,
+      },
+    ];
+
+    const groups = groupTransactionsByStatementDate(transactions, 15, 1, refDate, [mockLoan], []);
+    const oct = groups.find((g) => g.statementKey === '2026-10');
+    expect(oct).toBeDefined();
+
+    // 1. Installment must be present in group.installments
+    expect(oct?.installments).toHaveLength(1);
+    expect(oct?.installments[0].sourceId).toBe('loan-iphone-shared');
+    expect(oct?.totalInstallments).toBe(5000);
+
+    // 2. The duplicate transaction with loan_id 'loan-iphone-shared' must be HIDDEN from group.transactions!
+    expect(oct?.transactions).toHaveLength(1);
+    expect(oct?.transactions[0].id).toBe('tx-normal-grocery');
+
+    // 3. Statement netSpend must only be 2500 (Groceries), NOT 7500!
+    expect(oct?.netSpend).toBe(2500);
+
+    // Total = netSpend (2500) + totalInstallments (5000) = 7500 (NOT 12500!)
+    expect((oct?.netSpend || 0) + (oct?.totalInstallments || 0)).toBe(7500);
+  });
+
+  it('deduplicates multiple transactions with the same loan_id when no installment exists', () => {
+    const transactions = [
+      {
+        id: 'tx-dup-1',
+        amount: 3000,
+        kind: 'expense',
+        occurred_on: '2026-10-08',
+        note: 'Lent cash to John',
+        loan_id: 'loan-p2p-flex',
+      },
+      {
+        id: 'tx-dup-2',
+        amount: 3000,
+        kind: 'expense',
+        occurred_on: '2026-10-09',
+        note: 'Lent cash to John (duplicate log)',
+        loan_id: 'loan-p2p-flex',
+      },
+    ];
+
+    const groups = groupTransactionsByStatementDate(transactions, 15, 5, refDate, [], []);
+    const oct = groups.find((g) => g.statementKey === '2026-10');
+    expect(oct).toBeDefined();
+
+    // Only 1 transaction kept, duplicate hidden
+    expect(oct?.transactions).toHaveLength(1);
+    expect(oct?.transactions[0].id).toBe('tx-dup-1');
+    expect(oct?.netSpend).toBe(3000); // NOT 6000!
+  });
 });
 
 
