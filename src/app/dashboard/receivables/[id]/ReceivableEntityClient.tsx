@@ -31,6 +31,7 @@ import {
   Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { Loan, Contact, CreditCard, Property } from '@/types';
 import { formatMoney, formatDate } from '@/lib/finance/calculations';
 import { getPropertyIcon } from '@/lib/constants';
@@ -47,7 +48,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, ExpandableCardContent } from '@/components/ui/card';
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -967,11 +968,12 @@ export function ReceivableEntityClient({
                           className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                           title={isExpanded ? 'Collapse breakdown' : 'Expand breakdown'}
                         >
-                          {isExpanded ? (
-                            <ChevronUp className="w-4 h-4" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" />
-                          )}
+                          <ChevronDown
+                            className={cn(
+                              "w-4 h-4 transition-[transform,rotate] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                              isExpanded && "rotate-180"
+                            )}
+                          />
                         </button>
                       )}
                     </div>
@@ -979,8 +981,15 @@ export function ReceivableEntityClient({
                 </div>
 
                 {/* Expanded Breakdown for Installments and Payments */}
-                {isExpanded && rawLoan && (
-                  <div className="pt-3 space-y-3 bg-muted/40 rounded-2xl p-4">
+                {rawLoan && (
+                  <ExpandableCardContent
+                    expanded={isExpanded}
+                    className={cn(
+                      "transition-[grid-template-rows,opacity,margin] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                      isExpanded ? "mt-3" : "mt-0"
+                    )}
+                    contentClassName="space-y-3 bg-muted/40 rounded-2xl p-4"
+                  >
                     {/* Installments schedule */}
                     {hasInstallments && (
                       <div className="space-y-2">
@@ -1049,7 +1058,7 @@ export function ReceivableEntityClient({
                         </div>
                       </div>
                     )}
-                  </div>
+                  </ExpandableCardContent>
                 )}
               </div>
             );

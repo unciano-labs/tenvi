@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { dismissOnboardingChecklistAction } from '@/app/actions/onboarding';
 import { Badge } from '@/components/ui/badge';
+import { ExpandableCardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface LaunchpadProps {
   progress: {
@@ -207,7 +209,12 @@ export function OnboardingLaunchpad({
             aria-label="Toggle missions"
             className="p-2 text-muted-foreground hover:text-foreground transition rounded-xl hover:bg-muted active:scale-95 cursor-pointer"
           >
-            {collapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+            <ChevronDown
+              className={cn(
+                "w-5 h-5 transition-[transform,rotate] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                !collapsed && "rotate-180"
+              )}
+            />
           </button>
 
           <button
@@ -229,10 +236,12 @@ export function OnboardingLaunchpad({
         />
       </div>
 
-      {/* Interactive 4 Mission Cards */}
-      {!collapsed && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {missions.map((mission) => {
+      {/* Interactive 4 Mission Cards with 350ms ease-out expand */}
+      <ExpandableCardContent
+        expanded={!collapsed}
+        contentClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1"
+      >
+        {missions.map((mission) => {
             const Icon = mission.icon;
             const isNext = !mission.done && mission.id === nextMission?.id;
 
@@ -316,8 +325,7 @@ export function OnboardingLaunchpad({
               </button>
             );
           })}
-        </div>
-      )}
+      </ExpandableCardContent>
     </div>
   );
 }

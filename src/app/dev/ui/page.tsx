@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,6 +11,7 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
+  ExpandableCardContent,
 } from "@/components/ui/card";
 import {
   Dialog,
@@ -217,6 +220,7 @@ export default function DevUiDemoPage() {
   const [checkboxChecked, setCheckboxChecked] = useState<boolean>(false);
   const [isMultiTxModalOpen, setIsMultiTxModalOpen] = useState<boolean>(false);
   const [multiTxModalItems, setMultiTxModalItems] = useState<ParsedCardItem[] | undefined>(undefined);
+  const [isDemoCardExpanded, setIsDemoCardExpanded] = useState<boolean>(false);
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6 sm:p-10 max-w-5xl mx-auto space-y-10">
@@ -297,6 +301,74 @@ export default function DevUiDemoPage() {
             Overdue (Danger)
           </span>
         </div>
+      </section>
+
+      {/* Expandable Card Effect Demo (350ms Ease-Out: Fast first, then slow) */}
+      <section className="space-y-4 p-5 sm:p-6 rounded-3xl bg-card shadow-card" id="expandable-card-demo">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-xl font-semibold">Card Expansion Physics (Fast First, Slow Settle)</h2>
+            <Badge variant="outline" className="text-xs font-mono font-bold">
+              350ms • cubic-bezier(0.16, 1, 0.3, 1)
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Demonstrating smooth intrinsic-height CSS Grid animation without max-height clipping or layout jank.
+          </p>
+        </div>
+
+        <Card className="shadow-card overflow-hidden">
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-foreground">Statement Cycle Summary & Transactions</h3>
+                <p className="text-xs text-muted-foreground">Click toggle to trigger the 350ms ease-out expand/collapse effect</p>
+              </div>
+              <Button
+                id="demo-card-expand-toggle"
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDemoCardExpanded((prev) => !prev)}
+                className="size-8 rounded-xl bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+                aria-label={isDemoCardExpanded ? 'Collapse card' : 'Expand card'}
+              >
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-[transform,rotate] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                    isDemoCardExpanded && "rotate-180"
+                  )}
+                />
+              </Button>
+            </div>
+
+            <ExpandableCardContent
+              id="demo-card-expandable-content"
+              expanded={isDemoCardExpanded}
+              className={cn(
+                "transition-[grid-template-rows,opacity,margin] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                isDemoCardExpanded ? "mt-4" : "mt-0"
+              )}
+              contentClassName="space-y-2 pt-1"
+            >
+              <div className="p-4 rounded-xl bg-muted/50 space-y-2 text-xs">
+                <div className="font-semibold text-foreground">Statement Transactions Breakdown</div>
+                <p className="text-muted-foreground">
+                  The container height expands dynamically from 0 to full intrinsic height over exactly 350ms with exponential deceleration.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                  <div className="p-3 rounded-lg bg-card shadow-xs">
+                    <span className="text-muted-foreground block text-2xs">Initial Acceleration</span>
+                    <strong className="text-foreground">~70% of distance covered in first 120ms</strong>
+                  </div>
+                  <div className="p-3 rounded-lg bg-card shadow-xs">
+                    <span className="text-muted-foreground block text-2xs">Gentle Settle</span>
+                    <strong className="text-foreground">Smooth deceleration to rest at 350ms</strong>
+                  </div>
+                </div>
+              </div>
+            </ExpandableCardContent>
+          </CardContent>
+        </Card>
       </section>
 
       {/* Cards & Dialogs */}

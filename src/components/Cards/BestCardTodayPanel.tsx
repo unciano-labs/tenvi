@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { formatMoney } from '@/lib/finance/calculations';
 import type { OptimalCardResult, CardSpendRecommendation } from '@/lib/finance/calculations';
 import { Sparkles, Plus, ChevronDown, Info, Calendar } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface BestCardTodayPanelProps {
   optimalData: OptimalCardResult;
@@ -104,9 +105,10 @@ export function BestCardTodayPanel({
             >
               <span>See all {rankedCards.length} cards ranked</span>
               <ChevronDown
-                className={`size-3.5 transition-transform duration-200 ${
-                  isOpen ? 'rotate-180' : ''
-                }`}
+                className={cn(
+                  "size-3.5 transition-[transform,rotate] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                  isOpen && "rotate-180"
+                )}
               />
             </CollapsibleTrigger>
 

@@ -30,6 +30,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { deleteCreditCardAction } from '@/app/actions/cards';
 import { deleteTransactionAction } from '@/app/actions/transactions';
 import { deleteLiabilityAction } from '@/app/actions/liabilities';
@@ -45,7 +46,7 @@ import {
   getCardUrgency,
 } from '@/lib/finance/calculations';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, ExpandableCardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -1036,7 +1037,7 @@ export function CardDetailsClient({
 
               return (
                 <Card key={group.statementKey} className="shadow-card overflow-hidden">
-                  <CardContent className="p-5 sm:p-6 space-y-3">
+                  <CardContent className="p-5 sm:p-6">
                     {/* Statement Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="space-y-1">
@@ -1087,18 +1088,25 @@ export function CardDetailsClient({
                           className="size-8 rounded-xl bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
                           aria-label={isCollapsed ? 'Expand statement' : 'Collapse statement'}
                         >
-                          {isCollapsed ? (
-                            <ChevronDown className="size-4" />
-                          ) : (
-                            <ChevronUp className="size-4" />
-                          )}
+                          <ChevronDown
+                            className={cn(
+                              "size-4 transition-[transform,rotate] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                              !isCollapsed && "rotate-180"
+                            )}
+                          />
                         </Button>
                       </div>
                     </div>
 
-                    {/* Statement Transactions List */}
-                    {!isCollapsed && (
-                      <div className="space-y-2 pt-1">
+                    {/* Statement Transactions List with 350ms ease-out expand */}
+                    <ExpandableCardContent
+                      expanded={!isCollapsed}
+                      className={cn(
+                        "transition-[grid-template-rows,opacity,margin] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                        !isCollapsed ? "mt-3" : "mt-0"
+                      )}
+                      contentClassName="space-y-2 pt-1"
+                    >
                         {/* Statement Installment Commitments */}
                         {hasInstallments && (
                           <div className="space-y-1.5 pb-1">
@@ -1286,8 +1294,7 @@ export function CardDetailsClient({
                             ))}
                           </div>
                         )}
-                      </div>
-                    )}
+                    </ExpandableCardContent>
                   </CardContent>
                 </Card>
               );

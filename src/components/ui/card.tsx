@@ -92,6 +92,39 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+interface ExpandableCardContentProps extends React.ComponentProps<"div"> {
+  expanded: boolean;
+  contentClassName?: string;
+}
+
+function ExpandableCardContent({
+  expanded,
+  className,
+  contentClassName,
+  children,
+  ...props
+}: ExpandableCardContentProps) {
+  return (
+    <div
+      data-slot="expandable-card-content"
+      data-expanded={expanded}
+      aria-hidden={!expanded}
+      className={cn(
+        "grid transition-[grid-template-rows,opacity] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden",
+        expanded
+          ? "grid-rows-[1fr] opacity-100"
+          : "grid-rows-[0fr] opacity-0 pointer-events-none",
+        className
+      )}
+      {...props}
+    >
+      <div className={cn("min-h-0 overflow-hidden", contentClassName)}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 export {
   Card,
   CardHeader,
@@ -100,4 +133,5 @@ export {
   CardAction,
   CardDescription,
   CardContent,
+  ExpandableCardContent,
 }
