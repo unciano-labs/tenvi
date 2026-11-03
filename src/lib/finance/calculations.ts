@@ -192,7 +192,8 @@ export function groupTransactionsByStatementDate(
   transactions: any[],
   statementDay: number,
   dueDay: number,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
+  pastMonthsCount: number = 12
 ): StatementGroup[] {
   const safeStatementDay = Math.max(1, Math.min(31, Number(statementDay) || 15));
   const safeDueDay = Math.max(1, Math.min(31, Number(dueDay) || 5));
@@ -324,6 +325,20 @@ export function groupTransactionsByStatementDate(
   // Also ensure active unbilled cycle is created if different
   if (!groupsMap.has(currentCycleKey)) {
     groupsMap.set(currentCycleKey, helperBuildCycle(curCycleYear, curCycleMonth));
+  }
+
+  // Pre-populate past statement cycles (default past 12 months)
+  for (let i = 1; i <= pastMonthsCount; i++) {
+    let pastMonth = todayMonth - i;
+    let pastYear = todayYear;
+    while (pastMonth < 0) {
+      pastMonth += 12;
+      pastYear -= 1;
+    }
+    const pastKey = `${pastYear}-${String(pastMonth + 1).padStart(2, '0')}`;
+    if (!groupsMap.has(pastKey)) {
+      groupsMap.set(pastKey, helperBuildCycle(pastYear, pastMonth));
+    }
   }
 
   // Group each transaction

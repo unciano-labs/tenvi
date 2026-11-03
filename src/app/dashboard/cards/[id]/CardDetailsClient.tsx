@@ -51,6 +51,14 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogHeader,
@@ -119,7 +127,6 @@ export function CardDetailsClient({
   const [isUploadStatementOpen, setIsUploadStatementOpen] = useState(false);
   const [scheduleLiability, setScheduleLiability] = useState<Liability | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAllCutoffs, setShowAllCutoffs] = useState(false);
   const [collapsedStatements, setCollapsedStatements] = useState<Record<string, boolean>>({});
 
   // Confirmation dialog state
@@ -133,11 +140,62 @@ export function CardDetailsClient({
   }, [transactions]);
 
   // Group transactions into statement cycles
-  const statementGroups = groupTransactionsByStatementDate(
-    currentTransactions,
-    card.statement_day,
-    card.due_day
-  );
+  const statementGroups = useMemo(() => {
+    return groupTransactionsByStatementDate(
+      currentTransactions,
+      card.statement_day,
+      card.due_day
+    );
+  }, [currentTransactions, card.statement_day, card.due_day]);
+
+  // Current calendar month's statement key (e.g. '2026-11')
+  const currentMonthKey = useMemo(() => {
+    const found = statementGroups.find((g) => g.isCurrentMonth);
+    if (found) return found.statementKey;
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }, [statementGroups]);
+
+  // Selected statement month in drop-down (default to current month's statement)
+  const [selectedStatementMonth, setSelectedStatementMonth] = useState<string>(currentMonthKey);
+
+  // Dropdown options for selectable statement months
+  const statementMonthOptions = useMemo(() => {
+    return statementGroups.map((g) => {
+      const [yearStr, monthStr] = g.statementKey.split('-');
+      const y = parseInt(yearStr, 10);
+      const m = parseInt(monthStr, 10) - 1;
+      const monthDate = new Date(y, m, 1);
+      const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      let label = monthName;
+      if (g.isCurrentMonth) {
+        label = `${monthName} (Current Month)`;
+      } else if (g.isCurrentCycle) {
+        label = `${monthName} (Unbilled Cycle)`;
+      }
+
+      return {
+        key: g.statementKey,
+        label,
+        monthName,
+        isCurrentMonth: g.isCurrentMonth,
+        isCurrentCycle: g.isCurrentCycle,
+        txCount: g.transactions.length,
+      };
+    });
+  }, [statementGroups]);
+
+  const currentMonthLabel = useMemo(() => {
+    const group = statementGroups.find((g) => g.isCurrentMonth);
+    if (group) {
+      const [y, m] = group.statementKey.split('-');
+      const d = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+    const now = new Date();
+    return now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }, [statementGroups]);
 
   // Financial calculations
   const {
@@ -214,47 +272,59 @@ export function CardDetailsClient({
 
 
   // 1. All statement cycles that actually have transactions or are active/current
-  const cutoffsWithTransactions = statementGroups.filter(
-    (g) => g.transactions.length > 0 || g.isCurrentMonth || g.isCurrentCycle
-  );
+  const cutoffsWithTransactions = useMemo(() => {
+    return statementGroups.filter(
+      (g) => g.transactions.length > 0 || g.isCurrentMonth || g.isCurrentCycle
+    );
+  }, [statementGroups]);
 
-  // 2. Default statement cycles: Current Unbilled Cycle on top + Current Month Cut-Off
-  const defaultCutoffKeys = new Set(
-    statementGroups
-      .filter((g) => g.isCurrentMonth || g.isCurrentCycle)
-      .map((g) => g.statementKey)
-  );
+  // 2. Filter visible statement groups based on selected statement month and search query
+  const visibleGroups = useMemo(() => {
+    let groups: typeof statementGroups = [];
+    if (selectedStatementMonth === 'all') {
+      groups = cutoffsWithTransactions;
+    } else {
+      const matched = statementGroups.find((g) => g.statementKey === selectedStatementMonth);
+      if (matched) {
+        groups = [matched];
+      } else {
+        const fallback = statementGroups.find((g) => g.isCurrentMonth) || statementGroups[0];
+        groups = fallback ? [fallback] : [];
+      }
+    }
 
-  // Number of cut-offs with transactions that are hidden in default view
-  const hiddenCutoffsCount = cutoffsWithTransactions.filter(
-    (g) => !defaultCutoffKeys.has(g.statementKey)
-  ).length;
+    if (!searchQuery.trim()) {
+      return groups;
+    }
 
-  // 3. Filter groups based on search query and default vs all cut-offs toggle
-  const visibleGroups = statementGroups
-    .filter((group) => {
-      if (searchQuery.trim()) return group.transactions.length > 0;
-      if (showAllCutoffs) return group.transactions.length > 0 || group.isCurrentMonth || group.isCurrentCycle;
-      return defaultCutoffKeys.has(group.statementKey);
-    })
-    .map((group) => {
-      if (!searchQuery.trim()) return group;
-      const query = searchQuery.toLowerCase();
-      const filteredTxs = group.transactions.filter((tx) => {
-        const noteMatch = (tx.note || '').toLowerCase().includes(query);
-        const catMatch = (tx.category?.name || '').toLowerCase().includes(query);
-        const amtMatch = String(tx.amount || '').includes(query);
-        return noteMatch || catMatch || amtMatch;
-      });
-      return {
-        ...group,
-        transactions: filteredTxs,
-      };
-    })
-    .filter((group) => {
-      if (!searchQuery.trim()) return true;
-      return group.transactions.length > 0;
+    const query = searchQuery.toLowerCase();
+    return groups
+      .map((group) => {
+        const filteredTxs = group.transactions.filter((tx) => {
+          const noteMatch = (tx.note || '').toLowerCase().includes(query);
+          const catMatch = (tx.category?.name || '').toLowerCase().includes(query);
+          const amtMatch = String(tx.amount || '').includes(query);
+          return noteMatch || catMatch || amtMatch;
+        });
+        return {
+          ...group,
+          transactions: filteredTxs,
+        };
+      })
+      .filter((group) => group.transactions.length > 0);
+  }, [statementGroups, selectedStatementMonth, cutoffsWithTransactions, searchQuery]);
+
+  // Check if search query matches transactions in other statement months
+  const hasMatchesInOtherMonths = useMemo(() => {
+    if (!searchQuery.trim() || selectedStatementMonth === 'all') return false;
+    const query = searchQuery.toLowerCase();
+    return currentTransactions.some((tx) => {
+      const noteMatch = (tx.note || '').toLowerCase().includes(query);
+      const catMatch = (tx.category?.name || '').toLowerCase().includes(query);
+      const amtMatch = String(tx.amount || '').includes(query);
+      return noteMatch || catMatch || amtMatch;
     });
+  }, [searchQuery, selectedStatementMonth, currentTransactions]);
 
   // Active installment commitments from card-linked liabilities
   const activeCycleInstallments = useMemo(() => {
@@ -780,7 +850,7 @@ export function CardDetailsClient({
       <div className="space-y-4">
         {/* Section Toolbar */}
         <Card className="shadow-card">
-          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardContent className="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                 <Receipt className="size-4 text-primary" />
@@ -791,18 +861,52 @@ export function CardDetailsClient({
               </p>
             </div>
 
-            <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
+              {/* Statement Month Dropdown */}
+              <div className="w-full sm:w-60">
+                <Select
+                  value={selectedStatementMonth}
+                  onValueChange={(val) => {
+                    if (val) setSelectedStatementMonth(val);
+                  }}
+                >
+                  <SelectTrigger size="sm" className="min-h-10 h-10 text-xs font-semibold rounded-xl bg-muted w-full">
+                    <Calendar className="size-3.5 text-primary shrink-0 mr-1" />
+                    <SelectValue placeholder="Select statement month">
+                      {(val: string | null) => {
+                        if (!val || val === 'all') return 'All Statement Months';
+                        const opt = statementMonthOptions.find((o) => o.key === val);
+                        return opt?.label || val;
+                      }}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    <SelectItem value="all">
+                      All Statement Months ({cutoffsWithTransactions.length})
+                    </SelectItem>
+                    <SelectSeparator />
+                    {statementMonthOptions.map((opt) => (
+                      <SelectItem key={opt.key} value={opt.key}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Upload Statement Button */}
               <Button
                 variant="soft"
                 size="sm"
                 onClick={() => setIsUploadStatementOpen(true)}
-                className="min-h-10 text-xs font-semibold cursor-pointer"
+                className="min-h-10 text-xs font-semibold cursor-pointer shrink-0"
               >
                 <UploadCloud className="mr-1.5 size-3.5" />
                 Upload Statement
               </Button>
 
-              <div className="relative w-full sm:w-60">
+              {/* Search Purchases */}
+              <div className="relative w-full sm:w-52">
                 <Search className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <Input
                   type="text"
@@ -816,36 +920,48 @@ export function CardDetailsClient({
           </CardContent>
         </Card>
 
-        {/* Statement Cut-Off Filter Pills */}
+        {/* Active Statement Cycle Info Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 text-xs">
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-muted w-fit">
-            <Button
-              type="button"
-              variant={!showAllCutoffs ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => setShowAllCutoffs(false)}
-              className="rounded-xl text-xs h-8 px-3 font-semibold"
-            >
-              Current & Unbilled
-            </Button>
-            <Button
-              type="button"
-              variant={showAllCutoffs ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => setShowAllCutoffs(true)}
-              className="rounded-xl text-xs h-8 px-3 font-semibold"
-            >
-              All Cut-Offs ({cutoffsWithTransactions.length})
-            </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-muted-foreground font-medium">Viewing:</span>
+            {selectedStatementMonth === 'all' ? (
+              <Badge variant="secondary" className="text-xs font-semibold py-0.5 px-2">
+                All Statement Cycles ({visibleGroups.length})
+              </Badge>
+            ) : (
+              (() => {
+                const activeGroup = statementGroups.find((g) => g.statementKey === selectedStatementMonth);
+                if (!activeGroup) return null;
+                return (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge
+                      variant={activeGroup.isCurrentMonth ? 'default' : 'secondary'}
+                      className="text-xs font-semibold py-0.5 px-2"
+                    >
+                      Cut-off: {activeGroup.statementDateFormatted}
+                    </Badge>
+                    <span className="text-muted-foreground">
+                      Cycle: {activeGroup.cycleStartDateFormatted} – {activeGroup.cycleEndDateFormatted} • Due: <strong className="text-foreground">{activeGroup.dueDateFormatted}</strong>
+                    </span>
+                  </div>
+                );
+              })()
+            )}
           </div>
 
           <div className="text-xs text-muted-foreground font-medium">
-            {!showAllCutoffs && hiddenCutoffsCount > 0 ? (
-              <span>
-                {hiddenCutoffsCount} other statement cut-off{hiddenCutoffsCount > 1 ? 's' : ''} hidden
-              </span>
+            {selectedStatementMonth !== currentMonthKey ? (
+              <button
+                type="button"
+                onClick={() => setSelectedStatementMonth(currentMonthKey)}
+                className="text-primary hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
+              >
+                ← Return to Current Month ({currentMonthLabel})
+              </button>
             ) : (
-              <span>Showing all active statement cut-offs</span>
+              <span className="text-muted-foreground">
+                Default view: Current month&apos;s statement
+              </span>
             )}
           </div>
         </div>
@@ -859,14 +975,26 @@ export function CardDetailsClient({
             <h3 className="text-sm font-bold text-foreground">No Transactions Found</h3>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               {searchQuery
-                ? `No transactions matched "${searchQuery}". Try clearing the search.`
+                ? `No transactions matched "${searchQuery}" in this statement period.`
                 : 'No card purchases recorded for this statement period.'}
             </p>
+            {searchQuery && hasMatchesInOtherMonths && (
+              <div className="pt-1">
+                <Button
+                  variant="soft"
+                  size="sm"
+                  onClick={() => setSelectedStatementMonth('all')}
+                  className="text-xs font-semibold cursor-pointer"
+                >
+                  Search across All Statement Months →
+                </Button>
+              </div>
+            )}
             {!searchQuery && (
               <Button
                 variant="primary"
                 onClick={() => setIsSwipeModalOpen(true)}
-                className="min-h-10 text-xs font-semibold"
+                className="min-h-10 text-xs font-semibold cursor-pointer shadow-none"
               >
                 <Plus className="mr-1.5 size-3.5" />
                 Log First Swipe
@@ -1102,23 +1230,23 @@ export function CardDetailsClient({
               );
             })}
 
-            {/* Bottom helper card when cutoffs are hidden */}
-            {!showAllCutoffs && hiddenCutoffsCount > 0 && !searchQuery.trim() && (
+            {/* Bottom helper card when a single statement month is viewed and other cutoffs exist */}
+            {selectedStatementMonth !== 'all' && cutoffsWithTransactions.length > 1 && !searchQuery.trim() && (
               <Card className="shadow-card p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="size-4 text-primary shrink-0" />
                   <p>
-                    <strong className="text-foreground">{hiddenCutoffsCount}</strong> other statement cut-off{hiddenCutoffsCount > 1 ? 's' : ''} hidden.
+                    Viewing <strong className="text-foreground">{statementMonthOptions.find((o) => o.key === selectedStatementMonth)?.monthName || 'selected month'}</strong> statement. There are <strong className="text-foreground">{cutoffsWithTransactions.length - 1}</strong> other active statement cut-off{cutoffsWithTransactions.length - 1 > 1 ? 's' : ''}.
                   </p>
                 </div>
                 <Button
                   type="button"
                   variant="soft"
                   size="sm"
-                  onClick={() => setShowAllCutoffs(true)}
+                  onClick={() => setSelectedStatementMonth('all')}
                   className="font-bold shrink-0 cursor-pointer text-xs"
                 >
-                  Show All {cutoffsWithTransactions.length} Cut-Offs →
+                  Show All {cutoffsWithTransactions.length} Statement Months →
                 </Button>
               </Card>
             )}

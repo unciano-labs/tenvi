@@ -15,6 +15,7 @@ import {
   calculateCardSpending,
   calculatePropertyFinancials,
   calculatePropertyLoanAmortization,
+  groupTransactionsByStatementDate,
 } from './calculations';
 
 describe('TNV-015: getTodayManila()', () => {
@@ -982,6 +983,74 @@ describe('calculatePropertyFinancials() with loan records', () => {
     expect(result.activeLoanCount).toBe(2);
   });
 });
+
+describe('groupTransactionsByStatementDate: Statement Month Cycles & Dropdown Grouping', () => {
+  const refDate = new Date(2026, 10, 3); // 2026-11-03 (November 3, 2026)
+
+  it('pre-populates current month and 12 past statement months by default', () => {
+    const groups = groupTransactionsByStatementDate([], 15, 5, refDate);
+    // At least 13 cycles (current month 2026-11 + 12 previous months back to 2025-11)
+    expect(groups.length).toBeGreaterThanOrEqual(13);
+
+    // Sorted descending (newest first)
+    expect(groups[0].statementKey).toBe('2026-11');
+    expect(groups[0].isCurrentMonth).toBe(true);
+    expect(groups[0].isCurrentCycle).toBe(true);
+
+    // Check that previous months exist
+    const octGroup = groups.find((g) => g.statementKey === '2026-10');
+    expect(octGroup).toBeDefined();
+    expect(octGroup?.isCurrentMonth).toBe(false);
+
+    const yearAgoGroup = groups.find((g) => g.statementKey === '2025-11');
+    expect(yearAgoGroup).toBeDefined();
+  });
+
+  it('handles post-cutoff date by generating active unbilled cycle in next month', () => {
+    const afterCutoffDate = new Date(2026, 10, 20); // 2026-11-20 (after cutoff on 15th)
+    const groups = groupTransactionsByStatementDate([], 15, 5, afterCutoffDate);
+
+    // Newest cycle should be December 2026 (unbilled cycle)
+    expect(groups[0].statementKey).toBe('2026-12');
+    expect(groups[0].isCurrentCycle).toBe(true);
+    expect(groups[0].isCurrentMonth).toBe(false);
+
+    // November is current calendar month
+    const novGroup = groups.find((g) => g.statementKey === '2026-11');
+    expect(novGroup?.isCurrentMonth).toBe(true);
+    expect(novGroup?.isCurrentCycle).toBe(false);
+  });
+
+  it('correctly maps transactions before and after cutoff day to distinct statement months', () => {
+    const sampleTxs = [
+      { id: 'tx-1', amount: 2500, kind: 'expense', occurred_on: '2026-11-02', note: 'Coffee' },
+      { id: 'tx-2', amount: 5000, kind: 'expense', occurred_on: '2026-10-20', note: 'Groceries post Oct 15' },
+      { id: 'tx-3', amount: 1500, kind: 'expense', occurred_on: '2026-10-10', note: 'Lunch pre Oct 15' },
+      { id: 'tx-4', amount: 1000, kind: 'income', occurred_on: '2026-11-01', note: 'Cashback refund' },
+    ];
+
+    // Statement day is 15th.
+    // - tx-1 (Nov 2) <= 15 -> Nov 2026 statement
+    // - tx-2 (Oct 20) > 15 -> Rolls into Nov 2026 statement!
+    // - tx-4 (Nov 1) <= 15 -> Nov 2026 statement (income refund)
+    // - tx-3 (Oct 10) <= 15 -> Oct 2026 statement
+    const groups = groupTransactionsByStatementDate(sampleTxs, 15, 5, refDate);
+
+    const nov = groups.find((g) => g.statementKey === '2026-11')!;
+    expect(nov).toBeDefined();
+    expect(nov.transactions).toHaveLength(3);
+    expect(nov.totalExpenses).toBe(7500); // 2500 + 5000
+    expect(nov.totalIncome).toBe(1000); // 1000 cashback
+    expect(nov.netSpend).toBe(6500); // 7500 - 1000
+
+    const oct = groups.find((g) => g.statementKey === '2026-10')!;
+    expect(oct).toBeDefined();
+    expect(oct.transactions).toHaveLength(1);
+    expect(oct.transactions[0].id).toBe('tx-3');
+    expect(oct.netSpend).toBe(1500);
+  });
+});
+
 
 
 

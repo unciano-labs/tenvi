@@ -48,3 +48,7 @@ yarn-error.log*
 
 # reference templates
 /templates
+
+# test artifacts
+/artifacts
+

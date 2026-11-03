@@ -37,3 +37,4 @@ describe('Widget Allowlist Security', () => {
     expect(new URL(config.src).origin).toBe('https://telli-six.vercel.app');
   });
 });
+

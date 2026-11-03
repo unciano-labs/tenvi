@@ -23,3 +23,4 @@ export function VoiceAgentWidget({ currentPath = '/' }: VoiceAgentWidgetProps) {
     />
   );
 }
+

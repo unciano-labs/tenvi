@@ -50,6 +50,85 @@ import {
   ThemeQuickToggle,
   ThemeSegmentedToggle,
 } from "@/components/ui/theme-toggle";
+import { CardDetailsClient } from "@/app/dashboard/cards/[id]/CardDetailsClient";
+import { CreditCard, Transaction, Category } from "@/types";
+
+const mockCard: CreditCard = {
+  id: "test-card-1",
+  website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953",
+  user_id: "user-1",
+  name: "Visa Platinum",
+  bank_name: "BDO",
+  last_4: "8812",
+  credit_limit: 150000,
+  statement_day: 15,
+  due_day: 5,
+  color_theme: "navy",
+  is_active: true,
+  created_at: "2026-01-01T00:00:00Z",
+};
+
+const mockCategories: Category[] = [
+  { id: "cat-1", name: "Groceries", kind: "expense", icon: "shopping-cart", color: "#10b981", is_default: true, user_id: "user-1", website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953", created_at: "2026-01-01" },
+  { id: "cat-2", name: "Dining", kind: "expense", icon: "coffee", color: "#f59e0b", is_default: true, user_id: "user-1", website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953", created_at: "2026-01-01" },
+  { id: "cat-3", name: "Shopping", kind: "expense", icon: "shopping-bag", color: "#3b82f6", is_default: true, user_id: "user-1", website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953", created_at: "2026-01-01" },
+  { id: "cat-4", name: "Transportation", kind: "expense", icon: "car", color: "#8b5cf6", is_default: true, user_id: "user-1", website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953", created_at: "2026-01-01" },
+];
+
+const mockTransactions: Transaction[] = [
+  {
+    id: "tx-nov-1",
+    website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953",
+    user_id: "user-1",
+    credit_card_id: "test-card-1",
+    payment_method: "credit_card",
+    amount: 4500,
+    kind: "expense",
+    note: "Rustan's Supermarket Groceries",
+    occurred_on: "2026-11-02",
+    created_at: "2026-11-02T10:00:00Z",
+    category: mockCategories[0],
+  },
+  {
+    id: "tx-nov-2",
+    website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953",
+    user_id: "user-1",
+    credit_card_id: "test-card-1",
+    payment_method: "credit_card",
+    amount: 1250,
+    kind: "expense",
+    note: "Starbucks Reserve Podium",
+    occurred_on: "2026-10-25",
+    created_at: "2026-10-25T14:30:00Z",
+    category: mockCategories[1],
+  },
+  {
+    id: "tx-oct-1",
+    website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953",
+    user_id: "user-1",
+    credit_card_id: "test-card-1",
+    payment_method: "credit_card",
+    amount: 18500,
+    kind: "expense",
+    note: "Power Mac Center AirPods Pro",
+    occurred_on: "2026-10-10",
+    created_at: "2026-10-10T16:00:00Z",
+    category: mockCategories[2],
+  },
+  {
+    id: "tx-sep-1",
+    website_id: "65d4f86e-1829-417a-981f-bc7aad7bc953",
+    user_id: "user-1",
+    credit_card_id: "test-card-1",
+    payment_method: "credit_card",
+    amount: 6200,
+    kind: "expense",
+    note: "Shell Gas Station Full Tank",
+    occurred_on: "2026-09-08",
+    created_at: "2026-09-08T09:15:00Z",
+    category: mockCategories[3],
+  },
+];
 
 export default function DevUiDemoPage() {
   const [selectedBank, setSelectedBank] = useState<string>("");
@@ -301,6 +380,24 @@ export default function DevUiDemoPage() {
             <ReferenceCardForm />
           </CardContent>
         </Card>
+      </section>
+
+      {/* Card Details with Statement Month Dropdown Demo */}
+      <section className="space-y-4 pt-6" id="card-details-demo">
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold">Card Details Statement Month Dropdown Demo</h2>
+          <p className="text-sm text-muted-foreground">
+            Validating the statement month dropdown selector, defaulting to current month&apos;s statement with interactive month switching.
+          </p>
+        </div>
+        <div className="p-4 sm:p-6 rounded-3xl bg-muted/30">
+          <CardDetailsClient
+            card={mockCard}
+            transactions={mockTransactions}
+            categories={mockCategories}
+            allCards={[mockCard]}
+          />
+        </div>
       </section>
     </div>
   );
