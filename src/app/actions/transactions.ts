@@ -75,6 +75,106 @@ export async function createTransactionAction(data: any) {
   return { success: true, id: result.transaction_id };
 }
 
+export async function createBatchTransactionsAction(items: any[]): Promise<{
+  success: boolean;
+  savedCount: number;
+  savedIds: string[];
+  errors?: string[];
+  error?: string;
+}> {
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return {
+      success: false,
+      savedCount: 0,
+      savedIds: [],
+      error: auth.error || 'You must be logged in to record transactions.',
+    };
+  }
+  const user = auth.user;
+  const supabase = await createClient();
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return {
+      success: false,
+      savedCount: 0,
+      savedIds: [],
+      error: 'No transactions to record.',
+    };
+  }
+
+  const savedIds: string[] = [];
+  const errors: string[] = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const parsed = transactionSchema.safeParse(item);
+    if (!parsed.success) {
+      errors.push(`Item ${i + 1} (${item.note || 'Transaction'}): ${parsed.error.errors[0]?.message || 'Invalid details'}`);
+      continue;
+    }
+
+    const {
+      kind,
+      amount,
+      categoryId,
+      paymentMethod,
+      creditCardId,
+      savingsId,
+      transferToSavingsId,
+      propertyId,
+      occurredOn,
+      note,
+    } = parsed.data;
+
+    const { data: result, error } = await supabase.rpc('execute_atomic_transaction', {
+      p_website_id: WEBSITE_ID,
+      p_user_id: user.id,
+      p_kind: kind,
+      p_amount: amount,
+      p_occurred_on: occurredOn,
+      p_category_id: categoryId || null,
+      p_payment_method: paymentMethod,
+      p_savings_id: savingsId || null,
+      p_credit_card_id: paymentMethod === 'credit_card' ? creditCardId || null : null,
+      p_property_id: propertyId || null,
+      p_note: note || null,
+      p_transfer_to_savings_id: transferToSavingsId || null,
+    });
+
+    if (error || !result?.success) {
+      errors.push(`Item ${i + 1} (${note || 'Transaction'}): ${error?.message || 'Failed to save'}`);
+      continue;
+    }
+
+    savedIds.push(result.transaction_id);
+
+    await logAuditEntry({
+      userId: user.id,
+      action: 'INSERT',
+      entityType: 'transaction',
+      entityId: result.transaction_id,
+      newData: parsed.data,
+    });
+  }
+
+  if (savedIds.length > 0) {
+    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/transactions');
+    revalidatePath('/dashboard/cards');
+    revalidatePath('/dashboard/savings');
+    revalidatePath('/dashboard/properties');
+    revalidatePath('/dashboard/properties', 'layout');
+  }
+
+  return {
+    success: savedIds.length > 0,
+    savedCount: savedIds.length,
+    savedIds,
+    errors: errors.length > 0 ? errors : undefined,
+  };
+}
+
 export async function deleteTransactionAction(id: string) {
   const auth = await requireWebsiteUser();
   if (!auth.isAuthorized || !auth.user) {

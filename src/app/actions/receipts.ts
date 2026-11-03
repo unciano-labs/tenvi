@@ -6,6 +6,18 @@ import { Category } from '@/types';
 import { matchCategoryForMerchant, normalizeDate } from '@/lib/ai/statementParser';
 import { getGeminiApiKey, recordGeminiUsage, GEMINI_CANDIDATE_MODELS, withTimeout } from '@/lib/ai/gemini';
 
+export interface ParsedReceiptTransaction {
+  id: string;
+  merchant: string;
+  amount: number;
+  date: string;
+  paymentMethod: 'cash' | 'credit_card' | 'gcash' | 'maya' | 'bank_transfer' | null;
+  itemsSummary: string | null;
+  categoryId: string | null;
+  categoryName: string | null;
+  isComplete?: boolean;
+}
+
 export interface ReceiptParseResult {
   merchant: string;
   amount: number;
@@ -16,6 +28,7 @@ export interface ReceiptParseResult {
   categoryName: string | null;
   source: 'gemini_vision' | 'ocr_fallback';
   rawTextPreview?: string;
+  transactions: ParsedReceiptTransaction[];
 }
 
 /**
@@ -76,16 +89,21 @@ export async function parseReceiptImageAction(
           else mimeType = 'image/jpeg';
         }
 
-        const prompt = `You are an expert OCR receipt and financial invoice parser.
-Extract the key financial transaction details from this receipt or bill image.
+        const prompt = `You are an expert OCR receipt and financial transaction parser.
+Extract ALL financial transactions visible in this image.
 
-CRITICAL RULES:
-1. "date": Return in "YYYY-MM-DD" format. If the year is not printed, default to ${currentYear}. If the date cannot be determined at all, return today's date in "YYYY-MM-DD".
-2. "amount": The final total amount paid (positive float, e.g. 450.00). Do not pick the subtotal, change, or tax unless it equals the total.
-3. "merchant": The official business or store name (e.g., "Jollibee", "Mercury Drug", "Shell", "SM Supermarket", "Starbucks").
-4. "paymentMethod": One of "cash", "credit_card", "gcash", "maya", "bank_transfer", or null if not indicated.
-5. "itemsSummary": A brief 1-line summary of top 1-3 purchased items (e.g. "2pc Chickenjoy, Burger Steak").
-6. "suggestedCategory": Suggest the best matching category from:
+SUPPORTED SCENARIOS:
+1. Multi-transaction images: If this is a credit card statement snippet, bank transaction history, SMS alerts log, e-wallet transaction list, or multiple receipts, extract EACH separate transaction entry.
+2. Single receipt / invoice: If this is a standard single store receipt or bill, extract ONE transaction representing the final receipt total paid. Summarize items in "itemsSummary".
+3. Itemized purchases / multi-receipts: If multiple distinct items/receipts are listed with individual prices, extract each as a distinct transaction.
+
+FIELD DEFINITIONS FOR EACH TRANSACTION:
+- "merchant": Official business, merchant, store, or recipient name (e.g., "Jollibee", "Mercury Drug", "Shell", "SM Supermarket", "Grab", "Shopee", "Meralco").
+- "amount": Final total paid or charge amount for this transaction (positive float, e.g. 450.00). If missing/unreadable, return 0.
+- "date": Transaction date in "YYYY-MM-DD" format. If year is missing, default to ${currentYear}. If the date is completely missing, return "".
+- "paymentMethod": One of "cash", "credit_card", "gcash", "maya", "bank_transfer", or null if not indicated.
+- "itemsSummary": Brief 1-line summary of items/services purchased, or null.
+- "suggestedCategory": Best matching category from:
    - Food & Groceries
    - Dining Out
    - Commute & Gas
@@ -96,14 +114,18 @@ CRITICAL RULES:
    - Entertainment & Subs
    - Other Expense
 
-Return a single JSON object with exact keys:
+Return JSON in this exact structure:
 {
-  "merchant": string,
-  "amount": number,
-  "date": "YYYY-MM-DD",
-  "paymentMethod": "cash" | "credit_card" | "gcash" | "maya" | "bank_transfer" | null,
-  "itemsSummary": string | null,
-  "suggestedCategory": string
+  "transactions": [
+    {
+      "merchant": string,
+      "amount": number,
+      "date": "YYYY-MM-DD",
+      "paymentMethod": "cash" | "credit_card" | "gcash" | "maya" | "bank_transfer" | null,
+      "itemsSummary": string | null,
+      "suggestedCategory": string
+    }
+  ]
 }`;
 
         let activeModel = GEMINI_CANDIDATE_MODELS[0];
@@ -163,7 +185,18 @@ Return a single JSON object with exact keys:
             }
           }
 
-          if (parsed && typeof parsed === 'object') {
+          let rawList: any[] = [];
+          if (Array.isArray(parsed)) {
+            rawList = parsed;
+          } else if (parsed && typeof parsed === 'object') {
+            if (Array.isArray(parsed.transactions)) {
+              rawList = parsed.transactions;
+            } else if (parsed.merchant || parsed.amount !== undefined) {
+              rawList = [parsed];
+            }
+          }
+
+          if (rawList.length > 0) {
             await recordGeminiUsage({
               userId: user.id,
               feature: 'statement_vision',
@@ -172,31 +205,58 @@ Return a single JSON object with exact keys:
               status: 'success',
             });
 
-            const rawMerchant = String(parsed.merchant || 'Store Receipt').trim();
-            const rawDate = String(parsed.date || '').trim();
-            const { isoDate } = normalizeDate(rawDate, currentYear);
-            const totalAmount = Math.abs(Number(parsed.amount || 0));
+            const transactions: ParsedReceiptTransaction[] = [];
+            const validPaymentMethods = ['cash', 'credit_card', 'gcash', 'maya', 'bank_transfer'];
 
-            // Auto-categorize
-            const { categoryId, categoryName } = matchCategoryForMerchant(
-              `${rawMerchant} ${parsed.suggestedCategory || ''} ${parsed.itemsSummary || ''}`,
-              userCategories
-            );
+            for (const item of rawList) {
+              if (!item || typeof item !== 'object') continue;
+              const rawMerchant = String(item.merchant || '').trim();
+              const rawDate = String(item.date || '').trim();
+              const { isoDate } = rawDate ? normalizeDate(rawDate, currentYear) : { isoDate: '' };
+              const totalAmount = Math.abs(Number(item.amount || 0));
+              const pMethod = validPaymentMethods.includes(item.paymentMethod)
+                ? (item.paymentMethod as any)
+                : null;
 
-            return {
-              success: true,
-              result: {
+              // Auto-categorize
+              const { categoryId, categoryName } = matchCategoryForMerchant(
+                `${rawMerchant} ${item.suggestedCategory || ''} ${item.itemsSummary || ''}`,
+                userCategories
+              );
+
+              const isComplete = totalAmount > 0 && Boolean(isoDate) && rawMerchant.length > 0;
+
+              transactions.push({
+                id: crypto.randomUUID(),
                 merchant: rawMerchant,
                 amount: totalAmount,
                 date: isoDate,
-                paymentMethod: parsed.paymentMethod || null,
-                itemsSummary: parsed.itemsSummary || null,
+                paymentMethod: pMethod,
+                itemsSummary: item.itemsSummary ? String(item.itemsSummary).trim() : null,
                 categoryId,
                 categoryName,
-                source: 'gemini_vision',
-                rawTextPreview: replyText.slice(0, 200),
-              },
-            };
+                isComplete,
+              });
+            }
+
+            if (transactions.length > 0) {
+              const primary = transactions[0];
+              return {
+                success: true,
+                result: {
+                  merchant: primary.merchant,
+                  amount: primary.amount,
+                  date: primary.date || new Date().toISOString().split('T')[0],
+                  paymentMethod: primary.paymentMethod,
+                  itemsSummary: primary.itemsSummary,
+                  categoryId: primary.categoryId,
+                  categoryName: primary.categoryName,
+                  source: 'gemini_vision',
+                  rawTextPreview: replyText.slice(0, 200),
+                  transactions,
+                },
+              };
+            }
           }
         } else if (lastModelError) {
           geminiFailureReason = lastModelError?.message || String(lastModelError);
@@ -283,6 +343,19 @@ Return a single JSON object with exact keys:
         userCategories
       );
 
+      const isComplete = parsedAmount > 0 && Boolean(isoDate) && merchantGuess.length > 0;
+      const fallbackTransaction: ParsedReceiptTransaction = {
+        id: crypto.randomUUID(),
+        merchant: merchantGuess,
+        amount: parsedAmount,
+        date: isoDate,
+        paymentMethod: detectedPaymentMethod,
+        itemsSummary: null,
+        categoryId,
+        categoryName,
+        isComplete,
+      };
+
       return {
         success: true,
         result: {
@@ -295,6 +368,7 @@ Return a single JSON object with exact keys:
           categoryName,
           source: 'ocr_fallback',
           rawTextPreview: ocrText.slice(0, 150),
+          transactions: [fallbackTransaction],
         },
       };
     } catch (ocrErr: any) {

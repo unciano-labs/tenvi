@@ -51,6 +51,7 @@ import {
   ThemeSegmentedToggle,
 } from "@/components/ui/theme-toggle";
 import { CardDetailsClient } from "@/app/dashboard/cards/[id]/CardDetailsClient";
+import { TransactionModal, ParsedCardItem } from "@/components/Forms/TransactionModal";
 import { CreditCard, Transaction, Category } from "@/types";
 
 const mockCard: CreditCard = {
@@ -130,11 +131,55 @@ const mockTransactions: Transaction[] = [
   },
 ];
 
+const sampleMultiParsedItems: ParsedCardItem[] = [
+  {
+    id: "tx-demo-1",
+    merchant: "Jollibee Galleria",
+    amount: "450.50",
+    date: "2026-11-04",
+    categoryId: "cat-1",
+    paymentMethod: "credit_card",
+    creditCardId: "test-card-1",
+    savingsId: "",
+    propertyId: "",
+    itemsSummary: "2pc Chickenjoy, Peach Mango Pie",
+    status: "idle",
+  },
+  {
+    id: "tx-demo-2",
+    merchant: "Grab Transport",
+    amount: "", // intentionally missing amount to test user input
+    date: "2026-11-04",
+    categoryId: "cat-2",
+    paymentMethod: "credit_card",
+    creditCardId: "test-card-1",
+    savingsId: "",
+    propertyId: "",
+    itemsSummary: "Ride to BGC",
+    status: "idle",
+  },
+  {
+    id: "tx-demo-3",
+    merchant: "Caltex Fuel Station",
+    amount: "1500.00",
+    date: "2026-11-03",
+    categoryId: "cat-4",
+    paymentMethod: "credit_card",
+    creditCardId: "test-card-1",
+    savingsId: "",
+    propertyId: "",
+    itemsSummary: "Techron Unleaded Full Tank",
+    status: "idle",
+  },
+];
+
 export default function DevUiDemoPage() {
   const [selectedBank, setSelectedBank] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [switchActive, setSwitchActive] = useState<boolean>(false);
   const [checkboxChecked, setCheckboxChecked] = useState<boolean>(false);
+  const [isMultiTxModalOpen, setIsMultiTxModalOpen] = useState<boolean>(false);
+  const [multiTxModalItems, setMultiTxModalItems] = useState<ParsedCardItem[] | undefined>(undefined);
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6 sm:p-10 max-w-5xl mx-auto space-y-10">
@@ -398,6 +443,59 @@ export default function DevUiDemoPage() {
             allCards={[mockCard]}
           />
         </div>
+      </section>
+
+      {/* Multi-Transaction Image Parsing & Review Modal Demo */}
+      <section className="space-y-4 pt-6" id="multi-transaction-modal-demo">
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold">Multi-Transaction Receipt Parsing & Review Demo</h2>
+          <p className="text-sm text-muted-foreground">
+            Demonstrates uploading receipt/statement images with multiple transactions, card review layout, missing field inputs, and approval.
+          </p>
+        </div>
+
+        <div className="p-6 rounded-3xl bg-muted/30 space-y-4">
+          <div className="flex flex-wrap gap-3">
+            <Button
+              id="btn-open-multi-tx-modal"
+              onClick={() => {
+                setMultiTxModalItems(sampleMultiParsedItems);
+                setIsMultiTxModalOpen(true);
+              }}
+              className="h-11 px-5 rounded-2xl shadow-xs font-bold cursor-pointer"
+            >
+              Open Multi-Transaction Cards Modal (3 Parsed Items)
+            </Button>
+
+            <Button
+              id="btn-open-blank-modal"
+              variant="outline"
+              onClick={() => {
+                setMultiTxModalItems(undefined);
+                setIsMultiTxModalOpen(true);
+              }}
+              className="h-11 px-5 rounded-2xl bg-card hover:bg-muted/80 shadow-xs font-bold cursor-pointer"
+            >
+              Open Blank Modal (Camera / Upload Mode)
+            </Button>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Item 1 has complete details (₱450.50 Jollibee). Item 2 has missing amount (Grab Transport) requiring user input before approval. Item 3 has complete details (₱1,500.00 Caltex).
+          </p>
+        </div>
+
+        {isMultiTxModalOpen && (
+          <TransactionModal
+            isOpen={isMultiTxModalOpen}
+            onClose={() => setIsMultiTxModalOpen(false)}
+            categories={mockCategories}
+            creditCards={[mockCard]}
+            defaultCreditCardId={mockCard.id}
+            defaultPaymentMethod="credit_card"
+            initialParsedItems={multiTxModalItems}
+          />
+        )}
       </section>
     </div>
   );
