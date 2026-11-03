@@ -14,6 +14,7 @@ import {
   EmvChip,
   ContactlessWave,
 } from './CardThemeTokens';
+import { CardColorPicker } from './CardColorPicker';
 import { updateSavingsThemeAction } from '@/app/actions/savings';
 import { toast } from 'sonner';
 import {
@@ -86,8 +87,8 @@ export function FlippableSavingsCard({
     setIsFlipped((prev) => !prev);
   };
 
-  const handleChangeAccent = async (newAccentId: CardAccentId) => {
-    const packed = formatCardStyle(newAccentId, 'visa', pattern);
+  const handleChangeAccent = async (newAccent: string) => {
+    const packed = formatCardStyle(newAccent, 'visa', pattern);
     const prev = localStyle;
     setLocalStyle(packed);
     const res = await updateSavingsThemeAction(account.id, packed);
@@ -214,44 +215,19 @@ export function FlippableSavingsCard({
                     align="end"
                     className="w-72 sm:w-80 p-3.5 rounded-2xl bg-popover text-popover-foreground shadow-lift border border-border/70 space-y-3 z-50"
                   >
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider">
-                          Vault Color
-                        </span>
-                        <span className="text-3xs text-muted-foreground font-medium">Scroll for more &rarr;</span>
-                      </div>
-                      {/* 20 colors, 2 rows, horizontally scrollable with scrollbar, pure clickable circles with no text labels */}
-                      <div className="grid grid-rows-2 grid-flow-col auto-cols-max gap-2.5 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin scroll-smooth">
-                        {Object.values(CARD_ACCENTS).map((acc) => {
-                          const isSelected = themeId === acc.id;
-                          return (
-                            <button
-                              key={acc.id}
-                              type="button"
-                              onClick={() => handleChangeAccent(acc.id)}
-                              className={`size-7 sm:size-8 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110 shadow-xs shrink-0 ${
-                                isSelected
-                                  ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110 shadow-md'
-                                  : 'hover:opacity-90'
-                              }`}
-                              style={{ backgroundColor: acc.accentHex }}
-                              title={acc.name}
-                              aria-label={acc.name}
-                            >
-                              {isSelected && <Check className="size-3.5 text-white drop-shadow stroke-[3]" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    <CardColorPicker
+                      compact
+                      currentColor={themeId || localStyle.split(':')[0]}
+                      onChange={(c) => handleChangeAccent(c)}
+                      label="Vault Color"
+                    />
 
-                    {/* Pattern Selector (10 patterns) */}
+                    {/* Pattern Selector (20 patterns) */}
                     <div className="pt-2 border-t border-border/50">
                       <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
-                        Background Pattern (10 options)
+                        Background Pattern ({CARD_PATTERNS.length} options)
                       </span>
-                      <div className="grid grid-cols-5 gap-1.5">
+                      <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
                         {CARD_PATTERNS.map((p) => {
                           const isSelected = pattern === p.id;
                           return (

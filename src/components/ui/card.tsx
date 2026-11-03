@@ -11,7 +11,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-4 overflow-hidden rounded-2xl bg-card p-5 sm:p-6 text-sm text-card-foreground shadow-card transition-shadow hover:shadow-lift",
+        "group/card flex flex-col gap-4 overflow-hidden rounded-2xl bg-card p-5 sm:p-6 text-sm text-card-foreground shadow-card hover:shadow-lift transition-[width,height,padding,gap,box-shadow] duration-[var(--dur-base)] ease-[var(--ease-standard)]",
         size === "sm" && "p-4 gap-3",
         className
       )}

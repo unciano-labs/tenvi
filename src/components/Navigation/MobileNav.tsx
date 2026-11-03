@@ -121,7 +121,7 @@ export function MobileNav() {
           WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
           backdropFilter: 'blur(24px) saturate(1.5)',
         }}
-        className={`pointer-events-auto origin-bottom relative rounded-full backdrop-blur-2xl backdrop-saturate-150 bg-background/55 dark:bg-card/75 border border-white/25 dark:border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),inset_0_-1px_2px_rgba(0,0,0,0.15),0_12px_32px_-4px_rgba(0,0,0,0.25)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_2px_rgba(0,0,0,0.4),0_16px_36px_-4px_rgba(0,0,0,0.6)] flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] transform-gpu select-none px-2.5 ${
+        className={`pointer-events-auto origin-bottom relative rounded-full backdrop-blur-2xl backdrop-saturate-150 bg-background/55 dark:bg-card/75 border border-white/25 dark:border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),inset_0_-1px_2px_rgba(0,0,0,0.15),0_12px_32px_-4px_rgba(0,0,0,0.25)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_2px_rgba(0,0,0,0.4),0_16px_36px_-4px_rgba(0,0,0,0.6)] flex items-center justify-center transition-[width,height,transform,box-shadow] duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] transform-gpu select-none px-2.5 ${
           isShrunk
             ? 'h-12 w-[260px] shadow-md'
             : 'h-[62px] w-[330px] max-w-[calc(100vw-1.75rem)]'
@@ -134,7 +134,7 @@ export function MobileNav() {
           <div
             id="mobile-nav-liquid-indicator"
             aria-hidden="true"
-            className={`absolute top-0 bottom-0 left-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] z-0 transform-gpu ${
+            className={`absolute top-0 bottom-0 left-0 flex items-center justify-center pointer-events-none transition-[transform,width,opacity] duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] z-0 transform-gpu ${
               activeIndex >= 0 ? 'opacity-100' : 'opacity-0'
             }`}
             style={{

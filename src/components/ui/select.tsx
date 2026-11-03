@@ -40,7 +40,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-full items-center justify-between gap-2 rounded-xl bg-muted px-4 py-2.5 text-base text-foreground transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-2 aria-invalid:ring-destructive data-placeholder:text-muted-foreground cursor-pointer",
+        "flex w-full items-center justify-between gap-2 rounded-xl bg-muted px-4 py-2.5 text-base text-foreground transition-[color,background-color,box-shadow] duration-[var(--dur-fast)] ease-[var(--ease-standard)] outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-2 aria-invalid:ring-destructive data-placeholder:text-muted-foreground cursor-pointer",
         size === "default" && "min-h-12 h-12 text-base",
         size === "sm" && "min-h-10 h-10 text-sm px-3",
         className
@@ -85,7 +85,7 @@ function SelectContent({
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn(
-            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-xl bg-card p-1 text-card-foreground shadow-lift duration-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 outline-none",
+            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-xl bg-card p-1 text-card-foreground shadow-lift data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-top-1 data-open:duration-200 data-open:[animation-timing-function:var(--ease-spring)] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:duration-[120ms] data-closed:[animation-timing-function:var(--ease-standard)] outline-none",
             className
           )}
           {...props}

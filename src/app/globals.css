@@ -15,6 +15,13 @@
   --ease-expand: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-expand: 350ms;
 
+  /* macOS-style motion tokens */
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);  /* macOS smooth ease */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);    /* settling motion */
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 350ms;
+
   /* Calm, eye-friendly, low-contrast solid palette for senior adults & non-techy users */
   --color-canvas: #f8f9fa;           /* Warm soft pearl canvas (avoids cold glaring white) */
   --color-surface: #ffffff;          /* Clean solid white */
@@ -131,7 +138,29 @@
   }
 }
 
-/* Borderless, soft-floating card */
+/* Suppress transitions during continuous window resizing to prevent jank */
+.is-resizing *,
+.is-resizing *::before,
+.is-resizing *::after {
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
+}
+
+/* Dropdown/popover/select spring open + fast close (macOS-style) */
+[data-slot="dropdown-menu-content"],
+[data-slot="popover-content"],
+[data-slot="select-content"] {
+  --motion-spring-open: var(--ease-spring) 200ms;
+  --motion-standard-close: var(--ease-standard) 120ms;
+}
+
+/* View Transitions API: macOS-style fluid layout shifts */
+::view-transition-group(*) {
+  animation-duration: var(--dur-base);
+  animation-timing-function: var(--ease-standard);
+}
+
+/* Borderless, soft-floating card with smooth macOS-style responsive transitions */
 .bili-card,
 .tenvi-card {
   background-color: var(--card);
@@ -139,6 +168,11 @@
   border-radius: 1.25rem;
   box-shadow: var(--shadow-card);
   border: none !important;
+  transition: width var(--dur-base) var(--ease-standard),
+              height var(--dur-base) var(--ease-standard),
+              padding var(--dur-base) var(--ease-standard),
+              gap var(--dur-base) var(--ease-standard),
+              box-shadow var(--dur-base) var(--ease-standard);
 }
 
 /* Inset subtle well for secondary details */
@@ -480,6 +514,14 @@
   --input: #e5eaef;
   --ring: #5d87ff;
 
+  /* macOS-style motion tokens */
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 350ms;
+
   /* Custom Status Tokens */
   --success: #13deb9;
   --success-foreground: #ffffff;
@@ -818,7 +860,7 @@ button:not(:disabled):not([role="menuitem"]):not([role="option"]):not([role="tab
 [data-slot="button"]:not([data-variant="link"]):not(:disabled) {
   transition-property: transform, background-color, border-color, color, fill, stroke, opacity, box-shadow;
   transition-duration: 1000ms;
-  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-timing-function: var(--ease-spring);
   will-change: transform;
 }
 

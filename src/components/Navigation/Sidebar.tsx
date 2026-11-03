@@ -187,7 +187,7 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
                                 isActive={isActive}
                                 tooltip={item.label}
                                 render={<Link href={item.href} aria-current={isActive ? 'page' : undefined} />}
-                                className={`h-10 rounded-lg px-3 text-xs font-semibold transition-all cursor-pointer ${
+                                className={`h-10 rounded-lg px-3 text-xs font-semibold transition-[color,background-color,box-shadow,transform] duration-[var(--dur-fast)] ease-[var(--ease-standard)] cursor-pointer ${
                                   isActive
                                     ? 'bg-lightprimary text-primary font-bold shadow-xs'
                                     : 'text-muted-foreground hover:text-primary hover:bg-lightprimary/40'

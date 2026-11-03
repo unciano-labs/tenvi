@@ -32,7 +32,7 @@ function ResponsiveDialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="responsive-dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-slate-950/40 backdrop-blur-xs duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-50 bg-slate-950/40 backdrop-blur-xs duration-[var(--dur-base)] data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 data-closed:duration-[var(--dur-fast)] data-closed:[animation-timing-function:var(--ease-standard)]",
         className
       )}
       {...props}
@@ -55,9 +55,9 @@ function ResponsiveDialogContent({
         data-slot="responsive-dialog-content"
         className={cn(
           // Base & Mobile layout: Bottom sheet / Drawer with comfortable padding & safe-area margin
-          "fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-3xl bg-card p-6 sm:p-7 md:p-8 pb-[max(1.75rem,env(safe-area-inset-bottom))] text-card-foreground shadow-lift duration-200 outline-none",
-          "data-open:animate-in data-open:slide-in-from-bottom data-open:fade-in-0",
-          "data-closed:animate-out data-closed:slide-out-to-bottom data-closed:fade-out-0",
+          "fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-3xl bg-card p-6 sm:p-7 md:p-8 pb-[max(1.75rem,env(safe-area-inset-bottom))] text-card-foreground shadow-lift outline-none",
+          "data-open:animate-in data-open:slide-in-from-bottom data-open:fade-in-0 data-open:duration-[var(--dur-base)] data-open:[animation-timing-function:var(--ease-out-soft)]",
+          "data-closed:animate-out data-closed:slide-out-to-bottom data-closed:fade-out-0 data-closed:duration-[var(--dur-fast)] data-closed:[animation-timing-function:var(--ease-standard)]",
           // Desktop layout (md:): Centered Dialog with outer margin
           "md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg md:max-h-[calc(100dvh-4rem)] md:my-8 md:rounded-3xl",
           "md:data-open:slide-in-from-bottom-0 md:data-open:zoom-in-95",

@@ -75,8 +75,7 @@ import {
   CardPatternOverlay,
   EmvChip,
   ContactlessWave,
-  VisaLogo,
-  MastercardLogo,
+  CardNetworkLogo,
 } from '@/components/Cards/CardThemeTokens';
 
 // Lazy-load modal forms
@@ -479,11 +478,7 @@ export function CardDetailsClient({
                 </div>
 
                 <div className="flex items-center">
-                  {network === 'mastercard' ? (
-                    <MastercardLogo className="h-5" />
-                  ) : (
-                    <VisaLogo className="h-4" />
-                  )}
+                  <CardNetworkLogo network={network} className="h-5" />
                 </div>
               </div>
             </div>

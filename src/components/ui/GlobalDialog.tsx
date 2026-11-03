@@ -189,11 +189,11 @@ export function GlobalDialog() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-md animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-md animate-in fade-in duration-[var(--dur-base)] [animation-timing-function:var(--ease-standard)]"
       onClick={() => dialog.resolve(false)}
     >
       <div
-        className="bg-card text-card-foreground w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-lift relative animate-in zoom-in-95 duration-150"
+        className="bg-card text-card-foreground w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-lift relative animate-in zoom-in-95 duration-[var(--dur-base)] [animation-timing-function:var(--ease-out-soft)]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -230,7 +230,7 @@ export function GlobalDialog() {
                 ref={confirmBtnRef}
                 type="button"
                 onClick={() => dialog.resolve(true)}
-                className={`w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all cursor-pointer ${getConfirmBtnClasses()}`}
+                className={`w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-[color,background-color,box-shadow,transform] duration-[var(--dur-fast)] ease-[var(--ease-standard)] cursor-pointer ${getConfirmBtnClasses()}`}
               >
                 {dialog.confirmText}
               </button>
@@ -240,7 +240,7 @@ export function GlobalDialog() {
               ref={confirmBtnRef}
               type="button"
               onClick={() => dialog.resolve(true)}
-              className="w-full px-5 py-2.5 rounded-xl font-semibold text-sm text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm transition-all cursor-pointer"
+              className="w-full px-5 py-2.5 rounded-xl font-semibold text-sm text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm transition-[color,background-color,box-shadow,transform] duration-[var(--dur-fast)] ease-[var(--ease-standard)] cursor-pointer"
             >
               {dialog.buttonText}
             </button>

@@ -1246,7 +1246,7 @@ export function TenviAIChat({
       {/* Mobile Dimmed Backdrop */}
       {isMounted && (
         <div
-          className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-xs md:hidden transition-opacity duration-300 ${
+          className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-xs md:hidden transition-opacity duration-[var(--dur-base)] ease-[var(--ease-standard)] ${
             isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
           onClick={handleCloseChat}
@@ -1261,7 +1261,7 @@ export function TenviAIChat({
           role="dialog"
           aria-label="Tenvi AI Financial Assistant"
           aria-modal="true"
-          className={`fixed z-50 flex flex-col overflow-hidden bg-background md:bg-card/95 md:backdrop-blur-xl border-border/60 shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+          className={`fixed z-50 flex flex-col overflow-hidden bg-background md:bg-card/95 md:backdrop-blur-xl border-border/60 shadow-2xl transition-[transform,opacity] duration-[var(--dur-slow)] ease-[var(--ease-standard)]
             inset-x-0 bottom-0 h-[88dvh] max-h-[88dvh] rounded-t-3xl border-t pb-[max(0.75rem,env(safe-area-inset-bottom))]
             md:inset-auto md:bottom-20 md:right-6 md:w-[410px] md:h-[600px] md:max-h-[calc(100vh-7rem)] md:rounded-2xl md:border md:pb-0 md:origin-bottom-right ${
             isOpen

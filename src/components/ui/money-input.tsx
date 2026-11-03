@@ -82,7 +82,7 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
       <div
         data-slot="money-input-container"
         className={cn(
-          "relative flex w-full items-center rounded-xl bg-muted transition-all outline-none",
+          "relative flex w-full items-center rounded-xl bg-muted transition-[color,background-color,box-shadow] duration-[var(--dur-fast)] ease-[var(--ease-standard)] outline-none",
           size === "sm" ? "min-h-10 h-10 px-3" : "min-h-12 h-12 px-3.5",
           "focus-within:ring-2 focus-within:ring-ring",
           error && "ring-2 ring-destructive",

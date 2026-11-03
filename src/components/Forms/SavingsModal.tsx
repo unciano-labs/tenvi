@@ -28,6 +28,7 @@ import {
   EmvChip,
   ContactlessWave,
 } from '@/components/Cards/CardThemeTokens';
+import { CardColorPicker } from '@/components/Cards/CardColorPicker';
 
 interface SavingsModalProps {
   isOpen: boolean;
@@ -293,44 +294,19 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
               </div>
             </div>
 
-            {/* Accent Picker - 20 colors, scrollable, pure clickable circles without text */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Vault Color
-                </label>
-                <span className="text-3xs text-muted-foreground font-medium">Scroll for more &rarr;</span>
-              </div>
-              <div className="grid grid-rows-2 grid-flow-col auto-cols-max gap-2.5 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin scroll-smooth">
-                {Object.values(CARD_ACCENTS).map((acc) => {
-                  const isSelected = colorTheme === acc.id;
-                  return (
-                    <button
-                      key={acc.id}
-                      type="button"
-                      onClick={() => setColorTheme(acc.id)}
-                      className={`size-8 sm:size-9 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110 shadow-xs shrink-0 ${
-                        isSelected
-                          ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110 shadow-md'
-                          : 'hover:opacity-90'
-                      }`}
-                      style={{ backgroundColor: acc.accentHex }}
-                      title={acc.name}
-                      aria-label={acc.name}
-                    >
-                      {isSelected && <Check className="size-4 text-white drop-shadow stroke-[3]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            {/* Vault Color Picker with Presets + Custom Color */}
+            <CardColorPicker
+              currentColor={colorTheme}
+              onChange={setColorTheme}
+              label="Vault Color"
+            />
 
-            {/* Pattern Selector - 10 patterns */}
+            {/* Pattern Selector - 20 patterns */}
             <div className="pt-2 border-t border-border/40">
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Background Accent Pattern (10 options)
+                Background Accent Pattern ({CARD_PATTERNS.length} options)
               </label>
-              <div className="grid grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
                 {CARD_PATTERNS.map((p) => {
                   const isSelected = pattern === p.id;
                   return (

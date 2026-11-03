@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { GlobalDialog } from '@/components/ui/GlobalDialog';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PwaRegister } from '@/components/PWA/PwaRegister';
+import { ResizeLock } from '@/hooks/useResizeLock';
 import './globals.css';
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -101,6 +102,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={cn("font-sans overflow-x-hidden max-w-full", geist.variable)}>
       <body suppressHydrationWarning className="min-h-screen bg-background text-foreground antialiased selection:bg-slate-200 dark:selection:bg-slate-700 overflow-x-hidden max-w-full">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ResizeLock />
           {children}
           <Toaster />
           <GlobalDialog />

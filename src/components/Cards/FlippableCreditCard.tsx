@@ -20,9 +20,9 @@ import {
   CardPatternOverlay,
   EmvChip,
   ContactlessWave,
-  VisaLogo,
-  MastercardLogo,
+  CardNetworkLogo,
 } from './CardThemeTokens';
+import { CardColorPicker } from './CardColorPicker';
 import { updateCreditCardAction, updateCreditCardThemeAction } from '@/app/actions/cards';
 import { toast } from 'sonner';
 import {
@@ -113,9 +113,9 @@ export function FlippableCreditCard({
     setIsFlipped((prev) => !prev);
   };
 
-  // Change solid accent for this specific card
-  const handleChangeAccent = async (newAccentId: CardAccentId) => {
-    const packed = formatCardStyle(newAccentId, network, pattern);
+  // Change solid accent or custom hex for this specific card
+  const handleChangeAccent = async (newAccent: string) => {
+    const packed = formatCardStyle(newAccent, network, pattern);
     const prev = localStyle;
     setLocalStyle(packed);
     const res = await updateCreditCardThemeAction(card.id, packed);
@@ -151,7 +151,14 @@ export function FlippableCreditCard({
       setLocalStyle(prev);
       toast.error(res.error);
     } else {
-      toast.success(`Network set to ${newNetwork === 'visa' ? 'Visa' : 'Mastercard'}!`);
+      const networkLabels: Record<CardNetwork, string> = {
+        visa: 'Visa',
+        mastercard: 'Mastercard',
+        jcb: 'JCB',
+        unionpay: 'UnionPay',
+        amex: 'American Express',
+      };
+      toast.success(`Network set to ${networkLabels[newNetwork] || newNetwork}!`);
     }
   };
 
@@ -242,44 +249,19 @@ export function FlippableCreditCard({
                     align="end"
                     className="w-72 sm:w-80 p-3.5 rounded-2xl bg-popover text-popover-foreground shadow-lift border border-border/70 space-y-3 z-50"
                   >
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider">
-                          Card Color
-                        </span>
-                        <span className="text-3xs text-muted-foreground font-medium">Scroll for more &rarr;</span>
-                      </div>
-                      {/* 20 colors, 2 rows, horizontally scrollable with scrollbar, pure clickable circles with no text labels */}
-                      <div className="grid grid-rows-2 grid-flow-col auto-cols-max gap-2.5 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin scroll-smooth">
-                        {Object.values(CARD_ACCENTS).map((acc) => {
-                          const isSelected = themeId === acc.id;
-                          return (
-                            <button
-                              key={acc.id}
-                              type="button"
-                              onClick={() => handleChangeAccent(acc.id)}
-                              className={`size-7 sm:size-8 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110 shadow-xs shrink-0 ${
-                                isSelected
-                                  ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110 shadow-md'
-                                  : 'hover:opacity-90'
-                              }`}
-                              style={{ backgroundColor: acc.accentHex }}
-                              title={acc.name}
-                              aria-label={acc.name}
-                            >
-                              {isSelected && <Check className="size-3.5 text-white drop-shadow stroke-[3]" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    <CardColorPicker
+                      compact
+                      currentColor={themeId || localStyle.split(':')[0]}
+                      onChange={(c) => handleChangeAccent(c)}
+                      label="Card Color"
+                    />
 
-                    {/* Pattern Selector (10 patterns) */}
+                    {/* Pattern Selector (20 patterns) */}
                     <div className="pt-2 border-t border-border/50">
                       <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
-                        Background Pattern (10 options)
+                        Background Pattern ({CARD_PATTERNS.length} options)
                       </span>
-                      <div className="grid grid-cols-5 gap-1.5">
+                      <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
                         {CARD_PATTERNS.map((p) => {
                           const isSelected = pattern === p.id;
                           return (
@@ -301,37 +283,31 @@ export function FlippableCreditCard({
                       </div>
                     </div>
 
+                    {/* Card Network Selector (5 networks) */}
                     <div className="pt-2 border-t border-border/50">
                       <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
                         Network
                       </span>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleNetwork('visa')}
-                          className={`h-8 rounded-lg border flex items-center justify-center p-1 cursor-pointer transition-all ${
-                            network === 'visa'
-                              ? 'bg-primary/10 border-primary text-primary font-bold'
-                              : 'bg-muted/40 border-border/60 hover:bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          <span className="font-black italic text-xs">VISA</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleNetwork('mastercard')}
-                          className={`h-8 rounded-lg border flex items-center justify-center gap-1.5 p-1 cursor-pointer transition-all ${
-                            network === 'mastercard'
-                              ? 'bg-primary/10 border-primary font-bold'
-                              : 'bg-muted/40 border-border/60 hover:bg-muted'
-                          }`}
-                        >
-                          <div className="flex items-center">
-                            <div className="size-3 rounded-full bg-[#EB001B]" />
-                            <div className="size-3 rounded-full bg-[#F79E1B] -ml-1.5 opacity-90" />
-                          </div>
-                          <span className="text-3xs font-bold text-foreground">MC</span>
-                        </button>
+                      <div className="grid grid-cols-5 gap-1.5">
+                        {(['visa', 'mastercard', 'jcb', 'unionpay', 'amex'] as const).map((net) => {
+                          const isSelected = network === net;
+                          return (
+                            <button
+                              key={net}
+                              type="button"
+                              onClick={() => handleToggleNetwork(net)}
+                              className={`h-8 rounded-lg border flex items-center justify-center p-1 cursor-pointer transition-all ${
+                                isSelected
+                                  ? 'bg-primary/10 border-primary ring-1 ring-primary'
+                                  : 'bg-muted/40 border-border/60 hover:bg-muted'
+                              }`}
+                              title={net.toUpperCase()}
+                              aria-label={net.toUpperCase()}
+                            >
+                              <CardNetworkLogo network={net} className="h-4 max-w-full" />
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </PopoverContent>
@@ -363,11 +339,7 @@ export function FlippableCreditCard({
               </div>
 
               <div className="flex items-center">
-                {network === 'mastercard' ? (
-                  <MastercardLogo className="h-5" />
-                ) : (
-                  <VisaLogo className="h-4" />
-                )}
+                <CardNetworkLogo network={network} className="h-5" />
               </div>
             </div>
           </div>

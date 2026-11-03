@@ -71,7 +71,7 @@ function ToggleGroupItem({
       data-size={context.size || size}
       data-spacing={context.spacing}
       className={cn(
-        "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-all hover:text-foreground",
+        "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-[color,background-color,box-shadow,transform] duration-[var(--dur-fast)] ease-[var(--ease-standard)] hover:text-foreground",
         "data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-sm",
         className
       )}

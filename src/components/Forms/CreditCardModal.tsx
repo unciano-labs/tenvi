@@ -62,7 +62,12 @@ import {
   ContactlessWave,
   VisaLogo,
   MastercardLogo,
+  JcbLogo,
+  UnionPayLogo,
+  AmexLogo,
+  CardNetworkLogo,
 } from '@/components/Cards/CardThemeTokens';
+import { CardColorPicker } from '@/components/Cards/CardColorPicker';
 
 const creditCardFormSchema = z.object({
   bankName: z.string().min(1, 'Please select or enter the bank name.'),
@@ -270,11 +275,7 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
                   </div>
 
                   <div className="flex items-center">
-                    {network === 'mastercard' ? (
-                      <MastercardLogo className="h-5" />
-                    ) : (
-                      <VisaLogo className="h-4" />
-                    )}
+                    <CardNetworkLogo network={network} className="h-5" />
                   </div>
                 </div>
               </div>
@@ -468,48 +469,22 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
                   <Palette className="size-3.5" />
                   <span>Card Appearance (Color, Pattern & Network)</span>
                 </div>
-                  {/* Color Swatch Selector - 20 colors, scrollable, pure clickable circles without text */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Card Color
-                      </span>
-                      <span className="text-3xs text-muted-foreground font-medium">Scroll for more &rarr;</span>
-                    </div>
-                    <div className="grid grid-rows-2 grid-flow-col auto-cols-max gap-2.5 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin scroll-smooth">
-                      {Object.values(CARD_ACCENTS).map((acc) => {
-                        const { themeId, network, pattern } = parseCardStyle(watchedColor || 'cyan', watchedName);
-                        const isSelected = themeId === acc.id;
+                  {/* Color Swatch & Color Picker Selector */}
+                  <CardColorPicker
+                    currentColor={watchedColor ? (watchedColor.includes(':') ? watchedColor.split(':')[0] : watchedColor) : 'cyan'}
+                    onChange={(newColor) => {
+                      const { network, pattern } = parseCardStyle(watchedColor || 'cyan', watchedName);
+                      form.setValue('colorTheme', formatCardStyle(newColor as any, network, pattern));
+                    }}
+                    label="Card Color"
+                  />
 
-                        return (
-                          <button
-                            key={acc.id}
-                            type="button"
-                            onClick={() => {
-                              form.setValue('colorTheme', formatCardStyle(acc.id, network, pattern));
-                            }}
-                            className={`size-8 sm:size-9 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110 shadow-xs shrink-0 ${
-                              isSelected
-                                ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110 shadow-md'
-                                : 'hover:opacity-90'
-                            }`}
-                            style={{ backgroundColor: acc.accentHex }}
-                            title={acc.name}
-                            aria-label={acc.name}
-                          >
-                            {isSelected && <Check className="size-4 text-white drop-shadow stroke-[3]" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Background Pattern Selector - 10 patterns */}
+                  {/* Background Pattern Selector - 20 patterns */}
                   <div className="pt-2 border-t border-border/40">
                     <span className="text-2xs font-semibold text-muted-foreground block mb-2 uppercase tracking-wider">
-                      Background Accent Pattern (10 options)
+                      Background Accent Pattern (20 options)
                     </span>
-                    <div className="grid grid-cols-5 gap-1.5">
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
                       {CARD_PATTERNS.map((p) => {
                         const { themeId, network, pattern } = parseCardStyle(watchedColor || 'cyan', watchedName);
                         const isSelected = pattern === p.id;
@@ -535,49 +510,42 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
                     </div>
                   </div>
 
-                  {/* Network Selector (Visa vs Mastercard) */}
+                  {/* Network Selector (Visa, Mastercard, JCB, UnionPay, AMEX) */}
                   <div className="pt-2 border-t border-border/40">
                     <span className="text-2xs font-semibold text-muted-foreground block mb-2 uppercase tracking-wider">
-                      Card Network
+                      Card Network (5 options)
                     </span>
-                    <div className="grid grid-cols-2 gap-3 max-w-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                       {(() => {
                         const { themeId, network, pattern } = parseCardStyle(watchedColor || 'cyan', watchedName);
-                        return (
-                          <>
+                        const networks: { id: CardNetwork; label: string; logo: React.ReactNode }[] = [
+                          { id: 'visa', label: 'VISA', logo: <VisaLogo className="h-4" /> },
+                          { id: 'mastercard', label: 'Mastercard', logo: <MastercardLogo className="h-4.5" /> },
+                          { id: 'jcb', label: 'JCB', logo: <JcbLogo className="h-4.5" /> },
+                          { id: 'unionpay', label: 'UnionPay', logo: <UnionPayLogo className="h-4" /> },
+                          { id: 'amex', label: 'AMEX', logo: <AmexLogo className="h-4.5" /> },
+                        ];
+
+                        return networks.map((net) => {
+                          const isSelected = network === net.id;
+                          return (
                             <button
+                              key={net.id}
                               type="button"
                               onClick={() => {
-                                form.setValue('colorTheme', formatCardStyle(themeId, 'visa', pattern));
+                                form.setValue('colorTheme', formatCardStyle(themeId, net.id, pattern));
                               }}
-                              className={`h-11 rounded-xl border flex items-center justify-center gap-2 p-2 cursor-pointer transition-all ${
-                                network === 'visa'
-                                  ? 'bg-primary/10 border-primary text-primary font-bold'
+                              className={`h-11 rounded-xl border flex items-center justify-center gap-1.5 p-1.5 cursor-pointer transition-all ${
+                                isSelected
+                                  ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
                                   : 'bg-muted/40 border-border/60 hover:bg-muted text-muted-foreground'
                               }`}
+                              title={net.label}
                             >
-                              <span className="font-black italic text-base">VISA</span>
+                              {net.logo}
                             </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                form.setValue('colorTheme', formatCardStyle(themeId, 'mastercard', pattern));
-                              }}
-                              className={`h-11 rounded-xl border flex items-center justify-center gap-2 p-2 cursor-pointer transition-all ${
-                                network === 'mastercard'
-                                  ? 'bg-primary/10 border-primary font-bold'
-                                  : 'bg-muted/40 border-border/60 hover:bg-muted'
-                              }`}
-                            >
-                              <div className="flex items-center">
-                                <div className="size-4 rounded-full bg-[#EB001B]" />
-                                <div className="size-4 rounded-full bg-[#F79E1B] -ml-2 opacity-95" />
-                              </div>
-                              <span className="text-xs font-bold text-foreground">Mastercard</span>
-                            </button>
-                          </>
-                        );
+                          );
+                        });
                       })()}
                     </div>
                   </div>

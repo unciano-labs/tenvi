@@ -41,7 +41,7 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            "z-50 max-h-(--available-height) w-(--anchor-width) min-w-44 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-xl bg-card p-1 text-card-foreground shadow-lift duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "z-50 max-h-(--available-height) w-(--anchor-width) min-w-44 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-xl bg-card p-1 text-card-foreground shadow-lift outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-top-1 data-open:duration-200 data-open:[animation-timing-function:var(--ease-spring)] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:duration-[120ms] data-closed:[animation-timing-function:var(--ease-standard)]",
             className
           )}
           {...props}
@@ -138,7 +138,7 @@ function DropdownMenuSubContent({
     <DropdownMenuContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        "w-auto min-w-[120px] rounded-xl bg-card p-1 text-card-foreground shadow-lift duration-100 outline-none",
+        "w-auto min-w-[120px] rounded-xl bg-card p-1 text-card-foreground shadow-lift outline-none",
         className
       )}
       align={align}
