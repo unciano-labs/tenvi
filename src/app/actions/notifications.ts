@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
 import { revalidatePath } from 'next/cache';
-import { formatMoney, formatDate, calculateNextDueDate } from '@/lib/finance/calculations';
+import { formatMoney, formatDate, calculateNextDueDate, getTodayManila, getTodayManilaString } from '@/lib/finance/calculations';
 import { notificationSettingsSchema } from '@/lib/validations/schemas';
 import {
   NotificationSettings,
@@ -412,8 +412,8 @@ export async function checkAndSendCardDueAlertsAction({
   }
 
   // 3. Filter cards due within the specified window (e.g. within 3 days)
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const today = getTodayManila();
+  const todayStr = getTodayManilaString(today);
 
   const upcomingCards = cards
     .map((c) => {
@@ -634,7 +634,7 @@ export async function sendTestNotificationAction(
     logError = smsRes.error || null;
   }
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayManilaString();
 
   const { error: logErr } = await supabase.from('bili_notification_logs').insert({
     website_id: WEBSITE_ID,

@@ -5,6 +5,7 @@ import { requireWebsiteAdmin } from '@/lib/auth/guards';
 import { createAdminClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
 import { SystemConfigMap, getAllSystemConfigs } from '@/lib/config/systemConfig';
+import { dispatchDailyNotifications, DispatchSummary } from '@/lib/notifications/dispatcher';
 
 export interface CronHealthStatus {
   notifications: {
@@ -156,5 +157,45 @@ export async function triggerManualFxSyncAction(): Promise<{
     return { success: true, message: `Successfully synced ${rates.length} currency exchange pairs.` };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to sync FX rates' };
+  }
+}
+
+/**
+ * Admin action to manually trigger the daily due notifications cron run.
+ */
+export async function triggerManualNotificationsCronAction(): Promise<{
+  success: boolean;
+  message?: string;
+  summary?: DispatchSummary;
+  error?: string;
+}> {
+  const auth = await requireWebsiteAdmin();
+  if (!auth.isAuthorized || !auth.user) {
+    return { success: false, error: 'Unauthorized: Admin privileges required' };
+  }
+
+  try {
+    const summary = await dispatchDailyNotifications({ forceSend: true });
+
+    if (!summary.success) {
+      return { success: false, error: summary.error || 'Failed to execute notifications cron' };
+    }
+
+    revalidatePath('/admin/settings');
+    revalidatePath('/dashboard/settings');
+
+    const totalDispatched = summary.totalDispatched;
+    const msg = totalDispatched > 0
+      ? `Cron executed successfully! Dispatched ${totalDispatched} reminder(s) (Cards: ${summary.cards.totalDispatched}, Loans: ${summary.loans.totalDispatched}, Documents: ${summary.documents.totalDispatched}).`
+      : 'Cron executed successfully! No reminders were eligible or due within the window.';
+
+    return {
+      success: true,
+      message: msg,
+      summary,
+    };
+  } catch (err: any) {
+    console.error('[triggerManualNotificationsCronAction] Error:', err);
+    return { success: false, error: err.message || 'Failed to execute notifications cron' };
   }
 }

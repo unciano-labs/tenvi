@@ -24,6 +24,7 @@ import {
   getAdminSystemSettingsAction,
   updateSystemSettingAction,
   triggerManualFxSyncAction,
+  triggerManualNotificationsCronAction,
   CronHealthStatus,
 } from '@/app/actions/admin/settings';
 import { SystemConfigMap } from '@/lib/config/systemConfig';
@@ -73,6 +74,18 @@ export default function AdminSettingsPage() {
         loadData();
       } else {
         toast.error(res.error || 'Failed to sync FX rates');
+      }
+    });
+  };
+
+  const handleRunNotificationsCron = () => {
+    startTransition(async () => {
+      const res = await triggerManualNotificationsCronAction();
+      if (res.success) {
+        toast.success(res.message || 'Notifications cron executed successfully');
+        loadData();
+      } else {
+        toast.error(res.error || 'Failed to execute notifications cron');
       }
     });
   };
@@ -377,9 +390,22 @@ export default function AdminSettingsPage() {
                 </p>
               </div>
 
-              <span className="text-3xs font-mono text-muted-foreground px-2 py-1 rounded bg-muted">
-                /api/cron/notifications
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-3xs font-mono text-muted-foreground px-2 py-1 rounded bg-muted hidden sm:inline-block">
+                  /api/cron/notifications
+                </span>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRunNotificationsCron}
+                  disabled={isPending}
+                  className="h-8 text-2xs gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className={`size-3 ${isPending ? 'animate-spin' : ''}`} />
+                  Run Now
+                </Button>
+              </div>
             </div>
           </div>
         </div>
