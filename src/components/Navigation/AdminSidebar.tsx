@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   LogOut,
   ShieldAlert,
+  ShieldCheck,
   Megaphone,
 } from 'lucide-react';
 import { TenviIcon } from '@/components/ui/TenviIcon';
@@ -42,6 +43,12 @@ export const ADMIN_NAV_ITEMS = [
     href: '/admin/feedback',
     icon: MessageSquare,
     description: 'Member bugs & feature requests',
+  },
+  {
+    label: 'Delivery Logs',
+    href: '/admin/logs',
+    icon: ShieldCheck,
+    description: 'Email & SMS delivery audit trail',
   },
   {
     label: 'Developer Settings',

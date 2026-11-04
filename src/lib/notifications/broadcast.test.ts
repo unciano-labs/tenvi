@@ -46,7 +46,7 @@ describe('Admin Email Broadcast Domain & Template Generation', () => {
 
     // CTA & footer
     expect(html).toContain('Open Your Tenvi Dashboard &rarr;');
-    expect(html).toContain('https://tenvi.app/dashboard');
+    expect(html).toContain('https://tenvi.vercel.app/dashboard');
     expect(html).toContain('Tenvi — Personal Wealth Infrastructure');
   });
 

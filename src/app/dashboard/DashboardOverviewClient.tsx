@@ -87,6 +87,7 @@ export function DashboardOverviewClient({
   );
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [isNetWorthModalOpen, setIsNetWorthModalOpen] = useState(false);
+  const [paidCardIds, setPaidCardIds] = useState<string[]>([]);
 
   const now = useMemo(() => new Date(), []);
   const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -141,6 +142,12 @@ export function DashboardOverviewClient({
   const dueSoonCards = useMemo(() => {
     return getDueSoonCardItems(creditCards, undefined, transactions, loans, liabilities, now);
   }, [creditCards, transactions, loans, liabilities, now]);
+
+  const visibleDueSoonCards = useMemo(() => {
+    return dueSoonCards.filter(
+      (c) => !paidCardIds.includes(c.cardId) && (!c.statementId || !paidCardIds.includes(c.statementId))
+    );
+  }, [dueSoonCards, paidCardIds]);
 
   // Cashflow Chart Data based on selected timeframe
   const chartData = useMemo(() => {
@@ -243,8 +250,11 @@ export function DashboardOverviewClient({
       />
 
       {/* 2. Critical Alert: Cards Due Soon (Hidden if zero debt due) */}
-      {dueSoonCards.length > 0 && (
-        <PayTheseSoonPanel dueSoonCards={dueSoonCards} />
+      {visibleDueSoonCards.length > 0 && (
+        <PayTheseSoonPanel
+          dueSoonCards={visibleDueSoonCards}
+          onPaidSuccess={(id) => setPaidCardIds((prev) => [...prev, id])}
+        />
       )}
 
       {/* 3. Top KPI Cards: Net Worth, Inflow, Outflow, Net Savings */}

@@ -2,7 +2,7 @@
 
 import { requireWebsiteAdmin } from '@/lib/auth/guards';
 import { createAdminClient } from '@/lib/supabase/server';
-import { WEBSITE_ID } from '@/lib/constants';
+import { WEBSITE_ID, APP_URL } from '@/lib/constants';
 
 export interface LandingAnalyticsData {
   uniqueVisitors: number;
@@ -67,7 +67,7 @@ export async function getAdminAnalyticsAction(): Promise<{
     // Traffic sources breakdown
     const sourceCounts: Record<string, number> = {};
     events.forEach((e) => {
-      const src = e.utm_source || (e.referrer ? new URL(e.referrer, 'https://tenvi.app').hostname : 'direct');
+      const src = e.utm_source || (e.referrer ? new URL(e.referrer, APP_URL).hostname : 'direct');
       sourceCounts[src] = (sourceCounts[src] || 0) + 1;
     });
 

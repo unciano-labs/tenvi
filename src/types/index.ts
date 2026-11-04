@@ -76,7 +76,9 @@ export interface DueSoonCardItem {
   cardName: string;
   bankName: string;
   last4: string;
+  dueDate?: string;
   dueDateFormatted: string;
+  cycleEnd?: string;
   daysRemaining: number;
   amountDue: number;
   urgency: 'urgent' | 'soon' | 'overdue';
@@ -90,6 +92,7 @@ export interface CardDueDetails {
   statementId?: string;
   dueDate: string;
   dueDateFormatted: string;
+  cycleEnd?: string;
   daysRemaining: number;
   amountDue: number;
   totalUnbilled?: number;

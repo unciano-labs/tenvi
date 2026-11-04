@@ -32,7 +32,7 @@ describe('SEO, Robots, and Sitemap Configurations', () => {
     expect(Array.isArray(sitemapEntries)).toBe(true);
     expect(sitemapEntries.length).toBeGreaterThanOrEqual(3);
 
-    const rootEntry = sitemapEntries.find((entry) => entry.url.endsWith('tenvi.app') || entry.url === 'https://tenvi.app');
+    const rootEntry = sitemapEntries.find((entry) => entry.url.endsWith('tenvi.vercel.app') || entry.url === 'https://tenvi.vercel.app');
     expect(rootEntry).toBeDefined();
     expect(rootEntry?.priority).toBe(1.0);
     expect(rootEntry?.changeFrequency).toBe('weekly');

@@ -23,6 +23,7 @@ import { ThemeQuickToggle } from '@/components/ui/theme-toggle';
 import { buttonVariants } from '@/components/ui/button';
 import { VoiceAgentWidget } from '@/components/Widgets/VoiceAgentWidget';
 import { cn } from '@/lib/utils';
+import { APP_URL } from '@/lib/constants';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
     title: 'Tenvi — Personal Wealth Infrastructure & Financial Copilot',
     description:
       'Unify daily cash flow, credit card intelligence, loan amortizations, and vehicle/property portfolio management in one clean system.',
-    url: 'https://tenvi.app',
+    url: APP_URL,
     siteName: 'Tenvi',
     images: [
       {
@@ -74,8 +75,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     '@graph': [
       {
         '@type': 'WebSite',
-        '@id': 'https://tenvi.app/#website',
-        url: 'https://tenvi.app',
+        '@id': `${APP_URL}/#website`,
+        url: APP_URL,
         name: 'Tenvi',
         description: 'Unified Personal Wealth Infrastructure & Financial Copilot',
         publisher: {
@@ -83,13 +84,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           name: 'Tenvi',
           logo: {
             '@type': 'ImageObject',
-            url: 'https://tenvi.app/icon-512.png',
+            url: `${APP_URL}/icon-512.png`,
           },
         },
       },
       {
         '@type': 'SoftwareApplication',
-        '@id': 'https://tenvi.app/#software',
+        '@id': `${APP_URL}/#software`,
         name: 'Tenvi',
         applicationCategory: 'FinanceApplication',
         operatingSystem: 'All',

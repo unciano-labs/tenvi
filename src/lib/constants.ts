@@ -19,6 +19,15 @@ export const DEFAULT_ROLE_ID = sanitizeUuid(
   TENVI_DEFAULT_ROLE_ID
 );
 
+// Canonical Application Base URL
+export const APP_URL = (
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.APP_URL ||
+  'https://tenvi.vercel.app'
+)
+  .replace(/\/$/, '')
+  .trim();
+
 // Admin Configuration & Access Control
 export const ADMIN_EMAIL = (
   process.env.NEXT_PUBLIC_ADMIN_EMAIL ||

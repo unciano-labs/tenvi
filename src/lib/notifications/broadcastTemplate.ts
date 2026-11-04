@@ -1,3 +1,5 @@
+import { APP_URL } from '@/lib/constants';
+
 export type BroadcastCategory = 'feature_update' | 'maintenance' | 'announcement' | 'security_notice';
 export type BroadcastAudience = 'all_members' | 'admins_only' | 'test_only';
 
@@ -100,7 +102,7 @@ export function generateBroadcastEmailHtml(options: {
         <table border="0" cellspacing="0" cellpadding="0" style="margin: 28px 0 12px 0;">
           <tr>
             <td align="center" style="border-radius: 12px; background-color: #2563EB;">
-              <a href="https://tenvi.app/dashboard" target="_blank" style="font-size: 13.5px; font-weight: 700; color: #ffffff; text-decoration: none; padding: 12px 24px; display: inline-block; border-radius: 12px;">
+              <a href="${APP_URL}/dashboard" target="_blank" style="font-size: 13.5px; font-weight: 700; color: #ffffff; text-decoration: none; padding: 12px 24px; display: inline-block; border-radius: 12px;">
                 Open Your Tenvi Dashboard &rarr;
               </a>
             </td>

@@ -47,14 +47,18 @@ import {
 
 interface NotificationTemplatesEditorProps {
   initialSettings: NotificationSettings;
+  mode?: 'all' | 'loans_only' | 'cards_only';
   onSaved?: (updated: Partial<NotificationSettings>) => void;
 }
 
 export function NotificationTemplatesEditor({
   initialSettings,
+  mode = 'all',
   onSaved,
 }: NotificationTemplatesEditorProps) {
-  const [activeCategory, setActiveCategory] = useState<'loans' | 'cards'>('loans');
+  const [activeCategory, setActiveCategory] = useState<'loans' | 'cards'>(
+    mode === 'cards_only' ? 'cards' : 'loans'
+  );
   const [activeChannel, setActiveChannel] = useState<'sms' | 'email'>('sms');
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
@@ -122,33 +126,55 @@ export function NotificationTemplatesEditor({
 
   const handleSave = async () => {
     setIsSaving(true);
-    const res = await saveNotificationSettingsAction({
+    const payload: Parameters<typeof saveNotificationSettingsAction>[0] = {
       notifyEmail: initialSettings.notify_email,
       emailAddress: initialSettings.email_address,
       notifySms: initialSettings.notify_sms,
       phoneNumber: initialSettings.phone_number,
       daysBefore: initialSettings.days_before,
-      loanSmsTemplate: loanSms.trim(),
-      loanEmailSubject: loanEmailSubject.trim(),
-      loanEmailBody: loanEmailBody.trim(),
-      cardSmsTemplate: cardSms.trim(),
-      cardEmailSubject: cardEmailSubject.trim(),
-      cardEmailBody: cardEmailBody.trim(),
-    });
+    };
+
+    if (mode !== 'cards_only') {
+      payload.loanSmsTemplate = loanSms.trim();
+      payload.loanEmailSubject = loanEmailSubject.trim();
+      payload.loanEmailBody = loanEmailBody.trim();
+    }
+
+    if (mode !== 'loans_only') {
+      payload.cardSmsTemplate = cardSms.trim();
+      payload.cardEmailSubject = cardEmailSubject.trim();
+      payload.cardEmailBody = cardEmailBody.trim();
+    }
+
+    const res = await saveNotificationSettingsAction(payload);
     setIsSaving(false);
 
     if (res?.error) {
       toast.error(res.error);
     } else {
-      toast.success('Alert message templates saved successfully!');
+      toast.success(
+        mode === 'loans_only'
+          ? 'Borrower reminder message saved!'
+          : mode === 'cards_only'
+          ? 'Card due alert template saved!'
+          : 'Alert message templates saved successfully!'
+      );
       if (onSaved) {
         onSaved({
-          loan_sms_template: loanSms.trim(),
-          loan_email_subject: loanEmailSubject.trim(),
-          loan_email_body: loanEmailBody.trim(),
-          card_sms_template: cardSms.trim(),
-          card_email_subject: cardEmailSubject.trim(),
-          card_email_body: cardEmailBody.trim(),
+          ...(mode !== 'cards_only'
+            ? {
+                loan_sms_template: loanSms.trim(),
+                loan_email_subject: loanEmailSubject.trim(),
+                loan_email_body: loanEmailBody.trim(),
+              }
+            : {}),
+          ...(mode !== 'loans_only'
+            ? {
+                card_sms_template: cardSms.trim(),
+                card_email_subject: cardEmailSubject.trim(),
+                card_email_body: cardEmailBody.trim(),
+              }
+            : {}),
         });
       }
     }
@@ -200,14 +226,19 @@ export function NotificationTemplatesEditor({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-lg font-bold text-foreground">
-                Notification Message Templates
+                {mode === 'loans_only'
+                  ? 'Borrower Reminder Messages'
+                  : mode === 'cards_only'
+                  ? 'Credit Card Due Alert Templates'
+                  : 'Notification Message Templates'}
               </h2>
-              <Badge variant="secondary">
-                Customizable
-              </Badge>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Customize the automated SMS and Email messages sent to borrowers and for your credit cards.
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              {mode === 'loans_only'
+                ? 'Customize the polite text message or email sent when you remind family or friends to repay borrowed money.'
+                : mode === 'cards_only'
+                ? 'Customize the automated SMS and Email alerts dispatched to members before their payment due date.'
+                : 'Customize the automated SMS and Email messages sent to borrowers and for your credit cards.'}
             </p>
           </div>
         </div>
@@ -238,38 +269,40 @@ export function NotificationTemplatesEditor({
             ) : (
               <Save className="mr-1.5 size-3.5" />
             )}
-            {isSaving ? 'Saving...' : 'Save Templates'}
+            {isSaving ? 'Saving...' : mode === 'loans_only' ? 'Save Message' : 'Save Templates'}
           </Button>
         </div>
       </div>
 
-      {/* Category Pills (Loans vs Cards) */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-muted/60 w-fit">
-        <Button
-          type="button"
-          variant={activeCategory === 'loans' ? 'primary' : 'ghost'}
-          size="sm"
-          onClick={() => {
-            setActiveCategory('loans');
-            setFocusedField('loan_sms');
-          }}
-          className="rounded-xl text-xs font-semibold min-h-9 px-4"
-        >
-          Borrower Payment Reminders
-        </Button>
-        <Button
-          type="button"
-          variant={activeCategory === 'cards' ? 'primary' : 'ghost'}
-          size="sm"
-          onClick={() => {
-            setActiveCategory('cards');
-            setFocusedField('card_sms');
-          }}
-          className="rounded-xl text-xs font-semibold min-h-9 px-4"
-        >
-          Credit Card Due Reminders
-        </Button>
-      </div>
+      {/* Category Pills (Loans vs Cards) - only shown when mode === 'all' */}
+      {mode === 'all' && (
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-muted/60 w-fit">
+          <Button
+            type="button"
+            variant={activeCategory === 'loans' ? 'primary' : 'ghost'}
+            size="sm"
+            onClick={() => {
+              setActiveCategory('loans');
+              setFocusedField('loan_sms');
+            }}
+            className="rounded-xl text-xs font-semibold min-h-9 px-4"
+          >
+            Borrower Payment Reminders
+          </Button>
+          <Button
+            type="button"
+            variant={activeCategory === 'cards' ? 'primary' : 'ghost'}
+            size="sm"
+            onClick={() => {
+              setActiveCategory('cards');
+              setFocusedField('card_sms');
+            }}
+            className="rounded-xl text-xs font-semibold min-h-9 px-4"
+          >
+            Credit Card Due Reminders
+          </Button>
+        </div>
+      )}
 
       {/* Channel Pills (SMS vs Email) */}
       <div className="flex items-center gap-2">
@@ -278,10 +311,10 @@ export function NotificationTemplatesEditor({
           variant={activeChannel === 'sms' ? 'soft' : 'ghost'}
           size="sm"
           onClick={() => setActiveChannel('sms')}
-          className="rounded-xl text-xs font-semibold px-4 min-h-9"
+          className="rounded-xl text-xs font-semibold px-4 min-h-10"
         >
           <Smartphone className="mr-1.5 size-3.5" />
-          SMS Template
+          {mode === 'loans_only' ? 'Cellphone Text (SMS)' : 'SMS Template'}
         </Button>
 
         <Button
@@ -292,22 +325,22 @@ export function NotificationTemplatesEditor({
             setActiveChannel('email');
             setFocusedField(activeCategory === 'loans' ? 'loan_email_sub' : 'card_email_sub');
           }}
-          className="rounded-xl text-xs font-semibold px-4 min-h-9"
+          className="rounded-xl text-xs font-semibold px-4 min-h-10"
         >
           <Mail className="mr-1.5 size-3.5" />
-          Email Template
+          {mode === 'loans_only' ? 'Email Message' : 'Email Template'}
         </Button>
       </div>
 
-      {/* Dynamic Variables Toolbelt with Button chips (TNV-041) */}
+      {/* Dynamic Variables Toolbelt */}
       <div className="p-4 rounded-2xl bg-muted/60 space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="size-3.5 text-primary" />
-            Click to Insert Dynamic Variables
+            {mode === 'loans_only' ? 'Click to add details into your message:' : 'Click to Insert Dynamic Variables'}
           </span>
           <span className="text-xs text-muted-foreground">
-            Replaced automatically on send
+            {mode === 'loans_only' ? 'Replaced with actual amounts and dates' : 'Replaced automatically on send'}
           </span>
         </div>
 

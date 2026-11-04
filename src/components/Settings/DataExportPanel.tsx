@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileSpreadsheet, FileJson, Shield, Database } from 'lucide-react';
+import { Download, FileSpreadsheet, FileJson, Shield, Database, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function DataExportPanel() {
@@ -14,7 +14,7 @@ export function DataExportPanel() {
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('Export generation failed.');
+        throw new Error('Could not create your download file.');
       }
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -25,9 +25,9 @@ export function DataExportPanel() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
-      toast.success('Download initiated successfully!');
+      toast.success('Your file is downloading now!');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to download export file.');
+      toast.error(err.message || 'Failed to download your file. Please try again.');
     } finally {
       setDownloading(null);
     }
@@ -36,33 +36,35 @@ export function DataExportPanel() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
-    <Card className="rounded-3xl p-6 sm:p-8 shadow-xs border border-border/60">
-      <CardHeader className="p-0 pb-6">
+    <Card className="rounded-3xl p-6 sm:p-8 shadow-card space-y-6">
+      <CardHeader className="p-0 pb-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
-            <Database className="w-5 h-5" />
+          <div className="size-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
+            <Download className="size-5" />
           </div>
           <div>
             <CardTitle className="text-lg font-bold text-foreground">
-              Data Portability & Accounting Ledger Export
+              Download a Copy of Your Records
             </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground mt-0.5">
-              Export complete transactional records, balance sheets, and audit-ready commercial accounting files.
+            <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              You can save a copy of your records to your computer or phone anytime.
             </CardDescription>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="p-0 space-y-4">
-        {/* Export Item 1: Transactions Ledger */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-muted/50 border border-border/40 gap-4">
+        {/* Item 1: Transactions History */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl bg-muted/50 gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-sm font-bold text-foreground">General Transactions Ledger</span>
+              <FileSpreadsheet className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="text-sm font-bold text-foreground">
+                Your Spending & Income History
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Complete history of income, expenses, and inter-account transfers with linked accounts, cards, and categories.
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              A complete list of your daily expenses, income received, and transfers between accounts.
             </p>
           </div>
 
@@ -78,10 +80,10 @@ export function DataExportPanel() {
                   'tx-csv'
                 )
               }
-              className="rounded-xl text-xs font-semibold h-9"
+              className="rounded-xl text-xs font-semibold h-10 px-3 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 mr-1.5" />
-              {downloading === 'tx-csv' ? 'Exporting...' : 'Export CSV'}
+              <Download className="size-3.5 mr-1.5" />
+              {downloading === 'tx-csv' ? 'Downloading...' : 'Excel / Spreadsheet'}
             </Button>
             <Button
               variant="outline"
@@ -94,25 +96,25 @@ export function DataExportPanel() {
                   'tx-json'
                 )
               }
-              className="rounded-xl text-xs font-semibold h-9"
+              className="rounded-xl text-xs font-semibold h-10 px-3 cursor-pointer"
             >
-              <FileJson className="w-3.5 h-3.5 mr-1.5" />
-              {downloading === 'tx-json' ? 'Exporting...' : 'Export JSON'}
+              <FileJson className="size-3.5 mr-1.5" />
+              {downloading === 'tx-json' ? 'Downloading...' : 'Data File (JSON)'}
             </Button>
           </div>
         </div>
 
-        {/* Export Item 2: Balance Sheet & Net Worth */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-muted/50 border border-border/40 gap-4">
+        {/* Item 2: Accounts & Net Worth */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl bg-muted/50 gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-primary" />
+              <Shield className="size-4 text-primary shrink-0" />
               <span className="text-sm font-bold text-foreground">
-                Balance Sheet & Net Worth Statement
+                Your Savings & Debts Summary
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Consolidated snapshot of liquid bank accounts, receivables, fixed properties, card debts, and term liabilities.
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              A snapshot of your bank accounts, credit cards, money lent to others, and loans.
             </p>
           </div>
 
@@ -124,14 +126,14 @@ export function DataExportPanel() {
               onClick={() =>
                 handleDownload(
                   '/api/export/net-worth?format=csv',
-                  `tenvi_balance_sheet_${todayStr}.csv`,
+                  `tenvi_savings_and_debts_${todayStr}.csv`,
                   'nw-csv'
                 )
               }
-              className="rounded-xl text-xs font-semibold h-9"
+              className="rounded-xl text-xs font-semibold h-10 px-3 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 mr-1.5" />
-              {downloading === 'nw-csv' ? 'Exporting...' : 'Export CSV'}
+              <Download className="size-3.5 mr-1.5" />
+              {downloading === 'nw-csv' ? 'Downloading...' : 'Excel / Spreadsheet'}
             </Button>
             <Button
               variant="outline"
@@ -140,16 +142,24 @@ export function DataExportPanel() {
               onClick={() =>
                 handleDownload(
                   '/api/export/net-worth?format=json',
-                  `tenvi_balance_sheet_${todayStr}.json`,
+                  `tenvi_savings_and_debts_${todayStr}.json`,
                   'nw-json'
                 )
               }
-              className="rounded-xl text-xs font-semibold h-9"
+              className="rounded-xl text-xs font-semibold h-10 px-3 cursor-pointer"
             >
-              <FileJson className="w-3.5 h-3.5 mr-1.5" />
-              {downloading === 'nw-json' ? 'Exporting...' : 'Export JSON'}
+              <FileJson className="size-3.5 mr-1.5" />
+              {downloading === 'nw-json' ? 'Downloading...' : 'Data File (JSON)'}
             </Button>
           </div>
+        </div>
+
+        {/* Safe & Private Reassurance */}
+        <div className="p-4 rounded-2xl bg-blue-500/10 text-xs text-blue-600 dark:text-blue-400 flex items-center gap-3">
+          <CheckCircle2 className="size-5 shrink-0 text-blue-500" />
+          <p className="leading-relaxed text-foreground/90">
+            <strong>Safe and private:</strong> Your downloads are saved directly to your device and are never shared with anyone.
+          </p>
         </div>
       </CardContent>
     </Card>

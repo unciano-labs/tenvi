@@ -2,10 +2,11 @@
 
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { requireWebsiteAdmin } from '@/lib/auth/guards';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { WEBSITE_ID } from '@/lib/constants';
 import { SystemConfigMap, getAllSystemConfigs } from '@/lib/config/systemConfig';
 import { dispatchDailyNotifications, DispatchSummary } from '@/lib/notifications/dispatcher';
+import { NotificationSettings, CreditCard } from '@/types';
 
 export interface CronHealthStatus {
   notifications: {
@@ -199,3 +200,53 @@ export async function triggerManualNotificationsCronAction(): Promise<{
     return { success: false, error: err.message || 'Failed to execute notifications cron' };
   }
 }
+
+/**
+ * Admin action to fetch notification gateway settings (SMTP & httpSMS) and active cards.
+ */
+export async function getAdminGatewaysDataAction(): Promise<{
+  settings: NotificationSettings | null;
+  activeCards: CreditCard[];
+  error?: string;
+}> {
+  const auth = await requireWebsiteAdmin();
+  if (!auth.isAuthorized || !auth.user) {
+    return { settings: null, activeCards: [], error: 'Unauthorized: Admin privileges required' };
+  }
+
+  try {
+    const supabase = await createClient();
+    const [{ data: sData }, { data: cData }] = await Promise.all([
+      supabase
+        .from('bili_notification_settings')
+        .select('*')
+        .eq('website_id', WEBSITE_ID)
+        .eq('user_id', auth.user.id)
+        .maybeSingle(),
+      supabase
+        .from('bili_credit_cards')
+        .select('*')
+        .eq('website_id', WEBSITE_ID)
+        .eq('is_active', true)
+        .is('deleted_at', null)
+        .order('due_day', { ascending: true }),
+    ]);
+
+    const sanitizedSettings: NotificationSettings | null = sData
+      ? {
+          ...(sData as NotificationSettings),
+          smtp_app_password: sData.smtp_app_password ? '[CONFIGURED]' : null,
+          httpsms_api_key: sData.httpsms_api_key ? '[CONFIGURED]' : null,
+        }
+      : null;
+
+    return {
+      settings: sanitizedSettings,
+      activeCards: (cData as CreditCard[]) || [],
+    };
+  } catch (err: any) {
+    console.error('[getAdminGatewaysDataAction] Error:', err);
+    return { settings: null, activeCards: [], error: err.message || 'Failed to fetch gateway settings' };
+  }
+}
+

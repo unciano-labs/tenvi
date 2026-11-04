@@ -6,7 +6,7 @@ import { WEBSITE_ID } from '@/lib/constants';
 import { creditCardSchema, cardInstallmentSchema } from '@/lib/validations/schemas';
 import { requireWebsiteUser } from '@/lib/auth/guards';
 import { logAuditEntry } from '@/lib/audit/logger';
-import { calculateAmortizationSchedule } from '@/lib/finance/calculations';
+import { calculateAmortizationSchedule, calculateNextDueDate } from '@/lib/finance/calculations';
 import { resolveFirstInstallmentDueDate } from '@/lib/finance/dateResolver';
 
 export async function createCreditCardAction(data: any) {
@@ -346,6 +346,206 @@ export async function markStatementPaidAction(data: {
   revalidatePath(`/dashboard/cards/${statement.credit_card_id}`);
 
   return { success: true, status: newStatus, paidAmount: newPaidAmount };
+}
+
+export async function markCardDuePaidAction(data: {
+  cardId: string;
+  statementId?: string | null;
+  amountPaid: number;
+  dueDate?: string | null;
+  cycleEnd?: string | null;
+  savingsAccountId?: string | null;
+}) {
+  const auth = await requireWebsiteUser();
+  if (!auth.isAuthorized || !auth.user) {
+    return { error: auth.error || 'Unauthorized. Please log in.' };
+  }
+  const user = auth.user;
+  const supabase = await createClient();
+
+  const { cardId, statementId, amountPaid, dueDate, cycleEnd, savingsAccountId } = data;
+
+  // 1. Verify card ownership
+  const { data: card, error: cardError } = await supabase
+    .from('bili_credit_cards')
+    .select('id, name, bank_name, statement_day, due_day')
+    .eq('id', cardId)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .is('deleted_at', null)
+    .single();
+
+  if (cardError || !card) {
+    return { error: 'Credit card not found or unauthorized.' };
+  }
+
+  const paymentTimestamp = new Date().toISOString();
+  const paymentDate = paymentTimestamp.split('T')[0];
+
+  let targetStatementId = statementId;
+
+  // 2. If statementId already exists, update the existing statement
+  if (targetStatementId) {
+    const { data: existingStmt } = await supabase
+      .from('bili_card_statements')
+      .select('id, billed_amount, paid_amount')
+      .eq('id', targetStatementId)
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id)
+      .single();
+
+    if (existingStmt) {
+      const fullBilled = Number(existingStmt.billed_amount || amountPaid);
+      await supabase
+        .from('bili_card_statements')
+        .update({
+          paid_amount: fullBilled,
+          paid_on: paymentTimestamp,
+          status: 'paid',
+          updated_at: paymentTimestamp,
+        })
+        .eq('id', targetStatementId)
+        .eq('website_id', WEBSITE_ID)
+        .eq('user_id', user.id);
+    }
+  } else {
+    // 3. Statement does not exist yet in bili_card_statements:
+    // Resolve cycleEnd and dueDate
+    const resolvedDueDate =
+      dueDate || calculateNextDueDate(card.due_day).nextDueDate.toISOString().split('T')[0];
+    let resolvedCycleEnd = cycleEnd;
+
+    if (!resolvedCycleEnd) {
+      const parts = resolvedDueDate.split('-').map(Number);
+      let cycleY = parts[0];
+      let cycleM = parts[1] - 1; // 0-indexed month
+      if (card.due_day <= card.statement_day) {
+        cycleM -= 1;
+        if (cycleM < 0) {
+          cycleM = 11;
+          cycleY -= 1;
+        }
+      }
+      const lastDay = new Date(Date.UTC(cycleY, cycleM + 1, 0)).getUTCDate();
+      const clampedStmtDay = Math.min(card.statement_day, lastDay);
+      resolvedCycleEnd = `${cycleY}-${String(cycleM + 1).padStart(2, '0')}-${String(clampedStmtDay).padStart(2, '0')}`;
+    }
+
+    // Upsert the formal statement row in bili_card_statements
+    const { data: upsertedStmt, error: stmtErr } = await supabase
+      .from('bili_card_statements')
+      .upsert(
+        {
+          website_id: WEBSITE_ID,
+          user_id: user.id,
+          credit_card_id: cardId,
+          cycle_end: resolvedCycleEnd,
+          due_date: resolvedDueDate,
+          billed_amount: amountPaid,
+          paid_amount: amountPaid,
+          paid_on: paymentTimestamp,
+          status: 'paid',
+          updated_at: paymentTimestamp,
+        },
+        { onConflict: 'credit_card_id,cycle_end' }
+      )
+      .select('id')
+      .single();
+
+    if (!stmtErr && upsertedStmt) {
+      targetStatementId = upsertedStmt.id;
+    }
+  }
+
+  // 4. Mark any loan installments linked to this credit card in this cycle as paid
+  const { data: linkedLoans } = await supabase
+    .from('bili_loans')
+    .select('id, balance_remaining')
+    .eq('credit_card_id', cardId)
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .is('deleted_at', null);
+
+  if (linkedLoans && linkedLoans.length > 0) {
+    const limitDate = dueDate || paymentDate;
+
+    for (const loan of linkedLoans) {
+      const { data: unpaidInsts } = await supabase
+        .from('bili_loan_installments')
+        .select('id, amount')
+        .eq('loan_id', loan.id)
+        .eq('is_paid', false)
+        .lte('due_date', limitDate);
+
+      if (unpaidInsts && unpaidInsts.length > 0) {
+        await supabase
+          .from('bili_loan_installments')
+          .update({ is_paid: true, updated_at: paymentTimestamp })
+          .in('id', unpaidInsts.map((i) => i.id));
+
+        const paidInstTotal = unpaidInsts.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+        const newBalance = Math.max(0, Number(loan.balance_remaining || 0) - paidInstTotal);
+        await supabase
+          .from('bili_loans')
+          .update({
+            balance_remaining: newBalance,
+            status: newBalance <= 0 ? 'paid' : 'partial',
+            updated_at: paymentTimestamp,
+          })
+          .eq('id', loan.id);
+      }
+    }
+  }
+
+  // 5. If funding savings account was provided, deduct balance
+  if (savingsAccountId && amountPaid > 0) {
+    const { data: account } = await supabase
+      .from('bili_savings')
+      .select('id, current_balance, name')
+      .eq('id', savingsAccountId)
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id)
+      .single();
+
+    if (account && Number(account.current_balance) >= amountPaid) {
+      await supabase
+        .from('bili_savings')
+        .update({
+          current_balance: Number(account.current_balance) - amountPaid,
+          updated_at: paymentTimestamp,
+        })
+        .eq('id', savingsAccountId);
+    }
+  }
+
+  // 6. Record payment transaction in bili_transactions
+  await supabase.from('bili_transactions').insert({
+    website_id: WEBSITE_ID,
+    user_id: user.id,
+    kind: 'transfer',
+    amount: amountPaid,
+    payment_method: 'credit_card',
+    credit_card_id: cardId,
+    savings_id: savingsAccountId || null,
+    occurred_on: paymentDate,
+    note: `Bill payment for ${card.bank_name} ${card.name}`,
+  });
+
+  // 7. Revalidate relevant Next.js cache paths
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/cards');
+  revalidatePath(`/dashboard/cards/${cardId}`);
+  revalidatePath('/dashboard/transactions');
+  if (savingsAccountId) {
+    revalidatePath('/dashboard/savings');
+  }
+
+  return {
+    success: true,
+    cardId,
+    statementId: targetStatementId,
+    amountPaid,
+  };
 }
 
 export async function createOrUpdateStatementAction(data: {

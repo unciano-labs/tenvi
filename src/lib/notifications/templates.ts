@@ -1,4 +1,5 @@
 import { formatMoney, formatDate } from '@/lib/finance/calculations';
+import { APP_URL } from '@/lib/constants';
 
 export interface TemplateVariable {
   key: string;
@@ -81,7 +82,7 @@ export const CARD_TEMPLATE_VARIABLES: TemplateVariable[] = [
   {
     key: 'app_url',
     label: 'Card Dashboard Link',
-    sample: 'https://tenvi.app/dashboard/cards',
+    sample: `${APP_URL}/dashboard/cards`,
     description: 'Direct link to view card statements in Tenvi',
   },
 ];
@@ -208,7 +209,7 @@ export function buildCardNotificationVariables({
   cardCount,
   cardList,
   daysBefore,
-  appUrl = 'https://tenvi.app/dashboard/cards',
+  appUrl = `${APP_URL}/dashboard/cards`,
 }: {
   cardCount: number;
   cardList: string;
@@ -289,7 +290,7 @@ export const DOCUMENT_TEMPLATE_VARIABLES: TemplateVariable[] = [
   {
     key: 'app_url',
     label: 'Document Link',
-    sample: 'https://tenvi.app/dashboard/properties',
+    sample: `${APP_URL}/dashboard/properties`,
     description: 'Direct link to view property details and documents',
   },
 ];
@@ -326,7 +327,7 @@ export function buildDocumentNotificationVariables({
   documentNumber,
   expiryDate,
   daysRemaining,
-  appUrl = 'https://tenvi.app/dashboard/properties',
+  appUrl = `${APP_URL}/dashboard/properties`,
 }: {
   propertyName: string;
   documentTitle: string;

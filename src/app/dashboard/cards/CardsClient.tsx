@@ -201,7 +201,11 @@ export function CardsClient({
     );
 
     if (paidStatementIds.length > 0) {
-      return items.filter((item) => !item.statementId || !paidStatementIds.includes(item.statementId));
+      return items.filter((item) => {
+        if (item.statementId && paidStatementIds.includes(item.statementId)) return false;
+        if (paidStatementIds.includes(item.cardId)) return false;
+        return true;
+      });
     }
 
     return items;

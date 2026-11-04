@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { WEBSITE_ID, DOCUMENT_TYPE_PRESETS, DocumentTypeOption } from '@/lib/constants';
+import { WEBSITE_ID, DOCUMENT_TYPE_PRESETS, DocumentTypeOption, APP_URL } from '@/lib/constants';
 import { requireWebsiteUser } from '@/lib/auth/guards';
 import { revalidatePath } from 'next/cache';
 import { PropertyDocument, PropertyDocumentType } from '@/types';
@@ -466,7 +466,7 @@ export async function sendDocumentExpiryAlertAction(
       documentNumber: doc.document_number,
       expiryDate: doc.expiry_date,
       daysRemaining: expiryStatus.daysRemaining ?? 0,
-      appUrl: `https://tenvi.app/dashboard/properties/${doc.property_id}`,
+      appUrl: `${APP_URL}/dashboard/properties/${doc.property_id}`,
     });
 
     const emailSubject = interpolateTemplate(DEFAULT_DOCUMENT_EMAIL_SUBJECT, docVars);

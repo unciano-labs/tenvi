@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://tenvi.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://tenvi.vercel.app'),
   title: {
     default: 'Tenvi — Personal Wealth Infrastructure Platform',
     template: '%s | Tenvi',
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     title: 'Tenvi — Personal Wealth Infrastructure Platform',
     description:
       'Unify daily cash flow, credit card intelligence, loan amortizations, and vehicle/property portfolio management in one clean system.',
-    url: 'https://tenvi.app',
+    url: process.env.NEXT_PUBLIC_APP_URL || 'https://tenvi.vercel.app',
     siteName: 'Tenvi',
     images: [
       {

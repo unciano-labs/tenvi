@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { WEBSITE_ID } from '@/lib/constants';
+import { WEBSITE_ID, APP_URL } from '@/lib/constants';
 import { revalidatePath } from 'next/cache';
 import { formatMoney, formatDate, calculateNextDueDate, getTodayManila, getTodayManilaString } from '@/lib/finance/calculations';
 import { notificationSettingsSchema } from '@/lib/validations/schemas';
@@ -482,7 +482,7 @@ export async function checkAndSendCardDueAlertsAction({
     cardCount: upcomingCards.length,
     cardList: cardItemsSummary,
     daysBefore,
-    appUrl: 'https://tenvi.app/dashboard/cards',
+    appUrl: `${APP_URL}/dashboard/cards`,
   });
 
   const smsTemplate = settings?.card_sms_template || DEFAULT_CARD_SMS_TEMPLATE;

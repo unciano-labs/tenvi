@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
-import { WEBSITE_ID } from '@/lib/constants';
+import { WEBSITE_ID, APP_URL } from '@/lib/constants';
 import {
   calculateNextDueDate,
   formatDate,
@@ -180,7 +180,7 @@ export async function dispatchDailyNotifications(
       cardCount: upcoming.length,
       cardList: cardItemsSummary,
       daysBefore: targetDays,
-      appUrl: 'https://tenvi.app/dashboard/cards',
+      appUrl: `${APP_URL}/dashboard/cards`,
     });
 
     const smsTemplate = settings.card_sms_template || DEFAULT_CARD_SMS_TEMPLATE;
@@ -502,7 +502,7 @@ export async function dispatchDailyNotifications(
         documentNumber: doc.document_number,
         expiryDate: doc.expiry_date,
         daysRemaining: expiryStatus.daysRemaining ?? 0,
-        appUrl: `https://tenvi.app/dashboard/properties/${doc.property_id}`,
+        appUrl: `${APP_URL}/dashboard/properties/${doc.property_id}`,
       });
 
       const smsBody = interpolateTemplate(DEFAULT_DOCUMENT_SMS_TEMPLATE, docVars);

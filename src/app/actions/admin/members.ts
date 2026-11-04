@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireWebsiteAdmin } from '@/lib/auth/guards';
 import { createAdminClient } from '@/lib/supabase/server';
-import { WEBSITE_ID } from '@/lib/constants';
+import { WEBSITE_ID, APP_URL } from '@/lib/constants';
 
 export interface AdminMemberRecord {
   user_id: string;
@@ -167,7 +167,7 @@ export async function triggerMemberPasswordResetAction(
 
   try {
     const admin = createAdminClient();
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tenvi.app';
+    const appUrl = APP_URL;
     const { error } = await admin.auth.resetPasswordForEmail(userEmail, {
       redirectTo: `${appUrl}/auth/confirm?type=recovery`,
     });

@@ -1273,6 +1273,8 @@ describe('calculateCardDueDetails & getDueSoonCardItems (Due Date & Deletion Syn
     expect(dueSoonList[0].cardId).toBe('card-maya-black');
     expect(dueSoonList[0].amountDue).toBe(5000);
     expect(dueSoonList[0].daysRemaining).toBe(0);
+    expect(dueSoonList[0].dueDate).toBe('2026-11-04');
+    expect(dueSoonList[0].cycleEnd).toBe('2026-10-15');
   });
 
   it('correctly excludes future-dated liability installments from being due prematurely', () => {
