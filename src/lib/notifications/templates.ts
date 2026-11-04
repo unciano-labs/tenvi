@@ -69,7 +69,7 @@ export const CARD_TEMPLATE_VARIABLES: TemplateVariable[] = [
     key: 'card_list',
     label: 'Cards Summary List',
     sample:
-      '1) BDO Visa (•••• 4321): Due in 3 days (Oct 20, 2026)\n2) BPI Gold (•••• 8820): Due in 2 days (Oct 19, 2026)',
+      '1) BDO Visa (•••• 4321): Due in 3 days (Oct 20, 2026) • Amount Due: ₱5,420.00\n2) BPI Gold (•••• 8820): Due in 2 days (Oct 19, 2026) • amount due not set',
     description: 'Formatted itemized breakdown of cards due',
   },
   {
@@ -221,6 +221,31 @@ export function buildCardNotificationVariables({
     days_before: String(daysBefore),
     app_url: appUrl,
   };
+}
+
+/**
+ * Formats a single credit card line for consolidation in SMS/Email notification alerts.
+ * Rules:
+ * - Omit credit limit entirely.
+ * - Display "Amount Due: <formatted money>" if unpaid statement balance > 0.
+ * - Display "amount due not set" if no statement exists or unpaid balance <= 0.
+ */
+export function formatCardSummaryItem(
+  index: number,
+  card: { bank_name: string; name: string; last_4: string; credit_limit?: number | null },
+  dueInfo: { label: string; nextDueDate: Date },
+  statement?: { billed_amount?: number | string | null; paid_amount?: number | string | null } | null
+): string {
+  const unpaidAmount = statement
+    ? Math.max(0, Number(statement.billed_amount || 0) - Number(statement.paid_amount || 0))
+    : 0;
+
+  const dueDetail =
+    unpaidAmount > 0
+      ? `Amount Due: ${formatMoney(unpaidAmount)}`
+      : 'amount due not set';
+
+  return `${index + 1}) ${card.bank_name} ${card.name} (•••• ${card.last_4}): ${dueInfo.label} (${formatDate(dueInfo.nextDueDate)}) • ${dueDetail}`;
 }
 
 export const DOCUMENT_TEMPLATE_VARIABLES: TemplateVariable[] = [

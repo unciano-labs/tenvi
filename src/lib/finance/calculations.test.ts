@@ -16,6 +16,8 @@ import {
   calculatePropertyFinancials,
   calculatePropertyLoanAmortization,
   groupTransactionsByStatementDate,
+  calculateCardDueDetails,
+  getDueSoonCardItems,
 } from './calculations';
 
 describe('TNV-015: getTodayManila()', () => {
@@ -1195,6 +1197,115 @@ describe('groupTransactionsByStatementDate: Statement Month Cycles & Dropdown Gr
     expect(oct?.transactions).toHaveLength(1);
     expect(oct?.transactions[0].id).toBe('tx-dup-1');
     expect(oct?.netSpend).toBe(3000); // NOT 6000!
+  });
+});
+
+describe('calculateCardDueDetails & getDueSoonCardItems (Due Date & Deletion Sync)', () => {
+  const refDateNov4 = new Date(Date.UTC(2026, 10, 4, 0, 0, 0)); // 2026-11-04 (Nov 4)
+
+  const mayaCard = {
+    id: 'card-maya-black',
+    name: 'Black VISA',
+    bank_name: 'MAYA',
+    last_4: '1234',
+    statement_day: 15,
+    due_day: 4,
+  };
+
+  it('correctly reports amountDue: 0 when a mistake transaction was deleted, leaving only an unbilled future transaction', () => {
+    // Sept 30 transaction was soft-deleted (deleted_at is set)
+    // Only an expense on Oct 20 (cutoff Nov 15, due Dec 4) is active
+    const transactions = [
+      {
+        id: 'tx-mistake',
+        credit_card_id: 'card-maya-black',
+        amount: 6039,
+        kind: 'expense',
+        occurred_on: '2026-09-30',
+        deleted_at: '2026-11-04T10:00:00Z',
+      },
+      {
+        id: 'tx-unbilled',
+        credit_card_id: 'card-maya-black',
+        amount: 6039,
+        kind: 'expense',
+        occurred_on: '2026-10-20',
+        deleted_at: null,
+      },
+    ];
+
+    const details = calculateCardDueDetails(mayaCard, null, transactions, [], [], refDateNov4);
+
+    // Because the Sept 30 transaction is deleted, the cycle closing Oct 15 (due Nov 4) has 0 due!
+    // The Oct 20 transaction belongs to the cycle closing Nov 15, due Dec 4.
+    expect(details.amountDue).toBe(0);
+    expect(details.isDueSoon).toBe(false);
+    expect(details.urgency).toBe('none');
+    expect(details.totalUnbilled).toBe(6039);
+    expect(details.dueDateFormatted).toContain('Dec 4, 2026');
+
+    // getDueSoonCardItems must NOT include this card for Nov 4
+    const dueSoonList = getDueSoonCardItems([mayaCard], {}, transactions, [], [], refDateNov4);
+    expect(dueSoonList.find((c) => c.cardId === 'card-maya-black')).toBeUndefined();
+  });
+
+  it('correctly includes a card with active billed transactions due today', () => {
+    const transactions = [
+      {
+        id: 'tx-valid-billed',
+        credit_card_id: 'card-maya-black',
+        amount: 5000,
+        kind: 'expense',
+        occurred_on: '2026-10-05', // Billed on Oct 15, due Nov 4
+        deleted_at: null,
+      },
+    ];
+
+    const details = calculateCardDueDetails(mayaCard, null, transactions, [], [], refDateNov4);
+
+    expect(details.amountDue).toBe(5000);
+    expect(details.daysRemaining).toBe(0);
+    expect(details.isDueSoon).toBe(true);
+    expect(details.urgency).toBe('urgent');
+
+    const dueSoonList = getDueSoonCardItems([mayaCard], {}, transactions, [], [], refDateNov4);
+    expect(dueSoonList).toHaveLength(1);
+    expect(dueSoonList[0].cardId).toBe('card-maya-black');
+    expect(dueSoonList[0].amountDue).toBe(5000);
+    expect(dueSoonList[0].daysRemaining).toBe(0);
+  });
+
+  it('correctly excludes future-dated liability installments from being due prematurely', () => {
+    const rcbcCard = {
+      id: 'card-rcbc',
+      name: 'Platinum MC',
+      bank_name: 'RCBC',
+      last_4: '5678',
+      statement_day: 16,
+      due_day: 5,
+    };
+
+    const liability = {
+      id: 'lib-credit2cash',
+      credit_card_id: 'card-rcbc',
+      original_principal: 500000,
+      term_months: 12,
+      interest_rate_type: 'monthly',
+      interest_rate: 0.5,
+      monthly_payment: 44166.67,
+      first_payment_date: '2026-12-05', // Starts in Dec, not Nov!
+      due_day: 5,
+      deleted_at: null,
+    };
+
+    const details = calculateCardDueDetails(rcbcCard, null, [], [], [liability], refDateNov4);
+
+    // On Nov 4, the first installment is not due until Dec 5!
+    expect(details.amountDue).toBe(0);
+    expect(details.isDueSoon).toBe(false);
+
+    const dueSoonList = getDueSoonCardItems([rcbcCard], {}, [], [], [liability], refDateNov4);
+    expect(dueSoonList.find((c) => c.cardId === 'card-rcbc')).toBeUndefined();
   });
 });
 

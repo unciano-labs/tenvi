@@ -52,3 +52,7 @@ yarn-error.log*
 # test artifacts
 /artifacts
 
+# supabase cli temporary files
+supabase/.temp/
+
+

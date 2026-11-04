@@ -5,6 +5,7 @@ import {
   calculateCardSpending,
   calculateNextDueDate,
   formatDate,
+  getDueSoonCardItems,
   type CardSpendingSummary,
 } from '@/lib/finance/calculations';
 import type { DueSoonCardItem } from '@/components/Cards/PayTheseSoonPanel';
@@ -121,33 +122,13 @@ export default async function CardsPage() {
   );
 
   // Server-computed pay these soon items (hidden if all cards paid or no dues incoming in 3 days)
-  const initialDueSoonCards: DueSoonCardItem[] = [];
-  cardsWithStatements.forEach((card) => {
-    const spending = spendingMap[card.id];
-    const totalBalance = card.latest_statement
-      ? Number(card.latest_statement.billed_amount || 0) - Number(card.latest_statement.paid_amount || 0)
-      : spending?.totalUsed || 0;
-
-    if (totalBalance > 0) {
-      const dueDateInfo = calculateNextDueDate(card.due_day);
-      // Only include cards due within 3 days (or overdue)
-      if (dueDateInfo.daysRemaining <= 3) {
-        initialDueSoonCards.push({
-          statementId: card.latest_statement?.id,
-          cardId: card.id,
-          cardName: card.name,
-          bankName: card.bank_name,
-          last4: card.last_4,
-          dueDateFormatted: formatDate(dueDateInfo.nextDueDate),
-          daysRemaining: dueDateInfo.daysRemaining,
-          amountDue: totalBalance,
-          urgency: dueDateInfo.daysRemaining < 0 ? 'overdue' : 'urgent',
-        });
-      }
-    }
-  });
-
-  initialDueSoonCards.sort((a, b) => a.daysRemaining - b.daysRemaining);
+  const initialDueSoonCards = getDueSoonCardItems(
+    cardsWithStatements,
+    statementsByCard,
+    transactions || [],
+    loans || [],
+    liabilities || []
+  );
 
   return (
     <CardsClient

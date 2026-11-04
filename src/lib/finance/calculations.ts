@@ -7,6 +7,8 @@ import { CURRENCY_SYMBOL } from '@/lib/constants';
 import { convertCurrency } from './fx';
 import { calculateAmortizationSchedule } from './amortizationEngine';
 import { resolveFirstInstallmentDueDate } from './dateResolver';
+import type { DueSoonCardItem, CardDueDetails } from '@/types';
+export type { DueSoonCardItem, CardDueDetails };
 
 /**
  * Format numbers into Philippine Peso currency strings
@@ -1516,6 +1518,261 @@ export function getCardUrgency(
     daysRemaining,
     variant: 'success',
   };
+}
+
+/**
+ * High-precision credit card due date and balance calculator.
+ * Synchronizes Dashboard and Cards pages with true statement cycles.
+ * 
+ * Rules:
+ * 1. If formal statement exists in bili_card_statements, use its due_date and unpaid balance (billed - paid).
+ * 2. If no formal statement, dynamically groups transactions, loans, and liabilities into billing statement cycles
+ *    via groupTransactionsByStatementDate.
+ * 3. Only considers transactions and installments that belong to the billed cycle currently due/overdue.
+ * 4. Transactions in unbilled future cycles are NOT counted as due for the current cycle.
+ * 5. Soft-deleted transactions are completely ignored.
+ */
+export function calculateCardDueDetails(
+  card: {
+    id: string;
+    name?: string | null;
+    bank_name?: string | null;
+    last_4?: string | null;
+    statement_day?: number | null;
+    due_day?: number | null;
+    latest_statement?: {
+      id?: string;
+      billed_amount?: number | string | null;
+      paid_amount?: number | string | null;
+      due_date?: string | null;
+      status?: string | null;
+    } | null;
+  },
+  statement?: {
+    id?: string;
+    billed_amount?: number | string | null;
+    paid_amount?: number | string | null;
+    due_date?: string | null;
+    status?: string | null;
+  } | null,
+  transactions: any[] = [],
+  loans: any[] = [],
+  liabilities: any[] = [],
+  referenceDate: Date = getTodayManila()
+): CardDueDetails {
+  const cardId = card.id;
+  const cardStatement = statement !== undefined ? statement : card.latest_statement;
+  const cardTxs = (transactions || []).filter((t: any) => t && t.credit_card_id === cardId && !t.deleted_at);
+  const cardLoans = (loans || []).filter((l: any) => l && l.credit_card_id === cardId && !l.deleted_at);
+  const cardLibs = (liabilities || []).filter((l: any) => l && l.credit_card_id === cardId && !l.deleted_at);
+
+  const cardName = card.name || 'Credit Card';
+  const bankName = card.bank_name || '';
+  const last4 = card.last_4 || '••••';
+
+  // 1. Formal statement in bili_card_statements
+  if (cardStatement && cardStatement.due_date) {
+    const billed = Number(cardStatement.billed_amount || 0);
+    const paid = Number(cardStatement.paid_amount || 0);
+    const unpaid = Math.max(0, billed - paid);
+
+    const parts = String(cardStatement.due_date).split('-').map(Number);
+    let dueDate = new Date();
+    if (parts.length === 3) {
+      dueDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    const todayMid = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+    const daysRemaining = Math.ceil((dueDate.getTime() - todayMid.getTime()) / (1000 * 60 * 60 * 24));
+
+    const isDueSoon = unpaid > 0 && daysRemaining <= 3 && daysRemaining >= -30;
+    const urgency: 'overdue' | 'urgent' | 'soon' | 'normal' | 'none' =
+      unpaid <= 0
+        ? 'none'
+        : daysRemaining < 0
+          ? 'overdue'
+          : daysRemaining <= 3
+            ? 'urgent'
+            : daysRemaining <= 7
+              ? 'soon'
+              : 'normal';
+
+    return {
+      cardId,
+      cardName,
+      bankName,
+      last4,
+      statementId: cardStatement.id,
+      dueDate: String(cardStatement.due_date),
+      dueDateFormatted: formatDate(dueDate),
+      daysRemaining,
+      amountDue: unpaid,
+      isDueSoon,
+      urgency,
+      statusLabel:
+        urgency === 'overdue'
+          ? `Overdue by ${Math.abs(daysRemaining)}d`
+          : daysRemaining === 0
+            ? 'Due today'
+            : daysRemaining === 1
+              ? 'Due tomorrow'
+              : `Due in ${daysRemaining} days`,
+    };
+  }
+
+  // 2. Dynamic statement cycles
+  const groups = groupTransactionsByStatementDate(
+    cardTxs,
+    card.statement_day || 15,
+    card.due_day || 5,
+    referenceDate,
+    6,
+    cardLoans,
+    cardLibs
+  );
+
+  // Check billed cycles (past or due soon)
+  const billedGroups = groups
+    .filter((g) => g.status === 'billed_due_soon' || (g.status === 'closed' && g.daysUntilDue >= -30))
+    .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+
+  let totalBilledDue = 0;
+  let earliestDueGroup: StatementGroup | null = null;
+
+  for (const g of billedGroups) {
+    const netSpend = g.transactions.reduce(
+      (sum, t) => (t.kind === 'expense' ? sum + Number(t.amount || 0) : sum - Number(t.amount || 0)),
+      0
+    );
+    const unpaidInst = (g.installments || [])
+      .filter((i: any) => !i.isPaid)
+      .reduce((sum, i) => sum + Number(i.amount || 0), 0);
+    const cycleDue = Math.max(0, netSpend + unpaidInst);
+
+    if (cycleDue > 0) {
+      totalBilledDue += cycleDue;
+      if (!earliestDueGroup || g.daysUntilDue < earliestDueGroup.daysUntilDue) {
+        earliestDueGroup = g;
+      }
+    }
+  }
+
+  if (totalBilledDue > 0 && earliestDueGroup) {
+    const daysRemaining = earliestDueGroup.daysUntilDue;
+    const isDueSoon = daysRemaining <= 3;
+    const urgency: 'overdue' | 'urgent' | 'soon' | 'normal' | 'none' =
+      daysRemaining < 0 ? 'overdue' : daysRemaining <= 3 ? 'urgent' : daysRemaining <= 7 ? 'soon' : 'normal';
+
+    return {
+      cardId,
+      cardName,
+      bankName,
+      last4,
+      statementId: undefined,
+      dueDate: earliestDueGroup.dueDate,
+      dueDateFormatted: earliestDueGroup.dueDateFormatted,
+      daysRemaining,
+      amountDue: totalBilledDue,
+      isDueSoon,
+      urgency,
+      statusLabel: earliestDueGroup.statusLabel,
+    };
+  }
+
+  // If no billed cycle has dues, check unbilled cycle
+  const currentUnbilledGroup = groups.find((g) => g.isCurrentCycle || g.status === 'current_unbilled');
+  if (currentUnbilledGroup) {
+    const netSpend = currentUnbilledGroup.transactions.reduce(
+      (sum, t) => (t.kind === 'expense' ? sum + Number(t.amount || 0) : sum - Number(t.amount || 0)),
+      0
+    );
+    const unpaidInst = (currentUnbilledGroup.installments || [])
+      .filter((i: any) => !i.isPaid)
+      .reduce((sum, i) => sum + Number(i.amount || 0), 0);
+    const unbilledTotal = Math.max(0, netSpend + unpaidInst);
+
+    return {
+      cardId,
+      cardName,
+      bankName,
+      last4,
+      statementId: undefined,
+      dueDate: currentUnbilledGroup.dueDate,
+      dueDateFormatted: currentUnbilledGroup.dueDateFormatted,
+      daysRemaining: currentUnbilledGroup.daysUntilDue,
+      amountDue: 0, // Unbilled - not due yet for current cycle!
+      totalUnbilled: unbilledTotal,
+      isDueSoon: false,
+      urgency: 'none',
+      statusLabel: currentUnbilledGroup.statusLabel,
+    };
+  }
+
+  // Fallback if card has no activity
+  const nextDue = calculateNextDueDate(card.due_day || 5, referenceDate);
+  return {
+    cardId,
+    cardName,
+    bankName,
+    last4,
+    statementId: undefined,
+    dueDate: nextDue.nextDueDate.toISOString().split('T')[0],
+    dueDateFormatted: formatDate(nextDue.nextDueDate),
+    daysRemaining: nextDue.daysRemaining,
+    amountDue: 0,
+    isDueSoon: false,
+    urgency: 'none',
+    statusLabel: nextDue.label,
+  };
+}
+
+/**
+ * Returns consolidated list of cards with urgent balances due within window (default 3 days or overdue).
+ * Guaranteed to match between Dashboard and Cards pages.
+ */
+export function getDueSoonCardItems(
+  cards: any[],
+  statementsByCard: Map<string, any> | Record<string, any> = {},
+  transactions: any[] = [],
+  loans: any[] = [],
+  liabilities: any[] = [],
+  referenceDate: Date = getTodayManila(),
+  windowDays = 3
+): DueSoonCardItem[] {
+  const items: DueSoonCardItem[] = [];
+
+  for (const card of cards || []) {
+    if (!card || card.is_active === false || card.deleted_at) continue;
+
+    const stmt =
+      statementsByCard instanceof Map
+        ? statementsByCard.get(card.id)
+        : (statementsByCard as any)?.[card.id] || card.latest_statement;
+
+    const details = calculateCardDueDetails(
+      card,
+      stmt,
+      transactions,
+      loans,
+      liabilities,
+      referenceDate
+    );
+
+    if (details.amountDue > 0 && details.daysRemaining <= windowDays && details.daysRemaining >= -30) {
+      items.push({
+        statementId: details.statementId,
+        cardId: details.cardId,
+        cardName: details.cardName,
+        bankName: details.bankName,
+        last4: details.last4,
+        dueDateFormatted: details.dueDateFormatted,
+        daysRemaining: details.daysRemaining,
+        amountDue: details.amountDue,
+        urgency: details.urgency === 'overdue' ? 'overdue' : 'urgent',
+      });
+    }
+  }
+
+  return items.sort((a, b) => a.daysRemaining - b.daysRemaining);
 }
 
 export interface UsageLevelInfo {

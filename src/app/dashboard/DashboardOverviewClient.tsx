@@ -8,6 +8,7 @@ import {
   calculateTrueNetWorth,
   formatMoney,
   formatDate,
+  getDueSoonCardItems,
 } from '@/lib/finance/calculations';
 import {
   Category,
@@ -134,33 +135,12 @@ export function DashboardOverviewClient({
   // Credit Card Recommendations & Due Dates
   const cardRecommendation = useMemo(() => {
     if (creditCards.length === 0) return null;
-    return calculateOptimalCardToSwipe(creditCards, transactions, loans, now);
-  }, [creditCards, transactions, loans, now]);
+    return calculateOptimalCardToSwipe(creditCards, transactions, loans, now, liabilities);
+  }, [creditCards, transactions, loans, now, liabilities]);
 
   const dueSoonCards = useMemo(() => {
-    const items: DueSoonCardItem[] = [];
-    creditCards.forEach((c) => {
-      const dueInfo = calculateNextDueDate(c.due_day);
-      if (dueInfo.daysRemaining <= 3) {
-        const matchingRec = cardRecommendation?.rankedCards.find((r) => r.card.id === c.id);
-        const amountDue = matchingRec?.totalUtilized || 0;
-        if (amountDue > 0) {
-          items.push({
-            statementId: c.latest_statement?.id,
-            cardId: c.id,
-            cardName: c.name,
-            bankName: c.bank_name,
-            last4: c.last_4,
-            dueDateFormatted: formatDate(dueInfo.nextDueDate),
-            daysRemaining: dueInfo.daysRemaining,
-            amountDue,
-            urgency: dueInfo.daysRemaining < 0 ? 'overdue' : 'urgent',
-          });
-        }
-      }
-    });
-    return items.sort((a, b) => a.daysRemaining - b.daysRemaining);
-  }, [creditCards, cardRecommendation]);
+    return getDueSoonCardItems(creditCards, undefined, transactions, loans, liabilities, now);
+  }, [creditCards, transactions, loans, liabilities, now]);
 
   // Cashflow Chart Data based on selected timeframe
   const chartData = useMemo(() => {

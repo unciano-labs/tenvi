@@ -10,9 +10,12 @@ import {
   calculateNextDueDate,
   calculateOptimalCardToSwipe,
   calculateCardSpending,
+  calculateCardDueDetails,
+  getDueSoonCardItems,
   getCardUrgency,
   formatDate,
   OptimalCardResult,
+  CardDueDetails,
 } from '@/lib/finance/calculations';
 import { softDeleteCreditCardAction, restoreCreditCardAction } from '@/app/actions/cards';
 
@@ -167,47 +170,42 @@ export function CardsClient({
     return calculateOptimalCardToSwipe(activeCards, cardTransactions, linkedLoans, linkedLiabilities);
   }, [activeCards, cardTransactions, linkedLoans, linkedLiabilities, initialOptimalResult, removedCardIds]);
 
+  // Due details map for each card (memoized)
+  const dueDetailsMap = useMemo(() => {
+    const map = new Map<string, CardDueDetails>();
+    activeCards.forEach((card) => {
+      const details = calculateCardDueDetails(
+        card,
+        card.latest_statement,
+        cardTransactions,
+        linkedLoans,
+        linkedLiabilities
+      );
+      map.set(card.id, details);
+    });
+    return map;
+  }, [activeCards, cardTransactions, linkedLoans, linkedLiabilities]);
+
   // Pay These Soon items (balances due within 3 days or overdue, excluding paid items)
   const dueSoonCards = useMemo(() => {
     if (initialDueSoonCards && removedCardIds.length === 0 && paidStatementIds.length === 0) {
       return initialDueSoonCards;
     }
 
-    const items: DueSoonCardItem[] = [];
+    const items = getDueSoonCardItems(
+      activeCards,
+      undefined,
+      cardTransactions,
+      linkedLoans,
+      linkedLiabilities
+    );
 
-    activeCards.forEach((card) => {
-      if (card.latest_statement?.id && paidStatementIds.includes(card.latest_statement.id)) {
-        return;
-      }
+    if (paidStatementIds.length > 0) {
+      return items.filter((item) => !item.statementId || !paidStatementIds.includes(item.statementId));
+    }
 
-      const spending = spendingMap.get(card.id);
-      const totalBalance = card.latest_statement
-        ? Number(card.latest_statement.billed_amount || 0) - Number(card.latest_statement.paid_amount || 0)
-        : spending?.totalUsed || 0;
-
-      if (totalBalance > 0) {
-        const dueInfo = calculateNextDueDate(card.due_day);
-        const urgencyInfo = getCardUrgency(dueInfo.nextDueDate, totalBalance);
-
-        // Hide if all cards paid or no dues incoming within 3 days (daysRemaining <= 3)
-        if (dueInfo.daysRemaining <= 3) {
-          items.push({
-            statementId: card.latest_statement?.id,
-            cardId: card.id,
-            cardName: card.name,
-            bankName: card.bank_name,
-            last4: card.last_4,
-            dueDateFormatted: formatDate(dueInfo.nextDueDate),
-            daysRemaining: dueInfo.daysRemaining,
-            amountDue: totalBalance,
-            urgency: urgencyInfo.urgency === 'overdue' ? 'overdue' : 'urgent',
-          });
-        }
-      }
-    });
-
-    return items.sort((a, b) => a.daysRemaining - b.daysRemaining);
-  }, [activeCards, spendingMap, initialDueSoonCards, removedCardIds, paidStatementIds]);
+    return items;
+  }, [activeCards, cardTransactions, linkedLoans, linkedLiabilities, initialDueSoonCards, removedCardIds, paidStatementIds]);
 
   // Next payment info for the 3rd tile in summary row
   const nextPaymentItem = useMemo(() => {
@@ -224,30 +222,29 @@ export function CardsClient({
 
     let earliestCard: DueSoonCardItem | null = null;
     activeCards.forEach((card) => {
-      const spending = spendingMap.get(card.id);
-      const totalBalance = card.latest_statement
-        ? Number(card.latest_statement.billed_amount || 0) - Number(card.latest_statement.paid_amount || 0)
-        : spending?.totalUsed || 0;
+      if (card.latest_statement?.id && paidStatementIds.includes(card.latest_statement.id)) {
+        return;
+      }
 
-      if (totalBalance > 0) {
-        const dueInfo = calculateNextDueDate(card.due_day);
-        if (!earliestCard || dueInfo.daysRemaining < earliestCard.daysRemaining) {
+      const details = dueDetailsMap.get(card.id);
+      if (details && details.amountDue > 0 && details.daysRemaining >= -30) {
+        if (!earliestCard || details.daysRemaining < earliestCard.daysRemaining) {
           earliestCard = {
             cardId: card.id,
-            cardName: card.name,
-            bankName: card.bank_name,
-            last4: card.last_4,
-            dueDateFormatted: formatDate(dueInfo.nextDueDate),
-            daysRemaining: dueInfo.daysRemaining,
-            amountDue: totalBalance,
-            urgency: 'urgent',
+            cardName: details.cardName,
+            bankName: details.bankName,
+            last4: details.last4,
+            dueDateFormatted: details.dueDateFormatted,
+            daysRemaining: details.daysRemaining,
+            amountDue: details.amountDue,
+            urgency: details.urgency === 'overdue' ? 'overdue' : 'urgent',
           };
         }
       }
     });
 
     return earliestCard;
-  }, [dueSoonCards, activeCards, spendingMap]);
+  }, [dueSoonCards, activeCards, dueDetailsMap, paidStatementIds]);
 
   // Unique banks for toolbar filter
   const uniqueBanks = useMemo(
@@ -491,12 +488,14 @@ export function CardsClient({
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {displayedCards.map((card) => {
             const spending = spendingMap.get(card.id) || calculateCardSpending(card, [], []);
+            const dueDetails = dueDetailsMap.get(card.id);
 
             return (
               <CreditCardTile
                 key={card.id}
                 card={card}
                 spending={spending}
+                dueDetails={dueDetails}
                 onEdit={handleEditCard}
                 onDelete={handleDeleteCard}
               />

@@ -22,6 +22,7 @@ import {
   DEFAULT_CARD_EMAIL_BODY,
   interpolateTemplate,
   buildCardNotificationVariables,
+  formatCardSummaryItem,
 } from '@/lib/notifications/templates';
 import { sendGmailEmail, verifyGmailConnection } from '@/lib/notifications/email';
 import { sendHttpSms, verifyHttpSmsConnection, formatPhoneNumberE164 } from '@/lib/notifications/sms';
@@ -402,6 +403,7 @@ export async function checkAndSendCardDueAlertsAction({
     .eq('website_id', WEBSITE_ID)
     .eq('user_id', user.id)
     .eq('is_active', true)
+    .is('deleted_at', null)
     .order('due_day', { ascending: true });
 
   if (cardsError || !cards || cards.length === 0) {
@@ -447,11 +449,32 @@ export async function checkAndSendCardDueAlertsAction({
   const dispatchedChannels: string[] = [];
   const cardNamesList = upcomingCards.map((i) => `${i.card.bank_name} ${i.card.name}`).join(', ');
 
+  // Fetch latest statements for upcoming cards to retrieve amount due
+  const cardIds = upcomingCards.map((i) => i.card.id);
+  const { data: statements } = await supabase
+    .from('bili_card_statements')
+    .select('credit_card_id, billed_amount, paid_amount, cycle_end, due_date')
+    .eq('website_id', WEBSITE_ID)
+    .eq('user_id', user.id)
+    .in('credit_card_id', cardIds)
+    .order('cycle_end', { ascending: false });
+
+  const statementsByCard = new Map<string, any>();
+  (statements || []).forEach((st) => {
+    if (!statementsByCard.has(st.credit_card_id)) {
+      statementsByCard.set(st.credit_card_id, st);
+    }
+  });
+
   // 5. Build friendly consolidated alert message
   const cardItemsSummary = upcomingCards
-    .map(
-      (item, idx) =>
-        `${idx + 1}) ${item.card.bank_name} ${item.card.name} (•••• ${item.card.last_4}): ${item.dueInfo.label} (${formatDate(item.dueInfo.nextDueDate)})${item.card.credit_limit > 0 ? ` • Limit ${formatMoney(item.card.credit_limit)}` : ''}`
+    .map((item, idx) =>
+      formatCardSummaryItem(
+        idx,
+        item.card,
+        item.dueInfo,
+        statementsByCard.get(item.card.id)
+      )
     )
     .join('\n');
 

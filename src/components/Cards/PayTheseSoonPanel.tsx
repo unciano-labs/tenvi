@@ -8,18 +8,8 @@ import { formatMoney } from '@/lib/finance/calculations';
 import { markStatementPaidAction } from '@/app/actions/cards';
 import { toast } from 'sonner';
 import { Clock, AlertTriangle, Loader2 } from 'lucide-react';
-
-export interface DueSoonCardItem {
-  statementId?: string;
-  cardId: string;
-  cardName: string;
-  bankName: string;
-  last4: string;
-  dueDateFormatted: string;
-  daysRemaining: number;
-  amountDue: number;
-  urgency: 'urgent' | 'soon' | 'overdue';
-}
+import type { DueSoonCardItem } from '@/types';
+export type { DueSoonCardItem };
 
 interface PayTheseSoonPanelProps {
   dueSoonCards: DueSoonCardItem[];

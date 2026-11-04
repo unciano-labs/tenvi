@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     day: '2-digit',
   }).format(now);
 
-  // Parallel database execution: eliminate 8 sequential waterfalls
+  // Parallel database execution: eliminate 9 sequential waterfalls
   const [
     { data: categories },
     { data: creditCards },
@@ -33,6 +33,7 @@ export default async function DashboardPage() {
     { data: properties },
     { data: onboarding },
     { data: liabilities },
+    { data: statements },
   ] = await Promise.all([
     // 1. Categories
     supabase
@@ -64,7 +65,6 @@ export default async function DashboardPage() {
       .eq('website_id', WEBSITE_ID)
       .eq('user_id', user?.id)
       .is('deleted_at', null)
-      .lte('occurred_on', todayISO)
       .order('occurred_on', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(300),
@@ -128,13 +128,35 @@ export default async function DashboardPage() {
       .eq('user_id', user?.id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false }),
+
+    // 10. Credit Card Statements
+    supabase
+      .from('bili_card_statements')
+      .select('*')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user?.id)
+      .order('cycle_end', { ascending: false }),
   ]);
+
+  // Attach latest statement to each card
+  const statementsByCard = new Map<string, any>();
+  (statements || []).forEach((st) => {
+    if (!statementsByCard.has(st.credit_card_id)) {
+      statementsByCard.set(st.credit_card_id, st);
+    }
+  });
+
+  const cardsWithStatements = (creditCards || []).map((card) => ({
+    ...card,
+    color: card.color || card.color_theme,
+    latest_statement: statementsByCard.get(card.id) || null,
+  }));
 
   return (
     <DashboardOverviewClient
       userName={userName}
       categories={categories || []}
-      creditCards={creditCards || []}
+      creditCards={cardsWithStatements}
       transactions={transactions || []}
       loans={loans || []}
       splits={splits || []}

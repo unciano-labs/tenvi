@@ -8,6 +8,7 @@ import {
   calculateNextDueDate,
   getCardUrgency,
   type CardSpendingSummary,
+  type CardDueDetails,
 } from '@/lib/finance/calculations';
 import {
   parseCardStyle,
@@ -52,6 +53,7 @@ export type { CardSpendingSummary };
 interface FlippableCreditCardProps {
   card: CreditCard;
   spending: CardSpendingSummary;
+  dueDetails?: CardDueDetails;
   onEdit: (card: CreditCard) => void;
   onDelete: (cardId: string) => void;
 }
@@ -68,6 +70,7 @@ function getOrdinalSuffix(day: number): string {
 export function FlippableCreditCard({
   card,
   spending,
+  dueDetails,
   onEdit,
   onDelete,
 }: FlippableCreditCardProps) {
@@ -96,10 +99,39 @@ export function FlippableCreditCard({
 
   const usagePct = creditLimit > 0 ? Math.min(100, Math.round((totalUsed / creditLimit) * 100)) : 0;
   const dueDateInfo = calculateNextDueDate(card.due_day);
-  const billedBalance = card.latest_statement
+  const billedBalance = dueDetails
+    ? dueDetails.amountDue
+    : card.latest_statement
     ? Number(card.latest_statement.billed_amount || 0) - Number(card.latest_statement.paid_amount || 0)
-    : totalUsed;
-  const urgencyInfo = getCardUrgency(dueDateInfo.nextDueDate, billedBalance);
+    : 0;
+
+  const effectiveDaysRemaining = dueDetails ? dueDetails.daysRemaining : dueDateInfo.daysRemaining;
+  const isOverdue = dueDetails ? dueDetails.urgency === 'overdue' : (billedBalance > 0 && effectiveDaysRemaining < 0);
+
+  let dueBadgeLabel = 'No balance due';
+  let dueBadgeStyle = 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30';
+
+  if (billedBalance > 0) {
+    if (isOverdue) {
+      dueBadgeLabel = 'Overdue';
+      dueBadgeStyle = 'bg-rose-500/25 text-rose-200 border-rose-400/40';
+    } else if (effectiveDaysRemaining === 0) {
+      dueBadgeLabel = 'Due Today';
+      dueBadgeStyle = 'bg-rose-500/25 text-rose-200 border-rose-400/40';
+    } else if (effectiveDaysRemaining === 1) {
+      dueBadgeLabel = 'Due Tomorrow';
+      dueBadgeStyle = 'bg-rose-500/25 text-rose-200 border-rose-400/40';
+    } else if (effectiveDaysRemaining <= 3) {
+      dueBadgeLabel = `Due in ${effectiveDaysRemaining} days`;
+      dueBadgeStyle = 'bg-rose-500/25 text-rose-200 border-rose-400/40';
+    } else if (effectiveDaysRemaining <= 7) {
+      dueBadgeLabel = `Due in ${effectiveDaysRemaining} days`;
+      dueBadgeStyle = 'bg-amber-500/25 text-amber-200 border-amber-400/40';
+    } else {
+      dueBadgeLabel = `Due in ${effectiveDaysRemaining} days`;
+      dueBadgeStyle = 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30';
+    }
+  }
 
   // Card click handler: flips ONLY when clicking card surface, never when clicking buttons or controls
   const handleCardClick = (e: React.MouseEvent) => {
@@ -457,19 +489,9 @@ export function FlippableCreditCard({
                 </div>
 
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
-                    urgencyInfo.urgency === 'urgent' || urgencyInfo.urgency === 'overdue'
-                      ? 'bg-rose-500/25 text-rose-200 border-rose-400/40'
-                      : urgencyInfo.urgency === 'soon'
-                      ? 'bg-amber-500/25 text-amber-200 border-amber-400/40'
-                      : 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30'
-                  }`}
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${dueBadgeStyle}`}
                 >
-                  {urgencyInfo.urgency === 'overdue'
-                    ? 'Overdue'
-                    : dueDateInfo.daysRemaining <= 0
-                    ? 'Due Today'
-                    : `Due in ${dueDateInfo.daysRemaining} days`}
+                  {dueBadgeLabel}
                 </span>
               </div>
 

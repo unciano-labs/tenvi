@@ -70,6 +70,34 @@ export interface Category {
 export type CardUrgency = 'none' | 'ok' | 'soon' | 'urgent' | 'overdue';
 export type UsageLevel = 'healthy' | 'high' | 'maxed';
 
+export interface DueSoonCardItem {
+  statementId?: string;
+  cardId: string;
+  cardName: string;
+  bankName: string;
+  last4: string;
+  dueDateFormatted: string;
+  daysRemaining: number;
+  amountDue: number;
+  urgency: 'urgent' | 'soon' | 'overdue';
+}
+
+export interface CardDueDetails {
+  cardId: string;
+  cardName: string;
+  bankName: string;
+  last4: string;
+  statementId?: string;
+  dueDate: string;
+  dueDateFormatted: string;
+  daysRemaining: number;
+  amountDue: number;
+  totalUnbilled?: number;
+  isDueSoon: boolean;
+  urgency: 'overdue' | 'urgent' | 'soon' | 'normal' | 'none';
+  statusLabel?: string;
+}
+
 export interface CardStatement {
   id: string;
   website_id: string;
