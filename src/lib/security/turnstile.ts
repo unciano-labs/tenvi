@@ -44,6 +44,11 @@ export async function verifyTurnstileToken(
     };
   }
 
+  // Support development bypass token if script was blocked by local browser extensions
+  if (token === 'test_pass_token' && process.env.NODE_ENV !== 'production') {
+    return { success: true };
+  }
+
   try {
     const formData = new URLSearchParams();
     formData.append('secret', secretKey);
