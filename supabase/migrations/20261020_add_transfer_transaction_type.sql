@@ -15,7 +15,7 @@ CREATE INDEX IF NOT EXISTS idx_bili_transactions_transfer_to
   ON public.bili_transactions (transfer_to_savings_id);
 
 CREATE OR REPLACE FUNCTION public.execute_atomic_transaction(
-  p_website_id text,
+  p_website_id uuid,
   p_user_id uuid,
   p_kind text,
   p_amount numeric,
@@ -162,7 +162,7 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.execute_atomic_delete_transaction(
-  p_website_id text,
+  p_website_id uuid,
   p_user_id uuid,
   p_transaction_id uuid
 )

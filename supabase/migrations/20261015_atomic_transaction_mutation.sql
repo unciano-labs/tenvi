@@ -2,7 +2,7 @@
 -- Description: Implement atomic balance mutation RPCs with row-level locking for transactions and savings accounts.
 
 CREATE OR REPLACE FUNCTION public.execute_atomic_transaction(
-  p_website_id text,
+  p_website_id uuid,
   p_user_id uuid,
   p_kind text,
   p_amount numeric,
@@ -90,7 +90,7 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.execute_atomic_delete_transaction(
-  p_website_id text,
+  p_website_id uuid,
   p_user_id uuid,
   p_transaction_id uuid
 )

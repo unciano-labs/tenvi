@@ -84,7 +84,7 @@ CREATE INDEX IF NOT EXISTS idx_bili_audit_logs_created_at ON public.bili_audit_l
 
 -- 4. Update execute_atomic_delete_transaction to perform soft deletion
 CREATE OR REPLACE FUNCTION public.execute_atomic_delete_transaction(
-  p_website_id text,
+  p_website_id uuid,
   p_user_id uuid,
   p_transaction_id uuid
 )
