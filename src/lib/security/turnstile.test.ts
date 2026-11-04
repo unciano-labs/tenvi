@@ -50,14 +50,13 @@ describe('Security: Cloudflare Turnstile Verification', () => {
   });
 
   it('allows test_pass_token in non-production environments', async () => {
-    const prevNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
     try {
       const res = await verifyTurnstileToken('test_pass_token', '127.0.0.1');
       expect(res.success).toBe(true);
       expect(res.error).toBeUndefined();
     } finally {
-      process.env.NODE_ENV = prevNodeEnv;
+      vi.unstubAllEnvs();
     }
   });
 });
