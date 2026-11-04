@@ -38,6 +38,24 @@
     "src/components/AI/TenviAIChat.tsx": {
       "reason": "Tenvi AI natural language ledger floating dialog and FAB container."
     },
+    "src/components/AI/ChatHeader.tsx": {
+      "reason": "Tenvi AI glass header container with hairline border."
+    },
+    "src/components/AI/WelcomeState.tsx": {
+      "reason": "Tenvi AI welcome hero with soft glow and suggestion insight cards."
+    },
+    "src/components/AI/SuggestionChips.tsx": {
+      "reason": "Tenvi AI horizontal scroll suggestion chips with faded edge masks."
+    },
+    "src/components/AI/ChatMessageList.tsx": {
+      "reason": "Tenvi AI message list and bubble-less surface formatting."
+    },
+    "src/components/AI/ChatComposer.tsx": {
+      "reason": "Tenvi AI rounded pill composer with mic and attachment actions."
+    },
+    "src/components/AI/RichCards.tsx": {
+      "reason": "Tenvi AI rich ledger confirmation cards and native SVG spending chart."
+    },
     "src/components/Navigation/Sidebar.tsx": {
       "reason": "Desktop collapsible sidebar container boundary."
     },

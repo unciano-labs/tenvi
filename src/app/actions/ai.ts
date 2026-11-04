@@ -43,6 +43,8 @@ export interface AIChatMessage {
   text: string;
   timestamp: string;
   imageUrl?: string;
+  fileName?: string;
+  fileType?: 'image' | 'pdf';
   quickReplies?: string[];
   transaction?: AITransactionItem;
   transactions?: AITransactionItem[];

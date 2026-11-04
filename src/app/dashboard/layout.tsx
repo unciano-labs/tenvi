@@ -43,7 +43,12 @@ export default async function DashboardLayout({
   const userRole = await getWebsiteUserRole(user.id, WEBSITE_ID);
 
   const supabase = await createClient();
-  const [{ data: contacts }, { data: properties }] = await Promise.all([
+  const [
+    { data: contacts },
+    { data: properties },
+    { data: cards },
+    { data: recentTransactions },
+  ] = await Promise.all([
     supabase
       .from('bili_contacts')
       .select('id, name, phone, email')
@@ -57,7 +62,33 @@ export default async function DashboardLayout({
       .eq('user_id', user.id)
       .neq('status', 'sold')
       .order('name'),
+    supabase
+      .from('bili_credit_cards')
+      .select('id, name, bank_name, last_4')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('bili_transactions')
+      .select('id, amount, occurred_on, payment_method, credit_card_id, note, category:bili_categories(name)')
+      .eq('website_id', WEBSITE_ID)
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .order('occurred_on', { ascending: false })
+      .limit(100),
   ]);
+
+  const mappedRecentTransactions = (recentTransactions || []).map((t: any) => ({
+    id: t.id,
+    amount: Number(t.amount || 0),
+    occurred_on: t.occurred_on,
+    payment_method: t.payment_method || 'cash',
+    credit_card_id: t.credit_card_id || null,
+    note: t.note || '',
+    category_name: t.category?.name || null,
+  }));
 
   return (
     <SidebarProvider defaultOpen={true} className="h-dvh max-h-dvh w-full overflow-hidden">
@@ -82,7 +113,13 @@ export default async function DashboardLayout({
         <MobileNav />
 
         {/* Floating Tenvi AI Natural Language Ledger */}
-        <TenviAIChat initialContacts={contacts || []} initialProperties={properties || []} />
+        <TenviAIChat
+          initialContacts={contacts || []}
+          initialProperties={properties || []}
+          initialCards={cards || []}
+          initialRecentTransactions={mappedRecentTransactions}
+          userName={userName}
+        />
       </div>
     </SidebarProvider>
   );

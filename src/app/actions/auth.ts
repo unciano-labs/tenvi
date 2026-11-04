@@ -5,6 +5,13 @@ import { redirect } from 'next/navigation';
 import { WEBSITE_ID, DEFAULT_ROLE_ID, DEFAULT_CATEGORIES } from '@/lib/constants';
 import { loginSchema, registerSchema } from '@/lib/validations/schemas';
 import { checkUserWebsiteMembership, verifyWebsiteMembership } from '@/lib/auth/guards';
+import {
+  getClientIp,
+  checkRegistrationRateLimit,
+  checkLoginRateLimit,
+  clearRateLimit,
+} from '@/lib/security/rateLimit';
+import { verifyTurnstileToken } from '@/lib/security/turnstile';
 
 /**
  * Ensures initial default state exists for a user on this website:
@@ -223,9 +230,33 @@ export async function loginAction(
     return { error: parsed.error.errors[0]?.message || 'Invalid input' };
   }
 
+  // 1. Rate Limiting Check (Anti-Brute Force & Credential Stuffing)
+  const clientIp = await getClientIp();
+  const rateLimitResult = await checkLoginRateLimit(clientIp, email);
+  if (!rateLimitResult.allowed) {
+    return {
+      error: `Too many login attempts. Please wait ${Math.ceil(
+        rateLimitResult.resetInSeconds / 60
+      )} minute(s) before trying again.`,
+      code: 'RATE_LIMITED',
+    };
+  }
+
+  // 2. Cloudflare Turnstile CAPTCHA Verification (if token is submitted)
+  const turnstileToken = formData.get('cf-turnstile-response') as string;
+  if (turnstileToken) {
+    const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp);
+    if (!turnstileResult.success) {
+      return {
+        error: turnstileResult.error || 'Security verification failed. Please complete the CAPTCHA.',
+        code: 'CAPTCHA_FAILED',
+      };
+    }
+  }
+
   const supabase = await createClient();
 
-  // 1. Authenticate identity with Supabase Auth
+  // 3. Authenticate identity with Supabase Auth
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -235,7 +266,13 @@ export async function loginAction(
     return { error: error?.message || 'Incorrect email or password' };
   }
 
-  // 2. Authorize website membership
+  // Reset failed login rate limit counters upon successful authentication
+  await clearRateLimit(`ratelimit:login:ip:${clientIp}`);
+  if (email) {
+    await clearRateLimit(`ratelimit:login:email:${email}`);
+  }
+
+  // 4. Authorize website membership
   const isEnrolled = await checkUserWebsiteMembership(data.user.id, WEBSITE_ID);
   if (!isEnrolled) {
     // Fetch profile details for pre-populating registration
@@ -290,6 +327,28 @@ export async function registerAction(prevState: any, formData: FormData) {
     return { error: parsed.error.errors[0]?.message || 'Invalid input' };
   }
 
+  // 1. Rate Limiting Check (Anti-DoS & Anti-Account Flooding)
+  const clientIp = await getClientIp();
+  const rateLimitResult = await checkRegistrationRateLimit(clientIp, email);
+  if (!rateLimitResult.allowed) {
+    return {
+      error: `Too many registration attempts. Please wait ${Math.ceil(
+        rateLimitResult.resetInSeconds / 60
+      )} minute(s) before trying again.`,
+      code: 'RATE_LIMITED',
+    };
+  }
+
+  // 2. Cloudflare Turnstile CAPTCHA Verification
+  const turnstileToken = formData.get('cf-turnstile-response') as string;
+  const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp);
+  if (!turnstileResult.success) {
+    return {
+      error: turnstileResult.error || 'Security verification failed. Please complete the CAPTCHA.',
+      code: 'CAPTCHA_FAILED',
+    };
+  }
+
   let admin: ReturnType<typeof createAdminClient>;
   try {
     admin = createAdminClient();
@@ -299,33 +358,15 @@ export async function registerAction(prevState: any, formData: FormData) {
   }
   const supabase = await createClient();
 
-  // 1. Check if email already exists globally in user_profiles
+  // 3. Check if email already exists globally in user_profiles
   const { data: existingProfile } = await admin
     .from('user_profiles')
     .select('id, user_id, full_name')
     .eq('email', email)
     .maybeSingle();
 
-  // 1b. Also check if user exists in auth.users but not in user_profiles
-  // (this can happen when a previous signup created the auth.users entry
-  //  but enrollment failed before the user_profiles row was created)
-  let authUserId: string | null = null;
-  if (!existingProfile) {
-    try {
-      const { data: authUserList } = await admin.auth.admin.listUsers();
-      const matchedUser = authUserList?.users?.find(
-        (u: { email?: string }) => u.email?.toLowerCase() === email
-      );
-      if (matchedUser) {
-        authUserId = matchedUser.id;
-      }
-    } catch {
-      // listUsers may fail in some configurations; fall through to signUp
-    }
-  }
-
   if (existingProfile) {
-    // 2. Check if already enrolled in Tenvi
+    // Check if already enrolled in Tenvi
     const isEnrolled = await checkUserWebsiteMembership(existingProfile.user_id, WEBSITE_ID);
     if (isEnrolled) {
       return {
@@ -334,7 +375,7 @@ export async function registerAction(prevState: any, formData: FormData) {
       };
     }
 
-    // 3. User exists on another site! Verify password before enrolling into Tenvi
+    // User exists on another site! Verify password before enrolling into Tenvi
     const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -348,7 +389,7 @@ export async function registerAction(prevState: any, formData: FormData) {
       };
     }
 
-    // 4. Enroll existing user in Tenvi
+    // Enroll existing user in Tenvi
     try {
       await enrollUserInTenvi(
         authData.user.id,
@@ -356,6 +397,10 @@ export async function registerAction(prevState: any, formData: FormData) {
         fullName || existingProfile.full_name || ''
       );
       await seedInitialUserData(authData.user.id);
+
+      // Clear rate limit counters upon successful registration/enrollment
+      await clearRateLimit(`ratelimit:register:ip:${clientIp}`);
+      if (email) await clearRateLimit(`ratelimit:register:email:${email}`);
     } catch (enrollErr) {
       console.error('[registerAction] Enrollment failed for existing cross-site user:', enrollErr);
       return {
@@ -366,36 +411,7 @@ export async function registerAction(prevState: any, formData: FormData) {
     redirect('/dashboard');
   }
 
-  // 5. Handle edge case: user exists in auth.users but NOT in user_profiles
-  // (orphaned auth entry from a previous failed registration)
-  if (authUserId) {
-    const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (authErr || !authData.user) {
-      return {
-        error:
-          'Incorrect password for this account. Please enter your correct account password to activate Tenvi.',
-        code: 'EXISTING_ACCOUNT_PASSWORD_REQUIRED',
-      };
-    }
-
-    try {
-      await enrollUserInTenvi(authData.user.id, email, fullName);
-      await seedInitialUserData(authData.user.id);
-    } catch (enrollErr) {
-      console.error('[registerAction] Enrollment failed for orphaned auth user:', enrollErr);
-      return {
-        error: 'Account setup failed. Please try again or contact support.',
-      };
-    }
-
-    redirect('/dashboard');
-  }
-
-  // 6. Brand New User: Sign up with Supabase Auth
+  // 4. Brand New User: Sign up with Supabase Auth (or auto-link orphaned auth.users entries)
   const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
     email,
     password,
@@ -425,6 +441,9 @@ export async function registerAction(prevState: any, formData: FormData) {
       try {
         await enrollUserInTenvi(authData.user.id, email, fullName);
         await seedInitialUserData(authData.user.id);
+
+        await clearRateLimit(`ratelimit:register:ip:${clientIp}`);
+        if (email) await clearRateLimit(`ratelimit:register:email:${email}`);
       } catch (enrollErr) {
         console.error('[registerAction] Enrollment failed for "already registered" edge case:', enrollErr);
         return {
@@ -438,7 +457,7 @@ export async function registerAction(prevState: any, formData: FormData) {
     return { error: signUpErr.message };
   }
 
-  // 7. Verify signUp returned a valid user
+  // 5. Verify signUp returned a valid user
   // Supabase can return user=null or user with empty identities[] in some configs
   if (!signUpData.user) {
     console.error('[registerAction] signUp succeeded but returned null user');
@@ -459,14 +478,15 @@ export async function registerAction(prevState: any, formData: FormData) {
     };
   }
 
-  // 8. Enroll the brand new user
+  // 6. Enroll the brand new user
   try {
     await enrollUserInTenvi(signUpData.user.id, email, fullName);
     await seedInitialUserData(signUpData.user.id);
+
+    await clearRateLimit(`ratelimit:register:ip:${clientIp}`);
+    if (email) await clearRateLimit(`ratelimit:register:email:${email}`);
   } catch (enrollErr) {
     console.error('[registerAction] Enrollment failed for brand new user:', enrollErr);
-    // Don't leave the user in limbo — try to sign them out to prevent
-    // a redirect loop with the dashboard layout guard
     try { await supabase.auth.signOut(); } catch {}
     return {
       error: 'Account was created but setup failed. Please try registering again.',

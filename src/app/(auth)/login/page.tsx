@@ -7,6 +7,7 @@ import { loginAction } from '@/app/actions/auth';
 import { ArrowLeft, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
 import { TenviIcon } from '@/components/ui/TenviIcon';
 import { GoogleAuthButton } from '@/components/Auth/GoogleAuthButton';
+import { TurnstileWidget } from '@/components/Auth/TurnstileWidget';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -110,11 +111,14 @@ function LoginForm() {
           </div>
         </div>
 
+        {/* Cloudflare Turnstile Bot Protection */}
+        <TurnstileWidget className="my-3" />
+
         <Button
           type="submit"
           disabled={isPending}
           size="lg"
-          className="w-full h-12 rounded-2xl text-base mt-4 shadow-card hover:shadow-lift"
+          className="w-full h-12 rounded-2xl text-base mt-2 shadow-card hover:shadow-lift"
         >
           {isPending ? (
             <>

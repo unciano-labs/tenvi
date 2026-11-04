@@ -112,6 +112,13 @@ export function detectDuplicateItem(
     const txAmt = Number(tx.amount || 0);
     const txDate = normalizeISODate(tx.occurredOn);
     if (Math.abs(itemAmt - txAmt) < 0.01 && itemDate === txDate) {
+      // Check card if both specify creditCardId
+      const txCardId = (tx as any).cardId || (tx as any).credit_card_id || null;
+      const itemCardId = item.creditCardId || null;
+      if (itemCardId && txCardId && itemCardId !== txCardId) {
+        continue;
+      }
+
       const txNote = (tx.note || tx.categoryName || '').trim().toLowerCase();
       const descMatch =
         !itemTitle ||
@@ -327,8 +334,8 @@ USER SAVINGS & E-WALLETS: ${JSON.stringify(ctx.savingsContext || [])}
 
 YOUR CRITICAL INSTRUCTIONS:
 1. PARSE ALL DISTINCT FINANCIAL ITEMS:
-   - Carefully read the photo.
-   - If the photo is a receipt with distinct items or multiple purchases, extract the itemized entries. If it is a single total transaction, extract the single merchant/item.
+   - Carefully read the receipt image or PDF document.
+   - If the file is a receipt or statement with distinct items or multiple purchases, extract the itemized entries. If it is a single total transaction, extract the single merchant/item.
    - If it is a handwritten list, ledger, or note containing multiple amounts or names (e.g. debts, contributions, list of expenses), extract EACH entry as an independent item!
    - Every item must have:
      * "id": unique string (e.g. "photo-item-1", "photo-item-2")
@@ -365,16 +372,17 @@ YOUR CRITICAL INSTRUCTIONS:
    - If type is "receivable" and "borrowerName" is null/empty -> add "borrower" to "missingFields".
    - If type was not specified by user in message -> add "type_confirmation" to "missingParameters".
 
-6. CONFIRMATION BEFORE SAVING (CRITICAL):
+6. CONFIRMATION & PAYMENT ACCOUNT (CRITICAL):
    - You MUST NOT tell the user that the items were already saved to their ledger!
-   - Instead, state clearly: "I found [X] items in this photo totaling ₱[TOTAL]. Please confirm if you want me to save them."
+   - In "reply", state clearly: "I parsed [X] items from your receipt totaling ₱[TOTAL]. Please choose whether to connect these to your card or cash below, and review before saving."
    - In "reply", format an attractive, clear markdown list of the parsed items with:
      * Item name
      * Amount (₱...)
      * Type (Expense or Receivable)
      * Category or Borrower name
+     * Date (YYYY-MM-DD)
      * Total sum
-     * A clear question asking the user to confirm or specify how to save.
+     * A clear question asking what card or cash account to connect these transactions to, and to confirm before saving.
 
 Return a SINGLE valid JSON object with exact keys:
 {
@@ -504,7 +512,7 @@ Return a SINGLE valid JSON object with exact keys:
                 ];
 
           return {
-            reply: parsed.reply || `I parsed ${itemsWithDuplicates.length} items from your photo. Please confirm before saving.`,
+            reply: parsed.reply || `I parsed ${itemsWithDuplicates.length} items from your receipt. Please select which card or cash to connect these transactions to below, and review before saving.`,
             items: itemsWithDuplicates,
             overallType: parsed.overallType || (itemsWithDuplicates.some((i) => i.type === 'receivable') ? 'receivable' : 'expense'),
             missingParameters: Array.isArray(parsed.missingParameters) ? parsed.missingParameters : [],
