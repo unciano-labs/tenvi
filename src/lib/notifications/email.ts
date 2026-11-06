@@ -211,6 +211,13 @@ export function generateNotificationHtml(subject: string, textBody: string): str
   `;
 }
 
+function maskEmail(email: string): string {
+  if (!email || !email.includes('@')) return '****';
+  const [user, domain] = email.split('@');
+  if (user.length <= 2) return `${user[0]}***@${domain}`;
+  return `${user[0]}***${user[user.length - 1]}@${domain}`;
+}
+
 /**
  * Sends an email notification using Gmail SMTP
  * Gracefully handles unconfigured environments without crashing.
@@ -224,10 +231,11 @@ export async function sendGmailEmail({
   customPass,
 }: SendEmailOptions): Promise<SendEmailResult> {
   const config = getGmailSmtpConfig(customUser, customPass);
+  const maskedTo = maskEmail(to);
 
   // If no Gmail credentials configured, record as simulated with explanation
   if (!config.isConfigured) {
-    console.info(`[Email Service] Gmail SMTP credentials not set. Simulated email to: ${to} (Subject: ${subject})`);
+    console.info(`[Email Service] Gmail SMTP credentials not set. Simulated email to: ${maskedTo} (Subject: ${subject})`);
     return {
       success: true,
       status: 'simulated',
@@ -250,7 +258,7 @@ export async function sendGmailEmail({
       html: emailHtml,
     });
 
-    console.log(`[Email Service] Email sent successfully via Gmail SMTP to ${to}. Message ID: ${info.messageId}`);
+    console.log(`[Email Service] Email sent successfully via Gmail SMTP to ${maskedTo}. Message ID: ${info.messageId}`);
 
     return {
       success: true,
@@ -258,7 +266,7 @@ export async function sendGmailEmail({
       messageId: info.messageId,
     };
   } catch (error: any) {
-    console.error(`[Email Service] Error sending email via Gmail SMTP to ${to}:`, error);
+    console.error(`[Email Service] Error sending email via Gmail SMTP to ${maskedTo}:`, error);
 
     return {
       success: false,

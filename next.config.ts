@@ -31,6 +31,7 @@ const adminEmail =
   'webcareer1+admin@gmail.com';
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   allowedDevOrigins: ['192.168.8.42', 'localhost:3000', '127.0.0.1'],
   env: {
     NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
@@ -80,12 +81,12 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://telli-six.vercel.app",
-              "frame-src 'self' https://telli-six.vercel.app",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://telli-six.vercel.app https://challenges.cloudflare.com",
+              "frame-src 'self' https://telli-six.vercel.app https://challenges.cloudflare.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://telli-six.vercel.app",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://telli-six.vercel.app https://challenges.cloudflare.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

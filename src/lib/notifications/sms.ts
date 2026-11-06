@@ -167,6 +167,13 @@ export async function verifyHttpSmsConnection(
   }
 }
 
+function maskPhoneNumber(phone: string): string {
+  if (!phone || phone.length < 8) return '****';
+  const prefix = phone.slice(0, 5);
+  const suffix = phone.slice(-3);
+  return `${prefix}****${suffix}`;
+}
+
 /**
  * Sends an SMS notification using the httpSMS Gateway API
  * (https://api.httpsms.com/v1/messages/send)
@@ -181,6 +188,7 @@ export async function sendHttpSms({
 }: SendSmsOptions): Promise<SendSmsResult> {
   const config = getHttpSmsConfig(customApiKey, customFrom);
   const normalizedTo = formatPhoneNumberE164(to);
+  const maskedTo = maskPhoneNumber(normalizedTo);
 
   if (!normalizedTo) {
     return {
@@ -193,7 +201,7 @@ export async function sendHttpSms({
   // Simulation mode if httpSMS credentials are not configured
   if (!config.isConfigured) {
     console.info(
-      `[SMS Service] httpSMS credentials not configured. Simulated SMS to: ${normalizedTo} (Body: "${message.slice(0, 60)}...")`
+      `[SMS Service] httpSMS credentials not configured. Simulated SMS to: ${maskedTo} (Body: "${message.slice(0, 60)}...")`
     );
 
     const reason = !config.apiKey
@@ -246,7 +254,7 @@ export async function sendHttpSms({
 
     const messageId = data?.data?.id || `httpsms-${Date.now()}`;
     console.log(
-      `[SMS Service] SMS dispatched via httpSMS to ${normalizedTo}. Message ID: ${messageId}`
+      `[SMS Service] SMS dispatched via httpSMS to ${maskedTo}. Message ID: ${messageId}`
     );
 
     return {
@@ -255,7 +263,7 @@ export async function sendHttpSms({
       messageId,
     };
   } catch (error: any) {
-    console.error(`[SMS Service] Exception dispatching SMS to ${normalizedTo}:`, error);
+    console.error(`[SMS Service] Exception dispatching SMS to ${maskedTo}:`, error);
 
     return {
       success: false,

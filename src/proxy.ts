@@ -44,8 +44,12 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Auth gate: /dashboard requires logged-in user
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  // Auth gate: /dashboard and /admin require logged-in user
+  if (
+    !user &&
+    (request.nextUrl.pathname.startsWith('/dashboard') ||
+      request.nextUrl.pathname.startsWith('/admin'))
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', request.nextUrl.pathname);

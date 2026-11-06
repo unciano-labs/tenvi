@@ -53,10 +53,35 @@ export async function parseReceiptImageAction(
       return { success: false, error: 'No receipt image provided.' };
     }
 
+    // Defensive check: File size (10MB limit)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      return { success: false, error: 'File size exceeds 10MB limit.' };
+    }
+
+    // Defensive check: Allowed MIME types & extensions
+    const ALLOWED_MIME = new Set([
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+      'image/heic',
+      'image/heif',
+      'application/pdf',
+    ]);
+    const fileType = file.type?.toLowerCase() || '';
+    const fileName = file.name.toLowerCase();
+    const hasAllowedExt = /\.(jpe?g|png|webp|heic|heif|pdf)$/i.test(fileName);
+
+    if (fileType && !ALLOWED_MIME.has(fileType) && !hasAllowedExt) {
+      return {
+        success: false,
+        error: 'Unsupported file type. Please upload a JPG, PNG, WebP, HEIC, or PDF.',
+      };
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const fileName = file.name.toLowerCase();
-    const fileType = file.type || 'image/jpeg';
     const currentYear = new Date().getFullYear();
 
     // 1. Fetch user categories for auto-categorization
