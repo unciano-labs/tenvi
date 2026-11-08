@@ -53,7 +53,7 @@ interface NavSection {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    heading: 'HOME',
+    heading: 'Home',
     items: [
       {
         label: 'Dashboard Overview',
@@ -64,7 +64,7 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    heading: 'MONEY FLOW',
+    heading: 'Money flow',
     items: [
       {
         label: 'Money In & Out',
@@ -81,7 +81,7 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    heading: 'ASSETS & OWED',
+    heading: 'Assets & owed',
     items: [
       {
         label: 'Properties & Assets',
@@ -98,7 +98,7 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    heading: 'DEBTS & BILLS',
+    heading: 'Debts & bills',
     items: [
       {
         label: 'Credit Cards',
@@ -121,7 +121,7 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    heading: 'ACCOUNT',
+    heading: 'Account',
     items: [
       {
         label: 'Alerts & Settings',
@@ -144,7 +144,7 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
 
   return (
     <TooltipProvider delay={200}>
-      <SidebarPrimitive collapsible="icon" className="border-r border-border/60 bg-sidebar text-sidebar-foreground shadow-xs">
+      <SidebarPrimitive collapsible="icon" className="bg-sidebar text-sidebar-foreground">
         {/* Brand Header */}
         <SidebarHeader className="p-4 sm:p-5 pb-3 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:pb-2">
           <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center">
@@ -160,19 +160,19 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
                 <div className="text-2xs text-muted-foreground font-medium">Simple Wealth Hub</div>
               </div>
             </Link>
-            <SidebarTrigger className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer group-data-[collapsible=icon]:hidden size-8 rounded-lg" />
+            <SidebarTrigger className="hidden lg:flex text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer group-data-[collapsible=icon]:hidden size-8 rounded-lg" />
           </div>
         </SidebarHeader>
 
         {/* Categorized Navigation */}
-        <SidebarContent className="px-3 py-2 space-y-4">
+        <SidebarContent className="px-3 py-2 gap-5">
           {NAV_SECTIONS.map((section) => (
             <SidebarGroup key={section.heading} className="p-0">
-              <SidebarGroupLabel className="px-3 text-3xs font-bold uppercase tracking-wider text-muted-foreground/70 group-data-[collapsible=icon]:hidden mb-1">
+              <SidebarGroupLabel className="h-7 px-3 text-xs font-medium text-muted-foreground group-data-[collapsible=icon]:hidden">
                 {section.heading}
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu className="space-y-1">
+                <SidebarMenu className="gap-0.5">
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     const isActive =
@@ -187,10 +187,10 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
                                 isActive={isActive}
                                 tooltip={item.label}
                                 render={<Link href={item.href} aria-current={isActive ? 'page' : undefined} />}
-                                className={`h-10 rounded-lg px-3 text-xs font-semibold transition-[color,background-color,box-shadow,transform] duration-[var(--dur-fast)] ease-[var(--ease-standard)] cursor-pointer ${
+                                className={`no-spring h-10 rounded-xl px-3 text-sm transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer ${
                                   isActive
-                                    ? 'bg-lightprimary text-primary font-bold shadow-xs'
-                                    : 'text-muted-foreground hover:text-primary hover:bg-lightprimary/40'
+                                    ? 'bg-lightprimary text-primary font-semibold'
+                                    : 'font-medium text-sidebar-foreground hover:text-foreground hover:bg-muted'
                                 }`}
                               />
                             }

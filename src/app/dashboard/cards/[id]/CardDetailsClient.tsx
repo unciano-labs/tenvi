@@ -355,78 +355,76 @@ export function CardDetailsClient({
 
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-150 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 md:pb-12">
+    <div className="flex flex-col gap-6 sm:gap-8 min-w-0">
       {/* 1. Breadcrumb & Clean Header */}
       <div>
         <Link
           href="/dashboard/cards"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-3"
+          className="-ml-2 mb-2 inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-(--motion-fast) ease-(--ease-in-out) outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <ArrowLeft className="size-3.5" />
-          Back to Credit Cards
+          <ArrowLeft className="size-4" />
+          Back to credit cards
         </Link>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <div className="page-header">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-x-3 gap-y-2 flex-wrap">
+              <h1 className="text-display text-foreground min-w-0">
                 {card.bank_name} {card.name}
               </h1>
               <Badge variant={urgencyInfo.variant} className="font-medium text-xs py-0.5 px-2.5">
                 {urgencyInfo.label}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Card ending in <strong className="font-mono text-foreground">•••• {card.last_4}</strong> • Bill is made on Day {card.statement_day}
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Card ending in <strong className="num font-semibold text-foreground whitespace-nowrap">•••• {card.last_4}</strong> · Bill is made on day <span className="num">{card.statement_day}</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5 self-start sm:self-auto flex-wrap">
+          <div className="page-header-actions w-full sm:w-auto">
             <Button
               variant="soft"
               size="default"
               onClick={() => setIsEditModalOpen(true)}
-              className="min-h-11 h-11 sm:min-h-12 sm:h-12 px-3 sm:px-4 font-semibold cursor-pointer"
+              className="flex-1 sm:flex-initial px-4"
             >
-              <Pencil className="mr-1.5 size-4 text-muted-foreground" />
-              Edit Card
+              <Pencil className="size-4 text-muted-foreground" />
+              Edit card
             </Button>
 
             <Button
               variant="soft"
               size="default"
               onClick={() => setIsInstallmentModalOpen(true)}
-              className="min-h-11 h-11 sm:min-h-12 sm:h-12 px-3.5 sm:px-4 font-semibold cursor-pointer text-foreground hover:text-primary"
+              className="flex-1 sm:flex-initial px-4 text-foreground"
             >
-              <Layers className="mr-1.5 size-4 text-primary" />
-              Add Installment
+              <Layers className="size-4 text-primary" />
+              Add installment
             </Button>
 
             <Button
               variant="primary"
               size="default"
               onClick={() => setIsSwipeModalOpen(true)}
-              className="min-h-11 h-11 sm:min-h-12 sm:h-12 px-4 sm:px-5 font-semibold cursor-pointer shadow-none"
+              className="w-full sm:w-auto px-5"
             >
-              <Plus className="mr-1.5 size-4" />
-              Log Card Swipe
+              <Plus className="size-4" />
+              Log card swipe
             </Button>
           </div>
         </div>
       </div>
 
       {/* 2. Unified Hero: Compact Physical Card + Financial Overview Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+      <div className="grid grid-cols-1 gap-5 items-start @4xl/main:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] @4xl/main:items-stretch">
         {/* Physical Card Representation - Inheriting color, solid matte theme, border, glow, and pattern */}
         {(() => {
           const { theme, network, pattern } = parseCardStyle((card as any).color || card.color_theme, card.name);
           return (
             <div
-              className={`p-5 sm:p-6 rounded-[22px] text-white border ${theme.borderColor} ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden flex flex-col justify-between min-h-[210px] shadow-card transition-all duration-300`}
+              className={`w-full max-w-sm aspect-[1.586/1] min-h-[200px] p-5 rounded-[22px] text-white ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden flex flex-col justify-between`}
               style={{ backgroundColor: theme.bgHex || theme.accentHex }}
             >
-              {/* Subtle solid accent top highlight line */}
-              <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />
 
               {/* Background Pattern Overlay */}
               <CardPatternOverlay pattern={pattern} accentHex={theme.accentHex} />
@@ -445,27 +443,27 @@ export function CardDetailsClient({
                   <button
                     type="button"
                     onClick={() => setIsEditModalOpen(true)}
-                    className="size-7 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                    className="no-spring -m-1 size-9 rounded-full bg-white/10 hover:bg-white/20 text-white/85 hover:text-white flex items-center justify-center transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white"
                     title="Edit card appearance"
                     aria-label="Edit card appearance"
                   >
-                    <Pencil className="size-3" />
+                    <Pencil className="size-4" />
                   </button>
                 </div>
               </div>
 
               {/* Middle: EMV Chip + Contactless Wave */}
-              <div className="relative z-10 flex items-center justify-between my-2">
-                <div className="flex items-center gap-2">
+              <div className="relative z-10 flex items-center justify-between gap-3 my-2">
+                <div className="flex shrink-0 items-center gap-2">
                   <EmvChip />
                   <ContactlessWave />
                 </div>
 
-                <div className="text-right">
+                <div className="min-w-0 text-right">
                   <span className="text-xs font-medium uppercase tracking-wider text-white/80 block">
-                    Available Spending:
+                    Available spending
                   </span>
-                  <span className="text-2xl font-bold tracking-tight text-white leading-tight">
+                  <span className="num block text-2xl font-bold tracking-tight text-white leading-tight break-words">
                     {formatMoney(availablePower)}
                   </span>
                 </div>
@@ -473,7 +471,7 @@ export function CardDetailsClient({
 
               {/* Bottom: Card Number + Network Logo */}
               <div className="relative z-10 flex justify-between items-end pt-1">
-                <div className="font-mono text-xs sm:text-sm font-semibold tracking-widest text-white/80">
+                <div className="num font-mono text-xs sm:text-sm font-semibold tracking-widest text-white/80 whitespace-nowrap">
                   •••• •••• •••• {card.last_4}
                 </div>
 
@@ -486,19 +484,19 @@ export function CardDetailsClient({
         })()}
 
         {/* Financial Overview & Key Schedule */}
-        <Card className="lg:col-span-2 shadow-card overflow-hidden flex flex-col justify-between">
-          <CardContent className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col justify-between">
+        <Card className="p-0 sm:p-0 gap-0 justify-between">
+          <CardContent className="p-5 sm:p-6 flex flex-1 flex-col justify-between gap-5">
             {/* Credit Utilization Bar */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground font-medium">
-                  Left to spend:{' '}
-                  <strong className="text-foreground font-bold text-sm">
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+                <span className="text-muted-foreground">
+                  Left to spend{' '}
+                  <strong className="num text-figure text-foreground block">
                     {formatMoney(availablePower)}
                   </strong>
                 </span>
-                <span className="text-muted-foreground font-medium">
-                  Used: <strong className="text-foreground">{formatMoney(totalUtilized)}</strong> ({utilizationPercent}%)
+                <span className="num text-muted-foreground">
+                  Used <strong className="font-semibold text-foreground">{formatMoney(totalUtilized)}</strong> ({utilizationPercent}%)
                 </span>
               </div>
               <Progress
@@ -510,10 +508,10 @@ export function CardDetailsClient({
             </div>
 
             {/* Key Schedule Well */}
-            <div className="bg-muted/60 p-3.5 rounded-2xl grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div className="bg-muted/50 p-4 rounded-xl grid-fluid gap-4 [--grid-min:9.5rem] text-sm">
               <div>
-                <span className="text-muted-foreground block text-xs font-medium">Bill is made</span>
-                <span className="font-bold text-foreground block mt-0.5">
+                <span className="text-muted-foreground block text-label">Bill is made</span>
+                <span className="font-semibold text-foreground block mt-1">
                   Day {card.statement_day} of month
                 </span>
                 <span className="text-xs text-muted-foreground">
@@ -522,8 +520,8 @@ export function CardDetailsClient({
               </div>
 
               <div>
-                <span className="text-muted-foreground block text-xs font-medium">Pay by</span>
-                <span className="font-bold text-foreground block mt-0.5">
+                <span className="text-muted-foreground block text-label">Pay by</span>
+                <span className="font-semibold text-foreground block mt-1">
                   Day {card.due_day} of month
                 </span>
                 <span className="text-xs text-success-soft-foreground font-semibold">
@@ -532,12 +530,12 @@ export function CardDetailsClient({
               </div>
 
               <div>
-                <span className="text-muted-foreground block text-xs font-medium">Days to pay</span>
-                <span className="font-bold text-foreground block mt-0.5">
-                  {thisCardRec ? `${thisCardRec.floatDays} Days` : '30-45 Days'}
+                <span className="text-muted-foreground block text-label">Days to pay</span>
+                <span className="num font-semibold text-foreground block mt-1">
+                  {thisCardRec ? `${thisCardRec.floatDays} days` : '30–45 days'}
                 </span>
                 <span 
-                  className="text-xs text-muted-foreground block truncate"
+                  className="text-xs leading-snug text-muted-foreground block line-clamp-2"
                   title={thisCardRec?.advice || 'Optimized cash float'}
                 >
                   {thisCardRec?.advice || 'Optimized cash float'}
@@ -546,8 +544,8 @@ export function CardDetailsClient({
             </div>
 
             {/* Direct Activity Summary */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground pt-0.5">
-              <span className="truncate pr-2">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span className="min-w-0">
                 {totalUtilized > 0 ? (
                   <>
                     Direct purchases: <strong className="text-foreground">{formatMoney(totalDirectSpend)}</strong> ({currentTransactions.length})
@@ -570,15 +568,15 @@ export function CardDetailsClient({
 
       {/* 3. Card Installments & Linked Loans */}
       {linkedLoans.length === 0 && linkedLiabilities.length === 0 ? (
-        <Card className="shadow-card">
-          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <Layers className="size-4" />
+        <Card className="p-0 sm:p-0 gap-0">
+          <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0 flex-[1_1_18rem]">
+              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Layers className="size-4.5" />
               </div>
-              <div>
-                <p className="font-bold text-foreground">Card Installment Plans</p>
-                <p className="text-muted-foreground text-xs">
+              <div className="min-w-0">
+                <p className="text-title text-foreground">Card installment plans</p>
+                <p className="text-muted-foreground text-sm max-w-prose">
                   Track 0% interest promos, BNPL purchases, or bank loans deducted from this credit limit.
                 </p>
               </div>
@@ -587,10 +585,10 @@ export function CardDetailsClient({
               variant="soft"
               size="sm"
               onClick={() => setIsInstallmentModalOpen(true)}
-              className="text-xs font-bold shrink-0 self-start sm:self-auto cursor-pointer"
+              className="w-full sm:w-auto shrink-0"
             >
-              <Plus className="mr-1 size-3.5" />
-              Record Installment
+              <Plus className="size-4" />
+              Record installment
             </Button>
           </CardContent>
         </Card>
@@ -652,10 +650,10 @@ export function CardDetailsClient({
                 return (
                   <div
                     key={lib.id}
-                    className="group p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-all border border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                    className="group p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-colors duration-(--motion-fast) ease-(--ease-in-out) flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                   >
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="size-9 rounded-xl bg-background border border-border/60 flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/40 transition-colors">
+                      <div className="size-9 rounded-xl bg-background flex items-center justify-center shrink-0 mt-0.5">
                         {lib.liability_type === 'mortgage' ? (
                           <Building2 className="size-4 text-emerald-500" />
                         ) : lib.liability_type === 'auto_loan' ? (
@@ -672,23 +670,23 @@ export function CardDetailsClient({
                             {lib.name}
                           </p>
                           {totalTerms > 0 && (
-                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-bold bg-primary/10 text-primary border-primary/25">
-                              {paidCount} OF {totalTerms} PAID
+                            <Badge variant="outline" className="text-[11px] py-0 px-1.5 font-bold bg-primary/10 text-primary border-primary/25">
+                              {paidCount} of {totalTerms} paid
                             </Badge>
                           )}
                           {lib.liability_type === 'credit_card_installment' && (
-                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-semibold bg-primary/15 text-primary border-primary/30">
+                            <Badge variant="outline" className="text-[11px] py-0 px-1.5 font-semibold bg-primary/15 text-primary border-primary/30">
                               Card Plan
                             </Badge>
                           )}
                           {lib.property?.name && (
-                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-normal bg-background/50">
+                            <Badge variant="outline" className="text-[11px] py-0 px-1.5 font-normal bg-background/50">
                               <Building2 className="size-2.5 mr-1" />
                               {lib.property.name}
                             </Badge>
                           )}
                           {isPaid ? (
-                            <Badge variant="soft" className="bg-emerald-500/10 text-emerald-600 text-[10px] py-0 px-1.5">
+                            <Badge variant="soft" className="bg-emerald-500/10 text-emerald-600 text-[11px] py-0 px-1.5">
                               Paid Off
                             </Badge>
                           ) : null}
@@ -726,13 +724,13 @@ export function CardDetailsClient({
                       </div>
                     </div>
 
-                    <div className="text-right sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-border/40 gap-1.5">
+                    <div className="text-right sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center pt-2 sm:pt-0 gap-1.5">
                       <div className="flex items-center gap-2">
                         <div>
-                          <span className="font-extrabold text-foreground block text-sm sm:text-xs">
+                          <span className="num font-bold text-foreground block text-sm">
                             {formatMoney(remainingBalance)}
                           </span>
-                          <span className="text-[10px] text-muted-foreground hidden sm:block">
+                          <span className="text-[11px] text-muted-foreground hidden sm:block">
                             Remaining balance
                           </span>
                         </div>
@@ -743,7 +741,7 @@ export function CardDetailsClient({
                           size="icon"
                           disabled={deletingLiabilityId === lib.id}
                           onClick={() => setLiabilityToDelete({ id: lib.id, name: lib.name })}
-                          className="opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity size-7 rounded-lg text-muted-foreground hover:text-destructive cursor-pointer"
+                          className="opacity-70 sm:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity size-9 rounded-lg text-muted-foreground hover:text-destructive cursor-pointer"
                           aria-label="Delete installment"
                         >
                           {deletingLiabilityId === lib.id ? (
@@ -753,7 +751,7 @@ export function CardDetailsClient({
                           )}
                         </Button>
                       </div>
-                      <span className="text-[10px] text-muted-foreground font-medium">
+                      <span className="text-[11px] text-muted-foreground font-medium">
                         {remainingTerms > 0 ? `${remainingTerms} mos left` : 'Completed'}
                       </span>
                     </div>
@@ -783,10 +781,10 @@ export function CardDetailsClient({
                   <Link
                     key={loan.id}
                     href={`/dashboard/loans/${loan.id}`}
-                    className="p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-all border border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group text-xs"
+                    className="p-3.5 rounded-2xl bg-muted/60 hover:bg-muted transition-colors duration-(--motion-fast) ease-(--ease-in-out) flex flex-col sm:flex-row sm:items-center justify-between gap-3 group text-xs"
                   >
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="size-9 rounded-xl bg-background border border-border/60 flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/40 transition-colors">
+                      <div className="size-9 rounded-xl bg-background flex items-center justify-center shrink-0 mt-0.5">
                         <HandCoins className="size-4 text-primary" />
                       </div>
                       <div className="min-w-0">
@@ -795,12 +793,12 @@ export function CardDetailsClient({
                             {loan.contact?.name || 'Borrower'} {loan.reason ? `• ${loan.reason}` : ''}
                           </p>
                           {loan.is_installment && (
-                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-primary/5 text-primary border-primary/20">
+                            <Badge variant="outline" className="text-[11px] py-0 px-1.5 bg-primary/5 text-primary border-primary/20">
                               INSTALLMENT
                             </Badge>
                           )}
                           {isPaid ? (
-                            <Badge variant="soft" className="bg-emerald-500/10 text-emerald-600 text-[10px] py-0 px-1.5">
+                            <Badge variant="soft" className="bg-emerald-500/10 text-emerald-600 text-[11px] py-0 px-1.5">
                               Paid
                             </Badge>
                           ) : null}
@@ -822,16 +820,16 @@ export function CardDetailsClient({
                       </div>
                     </div>
 
-                    <div className="text-right sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-border/40">
+                    <div className="text-right sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center pt-2 sm:pt-0">
                       <div>
-                        <span className="font-extrabold text-foreground block text-sm sm:text-xs">
+                        <span className="num font-bold text-foreground block text-sm">
                           {formatMoney(remainingBalance)}
                         </span>
-                        <span className="text-[10px] text-muted-foreground hidden sm:block">
+                        <span className="text-[11px] text-muted-foreground hidden sm:block">
                           Remaining balance
                         </span>
                       </div>
-                      <span className="text-xs text-primary font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform sm:mt-1">
+                      <span className="text-xs text-primary font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform duration-(--motion-fast) ease-(--ease-in-out) sm:mt-1">
                         Schedule →
                       </span>
                     </div>
@@ -846,32 +844,32 @@ export function CardDetailsClient({
       {/* 4. Statement Cycles & Transactions Section */}
       <div className="space-y-4">
         {/* Section Toolbar */}
-        <Card className="shadow-card">
-          <CardContent className="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                <Receipt className="size-4 text-primary" />
-                Statement Cycles & Transactions
+        <Card className="p-0 sm:p-0 gap-0">
+          <CardContent className="p-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+            <div className="min-w-0 flex-[1_1_16rem]">
+              <h2 className="text-title text-foreground flex items-center gap-2">
+                <Receipt className="size-4.5 shrink-0 text-primary" />
+                Statement cycles & transactions
               </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-sm text-muted-foreground mt-1">
                 Monthly billing cycle ends on day {card.statement_day}
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
+            <div className="flex min-w-0 flex-[1_1_30rem] flex-wrap items-center justify-end gap-2.5">
               {/* Statement Month Dropdown */}
-              <div className="w-full sm:w-60">
+              <div className="min-w-[min(100%,15rem)] flex-[1_1_15rem]">
                 <Select
                   value={selectedStatementMonth}
                   onValueChange={(val) => {
                     if (val) setSelectedStatementMonth(val);
                   }}
                 >
-                  <SelectTrigger size="sm" className="min-h-10 h-10 text-xs font-semibold rounded-xl bg-muted w-full">
-                    <Calendar className="size-3.5 text-primary shrink-0 mr-1" />
-                    <SelectValue placeholder="Select statement month">
+                  <SelectTrigger size="sm" className="min-h-11 h-11 text-sm font-medium rounded-xl bg-muted w-full" aria-label="Statement month">
+                    <Calendar className="size-4 text-primary shrink-0" />
+                    <SelectValue placeholder="Select statement month" className="block min-w-0 truncate">
                       {(val: string | null) => {
-                        if (!val || val === 'all') return 'All Statement Months';
+                        if (!val || val === 'all') return 'All statement months';
                         const opt = statementMonthOptions.find((o) => o.key === val);
                         return opt?.label || val;
                       }}
@@ -879,7 +877,7 @@ export function CardDetailsClient({
                   </SelectTrigger>
                   <SelectContent className="max-h-64">
                     <SelectItem value="all">
-                      All Statement Months ({cutoffsWithTransactions.length})
+                      All statement months ({cutoffsWithTransactions.length})
                     </SelectItem>
                     <SelectSeparator />
                     {statementMonthOptions.map((opt) => (
@@ -896,21 +894,22 @@ export function CardDetailsClient({
                 variant="soft"
                 size="sm"
                 onClick={() => setIsUploadStatementOpen(true)}
-                className="min-h-10 text-xs font-semibold cursor-pointer shrink-0"
+                className="min-h-11 h-11 flex-[1_1_auto] sm:flex-initial"
               >
-                <UploadCloud className="mr-1.5 size-3.5" />
-                Upload Statement
+                <UploadCloud className="size-4" />
+                Upload statement
               </Button>
 
               {/* Search Purchases */}
-              <div className="relative w-full sm:w-52">
-                <Search className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <div className="relative min-w-[min(100%,12rem)] flex-[1_1_12rem]">
+                <Search className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <Input
                   type="text"
-                  placeholder="Search purchases..."
+                  placeholder="Search purchases"
+                  aria-label="Search purchases"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 text-xs bg-muted min-h-10 h-10 rounded-xl"
+                  className="pl-10 bg-muted min-h-11 h-11 rounded-xl"
                 />
               </div>
             </div>
@@ -918,12 +917,12 @@ export function CardDetailsClient({
         </Card>
 
         {/* Active Statement Cycle Info Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 text-xs">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-muted-foreground font-medium">Viewing:</span>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1 text-xs">
+          <div className="flex min-w-0 items-center gap-2 flex-wrap">
+            <span className="text-muted-foreground font-medium">Viewing</span>
             {selectedStatementMonth === 'all' ? (
               <Badge variant="secondary" className="text-xs font-semibold py-0.5 px-2">
-                All Statement Cycles ({visibleGroups.length})
+                All statement cycles ({visibleGroups.length})
               </Badge>
             ) : (
               (() => {
@@ -938,7 +937,7 @@ export function CardDetailsClient({
                       Cut-off: {activeGroup.statementDateFormatted}
                     </Badge>
                     <span className="text-muted-foreground">
-                      Cycle: {activeGroup.cycleStartDateFormatted} – {activeGroup.cycleEndDateFormatted} • Due: <strong className="text-foreground">{activeGroup.dueDateFormatted}</strong>
+                      Cycle: {activeGroup.cycleStartDateFormatted} – {activeGroup.cycleEndDateFormatted} • Due: <strong className="text-foreground whitespace-nowrap">{activeGroup.dueDateFormatted}</strong>
                     </span>
                   </div>
                 );
@@ -953,7 +952,7 @@ export function CardDetailsClient({
                 onClick={() => setSelectedStatementMonth(currentMonthKey)}
                 className="text-primary hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
               >
-                ← Return to Current Month ({currentMonthLabel})
+                ← Back to current month ({currentMonthLabel})
               </button>
             ) : (
               <span className="text-muted-foreground">
@@ -965,12 +964,12 @@ export function CardDetailsClient({
 
         {/* Statement Groups List */}
         {visibleGroups.length === 0 ? (
-          <Card className="shadow-card text-center p-10 space-y-3">
-            <div className="size-10 rounded-2xl bg-muted text-muted-foreground mx-auto flex items-center justify-center">
+          <Card className="items-center text-center px-6 py-10 sm:px-6 sm:py-10 gap-3">
+            <div className="size-11 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center">
               <Receipt className="size-5" />
             </div>
-            <h3 className="text-sm font-bold text-foreground">No Transactions Found</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            <h3 className="text-title text-foreground">No transactions found</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
               {searchQuery
                 ? `No transactions matched "${searchQuery}" in this statement period.`
                 : 'No card purchases recorded for this statement period.'}
@@ -983,7 +982,7 @@ export function CardDetailsClient({
                   onClick={() => setSelectedStatementMonth('all')}
                   className="text-xs font-semibold cursor-pointer"
                 >
-                  Search across All Statement Months →
+                  Search all statement months →
                 </Button>
               </div>
             )}
@@ -991,10 +990,10 @@ export function CardDetailsClient({
               <Button
                 variant="primary"
                 onClick={() => setIsSwipeModalOpen(true)}
-                className="min-h-10 text-xs font-semibold cursor-pointer shadow-none"
+                className="shadow-none"
               >
-                <Plus className="mr-1.5 size-3.5" />
-                Log First Swipe
+                <Plus className="size-4" />
+                Log first swipe
               </Button>
             )}
           </Card>
@@ -1031,19 +1030,19 @@ export function CardDetailsClient({
               const hasInstallments = displayInstallments.length > 0;
 
               return (
-                <Card key={group.statementKey} className="shadow-card overflow-hidden">
+                <Card key={group.statementKey} className="p-0 sm:p-0 gap-0">
                   <CardContent className="p-5 sm:p-6">
                     {/* Statement Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="space-y-1">
+                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                      <div className="flex min-w-0 flex-[1_1_18rem] flex-col gap-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-extrabold text-foreground">
+                          <span className="text-title text-foreground">
                             Bill is made: {group.statementDateFormatted}
                           </span>
 
                           {group.isCurrentCycle ? (
                             <Badge variant="secondary" className="text-xs font-bold">
-                              Current Unbilled Cycle
+                              Current unbilled cycle
                             </Badge>
                           ) : group.status === 'billed_due_soon' ? (
                             <Badge variant="warning" className="text-xs font-bold">
@@ -1057,20 +1056,20 @@ export function CardDetailsClient({
                         </div>
 
                         <p className="text-xs text-muted-foreground">
-                          Cycle: {group.cycleStartDateFormatted} – {group.cycleEndDateFormatted} • Pay by: <strong className="text-foreground">{group.dueDateFormatted}</strong>
+                          Cycle: {group.cycleStartDateFormatted} – {group.cycleEndDateFormatted} • Pay by: <strong className="text-foreground whitespace-nowrap">{group.dueDateFormatted}</strong>
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-3 self-end sm:self-auto">
+                      <div className="flex items-center gap-3 ml-auto">
                         <div className="text-right">
-                          <span className="text-xs text-muted-foreground block font-medium">
-                            Statement Total
+                          <span className="text-label text-muted-foreground block">
+                            Statement total
                           </span>
-                          <span className="text-sm sm:text-base font-extrabold text-foreground">
+                          <span className="num text-lg font-bold text-foreground">
                             {formatMoney(cycleNetSpend + cycleInstallmentTotal)}
                           </span>
                           {cycleInstallmentTotal > 0 && (
-                            <span className="text-[10px] text-muted-foreground block font-medium">
+                            <span className="num text-xs text-muted-foreground block">
                               incl. {formatMoney(cycleInstallmentTotal)} installments
                             </span>
                           )}
@@ -1080,12 +1079,13 @@ export function CardDetailsClient({
                           variant="ghost"
                           size="icon"
                           onClick={() => toggleStatementCollapse(group.statementKey)}
-                          className="size-8 rounded-xl bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+                          className="size-10 min-h-10 min-w-10 rounded-xl bg-muted text-muted-foreground hover:text-foreground"
                           aria-label={isCollapsed ? 'Expand statement' : 'Collapse statement'}
+                          aria-expanded={!isCollapsed}
                         >
                           <ChevronDown
                             className={cn(
-                              "size-4 transition-[transform,rotate] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                              "size-4 transition-[rotate] duration-(--motion-base) ease-(--ease-spring-pop)",
                               !isCollapsed && "rotate-180"
                             )}
                           />
@@ -1096,11 +1096,7 @@ export function CardDetailsClient({
                     {/* Statement Transactions List with 350ms ease-out expand */}
                     <ExpandableCardContent
                       expanded={!isCollapsed}
-                      className={cn(
-                        "transition-[grid-template-rows,opacity,margin] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                        !isCollapsed ? "mt-3" : "mt-0"
-                      )}
-                      contentClassName="space-y-2 pt-1"
+                      contentClassName="space-y-2 pt-4"
                     >
                         {/* Statement Installment Commitments */}
                         {hasInstallments && (
@@ -1123,22 +1119,22 @@ export function CardDetailsClient({
                                         </span>
                                         <Badge
                                           variant="outline"
-                                          className="text-[10px] py-0 px-1.5 font-bold bg-primary/15 text-primary border-0"
+                                          className="text-[11px] py-0 px-1.5 font-bold bg-primary/15 text-primary border-0"
                                         >
                                           {inst.installmentNumber} OF {inst.totalTerms} {isPaid ? 'PAID' : 'SCHEDULED'}
                                         </Badge>
-                                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-card text-muted-foreground shadow-xs shrink-0">
+                                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-card text-muted-foreground shadow-xs shrink-0">
                                           {inst.sourceType === 'loan' ? 'Lent Loan' : 'Card Installment'}
                                         </span>
                                         {inst.lenderOrContact && (
-                                          <span className="text-[10px] text-muted-foreground truncate">
+                                          <span className="text-[11px] text-muted-foreground truncate">
                                             ({inst.lenderOrContact})
                                           </span>
                                         )}
                                       </div>
                                       <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                                         <span>
-                                          Due: <strong className="text-foreground">{inst.dueDateFormatted || group.dueDateFormatted}</strong>
+                                          Due: <strong className="text-foreground whitespace-nowrap">{inst.dueDateFormatted || group.dueDateFormatted}</strong>
                                         </span>
                                         {inst.remainingBalance > 0 && (
                                           <>
@@ -1172,10 +1168,10 @@ export function CardDetailsClient({
 
                                   <div className="shrink-0 flex items-center gap-2 text-right pt-0.5">
                                     <div className="text-right">
-                                      <span className="text-xs sm:text-sm font-extrabold whitespace-nowrap text-foreground block">
+                                      <span className="num text-sm font-bold whitespace-nowrap text-foreground block">
                                         -{formatMoney(inst.amount)}
                                       </span>
-                                      <span className="text-[10px] text-muted-foreground block font-medium">
+                                      <span className="text-[11px] text-muted-foreground block font-medium">
                                         {Math.max(0, inst.totalTerms - inst.installmentNumber)} mos left
                                       </span>
                                     </div>
@@ -1261,7 +1257,7 @@ export function CardDetailsClient({
 
                                 <div className="shrink-0 flex items-center gap-2 text-right pt-0.5">
                                   <span
-                                    className={`text-xs sm:text-sm font-extrabold whitespace-nowrap ${
+                                    className={`num text-sm font-bold whitespace-nowrap ${
                                       tx.kind === 'expense' ? 'text-foreground' : 'text-success-soft-foreground'
                                     }`}
                                   >
@@ -1275,7 +1271,7 @@ export function CardDetailsClient({
                                     size="icon"
                                     disabled={deletingTxId === tx.id}
                                     onClick={() => setTxToDelete({ id: tx.id, note: tx.note })}
-                                    className="opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity size-7 rounded-lg text-muted-foreground hover:text-destructive cursor-pointer"
+                                    className="opacity-70 sm:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity size-9 rounded-lg text-muted-foreground hover:text-destructive cursor-pointer"
                                     aria-label="Delete transaction"
                                   >
                                     {deletingTxId === tx.id ? (
@@ -1297,9 +1293,9 @@ export function CardDetailsClient({
 
             {/* Bottom helper card when a single statement month is viewed and other cutoffs exist */}
             {selectedStatementMonth !== 'all' && cutoffsWithTransactions.length > 1 && !searchQuery.trim() && (
-              <Card className="shadow-card p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="size-4 text-primary shrink-0" />
+              <Card className="p-4 sm:p-4 flex-row flex-wrap items-center justify-between gap-3 text-sm">
+                <div className="flex min-w-0 flex-[1_1_18rem] items-start gap-2 text-muted-foreground">
+                  <Calendar className="mt-0.5 size-4 text-primary shrink-0" />
                   <p>
                     Viewing <strong className="text-foreground">{statementMonthOptions.find((o) => o.key === selectedStatementMonth)?.monthName || 'selected month'}</strong> statement. There are <strong className="text-foreground">{cutoffsWithTransactions.length - 1}</strong> other active statement cut-off{cutoffsWithTransactions.length - 1 > 1 ? 's' : ''}.
                   </p>
@@ -1309,9 +1305,9 @@ export function CardDetailsClient({
                   variant="soft"
                   size="sm"
                   onClick={() => setSelectedStatementMonth('all')}
-                  className="font-bold shrink-0 cursor-pointer text-xs"
+                  className="shrink-0"
                 >
-                  Show All {cutoffsWithTransactions.length} Statement Months →
+                  Show all {cutoffsWithTransactions.length} statement months →
                 </Button>
               </Card>
             )}
@@ -1320,21 +1316,21 @@ export function CardDetailsClient({
       </div>
 
       {/* 5. Card Settings & Danger Zone */}
-      <div className="mt-8 pt-6 pb-28 space-y-3">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Card Settings & Danger Zone
-        </h4>
+      <div className="flex flex-col gap-3 pt-4">
+        <h2 className="text-title text-foreground">
+          Card settings
+        </h2>
 
-        <Card className="shadow-card">
-          <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <h5 className="text-sm font-bold text-foreground">
-                Delete Credit Card
-              </h5>
-              <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+        <Card className="p-0 sm:p-0 gap-0">
+          <CardContent className="p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex min-w-0 flex-[1_1_20rem] flex-col gap-1">
+              <h3 className="text-base font-semibold text-foreground">
+                Delete credit card
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-prose leading-relaxed">
                 Permanently remove this card and all associated statement records. Existing transaction records will remain preserved in your general ledger.
               </p>
-              <p className="text-xs text-muted-foreground/60 font-mono pt-1">
+              <p className="text-xs text-muted-foreground font-mono pt-1 break-all">
                 Credit Card ID: {card.id}
               </p>
             </div>
@@ -1343,10 +1339,10 @@ export function CardDetailsClient({
               type="button"
               variant="destructive"
               onClick={() => setIsDeleteCardOpen(true)}
-              className="min-h-10 text-xs font-bold shrink-0 self-start sm:self-auto cursor-pointer"
+              className="w-full sm:w-auto shrink-0"
             >
-              <Trash2 className="mr-1.5 size-4" />
-              Delete Card
+              <Trash2 className="size-4" />
+              Delete card
             </Button>
           </CardContent>
         </Card>

@@ -626,34 +626,33 @@ export function ReceivablesClient({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-150 pb-12">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <HandCoins className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Receivables Hub
+            <h1 className="text-display text-foreground min-w-0">
+              Receivables hub
             </h1>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-2 max-w-prose text-sm sm:text-base text-muted-foreground">
             Complete command center for all money owed to you — friendly personal loans, installment plans, and shared bill splits.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+        <div className="page-header-actions">
           <Link
             href="/dashboard/splits"
-            className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+            className={buttonVariants({ variant: 'soft', size: 'default' })}
           >
             <Receipt className="w-4 h-4 text-muted-foreground" />
-            Split a Bill
+            Split a bill
           </Link>
 
           <Button
-            size="sm"
             onClick={() => {
               setSelectedContactIdForLoan('');
               setIsLoanModalOpen(true);
@@ -661,24 +660,24 @@ export function ReceivablesClient({
             className="gap-1.5"
           >
             <Plus className="w-4 h-4" />
-            Record Receivable / Loan
+            Record a receivable
           </Button>
         </div>
       </div>
 
       {/* 1. Executive Top Metrics Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 @3xl/main:grid-cols-4 gap-4">
         {/* Total Outstanding */}
-        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card hover:shadow-lift transition-all flex flex-col justify-between col-span-2 sm:col-span-1 overflow-hidden min-w-0">
+        <div className="@container bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card flex flex-wrap items-end justify-between gap-x-6 gap-y-3 col-span-2 @3xl/main:col-span-4 min-w-0">
           <div>
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-              Total Receivables
+            <span className="text-label text-muted-foreground block">
+              Total receivables
             </span>
-            <div className="text-2xl font-bold text-foreground mt-1 leading-tight" title={formatMoney(metrics.totalOutstanding)}>
+            <div className="num mt-1 text-[length:min(2.5rem,11cqi)] font-bold leading-none tracking-tight text-foreground whitespace-nowrap" title={formatMoney(metrics.totalOutstanding)}>
               {formatMoney(metrics.totalOutstanding)}
             </div>
           </div>
-          <div className="text-2xs sm:text-[11px] text-muted-foreground/80 flex items-center gap-1 pt-1 flex-wrap">
+          <div className="num text-sm text-muted-foreground flex items-center gap-x-2 gap-y-1 flex-wrap">
             <span>Loans: {formatMoney(metrics.loansOutstanding)}</span>
             <span>•</span>
             <span>Splits: {formatMoney(metrics.splitsOutstanding)}</span>
@@ -686,45 +685,45 @@ export function ReceivablesClient({
         </div>
 
         {/* Due This Month */}
-        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card hover:shadow-lift transition-all flex flex-col justify-between overflow-hidden min-w-0">
+        <div className="@container bg-card text-card-foreground rounded-2xl p-4 sm:p-5 shadow-card flex flex-col justify-between gap-3 min-w-0">
           <div>
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-              Due This Month
+            <span className="text-label text-muted-foreground block">
+              Due this month
             </span>
-            <div className="text-2xl font-bold text-blue-500 mt-1 leading-tight" title={formatMoney(metrics.dueThisMonth)}>
+            <div className="num whitespace-nowrap text-[length:min(1.5rem,11cqi)] tracking-tight font-bold text-primary mt-1 leading-tight" title={formatMoney(metrics.dueThisMonth)}>
               {formatMoney(metrics.dueThisMonth)}
             </div>
           </div>
-          <div className="text-2xs sm:text-[11px] text-muted-foreground/80 flex items-center gap-1 pt-1">
-            <Clock className="w-3 h-3 text-blue-500 shrink-0" />
-            <span className="truncate">Scheduled collections</span>
+          <div className="text-xs leading-snug text-muted-foreground flex items-start gap-1.5">
+            <Clock className="w-3.5 h-3.5 mt-px text-primary shrink-0" />
+            <span>Scheduled collections</span>
           </div>
         </div>
 
         {/* Overdue / Action Needed */}
-        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card hover:shadow-lift transition-all flex flex-col justify-between overflow-hidden min-w-0">
+        <div className="@container bg-card text-card-foreground rounded-2xl p-4 sm:p-5 shadow-card flex flex-col justify-between gap-3 min-w-0">
           <div>
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-              Overdue / At Risk
+            <span className="text-label text-muted-foreground block">
+              Overdue or at risk
             </span>
             <div
-              className={`text-2xl font-bold ${
-                metrics.overdueAmount > 0 ? 'text-rose-500' : 'text-foreground'
+              className={`num whitespace-nowrap text-[length:min(1.5rem,11cqi)] tracking-tight font-bold ${
+                metrics.overdueAmount > 0 ? 'text-danger' : 'text-foreground'
               } mt-1 leading-tight`}
               title={formatMoney(metrics.overdueAmount)}
             >
               {formatMoney(metrics.overdueAmount)}
             </div>
           </div>
-          <div className="text-2xs sm:text-[11px] text-muted-foreground/80 flex items-center gap-1 pt-1">
+          <div className="text-xs leading-snug text-muted-foreground flex items-start gap-1.5">
             {metrics.overdueCount > 0 ? (
-              <span className="text-rose-500 font-semibold flex items-center gap-1 truncate">
-                <AlertCircle className="w-3 h-3 shrink-0" />
+              <span className="text-danger font-semibold flex items-start gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 mt-px shrink-0" />
                 {metrics.overdueCount} items past due
               </span>
             ) : (
-              <span className="text-emerald-500 font-medium flex items-center gap-1 truncate">
-                <CheckCircle2 className="w-3 h-3 shrink-0" />
+              <span className="text-success font-medium flex items-start gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 mt-px shrink-0" />
                 Zero overdue
               </span>
             )}
@@ -732,53 +731,53 @@ export function ReceivablesClient({
         </div>
 
         {/* Collected This Month */}
-        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card hover:shadow-lift transition-all flex flex-col justify-between overflow-hidden min-w-0">
+        <div className="@container bg-card text-card-foreground rounded-2xl p-4 sm:p-5 shadow-card flex flex-col justify-between gap-3 min-w-0">
           <div>
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-              Collected This Month
+            <span className="text-label text-muted-foreground block">
+              Collected this month
             </span>
-            <div className="text-2xl font-bold text-emerald-500 mt-1 leading-tight" title={formatMoney(metrics.collectedThisMonth)}>
+            <div className="num whitespace-nowrap text-[length:min(1.5rem,11cqi)] tracking-tight font-bold text-success mt-1 leading-tight" title={formatMoney(metrics.collectedThisMonth)}>
               {formatMoney(metrics.collectedThisMonth)}
             </div>
           </div>
-          <div className="text-2xs sm:text-[11px] text-muted-foreground/80 flex items-center gap-1 pt-1">
-            <TrendingUp className="w-3 h-3 text-emerald-500 shrink-0" />
-            <span className="truncate">Recovered capital</span>
+          <div className="text-xs leading-snug text-muted-foreground flex items-start gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 mt-px text-success shrink-0" />
+            <span>Recovered capital</span>
           </div>
         </div>
 
         {/* Total Interest Yield */}
-        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card hover:shadow-lift transition-all flex flex-col justify-between overflow-hidden min-w-0">
+        <div className="@container bg-card text-card-foreground rounded-2xl p-4 sm:p-5 shadow-card flex flex-col justify-between gap-3 min-w-0">
           <div>
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-              Interest Accrued
+            <span className="text-label text-muted-foreground block">
+              Interest accrued
             </span>
-            <div className="text-2xl font-bold text-indigo-500 mt-1 leading-tight" title={formatMoney(metrics.totalInterestYield)}>
+            <div className="num whitespace-nowrap text-[length:min(1.5rem,11cqi)] tracking-tight font-bold text-foreground mt-1 leading-tight" title={formatMoney(metrics.totalInterestYield)}>
               {formatMoney(metrics.totalInterestYield)}
             </div>
           </div>
-          <div className="text-2xs sm:text-[11px] text-muted-foreground/80 flex items-center gap-1 pt-1">
-            <Percent className="w-3 h-3 text-indigo-500 shrink-0" />
-            <span className="truncate">Yield on loans</span>
+          <div className="text-xs leading-snug text-muted-foreground flex items-start gap-1.5">
+            <Percent className="w-3.5 h-3.5 mt-px text-muted-foreground shrink-0" />
+            <span>Yield on loans</span>
           </div>
         </div>
       </div>
 
       {/* 2. Visual Aging Runway */}
       {metrics.totalOutstanding > 0 && (
-        <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm font-bold text-foreground tracking-tight flex items-center gap-2">
-                <Clock className="w-4 h-4 text-blue-500" />
-                Receivables Aging & Cash Flow Inflow Runway
+        <div className="bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+            <div className="min-w-0 flex-1 basis-64">
+              <h2 className="text-title text-foreground flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary shrink-0" />
+                Receivables aging and inflow runway
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground max-w-prose">
                 Categorization of money owed based on payment urgency and scheduled return dates.
               </p>
             </div>
-            <span className="text-xs font-bold text-foreground bg-muted px-3 py-1 rounded-full self-start sm:self-auto">
-              {debtorRollups.filter((d) => d.totalOwed > 0).length} People Currently Owe You
+            <span className="num text-xs font-semibold text-foreground bg-muted px-3 py-1 rounded-full shrink-0">
+              {debtorRollups.filter((d) => d.totalOwed > 0).length} {debtorRollups.filter((d) => d.totalOwed > 0).length === 1 ? 'person owes' : 'people owe'} you
             </span>
           </div>
 
@@ -786,7 +785,7 @@ export function ReceivablesClient({
           <div className="w-full h-3 rounded-full bg-muted overflow-hidden flex">
             {metrics.overdueAmount > 0 && (
               <div
-                className="h-full bg-rose-500 transition-all"
+                className="h-full bg-danger"
                 style={{
                   width: `${Math.max(
                     5,
@@ -798,7 +797,7 @@ export function ReceivablesClient({
             )}
             {metrics.dueThisMonth > 0 && (
               <div
-                className="h-full bg-blue-500 transition-all"
+                className="h-full bg-primary"
                 style={{
                   width: `${Math.max(
                     5,
@@ -809,74 +808,77 @@ export function ReceivablesClient({
               />
             )}
             <div
-              className="h-full bg-muted-foreground/30 transition-all flex-1"
+              className="h-full bg-muted-foreground/30 flex-1"
               title="Future Amortizations & Open Balances"
             />
           </div>
 
           {/* Runway Legend */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-xs">
+          <div className="grid-fluid gap-x-4 gap-y-2 text-sm [--grid-min:11rem]">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+              <span className="w-2.5 h-2.5 rounded-full bg-danger shrink-0" />
               <span className="text-muted-foreground font-medium">Overdue:</span>
-              <strong className="text-rose-500">{formatMoney(metrics.overdueAmount)}</strong>
+              <strong className="num text-danger">{formatMoney(metrics.overdueAmount)}</strong>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-              <span className="text-muted-foreground font-medium">Due This Month:</span>
-              <strong className="text-blue-500">{formatMoney(metrics.dueThisMonth)}</strong>
+              <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0" />
+              <span className="text-muted-foreground font-medium">Due this month:</span>
+              <strong className="num text-primary">{formatMoney(metrics.dueThisMonth)}</strong>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/50 shrink-0" />
-              <span className="text-muted-foreground font-medium">Future Amortizations:</span>
-              <strong className="text-foreground">
+              <span className="text-muted-foreground font-medium">Future payments:</span>
+              <strong className="num text-foreground">
                 {formatMoney(
                   Math.max(0, metrics.totalOutstanding - metrics.dueThisMonth - metrics.overdueAmount)
                 )}
               </strong>
             </div>
-            <div className="flex items-center gap-2 sm:justify-end">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-success shrink-0" />
               <span className="text-muted-foreground font-medium">Recovered:</span>
-              <strong className="text-emerald-500">{formatMoney(metrics.collectedThisMonth)}</strong>
+              <strong className="num text-success">{formatMoney(metrics.collectedThisMonth)}</strong>
             </div>
           </div>
         </div>
       )}
 
       {/* 3. Navigation Tabs, Search & Filter Controls */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-3">
         {/* Main Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl self-start overflow-x-auto no-scrollbar max-w-full shrink-0">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-xl overflow-x-auto no-scrollbar max-w-full min-w-0">
             <button
               onClick={() => setActiveTab('debtors')}
-              className={`py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+              aria-pressed={activeTab === 'debtors'}
+              className={`no-spring shrink-0 min-h-10 py-2 px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) whitespace-nowrap flex items-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 activeTab === 'debtors'
-                  ? 'bg-card text-foreground shadow-xs'
+                  ? 'bg-card text-foreground shadow-card'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Users className="w-3.5 h-3.5" />
-              Grouped by Entity ({debtorRollups.length})
+              By person ({debtorRollups.length})
             </button>
 
             <button
               onClick={() => setActiveTab('all')}
-              className={`py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              aria-pressed={activeTab === 'all'}
+              className={`no-spring shrink-0 min-h-10 py-2 px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) whitespace-nowrap flex items-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 activeTab === 'all'
-                  ? 'bg-card text-foreground shadow-xs'
+                  ? 'bg-card text-foreground shadow-card'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              All Line Items ({unifiedItems.length})
+              All items ({unifiedItems.length})
             </button>
 
             <button
               onClick={() => setActiveTab('loans')}
-              className={`py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+              aria-pressed={activeTab === 'loans'}
+              className={`no-spring shrink-0 min-h-10 py-2 px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) whitespace-nowrap flex items-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 activeTab === 'loans'
-                  ? 'bg-card text-foreground shadow-xs'
+                  ? 'bg-card text-foreground shadow-card'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -886,31 +888,33 @@ export function ReceivablesClient({
 
             <button
               onClick={() => setActiveTab('splits')}
-              className={`py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+              aria-pressed={activeTab === 'splits'}
+              className={`no-spring shrink-0 min-h-10 py-2 px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) whitespace-nowrap flex items-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 activeTab === 'splits'
-                  ? 'bg-card text-foreground shadow-xs'
+                  ? 'bg-card text-foreground shadow-card'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Receipt className="w-3.5 h-3.5" />
-              Bill Splits ({splits.length})
+              Bill splits ({splits.length})
             </button>
           </div>
 
           {/* Search Box */}
-          <div className="relative w-full sm:w-64">
+          <div className="relative flex-1 basis-56 min-w-0 sm:max-w-xs">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
             <Input
               type="text"
               placeholder="Search person or item..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-8 text-xs h-10 min-h-0 bg-muted rounded-xl"
+              className="pl-9 pr-10 h-12 sm:h-10 text-base sm:text-sm bg-card shadow-card rounded-xl"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer z-10"
+                aria-label="Clear search"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 size-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer z-10"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -919,25 +923,26 @@ export function ReceivablesClient({
         </div>
 
         {/* Status Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
-          <span className="text-muted-foreground font-medium text-xs uppercase tracking-wider shrink-0 flex items-center gap-1">
-            <Filter className="w-3 h-3" /> Status:
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs sm:text-sm">
+          <span className="text-muted-foreground font-medium shrink-0 flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5" /> Status
           </span>
 
           {[
-            { key: 'active', label: 'Active Outstanding' },
-            { key: 'due_month', label: 'Due This Month' },
-            { key: 'overdue', label: 'Overdue Only' },
+            { key: 'active', label: 'Outstanding' },
+            { key: 'due_month', label: 'Due this month' },
+            { key: 'overdue', label: 'Overdue' },
             { key: 'settled', label: 'Settled' },
-            { key: 'all', label: 'All Records' },
+            { key: 'all', label: 'All records' },
           ].map((s) => (
             <button
               key={s.key}
               onClick={() => setStatusFilter(s.key as StatusFilter)}
-              className={`px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              aria-pressed={statusFilter === s.key}
+              className={`no-spring shrink-0 min-h-9 px-3.5 py-1.5 rounded-full font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 statusFilter === s.key
-                  ? 'bg-primary text-primary-foreground shadow-xs'
-                  : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground shadow-xs'
+                  ? 'bg-primary text-primary-foreground shadow-card'
+                  : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               {s.label}
@@ -950,17 +955,17 @@ export function ReceivablesClient({
       {activeTab === 'debtors' && (
         <div className="space-y-4">
           {filteredDebtors.length === 0 ? (
-            <div className="bg-card text-card-foreground rounded-3xl p-12 text-center space-y-3 shadow-card">
-              <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
+            <div className="bg-card text-card-foreground rounded-2xl px-6 py-12 text-center flex flex-col items-center gap-3 shadow-card">
+              <div className="size-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center">
                 <Users className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-foreground">No debtors match your filter</h3>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                Try selecting &quot;All Records&quot; or clearing your search query.
+              <h3 className="text-title text-foreground">No one matches this filter</h3>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                Try &quot;All records&quot; or clear your search.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 @3xl/main:grid-cols-2 gap-4">
               {filteredDebtors.slice(0, debtorsVisibleCount).map((debtor) => {
                 const percentPaid =
                   debtor.totalOriginated > 0
@@ -971,7 +976,7 @@ export function ReceivablesClient({
                 return (
                   <div
                     key={debtor.contactId}
-                    className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-4 transition-all hover:shadow-md overflow-hidden"
+                    className="bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card flex flex-col gap-4 min-w-0"
                   >
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
@@ -983,7 +988,7 @@ export function ReceivablesClient({
                         }
                         className="flex items-start gap-3 min-w-0 flex-1 group cursor-pointer"
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-extrabold text-base shrink-0 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-extrabold text-base shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
                           {debtor.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
@@ -1013,8 +1018,8 @@ export function ReceivablesClient({
                       <span
                         className={`text-xs font-medium px-3 py-1 rounded-full shrink-0 ${
                           isFullySettled
-                            ? 'bg-emerald-500/10 text-emerald-500'
-                            : 'bg-indigo-500/10 text-indigo-500'
+                            ? 'bg-success-soft text-success'
+                            : 'bg-primary/10 text-primary'
                         }`}
                       >
                         {isFullySettled ? 'All Settled ✅' : `${formatMoney(debtor.totalOwed)} Owed`}
@@ -1024,7 +1029,7 @@ export function ReceivablesClient({
                     {/* Balance & Progress */}
                     <div className="p-4 rounded-2xl bg-muted/60 space-y-2">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-muted-foreground font-medium">Repayment Progress:</span>
+                        <span className="text-muted-foreground font-medium">Repayment progress</span>
                         <span className="font-bold text-foreground">
                           {percentPaid}% ({formatMoney(debtor.totalPaid)} of{' '}
                           {formatMoney(debtor.totalOriginated)})
@@ -1033,7 +1038,7 @@ export function ReceivablesClient({
 
                       <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                         <div
-                          className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                          className="h-full bg-success rounded-full"
                           style={{ width: `${percentPaid}%` }}
                         />
                       </div>
@@ -1041,12 +1046,12 @@ export function ReceivablesClient({
                       {/* Items breakdown pills */}
                       <div className="pt-1 flex flex-wrap items-center gap-2 text-xs">
                         {debtor.loans.length > 0 && (
-                          <span className="text-muted-foreground font-medium bg-card px-2.5 py-1 rounded-lg shadow-xs">
+                          <span className="text-muted-foreground font-medium bg-card px-2.5 py-1 rounded-lg shadow-card">
                             {debtor.loans.length} Loan{debtor.loans.length === 1 ? '' : 's'}
                           </span>
                         )}
                         {debtor.splitShares.length > 0 && (
-                          <span className="text-muted-foreground font-medium bg-card px-2.5 py-1 rounded-lg shadow-xs">
+                          <span className="text-muted-foreground font-medium bg-card px-2.5 py-1 rounded-lg shadow-card">
                             {debtor.splitShares.length} Bill Split{debtor.splitShares.length === 1 ? '' : 's'}
                           </span>
                         )}
@@ -1061,14 +1066,14 @@ export function ReceivablesClient({
                       {debtor.loans.map((l) => (
                         <div
                           key={l.id}
-                          className="flex items-center justify-between text-xs p-3 rounded-2xl bg-muted/60 hover:bg-muted/80 transition-colors shadow-2xs"
+                          className="flex items-center justify-between text-xs p-3 rounded-xl bg-muted/60 hover:bg-muted transition-colors"
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
                             <span
-                              className={`font-bold px-2 py-0.5 rounded-md text-xs uppercase tracking-wider shrink-0 ${
+                              className={`font-semibold px-2 py-0.5 rounded-md text-2xs shrink-0 ${
                                 l.status === 'paid'
-                                  ? 'bg-emerald-500/10 text-emerald-500'
-                                  : 'bg-indigo-500/10 text-indigo-500'
+                                  ? 'bg-success-soft text-success'
+                                  : 'bg-primary/10 text-primary'
                               }`}
                             >
                               {l.status === 'paid' ? 'Paid' : 'Advance'}
@@ -1082,7 +1087,7 @@ export function ReceivablesClient({
                                   {l.due_date ? `Due ${formatDate(l.due_date)}` : `Lent ${formatDate(l.loaned_on)}`}
                                 </span>
                                 {Number(l.monthly_interest_rate || 0) > 0 && (
-                                  <span className="text-indigo-500 font-semibold">
+                                  <span className="text-primary font-semibold">
                                     • {l.monthly_interest_rate}%/mo
                                   </span>
                                 )}
@@ -1093,8 +1098,8 @@ export function ReceivablesClient({
                           <div className="flex items-center gap-3 shrink-0 text-right">
                             <div>
                               <span
-                                className={`font-extrabold text-sm block ${
-                                  l.status === 'paid' ? 'text-emerald-500' : 'text-foreground'
+                                className={`num font-bold text-sm block whitespace-nowrap ${
+                                  l.status === 'paid' ? 'text-success' : 'text-foreground'
                                 }`}
                               >
                                 {formatMoney(l.balance_remaining)}
@@ -1107,7 +1112,7 @@ export function ReceivablesClient({
                             </div>
                             <Link
                               href={`/dashboard/loans/${l.id}`}
-                              className="p-1.5 rounded-xl text-blue-500 hover:bg-muted transition-colors"
+                              className="size-9 inline-flex items-center justify-center rounded-lg text-primary hover:bg-muted transition-colors"
                               title="View Details"
                             >
                               <ExternalLink className="w-4 h-4" />
@@ -1119,14 +1124,14 @@ export function ReceivablesClient({
                       {debtor.splitShares.map((s) => (
                         <div
                           key={s.participantId}
-                          className="flex items-center justify-between text-xs p-3 rounded-2xl bg-muted/60 hover:bg-muted/80 transition-colors shadow-2xs"
+                          className="flex items-center justify-between text-xs p-3 rounded-xl bg-muted/60 hover:bg-muted transition-colors"
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
                             <span
-                              className={`font-bold px-2 py-0.5 rounded-md text-xs uppercase tracking-wider shrink-0 ${
+                              className={`font-semibold px-2 py-0.5 rounded-md text-2xs shrink-0 ${
                                 s.isPaid
-                                  ? 'bg-emerald-500/10 text-emerald-500'
-                                  : 'bg-amber-500/10 text-amber-500'
+                                  ? 'bg-success-soft text-success'
+                                  : 'bg-warning-soft text-warning-soft-foreground'
                               }`}
                             >
                               {s.isPaid ? 'Paid' : 'Split'}
@@ -1143,15 +1148,15 @@ export function ReceivablesClient({
 
                           <div className="flex items-center gap-3 shrink-0 text-right">
                             <span
-                              className={`font-extrabold text-sm block ${
-                                s.isPaid ? 'text-emerald-500' : 'text-foreground'
+                              className={`num font-bold text-sm block whitespace-nowrap ${
+                                s.isPaid ? 'text-success' : 'text-foreground'
                               }`}
                             >
                               {s.isPaid ? 'Paid' : formatMoney(s.shareAmount)}
                             </span>
                             <Link
                               href="/dashboard/splits"
-                              className="p-1.5 rounded-xl text-blue-500 hover:bg-muted transition-colors"
+                              className="size-9 inline-flex items-center justify-center rounded-lg text-primary hover:bg-muted transition-colors"
                               title="View Split Details"
                             >
                               <ExternalLink className="w-4 h-4" />
@@ -1169,7 +1174,7 @@ export function ReceivablesClient({
                             ? `/dashboard/receivables/${debtor.contactId}`
                             : '#'
                         }
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-500 hover:text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer group"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary bg-primary/10 hover:bg-primary/15 px-3 py-1.5 rounded-xl transition-colors duration-(--motion-fast) cursor-pointer group"
                       >
                         <span>View All Details</span>
                         <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -1184,7 +1189,7 @@ export function ReceivablesClient({
                             setSelectedContactIdForLoan(debtor.contactId);
                             setIsLoanModalOpen(true);
                           }}
-                          className="text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 font-semibold gap-1.5"
+                          className="text-primary bg-primary/10 hover:bg-primary/15 font-semibold gap-1.5"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Add Advance
@@ -1208,7 +1213,7 @@ export function ReceivablesClient({
                             }
                             className="font-semibold gap-1.5"
                           >
-                            <Send className="w-3.5 h-3.5 text-blue-500" />
+                            <Send className="w-3.5 h-3.5 text-primary" />
                             Send Reminder
                           </Button>
                         )}
@@ -1243,11 +1248,11 @@ export function ReceivablesClient({
       {activeTab !== 'debtors' && (
         <div className="space-y-4">
           {filteredItems.length === 0 ? (
-            <div className="bg-card text-card-foreground rounded-3xl p-12 text-center space-y-3 shadow-card">
-              <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
+            <div className="bg-card text-card-foreground rounded-2xl px-6 py-12 text-center flex flex-col items-center gap-3 shadow-card">
+              <div className="size-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center">
                 <HandCoins className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-foreground">No receivables found</h3>
+              <h3 className="text-title text-foreground">No receivables found</h3>
               <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                 {statusFilter !== 'all'
                   ? 'Try selecting a different status filter above to view more items.'
@@ -1255,9 +1260,9 @@ export function ReceivablesClient({
               </p>
             </div>
           ) : (
-            <div className="bg-card text-card-foreground rounded-3xl p-4 sm:p-6 shadow-card space-y-3">
+            <div className="bg-card text-card-foreground rounded-2xl p-3 sm:p-5 shadow-card flex flex-col gap-3 min-w-0">
               {/* Header row */}
-              <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-muted-foreground">
                 <div className="col-span-4">Debtor & Title</div>
                 <div className="col-span-3">Due / Date</div>
                 <div className="col-span-3">Amount & Balance</div>
@@ -1272,11 +1277,11 @@ export function ReceivablesClient({
                   return (
                     <div
                       key={item.id}
-                      className={`rounded-2xl p-4 sm:px-4 sm:py-3.5 transition-all flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 items-start sm:items-center ${
+                      className={`rounded-xl p-4 sm:px-4 sm:py-3.5 transition-colors duration-(--motion-fast) flex flex-col sm:grid @xl/main:grid-cols-12 gap-3 sm:gap-4 items-start sm:items-center ${
                         item.isPaid
                           ? 'bg-muted/40'
                           : item.isOverdue
-                          ? 'bg-rose-500/10'
+                          ? 'bg-danger-soft'
                           : 'bg-muted/70'
                       }`}
                     >
@@ -1285,8 +1290,8 @@ export function ReceivablesClient({
                         <div
                           className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
                             item.kind === 'loan'
-                              ? 'bg-indigo-500/10 text-indigo-500'
-                              : 'bg-amber-500/10 text-amber-500'
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-warning-soft text-warning-soft-foreground'
                           }`}
                         >
                           {item.kind === 'loan' ? (
@@ -1312,10 +1317,10 @@ export function ReceivablesClient({
                               </span>
                             )}
                             <span
-                              className={`text-xs font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                              className={`text-2xs font-semibold px-2 py-0.5 rounded-full ${
                                 item.kind === 'loan'
-                                  ? 'bg-indigo-500/10 text-indigo-500'
-                                  : 'bg-amber-500/10 text-amber-500'
+                                  ? 'bg-primary/10 text-primary'
+                                  : 'bg-warning-soft text-warning-soft-foreground'
                               }`}
                             >
                               {item.kind === 'loan' ? 'Loan' : 'Bill Split'}
@@ -1342,9 +1347,9 @@ export function ReceivablesClient({
                         <span
                           className={`text-xs font-medium block mt-0.5 ${
                             item.isPaid
-                              ? 'text-emerald-500 font-bold'
+                              ? 'text-success font-bold'
                               : item.isOverdue
-                              ? 'text-rose-500 font-bold'
+                              ? 'text-danger font-bold'
                               : 'text-muted-foreground'
                           }`}
                         >
@@ -1355,7 +1360,7 @@ export function ReceivablesClient({
                       {/* Amount & Balance */}
                       <div className="col-span-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-sm font-extrabold text-foreground">
+                          <span className="num text-sm font-bold text-foreground whitespace-nowrap">
                             {formatMoney(item.balanceRemaining)}
                           </span>
                           {!item.isPaid && item.balanceRemaining !== item.amount && (
@@ -1366,7 +1371,7 @@ export function ReceivablesClient({
                         </div>
 
                         {item.rawLoan && Number(item.rawLoan.monthly_interest_rate || 0) > 0 && (
-                          <span className="text-xs font-semibold text-indigo-500 bg-indigo-500/10 px-1.5 py-0.2 rounded mt-0.5 inline-block">
+                          <span className="text-xs font-semibold text-primary bg-primary/10 px-1.5 py-0.2 rounded mt-0.5 inline-block">
                             {item.rawLoan.monthly_interest_rate}% / mo Interest
                           </span>
                         )}
@@ -1418,7 +1423,7 @@ export function ReceivablesClient({
                                 participantId: item.rawParticipantId,
                               })
                             }
-                            className="p-1.5 rounded-xl bg-card hover:bg-accent text-muted-foreground hover:text-foreground shadow-xs transition-colors shrink-0"
+                            className="size-9 inline-flex items-center justify-center rounded-lg bg-card hover:bg-accent text-muted-foreground hover:text-foreground shadow-card transition-colors shrink-0"
                             title="Send Payment Reminder"
                           >
                             <Send className="w-3.5 h-3.5" />

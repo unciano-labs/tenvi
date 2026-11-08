@@ -11,7 +11,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-4 overflow-hidden rounded-2xl bg-card p-5 sm:p-6 text-sm text-card-foreground shadow-card hover:shadow-lift transition-[width,height,padding,gap,box-shadow] duration-[var(--dur-base)] ease-[var(--ease-standard)]",
+        "group/card flex min-w-0 flex-col gap-4 overflow-hidden rounded-2xl bg-card p-5 sm:p-6 text-sm text-card-foreground shadow-card",
         size === "sm" && "p-4 gap-3",
         className
       )}
@@ -110,7 +110,7 @@ function ExpandableCardContent({
       data-expanded={expanded}
       aria-hidden={!expanded}
       className={cn(
-        "grid transition-[grid-template-rows,opacity] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden",
+        "grid transition-[grid-template-rows,opacity] duration-(--motion-base) ease-(--ease-out) overflow-hidden",
         expanded
           ? "grid-rows-[1fr] opacity-100"
           : "grid-rows-[0fr] opacity-0 pointer-events-none",

@@ -166,14 +166,14 @@ export function LoansClient({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            People Who Owe You
+      <div className="page-header">
+        <div>
+          <h1 className="text-display text-foreground">
+            People who owe you
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-2 max-w-prose text-sm sm:text-base text-muted-foreground">
             Track money lent to friends, family, and business operations with monthly installments or advances.
           </p>
         </div>
@@ -183,49 +183,49 @@ export function LoansClient({
             setSelectedContactIdForLoan('');
             setIsLoanModalOpen(true);
           }}
-          className="w-full sm:w-auto rounded-xl gap-2 font-semibold shadow-xs min-h-11 h-11 active:scale-[0.99] transition-transform"
+          className="w-full sm:w-auto gap-2"
         >
           <Plus className="w-4 h-4" />
-          Record a Loan / Advance
+          Record a loan or advance
         </Button>
       </div>
 
       {/* Metrics Row */}
-      <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 gap-3 sm:gap-6 pb-1 sm:pb-0">
+      <div className="grid-fluid gap-4 [--grid-min:14rem]">
         <StatCard
-          label="Total Still Owed to You"
+          label="Still owed to you"
           value={formatMoney(totalOwed)}
           subtext={`Across ${initialLoans.filter((l) => l.status !== 'paid').length} active loans (${groupedEntities.filter((g) => g.totalOwed > 0).length} entities)`}
           icon={HandCoins}
           variant="warning"
-          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         <StatCard
-          label="Total Money Lent"
+          label="Total money lent"
           value={formatMoney(totalOriginal)}
           subtext="All-time recorded loans"
           icon={HandCoins}
           variant="neutral"
-          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         <StatCard
-          label="Fully Repaid"
+          label="Fully repaid"
           value={formatMoney(totalOriginal - totalOwed)}
           subtext={`${initialLoans.filter((l) => l.status === 'paid').length} loans cleared`}
           icon={CheckCircle2}
           variant="positive"
-          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
       </div>
 
       {/* Filter Tabs, View Mode Switcher, and Search Bar */}
-      <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
+      <Card size="sm" className="flex-row flex-wrap items-center gap-3 p-3 min-w-0">
         {/* View Mode & Status Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-2 max-w-full min-w-0">
+        <div className="flex flex-wrap items-center gap-2 min-w-0 max-w-full">
           {/* View Mode Switcher */}
-          <div className="flex items-center gap-1 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar min-w-0">
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-xl max-w-full overflow-x-auto no-scrollbar min-w-0">
             <Button
               type="button"
               variant={viewMode === 'entity' ? 'default' : 'ghost'}
@@ -234,12 +234,12 @@ export function LoansClient({
                 setViewMode('entity');
                 setEntityVisibleCount(8);
               }}
-              className={`rounded-xl text-xs font-bold gap-1.5 whitespace-nowrap ${
-                viewMode === 'entity' ? 'shadow-xs' : 'text-muted-foreground'
+              className={`shrink-0 rounded-lg text-xs sm:text-sm font-semibold gap-1.5 whitespace-nowrap ${
+                viewMode === 'entity' ? 'shadow-card' : 'text-muted-foreground'
               }`}
             >
-              <Users className="w-3.5 h-3.5 text-primary" />
-              Group by Entity ({groupedEntities.length})
+              <Users className="w-3.5 h-3.5" />
+              Group by person ({groupedEntities.length})
             </Button>
             <Button
               type="button"
@@ -249,17 +249,17 @@ export function LoansClient({
                 setViewMode('flat');
                 setVisibleCount(8);
               }}
-              className={`rounded-xl text-xs font-bold gap-1.5 whitespace-nowrap ${
-                viewMode === 'flat' ? 'shadow-xs' : 'text-muted-foreground'
+              className={`shrink-0 rounded-lg text-xs sm:text-sm font-semibold gap-1.5 whitespace-nowrap ${
+                viewMode === 'flat' ? 'shadow-card' : 'text-muted-foreground'
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-              Individual Loans ({filteredLoans.length})
+              Individual loans ({filteredLoans.length})
             </Button>
           </div>
 
           {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar min-w-0">
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-xl max-w-full overflow-x-auto no-scrollbar min-w-0">
             <Button
               type="button"
               variant={statusFilter === 'active' ? 'default' : 'ghost'}
@@ -269,8 +269,8 @@ export function LoansClient({
                 setVisibleCount(8);
                 setEntityVisibleCount(8);
               }}
-              className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-                statusFilter === 'active' ? 'shadow-xs' : 'text-muted-foreground'
+              className={`shrink-0 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap ${
+                statusFilter === 'active' ? 'shadow-card' : 'text-muted-foreground'
               }`}
             >
               Active ({initialLoans.filter((l) => l.status !== 'paid').length})
@@ -284,8 +284,8 @@ export function LoansClient({
                 setVisibleCount(8);
                 setEntityVisibleCount(8);
               }}
-              className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-                statusFilter === 'paid' ? 'shadow-xs' : 'text-muted-foreground'
+              className={`shrink-0 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap ${
+                statusFilter === 'paid' ? 'shadow-card' : 'text-muted-foreground'
               }`}
             >
               Paid ({initialLoans.filter((l) => l.status === 'paid').length})
@@ -299,8 +299,8 @@ export function LoansClient({
                 setVisibleCount(8);
                 setEntityVisibleCount(8);
               }}
-              className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-                statusFilter === 'all' ? 'shadow-xs' : 'text-muted-foreground'
+              className={`shrink-0 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap ${
+                statusFilter === 'all' ? 'shadow-card' : 'text-muted-foreground'
               }`}
             >
               All ({initialLoans.length})
@@ -309,8 +309,8 @@ export function LoansClient({
         </div>
 
         {/* Search input and counter */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 sm:w-64">
+        <div className="flex flex-1 basis-64 items-center gap-3 min-w-0">
+          <div className="relative flex-1 min-w-0">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <Input
               type="text"
@@ -321,11 +321,11 @@ export function LoansClient({
                 setVisibleCount(8);
                 setEntityVisibleCount(8);
               }}
-              className="pl-9 h-10 text-xs rounded-xl"
+              className="pl-9 h-12 sm:h-10 text-base sm:text-sm rounded-xl"
             />
           </div>
 
-          <span className="text-xs text-muted-foreground font-medium whitespace-nowrap hidden sm:inline">
+          <span className="num text-xs text-muted-foreground font-medium whitespace-nowrap hidden sm:inline">
             {viewMode === 'entity'
               ? `${groupedEntities.length} ${groupedEntities.length === 1 ? 'entity' : 'entities'}`
               : `${filteredLoans.length} ${filteredLoans.length === 1 ? 'loan' : 'loans'}`}
@@ -336,7 +336,7 @@ export function LoansClient({
       {/* Content Section */}
       {filteredLoans.length === 0 ? (
         searchQuery ? (
-          <Card className="p-10 text-center shadow-xs space-y-2">
+          <Card className="items-center p-10 text-center gap-2">
             <p className="text-sm font-bold text-foreground">No records matched "{searchQuery}"</p>
             <p className="text-xs text-muted-foreground">Try adjusting your keywords or clearing filters.</p>
             <Button
@@ -349,7 +349,7 @@ export function LoansClient({
               }}
               className="text-xs font-semibold"
             >
-              Clear Search & Filters
+              Clear search and filters
             </Button>
           </Card>
         ) : (
@@ -361,7 +361,7 @@ export function LoansClient({
                 ? 'Keep peace of mind by logging money you lend to friends, family, or business operations.'
                 : 'No loans match your current filter.'
             }
-            actionText={initialLoans.length === 0 ? 'Record a Loan' : undefined}
+            actionText={initialLoans.length === 0 ? 'Record a loan' : undefined}
             onAction={() => {
               setSelectedContactIdForLoan('');
               setIsLoanModalOpen(true);
@@ -373,7 +373,7 @@ export function LoansClient({
            1. GROUP BY ENTITY / PERSON VIEW
            ========================================================== */
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 @3xl/main:grid-cols-2 gap-4 sm:gap-6">
             {displayedEntities.map((group) => {
               const percentPaid =
                 group.totalOriginal > 0
@@ -384,13 +384,13 @@ export function LoansClient({
               return (
                 <Card
                   key={group.contactId}
-                  className="p-6 sm:p-7 shadow-xs overflow-hidden min-w-0 flex flex-col justify-between space-y-5"
+                  className="p-5 sm:p-6 min-w-0 justify-between gap-5"
                 >
                   <div className="space-y-4 min-w-0">
                     {/* Entity Card Header */}
                     <div className="flex items-start justify-between gap-3 min-w-0">
                       <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-extrabold text-base shrink-0 shadow-2xs">
+                        <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-extrabold text-base shrink-0 shadow-card">
                           {group.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -423,17 +423,17 @@ export function LoansClient({
                     </div>
 
                     {/* Balance & Repayment Progress Bar */}
-                    <div className="p-4 rounded-2xl bg-muted/60 space-y-2.5 min-w-0">
+                    <div className="@container p-4 rounded-xl bg-muted/50 space-y-2.5 min-w-0">
                       <div className="flex justify-between items-end gap-2 min-w-0">
                         <div className="min-w-0">
-                          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-                            Total Outstanding
+                          <span className="text-label text-muted-foreground block">
+                            Total outstanding
                           </span>
-                          <span className="text-2xl font-bold tracking-tight text-foreground block">
+                          <span className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground block whitespace-nowrap">
                             {formatMoney(group.totalOwed)}
                           </span>
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground shrink-0">
+                        <span className="num text-xs font-medium text-muted-foreground shrink-0">
                           of {formatMoney(group.totalOriginal)} lent
                         </span>
                       </div>
@@ -468,7 +468,7 @@ export function LoansClient({
                             <div
                               key={loan.id}
                               onClick={() => router.push(`/dashboard/loans/${loan.id}`)}
-                              className="group p-3 rounded-2xl bg-card hover:bg-muted/50 transition-colors shadow-2xs cursor-pointer flex flex-col gap-2 min-w-0"
+                              className="group p-3 rounded-xl bg-card hover:bg-muted/50 transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer flex flex-col gap-2 min-w-0"
                             >
                               <div className="flex items-start justify-between gap-2 min-w-0">
                                 <div className="min-w-0 flex-1">
@@ -481,7 +481,7 @@ export function LoansClient({
                                           ? 'default'
                                           : 'warning'
                                       }
-                                      className="text-2xs font-bold uppercase tracking-wider shrink-0"
+                                      className="text-2xs font-semibold shrink-0"
                                     >
                                       {loan.status === 'paid'
                                         ? 'Paid'
@@ -519,8 +519,8 @@ export function LoansClient({
 
                                 <div className="text-right shrink-0">
                                   <span
-                                    className={`font-extrabold text-sm block ${
-                                      loan.status === 'paid' ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'
+                                    className={`num font-bold text-sm block whitespace-nowrap ${
+                                      loan.status === 'paid' ? 'text-success' : 'text-foreground'
                                     }`}
                                   >
                                     {formatMoney(loan.balance_remaining)}
@@ -602,13 +602,13 @@ export function LoansClient({
                           const firstUnpaid = group.loans.find((l) => l.status !== 'paid');
                           if (firstUnpaid) setSelectedLoanForPayment(firstUnpaid);
                         }}
-                        className="text-xs font-semibold gap-1 rounded-xl shadow-xs"
+                        className="text-xs font-semibold gap-1 rounded-xl shadow-card"
                       >
                         + Record Repayment
                       </Button>
                     ) : (
-                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4" /> All Clear
+                      <span className="text-xs font-semibold text-success flex items-center gap-1">
+                        <CheckCircle2 className="w-4 h-4" /> All clear
                       </span>
                     )}
                   </div>
@@ -640,7 +640,7 @@ export function LoansClient({
            2. INDIVIDUAL FLAT LOANS VIEW
            ========================================================== */
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 @3xl/main:grid-cols-2 gap-4 sm:gap-6">
             {displayedLoans.map((loan) => {
               const math = calculateLoanStatus(loan.amount, loan.balance_remaining);
 
@@ -648,7 +648,15 @@ export function LoansClient({
                 <Card
                   key={loan.id}
                   onClick={() => router.push(`/dashboard/loans/${loan.id}`)}
-                  className="p-6 sm:p-7 shadow-xs overflow-hidden min-w-0 transition-all cursor-pointer flex flex-col justify-between space-y-5 group"
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      router.push(`/dashboard/loans/${loan.id}`);
+                    }
+                  }}
+                  className="p-5 sm:p-6 min-w-0 motion-surface hover:shadow-lift cursor-pointer justify-between gap-5 group outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-2 min-w-0">
@@ -705,17 +713,17 @@ export function LoansClient({
                     </div>
 
                     {/* Balance Display */}
-                    <div className="mt-4 p-4 rounded-2xl bg-muted/60 min-w-0">
+                    <div className="@container mt-4 p-4 rounded-xl bg-muted/50 min-w-0">
                       <div className="flex justify-between items-end mb-2 gap-2 min-w-0">
                         <div className="min-w-0">
-                          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-                            Remaining Balance
+                          <span className="text-label text-muted-foreground block">
+                            Remaining balance
                           </span>
-                          <span className="text-2xl font-bold tracking-tight text-foreground block">
+                          <span className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground block whitespace-nowrap">
                             {formatMoney(loan.balance_remaining)}
                           </span>
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground shrink-0">
+                        <span className="num text-xs font-medium text-muted-foreground shrink-0">
                           of {formatMoney(loan.amount)}
                         </span>
                       </div>
@@ -745,7 +753,7 @@ export function LoansClient({
                       </div>
 
                       <span className="text-xs font-bold text-primary flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform shrink-0">
-                        {loan.is_installment ? 'View Schedule' : 'View Details'} <ChevronRight className="w-3.5 h-3.5" />
+                        {loan.is_installment ? 'View schedule' : 'View details'} <ChevronRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
                   </div>
@@ -759,12 +767,12 @@ export function LoansClient({
                           e.stopPropagation();
                           setSelectedLoanForPayment(loan);
                         }}
-                        className="rounded-xl text-xs font-semibold shadow-xs"
+                        className="rounded-xl text-xs font-semibold shadow-card"
                       >
                         + Record Repayment
                       </Button>
                     ) : (
-                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span className="text-xs font-semibold text-success flex items-center gap-1">
                         <CheckCircle2 className="w-4 h-4" /> Settled
                       </span>
                     )}

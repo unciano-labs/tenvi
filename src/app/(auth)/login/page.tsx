@@ -25,26 +25,27 @@ function LoginForm() {
     : '/register';
 
   return (
-    <div className="bg-card rounded-3xl p-8 sm:p-10 shadow-card">
+    <div className="bg-card rounded-3xl p-5 sm:p-8 shadow-card">
       {isNotEnrolled ? (
-        <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 text-amber-500 text-sm">
+        <div role="alert" className="mb-6 p-4 rounded-2xl bg-warning-soft text-sm">
           <div className="font-semibold flex items-center gap-1.5 mb-1 text-foreground">
-            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
-            No Tenvi Account Found
+            <AlertCircle className="w-4 h-4 text-warning-soft-foreground shrink-0" />
+            No Tenvi account found
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
             Your credentials belong to an account on our platform, but it has not been
             registered for Tenvi yet. Please register to activate your Tenvi access.
           </p>
           <Link
             href={registerHref}
-            className="inline-flex items-center gap-1 text-xs font-bold text-amber-500 underline hover:text-amber-400"
+            className="inline-flex min-h-11 items-center gap-1 rounded-md text-sm font-semibold text-warning-soft-foreground underline underline-offset-4 hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             Register for Tenvi now →
           </Link>
         </div>
       ) : (state?.error || urlError) ? (
-        <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 text-rose-500 text-sm font-medium">
+        <div role="alert" className="mb-6 flex items-start gap-2 p-4 rounded-2xl bg-danger-soft text-danger-soft-foreground text-sm font-medium">
+          <AlertCircle className="mt-0.5 w-4 h-4 shrink-0" />
           {state?.error || urlError}
         </div>
       ) : null}
@@ -55,20 +56,19 @@ function LoginForm() {
       </div>
 
       {/* Clean Divider */}
-      <div className="relative my-6 text-center">
-        <div className="absolute inset-0 flex items-center">
-          <Separator />
-        </div>
-        <span className="relative bg-card px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="my-6 flex items-center gap-3">
+        <Separator className="flex-1 data-horizontal:w-auto data-horizontal:h-0.5" />
+        <span className="shrink-0 text-label text-muted-foreground">
           Or continue with email
         </span>
+        <Separator className="flex-1 data-horizontal:w-auto data-horizontal:h-0.5" />
       </div>
 
-      <form action={formAction} className="space-y-5">
+      <form action={formAction} className="flex flex-col gap-5">
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-semibold text-foreground mb-1.5"
+            className="block text-sm font-medium text-foreground mb-2"
           >
             Email address
           </label>
@@ -91,7 +91,7 @@ function LoginForm() {
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-semibold text-foreground mb-1.5"
+            className="block text-sm font-medium text-foreground mb-2"
           >
             Password
           </label>
@@ -112,30 +112,30 @@ function LoginForm() {
         </div>
 
         {/* Cloudflare Turnstile Bot Protection */}
-        <TurnstileWidget className="my-3" />
+        <TurnstileWidget />
 
         <Button
           type="submit"
           disabled={isPending}
-          size="lg"
-          className="w-full h-12 rounded-2xl text-base mt-2 shadow-card hover:shadow-lift"
+          aria-busy={isPending}
+          className="w-full mt-1"
         >
           {isPending ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Signing in...
+              Signing in…
             </>
           ) : (
-            'Sign In to Your Account'
+            'Sign in to your account'
           )}
         </Button>
       </form>
 
-      <div className="mt-8 text-center text-sm text-muted-foreground">
+      <div className="mt-6 text-center text-sm text-muted-foreground">
         Don&apos;t have an account yet?{' '}
         <Link
           href="/register"
-          className="font-semibold text-foreground hover:text-primary underline underline-offset-4"
+          className="rounded-md font-semibold text-foreground hover:text-primary underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           Sign up for free
         </Link>
@@ -146,29 +146,29 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md px-6">
+    <main className="min-h-dvh bg-background flex flex-col justify-center gap-8 px-4 py-10 sm:py-16">
+      <div className="mx-auto w-full max-w-md">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-8 transition-colors"
+          className="-ml-2 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-(--motion-fast) ease-(--ease-in-out) outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Home
+          Back to home
         </Link>
 
-        <div className="flex items-center gap-3 mb-2">
-          <TenviIcon className="w-10 h-10 rounded-2xl shrink-0 shadow-xs" />
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        <div className="mt-6 flex flex-col items-start gap-4">
+          <TenviIcon className="size-11 rounded-2xl shrink-0 shadow-card" />
+          <h1 className="text-display text-foreground">
             Welcome back to Tenvi
           </h1>
         </div>
-        <p className="text-sm text-muted-foreground mb-8">
+        <p className="mt-2 max-w-prose text-base text-muted-foreground">
           Sign in to view your daily spending, bills, and savings.
         </p>
       </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md px-6">
-        <Suspense fallback={<div className="bg-card rounded-3xl p-8 shadow-card h-64 animate-pulse" />}>
+      <div className="mx-auto w-full max-w-md">
+        <Suspense fallback={<div className="bg-card rounded-3xl p-8 shadow-card min-h-96" aria-busy="true" />}>
           <LoginForm />
         </Suspense>
       </div>

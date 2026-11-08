@@ -118,6 +118,9 @@
     },
     "src/app/dashboard/properties/[id]/PropertyDetailsClient.tsx": {
       "reason": "Legacy property details view pending v2 refactor."
+    },
+    "src/lib/notifications/broadcastTemplate.ts": {
+      "reason": "HTML email template inline CSS borders (email clients need table borders/rules; not app UI)."
     }
   }
 }

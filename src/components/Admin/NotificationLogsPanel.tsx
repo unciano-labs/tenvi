@@ -145,18 +145,16 @@ export function NotificationLogsPanel({
   };
 
   return (
-    <div className="bg-card text-card-foreground shadow-card rounded-3xl p-6 sm:p-7 overflow-hidden space-y-6 animate-in fade-in duration-150">
+    <div className="flex flex-col gap-6 bg-card text-card-foreground shadow-card rounded-2xl p-5 sm:p-6 min-w-0">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-[1_1_18rem] items-start gap-3">
+          <div className="size-10 rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <ShieldCheck className="size-5" />
           </div>
-          <div>
-            <h2 className="text-lg font-extrabold text-foreground tracking-tight">
-              Email & Notification Delivery Logs
-            </h2>
-            <p className="text-xs text-muted-foreground">
+          <div className="min-w-0">
+            <h2 className="text-title text-foreground">Email & notification delivery logs</h2>
+            <p className="text-sm text-muted-foreground">
               Search, filter, and inspect delivery status, subject lines, recipients, and diagnostic errors.
             </p>
           </div>
@@ -167,35 +165,36 @@ export function NotificationLogsPanel({
           disabled={isRefreshingLogs || isLoadingLogs}
           variant="outline"
           size="sm"
-          className="gap-1.5 self-start sm:self-auto text-xs cursor-pointer"
+          aria-busy={isRefreshingLogs}
+          className="gap-1.5"
         >
-          <RefreshCw className={`size-3.5 ${isRefreshingLogs ? 'animate-spin' : ''}`} />
-          {isRefreshingLogs ? 'Refreshing...' : 'Refresh Logs'}
+          <RefreshCw className={`size-4 ${isRefreshingLogs ? 'animate-spin' : ''}`} />
+          {isRefreshingLogs ? 'Refreshing...' : 'Refresh logs'}
         </Button>
       </div>
 
       {/* Aggregate Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid-fluid gap-3 [--grid-min:9rem]">
         <div className="p-3.5 rounded-2xl bg-muted space-y-0.5">
-          <span className="text-2xs text-muted-foreground font-medium uppercase tracking-wider">Total Events</span>
-          <p className="text-lg font-bold text-foreground">{stats.total}</p>
+          <span className="text-label text-muted-foreground">Total events</span>
+          <p className="num text-xl font-bold text-foreground">{stats.total}</p>
         </div>
         <div className="p-3.5 rounded-2xl bg-emerald-500/10 space-y-0.5">
-          <span className="text-2xs text-emerald-600 dark:text-emerald-400 font-medium uppercase tracking-wider">Delivered (Sent)</span>
-          <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{stats.sent}</p>
+          <span className="text-label text-emerald-700 dark:text-emerald-400">Delivered (sent)</span>
+          <p className="num text-xl font-bold text-emerald-700 dark:text-emerald-400">{stats.sent}</p>
         </div>
         <div className="p-3.5 rounded-2xl bg-amber-500/10 space-y-0.5">
-          <span className="text-2xs text-amber-600 dark:text-amber-400 font-medium uppercase tracking-wider">Simulated / Fallback</span>
-          <p className="text-lg font-bold text-amber-600 dark:text-amber-400">{stats.simulated}</p>
+          <span className="text-label text-amber-700 dark:text-amber-400">Simulated / fallback</span>
+          <p className="num text-xl font-bold text-amber-700 dark:text-amber-400">{stats.simulated}</p>
         </div>
         <div className="p-3.5 rounded-2xl bg-rose-500/10 space-y-0.5">
-          <span className="text-2xs text-rose-600 dark:text-rose-400 font-medium uppercase tracking-wider">Failed Dispatches</span>
-          <p className="text-lg font-bold text-rose-600 dark:text-rose-400">{stats.failed}</p>
+          <span className="text-label text-rose-700 dark:text-rose-400">Failed dispatches</span>
+          <p className="num text-xl font-bold text-rose-700 dark:text-rose-400">{stats.failed}</p>
         </div>
       </div>
 
       {/* Search Bar & Filters Controls */}
-      <div className="space-y-3.5">
+      <div className="flex flex-col gap-3">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
             <Search className="size-4" />
@@ -205,7 +204,8 @@ export function NotificationLogsPanel({
             placeholder="Search by subject, recipient, card name, error reason, or message body..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 h-10 text-xs sm:text-sm font-medium bg-muted placeholder:text-muted-foreground rounded-xl"
+            aria-label="Search delivery logs"
+            className="pl-10 pr-12 h-12 sm:h-10 bg-muted placeholder:text-muted-foreground rounded-xl"
           />
           {isLoadingLogs ? (
             <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-muted-foreground">
@@ -215,8 +215,9 @@ export function NotificationLogsPanel({
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground cursor-pointer"
+              className="absolute inset-y-0 right-0 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer rounded-r-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
               title="Clear search"
+              aria-label="Clear search"
             >
               <X className="size-4" />
             </button>
@@ -224,26 +225,28 @@ export function NotificationLogsPanel({
         </div>
 
         {/* Channel & Status Filter Tabs Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Channel Tabs */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-muted">
+          <div role="group" aria-label="Filter by channel" className="flex max-w-full items-center gap-1 overflow-x-auto no-scrollbar p-1 rounded-xl bg-muted">
             <button
               type="button"
               onClick={() => setChannelFilter('all')}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors cursor-pointer ${
+              aria-pressed={channelFilter === 'all'}
+              className={`no-spring shrink-0 h-10 sm:h-8 text-sm font-medium px-3 rounded-lg transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 channelFilter === 'all'
-                  ? 'bg-card text-foreground shadow-xs font-bold'
+                  ? 'bg-card text-foreground font-semibold shadow-card'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              All Channels ({stats.total})
+              All channels ({stats.total})
             </button>
             <button
               type="button"
               onClick={() => setChannelFilter('email')}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+              aria-pressed={channelFilter === 'email'}
+              className={`no-spring shrink-0 h-10 sm:h-8 text-sm font-medium px-3 rounded-lg transition-colors duration-(--motion-fast) ease-(--ease-in-out) flex items-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 channelFilter === 'email'
-                  ? 'bg-card text-foreground shadow-xs font-bold'
+                  ? 'bg-card text-foreground font-semibold shadow-card'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -253,9 +256,10 @@ export function NotificationLogsPanel({
             <button
               type="button"
               onClick={() => setChannelFilter('sms')}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+              aria-pressed={channelFilter === 'sms'}
+              className={`no-spring shrink-0 h-10 sm:h-8 text-sm font-medium px-3 rounded-lg transition-colors duration-(--motion-fast) ease-(--ease-in-out) flex items-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 channelFilter === 'sms'
-                  ? 'bg-card text-foreground shadow-xs font-bold'
+                  ? 'bg-card text-foreground font-semibold shadow-card'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -265,8 +269,8 @@ export function NotificationLogsPanel({
           </div>
 
           {/* Status Tabs */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-2xs text-muted-foreground font-semibold mr-1">Status:</span>
+          <div role="group" aria-label="Filter by status" className="flex max-w-full items-center gap-1.5 overflow-x-auto no-scrollbar">
+            <span className="shrink-0 text-label text-muted-foreground mr-1">Status</span>
             {(['all', 'sent', 'simulated', 'failed'] as const).map((st) => {
               const countMap = {
                 all: stats.total,
@@ -279,14 +283,15 @@ export function NotificationLogsPanel({
                   key={st}
                   type="button"
                   onClick={() => setStatusFilter(st)}
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-xl transition-colors capitalize flex items-center gap-1 cursor-pointer ${
+                  aria-pressed={statusFilter === st}
+                  className={`no-spring shrink-0 h-10 sm:h-8 text-sm font-medium px-3 rounded-full transition-colors duration-(--motion-fast) ease-(--ease-in-out) capitalize flex items-center gap-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                     statusFilter === st
-                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <span>{st === 'all' ? 'All' : st}</span>
-                  <span className="text-2xs opacity-75 font-mono">({countMap[st]})</span>
+                  <span className="num text-xs opacity-75">({countMap[st]})</span>
                 </button>
               );
             })}
@@ -298,7 +303,7 @@ export function NotificationLogsPanel({
       {logs.length === 0 && !isLoadingLogs ? (
         <div className="p-12 rounded-2xl bg-muted text-center space-y-2">
           <Clock className="size-8 text-muted-foreground mx-auto opacity-50" />
-          <p className="text-sm font-bold text-foreground">No delivery logs found</p>
+          <p className="text-sm font-semibold text-foreground">No delivery logs found</p>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
             {searchQuery || channelFilter !== 'all' || statusFilter !== 'all'
               ? 'No notifications match your active search and filter criteria.'
@@ -306,7 +311,7 @@ export function NotificationLogsPanel({
           </p>
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="flex flex-col gap-2">
           {logs.map((log) => {
             const isExpanded = expandedLogId === log.id;
             const isEmail = log.channel === 'email';
@@ -314,50 +319,59 @@ export function NotificationLogsPanel({
             return (
               <div
                 key={log.id}
-                className="p-4 rounded-2xl bg-muted/50 hover:bg-muted/80 transition-colors space-y-3"
+                className="flex flex-col gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors duration-(--motion-fast) ease-(--ease-in-out)"
               >
                 <div
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none"
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                  className="flex flex-col @2xl/main:flex-row @2xl/main:items-center justify-between gap-3 cursor-pointer select-none rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-muted"
                   onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setExpandedLogId(isExpanded ? null : log.id);
+                    }
+                  }}
                 >
-                  <div className="flex items-start gap-3 min-w-0">
+                  <div className="flex flex-1 items-start gap-3 min-w-0">
                     <div
                       className={`size-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
                         isEmail
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                          : 'bg-blue-500/10 text-blue-700 dark:text-blue-400'
                       }`}
                     >
                       {isEmail ? <Mail className="size-4" /> : <Smartphone className="size-4" />}
                     </div>
 
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-foreground truncate">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
+                        <span className="min-w-0 max-w-full text-sm font-semibold text-foreground truncate">
                           {log.email_subject || (isEmail ? 'Card Due Alert Digest' : 'SMS Due Alert')}
                         </span>
                         <span
-                          className={`text-2xs font-bold px-2 py-0.5 rounded-full capitalize ${
+                          className={`shrink-0 text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize ${
                             log.status === 'sent'
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
                               : log.status === 'simulated'
-                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                              : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
                           }`}
                         >
                           {log.status}
                         </span>
                       </div>
 
-                      <p className="text-2xs text-muted-foreground truncate mt-0.5">
+                      <p className="text-xs text-muted-foreground truncate mt-1" title={log.recipient}>
                         To: <span className="font-medium text-foreground">{log.recipient}</span>
                         {log.card_names && ` • Cards: ${log.card_names}`}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3 text-2xs text-muted-foreground shrink-0 pl-11 sm:pl-0">
-                    <span>
+                  <div className="flex items-center justify-between @2xl/main:justify-end gap-3 text-xs text-muted-foreground shrink-0 pl-11 @2xl/main:pl-0">
+                    <span className="num whitespace-nowrap">
                       {formatDate(log.created_at)} at{' '}
                       {new Date(log.created_at).toLocaleTimeString([], {
                         hour: '2-digit',
@@ -370,14 +384,14 @@ export function NotificationLogsPanel({
 
                 {/* Expanded Details Pane */}
                 {isExpanded && (
-                  <div className="pt-2 space-y-3 text-xs animate-in fade-in duration-150">
+                  <div className="flex flex-col gap-3 text-xs">
                     {/* Error Box if Failed */}
                     {log.error_message && (
-                      <div className="p-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-start gap-2">
+                      <div className="p-3 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 flex items-start gap-2">
                         <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold text-2xs uppercase tracking-wider">Delivery Failure Reason:</p>
-                          <p className="text-2xs mt-0.5 font-mono">{log.error_message}</p>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-xs">Delivery failure reason</p>
+                          <p className="text-xs mt-0.5 font-mono break-words">{log.error_message}</p>
                         </div>
                       </div>
                     )}
@@ -385,18 +399,18 @@ export function NotificationLogsPanel({
                     {/* Message Body Preview */}
                     {log.message_body && (
                       <div className="p-3.5 rounded-xl bg-card space-y-1">
-                        <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground block">
-                          Message Body Dispatched:
+                        <span className="text-label text-muted-foreground block">
+                          Message body dispatched
                         </span>
-                        <p className="text-2xs font-mono whitespace-pre-wrap text-foreground/90 leading-relaxed">
+                        <p className="text-xs font-mono whitespace-pre-wrap break-words text-foreground/90 leading-relaxed">
                           {log.message_body}
                         </p>
                       </div>
                     )}
 
                     {/* Raw Metadata Details */}
-                    <div className="flex items-center gap-4 text-2xs text-muted-foreground flex-wrap">
-                      <span>Log ID: <code className="font-mono">{log.id}</code></span>
+                    <div className="flex items-center gap-x-4 gap-y-1 text-xs text-muted-foreground flex-wrap">
+                      <span className="min-w-0 break-all">Log ID: <code className="font-mono">{log.id}</code></span>
                       <span className="capitalize">Channel: {log.channel}</span>
                       <span>Dispatched: {new Date(log.created_at).toISOString()}</span>
                     </div>
@@ -416,7 +430,7 @@ export function NotificationLogsPanel({
             disabled={isLoadingMore}
             variant="outline"
             size="sm"
-            className="text-xs font-semibold cursor-pointer gap-2"
+            className="gap-2"
           >
             {isLoadingMore && <Loader2 className="size-3.5 animate-spin" />}
             {isLoadingMore ? 'Loading More Events...' : `Load More (${totalCount - logs.length} remaining)`}

@@ -474,10 +474,10 @@ export function TransactionModal({
 
   return (
     <ResponsiveDialog open={isOpen} onOpenChange={(open) => !open && handleModalClose()}>
-      <ResponsiveDialogContent className="max-w-xl sm:max-w-2xl max-h-[92vh] flex flex-col">
-        <ResponsiveDialogHeader>
+      <ResponsiveDialogContent className="max-w-xl sm:max-w-2xl max-h-[92dvh] flex flex-col">
+        <ResponsiveDialogHeader className="pr-10 sm:pr-12">
           <ResponsiveDialogTitle>
-            {parsedCardItems.length > 0 ? 'Review Parsed Transactions' : 'Record Transaction'}
+            {parsedCardItems.length > 0 ? 'Review parsed transactions' : 'Record transaction'}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
             {parsedCardItems.length > 0
@@ -512,21 +512,22 @@ export function TransactionModal({
                 variant="outline"
                 onClick={() => receiptCameraRef.current?.click()}
                 disabled={isScanningReceipt}
-                className="flex-1 py-2.5 px-3.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-60"
+                className="flex-1 py-2.5 px-3.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground text-xs font-bold flex items-center justify-center gap-2 transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer shadow-xs disabled:opacity-60"
               >
                 <Camera className="w-4 h-4 text-indigo-600 shrink-0" />
-                <span>Snap Receipt Photo</span>
+                <span>Snap receipt photo</span>
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => receiptFileRef.current?.click()}
                 disabled={isScanningReceipt}
-                className="py-2.5 px-3.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-60"
+                className="py-2.5 px-3.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground text-xs font-bold flex items-center justify-center gap-1.5 transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer shadow-xs disabled:opacity-60"
                 title="Upload receipt or statement image from files"
+                aria-label="Upload receipt image"
               >
                 <UploadCloud className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="hidden sm:inline">Upload Image</span>
+                <span className="hidden sm:inline">Upload image</span>
               </Button>
             </div>
 
@@ -618,7 +619,7 @@ export function TransactionModal({
                   return (
                     <div
                       key={item.id}
-                      className="p-4 sm:p-5 rounded-2xl bg-card shadow-xs space-y-3.5 transition-all"
+                      className="p-4 sm:p-5 rounded-2xl bg-card shadow-xs space-y-3.5"
                     >
                       {/* Card Top Row: Counter, Badge & Action Buttons */}
                       <div className="flex items-center justify-between gap-2">
@@ -683,9 +684,9 @@ export function TransactionModal({
                       )}
 
                       {/* Editable Inputs: Description & Amount */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 items-end gap-3">
                         <div className="sm:col-span-2">
-                          <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                          <label className="block text-label text-muted-foreground mb-1">
                             Description / Merchant <span className="text-rose-500">*</span>
                           </label>
                           <Input
@@ -698,7 +699,7 @@ export function TransactionModal({
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                          <label className="block text-label text-muted-foreground mb-1">
                             Amount (PHP) <span className="text-rose-500">*</span>
                           </label>
                           <Input
@@ -716,7 +717,7 @@ export function TransactionModal({
                       {/* Editable Inputs: Date & Category */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                          <label className="block text-label text-muted-foreground mb-1">
                             Date <span className="text-rose-500">*</span>
                           </label>
                           <Input
@@ -728,13 +729,13 @@ export function TransactionModal({
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                          <label className="block text-label text-muted-foreground mb-1">
                             Category
                           </label>
                           <select
                             value={item.categoryId}
                             onChange={(e) => handleUpdateCardItem(item.id, { categoryId: e.target.value })}
-                            className="h-10 w-full rounded-xl bg-muted/40 px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                            className="h-12 sm:h-10 w-full rounded-xl bg-muted/40 px-3 text-foreground text-sm outline-none transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             <option value="">-- Uncategorized Expense --</option>
                             {expenseCategories.map((cat) => (
@@ -749,7 +750,7 @@ export function TransactionModal({
                       {/* Editable Inputs: Payment Method & Credit Card */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                          <label className="block text-label text-muted-foreground mb-1">
                             Payment Method
                           </label>
                           <select
@@ -764,7 +765,7 @@ export function TransactionModal({
                                     : '',
                               });
                             }}
-                            className="h-10 w-full rounded-xl bg-muted/40 px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                            className="h-12 sm:h-10 w-full rounded-xl bg-muted/40 px-3 text-foreground text-sm outline-none transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             {PAYMENT_METHODS.map((pm) => (
                               <option key={pm.id} value={pm.id}>
@@ -776,7 +777,7 @@ export function TransactionModal({
 
                         {item.paymentMethod === 'credit_card' && (
                           <div>
-                            <label className="block text-[11px] font-semibold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider mb-1">
+                            <label className="block text-label text-indigo-900 dark:text-indigo-300 mb-1">
                               Credit Card <span className="text-rose-500">*</span>
                             </label>
                             {creditCards.length === 0 ? (
@@ -787,7 +788,7 @@ export function TransactionModal({
                               <select
                                 value={item.creditCardId}
                                 onChange={(e) => handleUpdateCardItem(item.id, { creditCardId: e.target.value })}
-                                className="h-10 w-full rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                                className="h-12 sm:h-10 w-full rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 px-3 text-foreground text-sm outline-none transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
                               >
                                 <option value="">-- Choose card --</option>
                                 {creditCards.map((card) => (
@@ -888,7 +889,7 @@ export function TransactionModal({
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Amount Input */}
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Amount (PHP)
                   </label>
                   <MoneyInput
@@ -903,7 +904,7 @@ export function TransactionModal({
 
                 {kind === 'transfer' ? (
                   <div className="space-y-4 p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 shadow-xs animate-in fade-in duration-150">
-                    <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200 text-xs font-bold uppercase tracking-wider">
+                    <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200 text-sm font-semibold">
                       <ArrowLeftRight className="w-4 h-4 text-blue-600 shrink-0" />
                       Inter-Account Vault Transfer
                     </div>
@@ -916,7 +917,7 @@ export function TransactionModal({
                           required
                           value={savingsId}
                           onChange={(e) => setSavingsId(e.target.value)}
-                          className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                          className="h-12 sm:h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <option value="">-- Choose source vault --</option>
                           {savingsAccounts.map((acc) => (
@@ -934,7 +935,7 @@ export function TransactionModal({
                           required
                           value={transferToSavingsId}
                           onChange={(e) => setTransferToSavingsId(e.target.value)}
-                          className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                          className="h-12 sm:h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <option value="">-- Choose destination vault --</option>
                           {savingsAccounts.map((acc) => (
@@ -953,7 +954,7 @@ export function TransactionModal({
                   <>
                     {/* Category Picker */}
                     <div>
-                      <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      <label className="block text-sm font-medium text-foreground mb-2">
                         Category
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-1">
@@ -963,7 +964,7 @@ export function TransactionModal({
                             type="button"
                             onClick={() => setCategoryId(cat.id)}
                             aria-pressed={categoryId === cat.id}
-                            className={`p-2.5 rounded-xl text-xs font-medium text-left truncate transition-all cursor-pointer ${
+                            className={`p-2.5 rounded-xl text-xs font-medium text-left truncate transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer ${
                               categoryId === cat.id
                                 ? 'bg-primary text-primary-foreground shadow-sm'
                                 : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
@@ -977,7 +978,7 @@ export function TransactionModal({
 
                     {/* Payment Method */}
                     <div>
-                      <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      <label className="block text-sm font-medium text-foreground mb-2">
                         Payment Method
                       </label>
                       <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
@@ -987,7 +988,7 @@ export function TransactionModal({
                             type="button"
                             onClick={() => setPaymentMethod(pm.id)}
                             aria-pressed={paymentMethod === pm.id}
-                            className={`py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-xs font-semibold transition-all cursor-pointer text-center truncate ${
+                            className={`py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-xs font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer text-center truncate ${
                               paymentMethod === pm.id
                                 ? 'bg-primary text-primary-foreground shadow-sm'
                                 : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
@@ -1014,7 +1015,7 @@ export function TransactionModal({
                           <select
                             value={creditCardId}
                             onChange={(e) => setCreditCardId(e.target.value)}
-                            className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                            className="h-12 sm:h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             <option value="">-- Choose card --</option>
                             {creditCards.map((card) => (
@@ -1037,7 +1038,7 @@ export function TransactionModal({
                         <select
                           value={savingsId}
                           onChange={(e) => setSavingsId(e.target.value)}
-                          className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                          className="h-12 sm:h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <option value="">-- None (General Cash Flow) --</option>
                           {savingsAccounts.map((acc) => (
@@ -1067,7 +1068,7 @@ export function TransactionModal({
                         <select
                           value={propertyId}
                           onChange={(e) => setPropertyId(e.target.value)}
-                          className="h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                          className="h-12 sm:h-10 w-full rounded-xl bg-card px-3 text-foreground text-sm outline-none transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <option value="">-- None (Personal / General) --</option>
                           {properties.map((p) => (
@@ -1089,7 +1090,7 @@ export function TransactionModal({
                 {/* Date & Note */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" /> Date
                     </label>
                     <Input
@@ -1102,7 +1103,7 @@ export function TransactionModal({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-1">
                       <FileText className="w-3.5 h-3.5" /> Note (Optional)
                     </label>
                     <Input

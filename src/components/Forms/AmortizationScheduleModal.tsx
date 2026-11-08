@@ -163,54 +163,54 @@ export function AmortizationScheduleModal({
         {/* Financial Highlights */}
         {scheduleData && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-3 shrink-0">
-            <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
+            <div className="p-3 rounded-xl bg-muted/50 text-xs flex flex-col gap-1 min-w-0">
+              <span className="text-label text-muted-foreground flex items-center gap-1.5">
                 <DollarSign className="w-3 h-3 text-primary" />
-                Remaining Balance
+                Remaining balance
               </span>
-              <span className="text-sm font-black text-foreground block">
+              <span className="num text-sm sm:text-base font-bold text-foreground block break-words">
                 {formatMoney(scheduleData.remainingUnpaidBalance)}
               </span>
-              <span className="text-[10px] text-muted-foreground block font-medium">
+              <span className="text-2xs text-muted-foreground block font-medium">
                 {scheduleData.unpaidCount} terms remaining
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                <Layers className="w-3 h-3 text-indigo-500" />
-                Terms Paid
+            <div className="p-3 rounded-xl bg-muted/50 text-xs flex flex-col gap-1 min-w-0">
+              <span className="text-label text-muted-foreground flex items-center gap-1.5">
+                <Layers className="w-3 h-3 text-primary" />
+                Terms paid
               </span>
-              <span className="text-sm font-black text-foreground block">
+              <span className="num text-sm sm:text-base font-bold text-foreground block break-words">
                 {scheduleData.paidCount} of {liability.term_months || scheduleData.schedule.length} paid
               </span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-semibold">
+              <span className="text-2xs text-success block font-semibold">
                 {formatMoney(scheduleData.paidPrincipal)} paid prin
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-amber-500" />
-                Monthly PMT
+            <div className="p-3 rounded-xl bg-muted/50 text-xs flex flex-col gap-1 min-w-0">
+              <span className="text-label text-muted-foreground flex items-center gap-1.5">
+                <Calendar className="w-3 h-3 text-warning-soft-foreground" />
+                Monthly payment
               </span>
-              <span className="text-sm font-black text-foreground block">
+              <span className="num text-sm sm:text-base font-bold text-foreground block break-words">
                 {formatMoney(scheduleData.monthlyPayment)}
               </span>
-              <span className="text-[10px] text-muted-foreground block font-medium">
-                Due Day {liability.due_day || 15}
+              <span className="text-2xs text-muted-foreground block font-medium">
+                Due day {liability.due_day || 15}
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-muted/60 text-xs space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                <TrendingDown className="w-3 h-3 text-emerald-500" />
-                Total Repayment
+            <div className="p-3 rounded-xl bg-muted/50 text-xs flex flex-col gap-1 min-w-0">
+              <span className="text-label text-muted-foreground flex items-center gap-1.5">
+                <TrendingDown className="w-3 h-3 text-success" />
+                Total repayment
               </span>
-              <span className="text-sm font-black text-foreground block">
+              <span className="num text-sm sm:text-base font-bold text-foreground block break-words">
                 {formatMoney(scheduleData.totalPayment)}
               </span>
-              <span className="text-[10px] text-amber-600 dark:text-amber-400 block font-medium">
+              <span className="text-2xs text-warning-soft-foreground block font-medium">
                 {formatMoney(scheduleData.totalInterest)} int
               </span>
             </div>
@@ -220,18 +220,18 @@ export function AmortizationScheduleModal({
         {/* Schedule Table */}
         {!scheduleData || scheduleData.schedule.length === 0 ? (
           <div className="py-12 text-center text-xs text-muted-foreground space-y-2">
-            <p className="font-semibold text-foreground">Term or Principal Information Incomplete</p>
+            <p className="font-semibold text-foreground">Term or principal information is incomplete</p>
             <p className="max-w-xs mx-auto">
               Please ensure this liability has both an original principal amount and term length (in months) to generate the amortization schedule.
             </p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto rounded-2xl border border-border/60 min-h-0">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-muted sticky top-0 z-10 border-b border-border/60">
-                <tr className="font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
+          <div className="flex-1 overflow-y-auto rounded-2xl min-h-0">
+            <table className="num w-full min-w-[36rem] text-left text-xs border-collapse">
+              <thead className="bg-muted sticky top-0 z-10">
+                <tr className="font-semibold text-muted-foreground text-2xs">
                   <th className="py-2.5 px-3">#</th>
-                  <th className="py-2.5 px-3">Due Date</th>
+                  <th className="py-2.5 px-3">Due date</th>
                   <th className="py-2.5 px-3 text-center">Status</th>
                   <th className="py-2.5 px-3 text-right">Payment</th>
                   <th className="py-2.5 px-3 text-right">Principal</th>
@@ -239,7 +239,7 @@ export function AmortizationScheduleModal({
                   <th className="py-2.5 px-3 text-right">Remaining</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/40 font-medium">
+              <tbody className="font-medium [&>tr:nth-child(even)]:bg-muted/30">
                 {scheduleData.schedule.map((row) => {
                   const isPast = row.dueDate < todayStr;
                   const isBusy = togglingNum === row.installmentNumber;
@@ -262,7 +262,7 @@ export function AmortizationScheduleModal({
                           type="button"
                           disabled={isBusy}
                           onClick={() => handleTogglePaid(row.installmentNumber, !row.isPaid)}
-                          className="inline-flex items-center gap-1 cursor-pointer transition-transform active:scale-95 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                           title="Click to toggle Paid / Unpaid"
                         >
                           {isBusy ? (
@@ -273,7 +273,7 @@ export function AmortizationScheduleModal({
                           ) : row.isPaid ? (
                             <Badge
                               variant="outline"
-                              className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 text-3xs font-bold py-0.5 px-2"
+                              className="bg-success-soft text-success hover:bg-success-soft text-3xs font-bold py-0.5 px-2"
                             >
                               <CheckCircle2 className="size-3 mr-1" />
                               Paid
@@ -281,7 +281,7 @@ export function AmortizationScheduleModal({
                           ) : isPast ? (
                             <Badge
                               variant="outline"
-                              className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 text-3xs font-bold py-0.5 px-2"
+                              className="bg-warning-soft text-warning-soft-foreground hover:bg-warning-soft text-3xs font-bold py-0.5 px-2"
                             >
                               <AlertCircle className="size-3 mr-1" />
                               Unpaid
@@ -289,7 +289,7 @@ export function AmortizationScheduleModal({
                           ) : (
                             <Badge
                               variant="outline"
-                              className="bg-muted text-muted-foreground border-border/60 hover:bg-muted/80 text-3xs font-medium py-0.5 px-2"
+                              className="bg-muted text-muted-foreground hover:bg-muted/80 text-3xs font-medium py-0.5 px-2"
                             >
                               <Clock className="size-3 mr-1" />
                               Upcoming
@@ -297,16 +297,16 @@ export function AmortizationScheduleModal({
                           )}
                         </button>
                       </td>
-                      <td className="py-2 px-3 text-right font-bold text-foreground">
+                      <td className="py-2 px-3 text-right whitespace-nowrap font-bold text-foreground">
                         {formatMoney(row.paymentAmount)}
                       </td>
-                      <td className="py-2 px-3 text-right text-emerald-600 dark:text-emerald-400 font-semibold">
+                      <td className="py-2 px-3 text-right whitespace-nowrap text-success font-semibold">
                         {formatMoney(row.principalAmount)}
                       </td>
-                      <td className="py-2 px-3 text-right text-amber-600 dark:text-amber-400 font-semibold">
+                      <td className="py-2 px-3 text-right whitespace-nowrap text-warning-soft-foreground font-semibold">
                         {formatMoney(row.interestAmount)}
                       </td>
-                      <td className="py-2 px-3 text-right text-foreground font-bold">
+                      <td className="py-2 px-3 text-right whitespace-nowrap text-foreground font-bold">
                         {formatMoney(row.remainingBalance)}
                       </td>
                     </tr>
@@ -317,9 +317,9 @@ export function AmortizationScheduleModal({
           </div>
         )}
 
-        <div className="flex items-center justify-end pt-3 mt-2 shrink-0 border-t border-border/40">
-          <Button variant="default" onClick={onClose} className="rounded-2xl font-bold px-6">
-            Close Schedule
+        <div className="flex items-center justify-end pt-3 mt-2 shrink-0">
+          <Button variant="default" onClick={onClose} className="px-6">
+            Close schedule
           </Button>
         </div>
       </ResponsiveDialogContent>

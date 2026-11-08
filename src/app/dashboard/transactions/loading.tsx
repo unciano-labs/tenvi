@@ -3,25 +3,31 @@ import { Skeleton, SkeletonTableRow } from '@/components/ui/skeleton';
 
 export default function TransactionsLoading() {
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
-      {/* Header Placeholder */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-60 rounded-2xl" />
-          <Skeleton className="h-4 w-44 rounded-lg" />
+    <div className="flex flex-col gap-6 sm:gap-8" aria-busy="true" aria-label="Loading transactions">
+      {/* Header placeholder (mirrors .page-header) */}
+      <div className="page-header">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-9 w-60 rounded-xl" />
+          <Skeleton className="h-4 w-full max-w-sm rounded-lg" />
         </div>
-        <Skeleton className="h-11 w-44 rounded-2xl shrink-0" />
+        <div className="page-header-actions w-full sm:w-auto">
+          <Skeleton className="h-12 sm:h-11 flex-1 sm:w-36 rounded-xl" />
+          <Skeleton className="h-12 sm:h-11 flex-1 sm:w-44 rounded-xl" />
+        </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Skeleton className="h-11 flex-1 rounded-2xl" />
-        <Skeleton className="h-11 w-32 rounded-2xl" />
-        <Skeleton className="h-11 w-36 rounded-2xl" />
+      {/* Filter toolbar */}
+      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 sm:p-5 shadow-card">
+        <div className="flex flex-wrap gap-3">
+          <Skeleton className="h-12 sm:h-10 w-full max-w-md rounded-2xl" />
+          <Skeleton className="h-12 sm:h-10 min-w-[min(100%,16rem)] flex-1 rounded-xl" />
+          <Skeleton className="h-12 sm:h-10 min-w-[min(100%,12rem)] flex-1 rounded-xl" />
+        </div>
+        <Skeleton className="h-4 w-40 rounded-lg" />
       </div>
 
-      {/* Transactions List */}
-      <div className="bg-card rounded-3xl p-6 sm:p-8 shadow-card overflow-hidden min-w-0 space-y-3">
+      {/* Transactions list */}
+      <div className="flex min-w-0 flex-col gap-3 rounded-2xl bg-card p-3 sm:p-5 shadow-card">
         <SkeletonTableRow />
         <SkeletonTableRow />
         <SkeletonTableRow />

@@ -147,67 +147,64 @@ export default function AdminMembersPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in-50 duration-200">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight text-foreground">
-              Members Directory
-            </h1>
-            <span className="px-2 py-0.5 text-2xs font-bold bg-primary/10 text-primary rounded-md">
-              {members.length} Loaded
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="text-display text-foreground">Members directory</h1>
+            <span className="num rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+              {members.length} loaded
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="mt-1 max-w-prose text-sm sm:text-base text-muted-foreground">
             Operational visibility and account access controls without exposing private ledger numbers.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="page-header-actions">
           <Button
             variant="outline"
             size="sm"
             onClick={() => fetchMembers()}
             disabled={loading}
-            className="gap-1.5 cursor-pointer"
+            aria-busy={loading}
+            className="gap-1.5"
           >
-            <RotateCcw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button
-            render={<Link href="/admin/broadcast" />}
-            size="sm"
-            className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs cursor-pointer"
-          >
-            <Megaphone className="size-3.5" />
-            Email Blast to All
+          <Button render={<Link href="/admin/broadcast" />} size="sm" className="gap-1.5">
+            <Megaphone className="size-4" />
+            Email blast to all
           </Button>
         </div>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <form onSubmit={handleSearchSubmit} className="flex-1 relative max-w-md">
-          <Search className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <form onSubmit={handleSearchSubmit} className="relative min-w-[min(100%,16rem)] max-w-md flex-1">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by email or name..."
-            className="pl-9 text-xs h-9 bg-card"
+            aria-label="Search members"
+            className="h-12 sm:h-10 pl-10 bg-card shadow-card"
           />
         </form>
 
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-lg bg-muted flex items-center gap-1 text-2xs font-semibold">
+          <div role="group" aria-label="Filter by status" className="p-1 rounded-xl bg-muted flex items-center gap-1 text-sm font-medium">
             {(['all', 'active', 'suspended'] as const).map((status) => (
               <button
                 key={status}
                 type="button"
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1 rounded-md capitalize transition-colors cursor-pointer ${
+                aria-pressed={statusFilter === status}
+                className={`no-spring h-10 sm:h-8 px-3.5 rounded-lg capitalize cursor-pointer outline-none transition-colors duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring ${
                   statusFilter === status
-                    ? 'bg-card text-foreground font-bold shadow-2xs'
+                    ? 'bg-card text-foreground font-semibold shadow-card'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -219,20 +216,20 @@ export default function AdminMembersPage() {
       </div>
 
       {/* Members Table */}
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-muted/40 text-muted-foreground font-semibold border-b border-border/50 select-none">
+      <div className="rounded-2xl bg-card shadow-card overflow-hidden">
+        <div className="relative overflow-x-auto overscroll-x-contain">
+          <table className="w-full min-w-[42rem] text-left text-sm">
+            <thead className="bg-muted/50 text-label text-muted-foreground select-none">
               <tr>
-                <th className="py-3 px-4">Member</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Joined Date</th>
-                <th className="py-3 px-4">Operational Volume</th>
-                <th className="py-3 px-4">Last Active</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th scope="col" className="sticky left-0 z-10 bg-muted py-3 px-3 font-medium">Member</th>
+                <th scope="col" className="py-3 px-3 font-medium">Status</th>
+                <th scope="col" className="py-3 px-3 font-medium whitespace-nowrap">Joined</th>
+                <th scope="col" className="py-3 px-3 font-medium whitespace-nowrap">Operational volume</th>
+                <th scope="col" className="py-3 px-3 font-medium whitespace-nowrap">Last active</th>
+                <th scope="col" className="py-3 px-3 text-right font-medium"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40">
+            <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-muted-foreground">
@@ -245,7 +242,7 @@ export default function AdminMembersPage() {
                   <td colSpan={6} className="py-12 text-center text-muted-foreground">
                     <Users className="size-8 opacity-40 mx-auto mb-2" />
                     <p className="font-semibold text-sm">No members found</p>
-                    <p className="text-3xs text-muted-foreground/80">
+                    <p className="text-xs text-muted-foreground/80">
                       Try adjusting your search query or filter.
                     </p>
                   </td>
@@ -257,23 +254,30 @@ export default function AdminMembersPage() {
                   return (
                     <tr
                       key={m.user_id}
-                      className="hover:bg-muted/30 transition-colors cursor-pointer group"
+                      tabIndex={0}
+                      className="group cursor-pointer outline-none transition-colors duration-(--motion-fast) ease-(--ease-in-out) even:bg-muted/25 hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                       onClick={() => {
                         setSelectedMember(m);
                         setDrawerOpen(true);
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.target === e.currentTarget) {
+                          setSelectedMember(m);
+                          setDrawerOpen(true);
+                        }
+                      }}
                     >
                       {/* Identity */}
-                      <td className="py-3 px-4">
+                      <td className="sticky left-0 z-10 bg-card group-even:bg-[color-mix(in_oklab,var(--card),var(--muted)_25%)] group-hover:bg-[color-mix(in_oklab,var(--card),var(--muted)_50%)] py-3 px-3 transition-colors duration-(--motion-fast) ease-(--ease-in-out)">
                         <div className="flex items-center gap-3">
                           <div className="size-8 rounded-full bg-lightprimary text-primary flex items-center justify-center font-bold text-xs shrink-0">
                             {initial}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-bold text-foreground truncate max-w-[200px]">
+                            <p className="font-semibold text-foreground truncate max-w-[12rem]" title={m.full_name || 'Member'}>
                               {m.full_name || 'Member'}
                             </p>
-                            <p className="text-3xs text-muted-foreground truncate max-w-[200px]">
+                            <p className="text-xs text-muted-foreground truncate max-w-[12rem]" title={m.email}>
                               {m.email}
                             </p>
                           </div>
@@ -281,28 +285,28 @@ export default function AdminMembersPage() {
                       </td>
 
                       {/* Status */}
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         {m.is_banned ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-extrabold bg-destructive/15 text-destructive">
-                            <Ban className="size-2.5" />
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-semibold bg-destructive/10 text-danger-soft-foreground">
+                            <Ban className="size-3" />
                             Suspended
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                            <CheckCircle2 className="size-2.5" />
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-semibold bg-success-soft text-success-soft-foreground">
+                            <CheckCircle2 className="size-3" />
                             Active
                           </span>
                         )}
                       </td>
 
                       {/* Joined */}
-                      <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                      <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">
                         {formatDate(m.created_at)}
                       </td>
 
                       {/* Operational Volume (No Financial Balances!) */}
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2 text-3xs font-semibold">
+                      <td className="py-3 px-3">
+                        <div className="num flex items-center gap-1.5 text-xs font-semibold">
                           <span
                             title="Logged Transactions"
                             className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted text-muted-foreground"
@@ -328,35 +332,35 @@ export default function AdminMembersPage() {
                       </td>
 
                       {/* Last Active */}
-                      <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                      <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">
                         {m.last_activity_at ? (
-                          <span className="flex items-center gap-1 text-2xs">
+                          <span className="flex items-center gap-1 text-xs">
                             <Clock className="size-3" />
                             {formatDate(m.last_activity_at)}
                           </span>
                         ) : (
-                          <span className="text-3xs text-muted-foreground/60">No activity yet</span>
+                          <span className="text-xs text-muted-foreground">No activity yet</span>
                         )}
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                      <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             render={
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="size-8 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
-                                aria-label="Member options"
+                                className="size-10 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
+                                aria-label={`Options for ${m.full_name || m.email}`}
                               />
                             }
                           >
                             <MoreVertical className="size-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 text-xs p-1.5">
-                            <DropdownMenuLabel className="text-3xs font-bold text-muted-foreground uppercase">
-                              Member Actions
+                            <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+                              Member actions
                             </DropdownMenuLabel>
                             <DropdownMenuItem
                               className="cursor-pointer"
@@ -366,7 +370,7 @@ export default function AdminMembersPage() {
                               }}
                             >
                               <Eye className="size-3.5 mr-2" />
-                              View Audit Trail
+                              View audit trail
                             </DropdownMenuItem>
 
                             <DropdownMenuItem
@@ -374,18 +378,18 @@ export default function AdminMembersPage() {
                               onClick={() => handleResetPassword(m.email)}
                             >
                               <KeyRound className="size-3.5 mr-2" />
-                              Send Password Reset
+                              Send password reset
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
 
                             {m.is_banned ? (
                               <DropdownMenuItem
-                                className="cursor-pointer text-emerald-600 dark:text-emerald-400 font-semibold"
+                                className="cursor-pointer text-emerald-700 dark:text-emerald-400 font-semibold"
                                 onClick={() => handleUnsuspend(m)}
                               >
                                 <ShieldCheck className="size-3.5 mr-2" />
-                                Unsuspend Account
+                                Unsuspend account
                               </DropdownMenuItem>
                             ) : (
                               <DropdownMenuItem
@@ -396,18 +400,18 @@ export default function AdminMembersPage() {
                                 }}
                               >
                                 <Ban className="size-3.5 mr-2" />
-                                Suspend Account
+                                Suspend account
                               </DropdownMenuItem>
                             )}
 
                             <DropdownMenuSeparator />
 
                             <DropdownMenuItem
-                              className="cursor-pointer text-destructive text-3xs"
+                              className="cursor-pointer text-destructive"
                               onClick={() => handleDeleteMember(m)}
                             >
                               <UserX className="size-3.5 mr-2" />
-                              Revoke Tenvi Access
+                              Revoke Tenvi access
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -433,21 +437,22 @@ export default function AdminMembersPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-2 text-destructive">
-              <ShieldAlert className="size-5" />
-              <DialogTitle className="text-base font-bold">Suspend Member Access</DialogTitle>
+              <ShieldAlert className="size-5 shrink-0" />
+              <DialogTitle className="text-title">Suspend member access</DialogTitle>
             </div>
-            <DialogDescription className="text-xs">
+            <DialogDescription className="text-sm break-words">
               Temporarily or indefinitely block <strong>{selectedMember?.email}</strong> from logging into Tenvi.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">Duration</label>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="suspend-duration" className="text-label text-foreground">Duration</label>
               <select
+                id="suspend-duration"
                 value={suspendDurationHours}
                 onChange={(e) => setSuspendDurationHours(Number(e.target.value))}
-                className="w-full text-xs p-2 rounded-lg bg-muted border border-border/60 outline-none"
+                className="h-12 w-full rounded-xl bg-muted px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value={24}>24 Hours (1 Day)</option>
                 <option value={168}>7 Days (1 Week)</option>
@@ -456,13 +461,13 @@ export default function AdminMembersPage() {
               </select>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">Reason (Recorded in Audit Logs)</label>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="suspend-reason" className="text-label text-foreground">Reason (recorded in audit logs)</label>
               <Input
+                id="suspend-reason"
                 value={suspendReason}
                 onChange={(e) => setSuspendReason(e.target.value)}
                 placeholder="e.g. Abusive automated scraping, spam"
-                className="text-xs"
               />
             </div>
           </div>
@@ -481,9 +486,11 @@ export default function AdminMembersPage() {
               size="sm"
               onClick={handleSuspend}
               disabled={isPending}
+              aria-busy={isPending}
+              className="gap-1.5"
             >
-              {isPending ? <Loader2 className="size-3.5 animate-spin mr-1.5" /> : null}
-              Confirm Suspension
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              Confirm suspension
             </Button>
           </DialogFooter>
         </DialogContent>

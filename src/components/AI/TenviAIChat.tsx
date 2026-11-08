@@ -870,7 +870,7 @@ export function TenviAIChat({
     <>
       {/* Floating Trigger Button (Tenvi AI FAB) */}
       <div
-        className={`fixed z-40 transition-all duration-300 ease-out origin-bottom-right top-auto bottom-24 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] right-4 md:bottom-6 md:right-6 ${
+        className={`fixed z-40 transition-[opacity,transform] duration-(--motion-base) ease-(--ease-spring-pop) origin-bottom-right top-auto bottom-24 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] right-4 lg:bottom-6 lg:right-6 ${
           isOpen
             ? 'opacity-0 scale-75 pointer-events-none'
             : isScrolledDown

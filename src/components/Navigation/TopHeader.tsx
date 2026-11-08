@@ -63,11 +63,11 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
 
   return (
     <TooltipProvider delay={150}>
-      <header className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-md border-b border-border/50 px-4 sm:px-6 py-3 flex items-center justify-between transition-colors">
+      <header className="sticky top-0 z-30 w-full bg-background/85 backdrop-blur-md px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
         {/* Left: Mobile hamburger & Desktop sidebar collapse & Brand / Search */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
           {/* Mobile Menu Trigger */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger
                 render={
@@ -93,7 +93,7 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
                     </SheetTitle>
                   </SheetHeader>
 
-                  <nav className="p-3 space-y-1">
+                  <nav className="p-3 flex flex-col gap-0.5" aria-label="Main navigation">
                     {MAIN_NAV_ITEMS.map((item) => {
                       const Icon = item.icon;
                       const active =
@@ -104,10 +104,10 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
                           aria-current={active ? 'page' : undefined}
-                          className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                          className={`flex min-h-12 items-center gap-3 px-3.5 rounded-xl text-sm transition-colors duration-(--motion-fast) ease-(--ease-in-out) outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                             active
-                              ? 'bg-lightprimary text-primary font-bold'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                              ? 'bg-lightprimary text-primary font-semibold'
+                              : 'font-medium text-muted-foreground hover:text-foreground hover:bg-muted'
                           }`}
                         >
                           <Icon className="size-4" />
@@ -119,7 +119,7 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
                 </div>
 
                 <div className="p-4 space-y-3 bg-muted/40">
-                  <div className="p-3 rounded-lg bg-card border border-border/40 shadow-xs">
+                  <div className="p-3 rounded-xl bg-card shadow-card">
                     <div className="flex items-center justify-between gap-2.5">
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <div className="size-8 rounded-full bg-lightprimary text-primary flex items-center justify-center font-bold text-xs shrink-0">
@@ -139,10 +139,10 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
                       type="submit"
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start gap-2 h-9 rounded-lg text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                      className="w-full justify-start gap-2 h-11 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                     >
                       <LogOut className="size-4" />
-                      Log Out
+                      Log out
                     </Button>
                   </form>
                 </div>
@@ -151,12 +151,12 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
           </div>
 
           {/* Desktop Sidebar Collapse / Expand Trigger */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden lg:flex items-center">
             <SidebarTrigger className="size-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors" />
           </div>
 
           {/* Mobile Logo Brand */}
-          <Link href="/dashboard" className="flex md:hidden items-center gap-2">
+          <Link href="/dashboard" className="flex lg:hidden items-center gap-2 shrink-0">
             <TenviIcon className="size-7 rounded-lg shrink-0 shadow-xs" />
             <span className="text-base font-extrabold tracking-tight text-foreground">Tenvi</span>
           </Link>
@@ -166,23 +166,23 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
             variant="ghost"
             size="icon"
             onClick={() => setSearchOpen(true)}
-            className="flex md:hidden size-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+            className="flex lg:hidden size-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
             aria-label="Open search dialog"
           >
             <Search className="size-4" />
           </Button>
 
           {/* Desktop Search Trigger / Functional Search Button */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden lg:flex min-w-0 flex-1 max-w-md items-center">
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-medium cursor-pointer transition-all border border-border/50 shadow-xs outline-none"
+              className="no-spring flex w-full min-w-0 h-10 items-center gap-2.5 px-3.5 rounded-xl bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground text-sm cursor-pointer transition-colors duration-(--motion-fast) ease-(--ease-in-out) outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Search records (⌘K)"
             >
-              <Search className="size-3.5 text-muted-foreground" />
-              <span className="truncate max-w-[200px] lg:max-w-xs">Search transactions, cards, accounts, properties...</span>
-              <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-3xs font-mono font-medium text-muted-foreground bg-background rounded border border-border">
+              <Search className="size-4 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 truncate text-left">Search transactions, cards, accounts, properties…</span>
+              <kbd className="hidden xl:inline-flex shrink-0 items-center px-1.5 py-0.5 text-3xs font-mono font-medium text-muted-foreground bg-background rounded">
                 ⌘K
               </kbd>
             </button>
@@ -190,16 +190,17 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
         </div>
 
         {/* Right side controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {/* Quick-Switch to Admin Panel for Administrators */}
           {userRole === 'admin' && (
             <Link
               href="/admin"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-2xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition-colors shadow-xs"
+              className="inline-flex h-9 items-center gap-1.5 px-2.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 transition-colors"
               title="Switch to Admin Control Plane"
+              aria-label="Admin panel"
             >
               <ShieldAlert className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span className="hidden sm:inline">Admin Panel</span>
+              <span className="hidden xl:inline">Admin panel</span>
             </Link>
           )}
 
@@ -228,7 +229,7 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
           <Tooltip>
             <TooltipTrigger
               render={
-                <div className="flex items-center justify-center size-8 sm:size-9 rounded-lg hover:bg-muted transition-colors cursor-pointer" />
+                <div className="hidden sm:flex items-center justify-center size-9 rounded-lg hover:bg-muted transition-colors cursor-pointer" />
               }
             >
               <ThemeQuickToggle />
@@ -247,7 +248,7 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
               render={
                 <button
                   type="button"
-                  className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-lg hover:bg-muted/80 transition-colors cursor-pointer outline-none border border-border/40"
+                  className="no-spring flex h-10 items-center gap-2 pl-1 pr-2 rounded-xl hover:bg-muted/80 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="User account menu"
                 />
               }
@@ -255,8 +256,8 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
               <div className="size-7 rounded-full bg-lightprimary text-primary font-bold text-xs flex items-center justify-center shrink-0">
                 {initial}
               </div>
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-bold text-foreground leading-tight max-w-[100px] truncate">
+              <div className="hidden xl:flex min-w-0 flex-col text-left">
+                <span className="text-xs font-semibold text-foreground leading-tight max-w-[120px] truncate">
                   {userName || 'Account'}
                 </span>
                 <span className={`text-3xs leading-none ${userRole === 'admin' ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-muted-foreground'}`}>
@@ -266,7 +267,7 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
               <ChevronDown className="size-3 text-muted-foreground ml-0.5" />
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl shadow-lift border border-border/60">
+            <DropdownMenuContent align="end" className="w-60 p-1.5 rounded-xl shadow-lift">
               <DropdownMenuLabel className="px-2 py-1.5">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-bold text-foreground truncate">{userName}</p>
@@ -342,7 +343,7 @@ export function TopHeader({ userName, userEmail, userRole = 'member' }: TopHeade
                   className="w-full flex items-center px-2 py-1.5 rounded-lg text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 >
                   <LogOut className="size-3.5 mr-2" />
-                  <span>Log Out</span>
+                  <span>Log out</span>
                 </button>
               </form>
             </DropdownMenuContent>

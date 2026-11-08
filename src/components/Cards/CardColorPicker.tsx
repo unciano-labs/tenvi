@@ -36,7 +36,7 @@ export function CardColorPicker({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <label className="text-label text-muted-foreground">
           {label}
         </label>
         <span className="text-3xs text-muted-foreground font-medium">Scroll for more &rarr;</span>

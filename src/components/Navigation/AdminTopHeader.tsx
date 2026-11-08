@@ -21,10 +21,10 @@ export function AdminTopHeader({ userEmail }: AdminTopHeaderProps) {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-md border-b border-border/50 px-4 sm:px-6 py-3 flex items-center justify-between transition-colors">
+    <header className="sticky top-0 z-30 w-full bg-background/85 backdrop-blur-md px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
       {/* Left: Mobile Trigger & Brand */}
       <div className="flex items-center gap-3">
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger
               render={
@@ -82,7 +82,7 @@ export function AdminTopHeader({ userEmail }: AdminTopHeaderProps) {
                 </nav>
               </div>
 
-              <div className="p-4 space-y-3 bg-muted/40 border-t border-border/40">
+              <div className="p-4 space-y-3 bg-muted/40">
                 <Link
                   href="/dashboard"
                   onClick={() => setMobileOpen(false)}
@@ -117,14 +117,14 @@ export function AdminTopHeader({ userEmail }: AdminTopHeaderProps) {
         </div>
 
         {/* Mobile Header Title */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex lg:hidden items-center gap-2">
           <TenviIcon className="size-7 rounded-lg shrink-0 shadow-xs" />
           <span className="text-base font-extrabold text-foreground">Tenvi Admin</span>
         </div>
 
         {/* Desktop Breadcrumb Badge */}
-        <div className="hidden md:flex items-center gap-2">
-          <span className="px-2 py-0.5 text-2xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-md flex items-center gap-1.5">
+        <div className="hidden lg:flex items-center gap-2">
+          <span className="px-2 py-0.5 text-2xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md flex items-center gap-1.5">
             <ShieldAlert className="size-3" />
             Control Plane
           </span>
@@ -143,7 +143,7 @@ export function AdminTopHeader({ userEmail }: AdminTopHeaderProps) {
         {/* Switch back to Personal Vault */}
         <Link
           href="/dashboard"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-primary hover:bg-lightprimary border border-primary/20 transition-colors shadow-2xs"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-primary hover:bg-lightprimary transition-colors shadow-2xs"
         >
           <ArrowLeft className="size-3.5" />
           <span className="hidden sm:inline">Personal Vault</span>

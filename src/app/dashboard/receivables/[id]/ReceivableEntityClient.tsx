@@ -526,20 +526,20 @@ export function ReceivableEntityClient({
   };
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* 1. Header & Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
+      <div className="page-header">
+        <div className="flex flex-col gap-2">
           <Link
             href="/dashboard/receivables"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group"
+            className="inline-flex min-h-10 w-fit items-center gap-1.5 rounded-lg text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors duration-(--motion-fast) cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            <span>Back to Receivables</span>
+            <ArrowLeft className="w-4 h-4 transition-transform duration-(--motion-fast) group-hover:-translate-x-0.5" />
+            <span>Back to receivables</span>
           </Link>
 
-          <div className="flex items-center gap-3 pt-1">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-extrabold text-lg shrink-0">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-extrabold text-lg shrink-0">
               {isProperty && matchedProperty ? (
                 <span className="text-xl">{getPropertyIcon(matchedProperty.property_type)}</span>
               ) : (
@@ -547,33 +547,33 @@ export function ReceivableEntityClient({
               )}
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                <h1 className="text-display text-foreground min-w-0">
                   {entityName}
                 </h1>
                 {isProperty && matchedProperty && (
                   <Badge variant="secondary" className="gap-1 text-xs">
-                    {getPropertyIcon(matchedProperty.property_type)} Asset / Property Entity
+                    {getPropertyIcon(matchedProperty.property_type)} Asset or property
                   </Badge>
                 )}
                 <span
-                  className={`text-xs font-bold px-3 py-1 rounded-full ${
+                  className={`num text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap ${
                     stats.totalOwed <= 0
-                      ? 'bg-emerald-500/10 text-emerald-500'
-                      : 'bg-indigo-500/10 text-indigo-500'
+                      ? 'bg-success-soft text-success'
+                      : 'bg-primary/10 text-primary'
                   }`}
                 >
-                  {stats.totalOwed <= 0 ? 'Fully Settled' : `${formatMoney(stats.totalOwed)} Owed`}
+                  {stats.totalOwed <= 0 ? 'Fully settled' : `${formatMoney(stats.totalOwed)} owed`}
                 </span>
               </div>
 
               {/* Contact meta */}
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
+              <div className="flex items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mt-1.5 flex-wrap min-w-0">
                 {entityPhone && (
                   <a
                     href={`tel:${entityPhone}`}
-                    className="flex items-center gap-1 hover:text-foreground transition-colors"
+                    className="flex min-w-0 items-center gap-1 break-all hover:text-foreground transition-colors"
                   >
                     <Phone className="w-3 h-3 text-muted-foreground" />
                     <span>{entityPhone}</span>
@@ -582,7 +582,7 @@ export function ReceivableEntityClient({
                 {entityEmail && (
                   <a
                     href={`mailto:${entityEmail}`}
-                    className="flex items-center gap-1 hover:text-foreground transition-colors"
+                    className="flex min-w-0 items-center gap-1 break-all hover:text-foreground transition-colors"
                   >
                     <Mail className="w-3 h-3 text-muted-foreground" />
                     <span>{entityEmail}</span>
@@ -599,12 +599,11 @@ export function ReceivableEntityClient({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 flex-wrap self-start sm:self-center">
+        <div className="page-header-actions">
           {stats.totalOwed > 0 && (entityPhone || entityEmail) && (
             <Button
               type="button"
-              variant="secondary"
-              size="sm"
+              variant="soft"
               onClick={() => {
                 setReminderTarget({
                   amount: stats.totalOwed,
@@ -616,37 +615,36 @@ export function ReceivableEntityClient({
               }}
               className="gap-1.5 font-semibold"
             >
-              <Send className="w-3.5 h-3.5 text-blue-500" />
-              <span>Send Reminder</span>
+              <Send className="w-3.5 h-3.5 text-primary" />
+              <span>Send reminder</span>
             </Button>
           )}
 
           <Button
             type="button"
             variant="default"
-            size="sm"
             onClick={() => setIsLoanModalOpen(true)}
-            className="gap-1.5 font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Add Advance</span>
+            <span>Add advance</span>
           </Button>
         </div>
       </div>
 
       {/* 2. Key Metrics Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid-fluid gap-3 sm:gap-4 [--grid-min:11rem]">
         {/* Total Owed */}
-        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Outstanding Balance
+        <div className="@container bg-card text-card-foreground rounded-2xl p-5 shadow-card flex flex-col gap-2 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-label text-muted-foreground min-w-0">
+              Outstanding balance
             </span>
-            <div className="w-7 h-7 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+            <div className="size-8 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
               <HandCoins className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground whitespace-nowrap">
             {formatMoney(stats.totalOwed)}
           </div>
           <div className="text-xs text-muted-foreground">
@@ -655,53 +653,53 @@ export function ReceivableEntityClient({
         </div>
 
         {/* Total Originated */}
-        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Total Originated
+        <div className="@container bg-card text-card-foreground rounded-2xl p-5 shadow-card flex flex-col gap-2 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-label text-muted-foreground min-w-0">
+              Total originated
             </span>
-            <div className="w-7 h-7 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+            <div className="size-8 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground whitespace-nowrap">
             {formatMoney(stats.totalOriginated)}
           </div>
           <div className="text-xs text-muted-foreground">Across {stats.totalCount} records</div>
         </div>
 
         {/* Total Repaid / Settled */}
-        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Total Repaid
+        <div className="@container bg-card text-card-foreground rounded-2xl p-5 shadow-card flex flex-col gap-2 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-label text-muted-foreground min-w-0">
+              Total repaid
             </span>
-            <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+            <div className="size-8 shrink-0 rounded-xl bg-success-soft text-success flex items-center justify-center">
               <CheckCircle2 className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground whitespace-nowrap">
             {formatMoney(stats.totalPaid)}
           </div>
           <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
             <div
-              className="bg-emerald-500 h-full rounded-full transition-all duration-300"
+              className="bg-success h-full rounded-full transition-colors duration-(--motion-fast)"
               style={{ width: `${stats.percentPaid}%` }}
             />
           </div>
         </div>
 
         {/* Repayment Health */}
-        <div className="bg-card text-card-foreground rounded-3xl p-5 shadow-card space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Repayment Progress
+        <div className="@container bg-card text-card-foreground rounded-2xl p-5 shadow-card flex flex-col gap-2 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-label text-muted-foreground min-w-0">
+              Repayment progress
             </span>
-            <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+            <div className="size-8 shrink-0 rounded-xl bg-warning-soft text-warning-soft-foreground flex items-center justify-center">
               <Percent className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground whitespace-nowrap">
             {stats.percentPaid}%
           </div>
           <div className="text-xs text-muted-foreground">
@@ -711,23 +709,24 @@ export function ReceivableEntityClient({
       </div>
 
       {/* 3. Controls: Filters & Search */}
-      <div className="bg-card text-card-foreground rounded-3xl p-4 sm:p-5 shadow-card space-y-3">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="bg-card text-card-foreground rounded-2xl p-3 sm:p-4 shadow-card flex flex-col gap-3 min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar max-w-full shrink-0">
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-xl overflow-x-auto no-scrollbar max-w-full min-w-0">
             {[
-              { key: 'all', label: `All Records (${unifiedItems.length})` },
+              { key: 'all', label: `All records (${unifiedItems.length})` },
               { key: 'outstanding', label: `Outstanding (${stats.activeCount})` },
               { key: 'settled', label: `Settled (${stats.settledCount})` },
-              { key: 'loans', label: `Advances & Loans (${loans.length})` },
-              { key: 'splits', label: `Bill Splits (${splitParticipants.length})` },
+              { key: 'loans', label: `Advances and loans (${loans.length})` },
+              { key: 'splits', label: `Bill splits (${splitParticipants.length})` },
             ].map((f) => (
               <button
                 key={f.key}
                 onClick={() => setFilterStatus(f.key as FilterStatus)}
-                className={`py-2 px-3.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                aria-pressed={filterStatus === f.key}
+                className={`no-spring shrink-0 min-h-10 py-2 px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-(--motion-fast) whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   filterStatus === f.key
-                    ? 'bg-card text-foreground shadow-xs'
+                    ? 'bg-card text-foreground shadow-card'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -737,19 +736,20 @@ export function ReceivableEntityClient({
           </div>
 
           {/* Search Box */}
-          <div className="relative w-full md:w-64">
+          <div className="relative flex-1 basis-56 min-w-0 sm:max-w-xs">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
             <Input
               type="text"
               placeholder="Search items or amounts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-8 text-xs h-10 min-h-0 bg-muted rounded-xl"
+              className="pl-9 pr-10 h-12 sm:h-10 text-base sm:text-sm bg-muted rounded-xl"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer z-10"
+                aria-label="Clear search"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 size-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-card cursor-pointer z-10"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -758,9 +758,9 @@ export function ReceivableEntityClient({
         </div>
 
         {/* Master Selection Toolbar */}
-        <div className="pt-2 flex items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 cursor-pointer font-semibold text-foreground select-none">
+            <label className="flex min-h-10 items-center gap-2 cursor-pointer font-medium text-foreground select-none">
               <input
                 type="checkbox"
                 checked={isAllSelected}
@@ -768,7 +768,7 @@ export function ReceivableEntityClient({
                 className="w-4 h-4 rounded-md accent-primary cursor-pointer"
               />
               <span>
-                Select All ({filteredItems.length} item{filteredItems.length === 1 ? '' : 's'})
+                Select all ({filteredItems.length} item{filteredItems.length === 1 ? '' : 's'})
               </span>
             </label>
           </div>
@@ -778,7 +778,7 @@ export function ReceivableEntityClient({
               <span>{selectedKeys.size} selected</span>
               <button
                 onClick={() => setSelectedKeys(new Set())}
-                className="text-primary hover:underline font-bold cursor-pointer"
+                className="min-h-10 px-2 rounded-lg text-primary hover:underline font-semibold cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Clear
               </button>
@@ -790,12 +790,12 @@ export function ReceivableEntityClient({
       {/* 4. Unified Records & Items List */}
       <div className="space-y-3">
         {filteredItems.length === 0 ? (
-          <div className="bg-card text-card-foreground rounded-3xl p-12 text-center space-y-3 shadow-card">
-            <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
+          <div className="bg-card text-card-foreground rounded-2xl px-6 py-12 text-center flex flex-col items-center gap-3 shadow-card">
+            <div className="size-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center">
               <HandCoins className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-bold text-foreground">No records found</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            <h3 className="text-title text-foreground">No records found</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
               {searchQuery
                 ? 'No items match your search. Try clearing the search query.'
                 : 'No records exist under this filter.'}
@@ -816,7 +816,7 @@ export function ReceivableEntityClient({
             return (
               <div
                 key={item.key}
-                className={`bg-card text-card-foreground rounded-3xl p-4 sm:p-5 shadow-card transition-all space-y-3 ${
+                className={`bg-card text-card-foreground rounded-2xl p-4 sm:p-5 shadow-card transition-colors duration-(--motion-fast) flex flex-col gap-3 min-w-0 ${
                   isSelected ? 'ring-2 ring-primary/40' : ''
                 }`}
               >
@@ -834,8 +834,8 @@ export function ReceivableEntityClient({
                     <div
                       className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 ${
                         item.kind === 'loan'
-                          ? 'bg-indigo-500/10 text-indigo-500'
-                          : 'bg-amber-500/10 text-amber-500'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-warning-soft text-warning-soft-foreground'
                       }`}
                     >
                       {item.kind === 'loan' ? (
@@ -847,24 +847,24 @@ export function ReceivableEntityClient({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-extrabold text-sm sm:text-base text-foreground">
+                        <span className="font-semibold text-sm sm:text-base text-foreground break-words min-w-0">
                           {item.title}
                         </span>
                         <span
-                          className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                             item.kind === 'loan'
-                              ? 'bg-indigo-500/10 text-indigo-500'
-                              : 'bg-amber-500/10 text-amber-500'
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-warning-soft text-warning-soft-foreground'
                           }`}
                         >
                           {item.kind === 'loan' ? 'Advance' : 'Split Share'}
                         </span>
                         <span
-                          className={`text-xs font-extrabold px-2 py-0.5 rounded-md ${
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
                             item.isPaid
-                              ? 'bg-emerald-500/10 text-emerald-500'
+                              ? 'bg-success-soft text-success'
                               : item.isOverdue
-                              ? 'bg-rose-500/10 text-rose-500'
+                              ? 'bg-danger-soft text-danger'
                               : 'bg-muted text-foreground'
                           }`}
                         >
@@ -873,7 +873,7 @@ export function ReceivableEntityClient({
                       </div>
 
                       {/* Meta dates and cards */}
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
+                      <div className="flex items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1 flex-wrap min-w-0">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3 text-muted-foreground" />
                           <span>Lent {formatDate(item.occurredOn)}</span>
@@ -883,7 +883,7 @@ export function ReceivableEntityClient({
                           <span
                             className={
                               item.isOverdue && !item.isPaid
-                                ? 'text-rose-500 font-bold'
+                                ? 'text-danger font-bold'
                                 : 'text-muted-foreground'
                             }
                           >
@@ -907,8 +907,8 @@ export function ReceivableEntityClient({
                   {/* Right: Amounts & Quick Actions */}
                   <div className="flex flex-col items-end gap-1 shrink-0 text-right">
                     <span
-                      className={`font-black text-base sm:text-lg ${
-                        item.isPaid ? 'text-emerald-500' : 'text-foreground'
+                      className={`num font-bold text-base sm:text-lg whitespace-nowrap ${
+                        item.isPaid ? 'text-success' : 'text-foreground'
                       }`}
                     >
                       {item.isPaid ? formatMoney(item.amount) : formatMoney(item.balanceRemaining)}
@@ -926,7 +926,7 @@ export function ReceivableEntityClient({
                         <button
                           type="button"
                           onClick={() => handleQuickSettleItem(item)}
-                          className="p-1.5 rounded-xl text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                          className="size-9 inline-flex items-center justify-center rounded-lg text-success hover:bg-success-soft transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           title="Settle this item"
                         >
                           <CheckCircle2 className="w-4 h-4" />
@@ -936,7 +936,7 @@ export function ReceivableEntityClient({
                       <button
                         type="button"
                         onClick={() => handleQuickTransferItem(item)}
-                        className="p-1.5 rounded-xl text-indigo-500 hover:bg-indigo-500/10 transition-colors cursor-pointer"
+                        className="size-9 inline-flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         title="Transfer borrower"
                       >
                         <ArrowRightLeft className="w-4 h-4" />
@@ -945,7 +945,7 @@ export function ReceivableEntityClient({
                       <button
                         type="button"
                         onClick={() => handleQuickDeleteItem(item)}
-                        className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        className="size-9 inline-flex items-center justify-center rounded-lg text-danger hover:bg-danger-soft transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         title="Delete item"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -954,7 +954,7 @@ export function ReceivableEntityClient({
                       {item.kind === 'loan' && (
                         <Link
                           href={`/dashboard/loans/${item.id}`}
-                          className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                          className="size-9 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           title="View loan details"
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -965,7 +965,7 @@ export function ReceivableEntityClient({
                         <button
                           type="button"
                           onClick={() => handleToggleExpand(item.key)}
-                          className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                          className="size-9 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           title={isExpanded ? 'Collapse breakdown' : 'Expand breakdown'}
                         >
                           <ChevronDown
@@ -993,14 +993,14 @@ export function ReceivableEntityClient({
                     {/* Installments schedule */}
                     {hasInstallments && (
                       <div className="space-y-2">
-                        <span className="text-xs font-bold text-foreground uppercase tracking-wider block">
+                        <span className="text-sm font-semibold text-foreground block">
                           Installment Schedule ({rawLoan.installments?.length} installments):
                         </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 @xl/main:grid-cols-2 @2xl/main:grid-cols-3 gap-2">
                           {rawLoan.installments?.map((inst) => (
                             <div
                               key={inst.id}
-                              className="bg-card text-card-foreground rounded-xl p-2.5 shadow-xs flex items-center justify-between text-xs"
+                              className="bg-card text-card-foreground rounded-xl p-2.5 shadow-card flex items-center justify-between text-xs"
                             >
                               <div>
                                 <span className="font-bold text-foreground">
@@ -1013,7 +1013,7 @@ export function ReceivableEntityClient({
                               <span
                                 className={`font-bold px-2 py-0.5 rounded-md text-xs ${
                                   inst.is_paid
-                                    ? 'bg-emerald-500/10 text-emerald-500'
+                                    ? 'bg-success-soft text-success'
                                     : 'bg-muted text-muted-foreground'
                                 }`}
                               >
@@ -1028,17 +1028,17 @@ export function ReceivableEntityClient({
                     {/* Payments history */}
                     {hasPayments && (
                       <div className="space-y-2">
-                        <span className="text-xs font-bold text-foreground uppercase tracking-wider block">
+                        <span className="text-sm font-semibold text-foreground block">
                           Payment History ({rawLoan.payments?.length} payments):
                         </span>
                         <div className="space-y-1.5">
                           {rawLoan.payments?.map((pm) => (
                             <div
                               key={pm.id}
-                              className="bg-card text-card-foreground rounded-xl p-2.5 shadow-xs flex items-center justify-between text-xs"
+                              className="bg-card text-card-foreground rounded-xl p-2.5 shadow-card flex items-center justify-between text-xs"
                             >
                               <div className="flex items-center gap-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
                                 <div>
                                   <span className="font-bold text-foreground">
                                     {formatMoney(pm.amount)} via {pm.payment_method}
@@ -1093,7 +1093,7 @@ export function ReceivableEntityClient({
                 onClick={() => setIsTransferDialogOpen(true)}
                 className="gap-1.5 text-xs font-bold"
               >
-                <ArrowRightLeft className="w-3.5 h-3.5 text-indigo-500" />
+                <ArrowRightLeft className="w-3.5 h-3.5 text-primary" />
                 <span>Transfer Borrower</span>
               </Button>
 
@@ -1103,7 +1103,7 @@ export function ReceivableEntityClient({
                 variant="default"
                 size="sm"
                 onClick={() => setIsSettleDialogOpen(true)}
-                className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white"
+                className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-success text-white"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Mark as Paid</span>
@@ -1142,7 +1142,7 @@ export function ReceivableEntityClient({
         <ResponsiveDialogContent className="max-w-md">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle className="flex items-center gap-2">
-              <ArrowRightLeft className="w-5 h-5 text-indigo-500" />
+              <ArrowRightLeft className="w-5 h-5 text-primary" />
               Transfer Borrower ({selectedKeys.size} item{selectedKeys.size === 1 ? '' : 's'})
             </ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
@@ -1153,8 +1153,8 @@ export function ReceivableEntityClient({
 
           <ResponsiveDialogBody className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground uppercase tracking-wider">
-                Select Destination Entity
+              <label className="text-sm font-semibold text-foreground">
+                Select destination entity
               </label>
               <select
                 value={transferTargetId}
@@ -1190,8 +1190,8 @@ export function ReceivableEntityClient({
 
             {transferTargetId === 'custom' && (
               <div className="space-y-1.5 animate-in fade-in duration-150">
-                <label className="text-xs font-bold text-foreground uppercase tracking-wider">
-                  New Borrower Name
+                <label className="text-sm font-semibold text-foreground">
+                  New borrower name
                 </label>
                 <Input
                   type="text"
@@ -1248,7 +1248,7 @@ export function ReceivableEntityClient({
         <ResponsiveDialogContent className="max-w-md">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+              <CheckCircle2 className="w-5 h-5 text-success" />
               Settle {selectedKeys.size} Item{selectedKeys.size === 1 ? '' : 's'}
             </ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
@@ -1258,20 +1258,20 @@ export function ReceivableEntityClient({
           </ResponsiveDialogHeader>
 
           <ResponsiveDialogBody className="space-y-4 pt-2">
-            <div className="bg-emerald-500/10 text-emerald-500 rounded-2xl p-4 flex items-center justify-between">
+            <div className="bg-success-soft text-success rounded-2xl p-4 flex items-center justify-between">
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wider block">
-                  Total Outstanding to Settle
+                <span className="text-xs font-semibold block">
+                  Total outstanding to settle
                 </span>
-                <span className="text-xl font-black">{formatMoney(selectedTotalBalance)}</span>
+                <span className="num text-xl font-bold">{formatMoney(selectedTotalBalance)}</span>
               </div>
               <CheckCircle2 className="w-8 h-8 opacity-80" />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground uppercase tracking-wider">
-                  Payment Method
+                <label className="text-sm font-semibold text-foreground">
+                  Payment method
                 </label>
                 <select
                   value={settleMethod}
@@ -1287,8 +1287,8 @@ export function ReceivableEntityClient({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground uppercase tracking-wider">
-                  Settlement Date
+                <label className="text-sm font-semibold text-foreground">
+                  Settlement date
                 </label>
                 <Input
                   type="date"
@@ -1300,7 +1300,7 @@ export function ReceivableEntityClient({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground uppercase tracking-wider">
+              <label className="text-sm font-semibold text-foreground">
                 Note / Remarks (Optional)
               </label>
               <Input
@@ -1326,7 +1326,7 @@ export function ReceivableEntityClient({
                 variant="default"
                 onClick={handleConfirmSettle}
                 disabled={isPending}
-                className="gap-1.5 font-bold bg-emerald-600 hover:bg-emerald-500 text-white"
+                className="gap-1.5 font-bold bg-emerald-600 hover:bg-success text-white"
               >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 Confirm Settlement
@@ -1342,7 +1342,7 @@ export function ReceivableEntityClient({
       <ResponsiveDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <ResponsiveDialogContent className="max-w-md">
           <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle className="flex items-center gap-2 text-rose-500">
+            <ResponsiveDialogTitle className="flex items-center gap-2 text-danger">
               <Trash2 className="w-5 h-5" />
               Delete {selectedKeys.size} Item{selectedKeys.size === 1 ? '' : 's'}?
             </ResponsiveDialogTitle>
@@ -1353,7 +1353,7 @@ export function ReceivableEntityClient({
           </ResponsiveDialogHeader>
 
           <ResponsiveDialogBody className="space-y-4 pt-2">
-            <div className="bg-rose-500/10 text-rose-500 rounded-2xl p-3 text-xs space-y-1">
+            <div className="bg-danger-soft text-danger rounded-2xl p-3 text-xs space-y-1">
               <span className="font-bold block">Selected for deletion:</span>
               <ul className="list-disc list-inside space-y-0.5 max-h-28 overflow-y-auto bili-scrollbar">
                 {selectedItems.map((it) => (
@@ -1395,7 +1395,7 @@ export function ReceivableEntityClient({
         <ResponsiveDialogContent className="max-w-md">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle className="flex items-center gap-2">
-              <Send className="w-5 h-5 text-blue-500" />
+              <Send className="w-5 h-5 text-primary" />
               Send Reminder to {entityName}
             </ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
@@ -1424,15 +1424,15 @@ export function ReceivableEntityClient({
               )}
               <div className="flex justify-between pt-1 font-bold">
                 <span className="text-foreground">Total Owed:</span>
-                <span className="text-indigo-500">{formatMoney(stats.totalOwed)}</span>
+                <span className="text-primary">{formatMoney(stats.totalOwed)}</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground uppercase tracking-wider">
-                Notification Channel
+              <label className="text-sm font-semibold text-foreground">
+                Notification channel
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 @xl/main:grid-cols-3 gap-2">
                 {[
                   { key: 'both', label: 'SMS & Email' },
                   { key: 'sms', label: 'SMS Only' },
@@ -1442,9 +1442,9 @@ export function ReceivableEntityClient({
                     key={c.key}
                     type="button"
                     onClick={() => setReminderChannel(c.key as any)}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-colors duration-(--motion-fast) cursor-pointer ${
                       reminderChannel === c.key
-                        ? 'bg-primary text-primary-foreground shadow-xs'
+                        ? 'bg-primary text-primary-foreground shadow-card'
                         : 'bg-muted text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -1455,7 +1455,7 @@ export function ReceivableEntityClient({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground uppercase tracking-wider">
+              <label className="text-sm font-semibold text-foreground">
                 Custom Message (Optional)
               </label>
               <Textarea

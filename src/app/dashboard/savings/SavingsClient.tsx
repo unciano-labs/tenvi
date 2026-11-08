@@ -106,137 +106,126 @@ export function SavingsClient({
     }
   };
 
+  const typeTabs = [
+    { value: 'all', label: 'All', count: initialAccounts.length },
+    {
+      value: 'digital',
+      label: 'Digital',
+      count: initialAccounts.filter((a) => a.account_type === 'digital_bank').length,
+    },
+    {
+      value: 'traditional',
+      label: 'Traditional',
+      count: initialAccounts.filter((a) => a.account_type === 'traditional_bank').length,
+    },
+    {
+      value: 'cash',
+      label: 'Cash & wallets',
+      count: initialAccounts.filter((a) => a.account_type === 'cash' || a.account_type === 'ewallet').length,
+    },
+  ];
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Savings & Cash Stash
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+      <div className="page-header">
+        <div>
+          <h1 className="text-display text-foreground">Savings &amp; cash stash</h1>
+          <p className="mt-2 max-w-prose text-sm sm:text-base text-muted-foreground">
             Keep track of your bank savings, high-yield digital banks, and physical cash.
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          className="w-full sm:w-auto rounded-xl gap-2 font-semibold shadow-xs min-h-11 h-11 active:scale-[0.99] transition-transform"
-        >
-          <Plus className="w-4 h-4" />
-          Add Savings or Cash
-        </Button>
+        <div className="page-header-actions w-full sm:w-auto">
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="w-full sm:w-auto sm:h-11 sm:min-h-11"
+          >
+            <Plus className="size-4" />
+            Add savings or cash
+          </Button>
+        </div>
       </div>
 
-      {/* Metrics Row */}
-      <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 gap-3 sm:gap-6 pb-1 sm:pb-0">
+      {/* Metrics: fluid grid — 3 across when there is room, stacked on phones (no clipped carousel) */}
+      <div className="grid-fluid gap-3 sm:gap-4 [--grid-min:14rem]">
         <StatCard
-          label="Total Savings & Cash"
+          label="Total savings & cash"
           value={formatMoney(totalSavings)}
-          subtext={`Across ${initialAccounts.length} accounts & wallets`}
+          subtext={`Across ${initialAccounts.length} ${initialAccounts.length === 1 ? 'account' : 'accounts'} & wallets`}
           icon={PiggyBank}
           variant="positive"
-          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
-          label="High-Yield Digital Banks"
+          label="High-yield digital banks"
           value={formatMoney(digitalSavings)}
           subtext="Maya, CIMB, MariBank, SeaBank, etc."
           icon={Sparkles}
           variant="neutral"
-          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
 
         <StatCard
-          label="Cash on Hand & E-Wallets"
+          label="Cash on hand & e‑wallets"
           value={formatMoney(cashOnHand)}
           subtext="Physical cash, GCash, Maya wallet"
           icon={Banknote}
           variant="neutral"
-          className="min-w-[260px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
         />
       </div>
 
-      {/* Filter Tabs and Search Bar */}
-      <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
-        {/* Type Filter Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar max-w-full min-w-0">
-          <Button
-            type="button"
-            variant={typeFilter === 'all' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => {
-              setTypeFilter('all');
-              setVisibleCount(9);
-            }}
-            className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-              typeFilter === 'all' ? 'shadow-xs' : 'text-muted-foreground'
-            }`}
-          >
-            All ({initialAccounts.length})
-          </Button>
-          <Button
-            type="button"
-            variant={typeFilter === 'digital' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => {
-              setTypeFilter('digital');
-              setVisibleCount(9);
-            }}
-            className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-              typeFilter === 'digital' ? 'shadow-xs' : 'text-muted-foreground'
-            }`}
-          >
-            Digital ({initialAccounts.filter((a) => a.account_type === 'digital_bank').length})
-          </Button>
-          <Button
-            type="button"
-            variant={typeFilter === 'traditional' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => {
-              setTypeFilter('traditional');
-              setVisibleCount(9);
-            }}
-            className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-              typeFilter === 'traditional' ? 'shadow-xs' : 'text-muted-foreground'
-            }`}
-          >
-            Traditional ({initialAccounts.filter((a) => a.account_type === 'traditional_bank').length})
-          </Button>
-          <Button
-            type="button"
-            variant={typeFilter === 'cash' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => {
-              setTypeFilter('cash');
-              setVisibleCount(9);
-            }}
-            className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-              typeFilter === 'cash' ? 'shadow-xs' : 'text-muted-foreground'
-            }`}
-          >
-            Cash & Wallets ({initialAccounts.filter((a) => a.account_type === 'cash' || a.account_type === 'ewallet').length})
-          </Button>
+      {/* Filter toolbar: type tabs scroll (never clip), search fills remaining space */}
+      <Card className="flex-row flex-wrap items-center gap-3 p-3 sm:p-4">
+        <div
+          role="group"
+          aria-label="Filter by account type"
+          className="flex max-w-full min-w-0 items-center gap-1 overflow-x-auto no-scrollbar rounded-2xl bg-muted p-1"
+        >
+          {typeTabs.map((tab) => {
+            const active = typeFilter === tab.value;
+            return (
+              <Button
+                key={tab.value}
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-pressed={active}
+                onClick={() => {
+                  setTypeFilter(tab.value);
+                  setVisibleCount(9);
+                }}
+                className={`shrink-0 rounded-xl px-3 text-sm ${
+                  active
+                    ? 'bg-card text-foreground shadow-sm hover:bg-card'
+                    : 'font-medium text-muted-foreground hover:bg-card/60'
+                }`}
+              >
+                {tab.label}
+                <span className={`num text-xs ${active ? 'text-muted-foreground' : 'text-muted-foreground/80'}`}>
+                  {tab.count}
+                </span>
+              </Button>
+            );
+          })}
         </div>
 
-        {/* Search input and counter */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <div className="flex min-w-[min(100%,20rem)] flex-1 items-center gap-3">
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              type="text"
-              placeholder="Search account, institution..."
+              type="search"
+              placeholder="Search account or institution"
+              aria-label="Search account or institution"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setVisibleCount(9);
               }}
-              className="pl-9 h-10 text-xs rounded-xl"
+              className="h-12 sm:h-10 pl-10 text-base sm:text-sm rounded-xl"
             />
           </div>
 
-          <span className="text-xs text-muted-foreground font-medium whitespace-nowrap hidden sm:inline">
+          <span className="num hidden shrink-0 whitespace-nowrap text-label text-muted-foreground sm:inline" aria-live="polite">
             {filtered.length} {filtered.length === 1 ? 'account' : 'accounts'}
           </span>
         </div>
@@ -245,62 +234,66 @@ export function SavingsClient({
       {/* Accounts Grid */}
       {filtered.length === 0 ? (
         searchQuery ? (
-          <Card className="p-10 text-center shadow-xs space-y-2">
-            <p className="text-sm font-bold text-foreground">No accounts matched "{searchQuery}"</p>
-            <p className="text-xs text-muted-foreground">Try adjusting your keywords or clearing filters.</p>
+          <Card className="items-center gap-2 p-10 text-center">
+            <p className="max-w-full break-words text-base font-semibold text-foreground">
+              No accounts matched &ldquo;{searchQuery}&rdquo;
+            </p>
+            <p className="text-sm text-muted-foreground">Try adjusting your keywords or clearing filters.</p>
             <Button
               type="button"
-              variant="link"
+              variant="soft"
               size="sm"
               onClick={() => {
                 setSearchQuery('');
                 setTypeFilter('all');
               }}
-              className="text-xs font-semibold"
+              className="mt-2"
             >
-              Clear Search & Filters
+              Clear search &amp; filters
             </Button>
           </Card>
         ) : (
           <EmptyState
             icon={PiggyBank}
-            title="No savings accounts added yet"
+            title={initialAccounts.length === 0 ? 'No savings accounts added yet' : 'No accounts of this type'}
             description={
               initialAccounts.length === 0
                 ? 'Add your bank accounts, digital banks (Maya, MariBank, CIMB), or cash envelope to see your total money in one place.'
                 : 'No accounts match this filter.'
             }
-            actionText={initialAccounts.length === 0 ? 'Add Savings or Cash' : undefined}
+            actionText={initialAccounts.length === 0 ? 'Add savings or cash' : undefined}
             onAction={() => setIsAddModalOpen(true)}
           />
         )
       ) : (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
-            {displayedAccounts.map((acc) => (
-              <FlippableSavingsCard
-                key={acc.id}
-                account={acc}
-                transactions={savingsTransactions}
-                onOpenBalanceModal={setSelectedForBalance}
-                onDelete={handleDelete}
-              />
+        <div className="flex flex-col gap-6">
+          {/* Re-keyed on filter so the new set springs in (stagger capped at 5) */}
+          <div key={typeFilter} className="grid-fluid-fill items-start gap-x-6 gap-y-8 [--grid-min:17.5rem]">
+            {displayedAccounts.map((acc, index) => (
+              <div key={acc.id} className="motion-pop-in min-w-0" style={{ ['--stagger' as string]: index }}>
+                <FlippableSavingsCard
+                  account={acc}
+                  transactions={savingsTransactions}
+                  onOpenBalanceModal={setSelectedForBalance}
+                  onDelete={handleDelete}
+                />
+              </div>
             ))}
           </div>
 
           {/* Lazy Load Button */}
           {filtered.length > visibleCount && (
-            <div className="pt-2 text-center">
+            <div className="flex flex-col items-center gap-2 text-center">
               <Button
                 type="button"
-                variant="secondary"
+                variant="soft"
                 size="sm"
                 onClick={() => setVisibleCount((prev) => prev + 9)}
-                className="px-6 py-2.5 text-xs font-semibold rounded-xl"
+                className="h-auto min-h-11 max-w-full whitespace-normal px-5 py-2"
               >
-                Load More Accounts ({filtered.length - visibleCount} remaining)
+                Load more accounts ({filtered.length - visibleCount} remaining)
               </Button>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="num text-xs text-muted-foreground">
                 Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} accounts
               </p>
             </div>

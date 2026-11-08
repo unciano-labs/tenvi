@@ -65,14 +65,14 @@ export function MemberActivityDrawer({ member, open, onOpenChange }: MemberActiv
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col justify-between">
-        <div className="p-6 border-b border-border/50">
+        <div className="p-6">
           <SheetHeader>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 text-3xs font-extrabold uppercase bg-primary/10 text-primary rounded">
+              <span className="px-2 py-0.5 text-xs font-bold capitalize bg-primary/10 text-primary rounded">
                 Audit Trail
               </span>
               {member?.is_banned && (
-                <span className="px-2 py-0.5 text-3xs font-extrabold uppercase bg-destructive/15 text-destructive rounded">
+                <span className="px-2 py-0.5 text-xs font-bold capitalize bg-destructive/15 text-destructive rounded">
                   Suspended
                 </span>
               )}
@@ -81,14 +81,14 @@ export function MemberActivityDrawer({ member, open, onOpenChange }: MemberActiv
               {member?.full_name || member?.email}
             </SheetTitle>
             <SheetDescription className="text-xs text-muted-foreground truncate">
-              {member?.email} • ID: <code className="text-3xs font-mono">{member?.user_id?.slice(0, 8)}...</code>
+              {member?.email} • ID: <code className="text-xs font-mono">{member?.user_id?.slice(0, 8)}...</code>
             </SheetDescription>
           </SheetHeader>
         </div>
 
         {/* Audit Timeline */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div className="flex items-center justify-between text-2xs font-semibold text-muted-foreground pb-2 border-b border-border/40">
+          <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground pb-2">
             <span>Operational Activity (Zero-Leak)</span>
             <span>{logs.length} events logged</span>
           </div>
@@ -102,38 +102,38 @@ export function MemberActivityDrawer({ member, open, onOpenChange }: MemberActiv
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground text-center space-y-2">
               <Shield className="size-8 opacity-40" />
               <p className="text-xs font-semibold">No recent activity events</p>
-              <p className="text-3xs text-muted-foreground/80 max-w-xs">
+              <p className="text-xs text-muted-foreground/80 max-w-xs">
                 This member has not triggered any logged database mutations yet.
               </p>
             </div>
           ) : (
-            <div className="space-y-3 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-border/60">
+            <div className="space-y-3 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-muted">
               {logs.map((log) => (
                 <div key={log.id} className="relative flex items-start gap-3 pl-1">
-                  <div className="size-7 rounded-full bg-card border border-border/60 flex items-center justify-center shrink-0 z-10 shadow-2xs">
+                  <div className="size-7 rounded-full bg-card flex items-center justify-center shrink-0 z-10">
                     {getActionIcon(log.action)}
                   </div>
-                  <div className="flex-1 p-3 rounded-xl bg-card border border-border/50 text-xs shadow-2xs space-y-1">
+                  <div className="flex-1 p-3 rounded-xl bg-card text-xs space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-foreground font-mono text-2xs uppercase">
+                      <span className="font-bold text-foreground font-mono text-xs capitalize">
                         {log.action}
                       </span>
-                      <span className="text-3xs text-muted-foreground flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="size-2.5" />
                         {formatDate(log.created_at)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-2xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="capitalize font-semibold text-foreground/80">
                         {log.entity_type}
                       </span>
                       <span>•</span>
-                      <span className="font-mono text-3xs text-muted-foreground truncate">
+                      <span className="font-mono text-xs text-muted-foreground truncate">
                         ID: {log.entity_id?.slice(0, 8)}...
                       </span>
                     </div>
                     {log.ip_address && (
-                      <div className="pt-1 text-3xs text-muted-foreground/70 flex items-center gap-1 font-mono">
+                      <div className="pt-1 text-xs text-muted-foreground/70 flex items-center gap-1 font-mono">
                         <Laptop className="size-2.5" />
                         Client IP: {log.ip_address}
                       </div>
@@ -146,7 +146,7 @@ export function MemberActivityDrawer({ member, open, onOpenChange }: MemberActiv
         </div>
 
         {/* Footer info */}
-        <div className="p-4 border-t border-border/50 bg-muted/20 text-3xs text-muted-foreground text-center">
+        <div className="p-4 bg-muted/20 text-xs text-muted-foreground text-center">
           Privacy guarantee: Financial transaction amounts and balances are strictly redacted.
         </div>
       </SheetContent>

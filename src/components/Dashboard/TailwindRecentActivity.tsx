@@ -39,18 +39,18 @@ export function TailwindRecentActivity({ transactions }: TailwindRecentActivityP
   }).slice(0, 6);
 
   return (
-    <CardBox className="h-full flex flex-col justify-between">
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <div>
+    <CardBox className="h-full rounded-2xl shadow-card hover:shadow-card flex flex-col gap-5">
+      <div className="flex flex-1 flex-col gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+          <div className="min-w-0 flex-[1_1_12rem]">
             <div className="flex items-center gap-1.5">
-              <h4 className="card-title">Recent Activity</h4>
+              <h2 className="text-title text-foreground">Recent activity</h2>
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <button
                       type="button"
-                      className="text-muted-foreground/70 hover:text-foreground cursor-pointer"
+                      className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground/80 hover:text-foreground cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label="Explain Recent Activity"
                     />
                   }
@@ -62,7 +62,7 @@ export function TailwindRecentActivity({ transactions }: TailwindRecentActivityP
                 </TooltipContent>
               </Tooltip>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground">
               Latest transactions timeline
             </p>
           </div>
@@ -73,19 +73,20 @@ export function TailwindRecentActivity({ transactions }: TailwindRecentActivityP
               render={
                 <button
                   type="button"
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border/50 cursor-pointer transition-colors"
+                  aria-label="Filter recent activity"
+                  className="no-spring inline-flex h-9 items-center gap-1.5 px-3 rounded-lg text-sm font-medium bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-(--motion-fast) ease-(--ease-in-out)"
                 />
               }
             >
-              <Filter className="size-3" />
+              <Filter className="size-3.5" aria-hidden="true" />
               <span className="capitalize">{filter}</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36 text-xs rounded-xl shadow-lift">
+            <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-lift">
               <DropdownMenuRadioGroup value={filter} onValueChange={(v) => setFilter(v as any)}>
-                <DropdownMenuRadioItem value="all">All Activity</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="income">Income Only</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="expense">Expenses Only</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="transfer">Transfers Only</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="all">All activity</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="income">Income only</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="expense">Expenses only</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="transfer">Transfers only</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -93,11 +94,12 @@ export function TailwindRecentActivity({ transactions }: TailwindRecentActivityP
 
         {/* Vertical Timeline */}
         {filtered.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground text-xs">
-            <p>No recent activity found for this filter.</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-muted/50 px-5 py-8 text-center">
+            <p className="text-sm font-medium text-foreground">No recent activity found for this filter.</p>
+            <p className="max-w-xs text-xs text-muted-foreground">Transactions you record will show up here as a timeline.</p>
           </div>
         ) : (
-          <div className="space-y-0.5 pt-2">
+          <div key={filter} className="motion-pop-in flex flex-col">
             {filtered.map((t, idx) => {
               const isLast = idx === filtered.length - 1;
               const isIncome = t.kind === 'income';
@@ -112,7 +114,7 @@ export function TailwindRecentActivity({ transactions }: TailwindRecentActivityP
                 <div key={t.id} className="flex gap-x-3 group">
                   {/* Time label */}
                   <div className="w-16 sm:w-20 text-end shrink-0 pt-0.5">
-                    <span className="text-2xs font-semibold text-muted-foreground">
+                    <span className="num text-xs font-medium text-muted-foreground">
                       {formatDate(t.occurred_on)}
                     </span>
                   </div>
@@ -127,17 +129,17 @@ export function TailwindRecentActivity({ transactions }: TailwindRecentActivityP
                   {/* Description & Amount */}
                   <div className="flex-1 min-w-0 pb-4 pt-0.5 flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {t.note || t.category?.name || (isTransfer ? 'Transfer' : 'General Transaction')}
                       </p>
-                      <p className="text-3xs text-muted-foreground truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         {t.category?.name || (t.payment_method === 'credit_card' ? 'Credit Card' : 'Cash')}
                       </p>
                     </div>
 
                     <div className="shrink-0 text-end">
-                      <span className={`text-xs font-bold ${
-                        isIncome ? 'text-success' : isTransfer ? 'text-secondary' : 'text-foreground'
+                      <span className={`num text-sm font-semibold whitespace-nowrap ${
+                        isIncome ? 'text-success' : 'text-foreground'
                       }`}>
                         {isIncome ? `+${formatMoney(t.amount)}` : isTransfer ? `⇆ ${formatMoney(t.amount)}` : `-${formatMoney(t.amount)}`}
                       </span>
@@ -151,15 +153,15 @@ export function TailwindRecentActivity({ transactions }: TailwindRecentActivityP
       </div>
 
       {/* Footer Link */}
-      <div className="pt-3 border-t border-border/40 mt-1 flex items-center justify-between text-xs">
-        <span className="text-2xs text-muted-foreground">
-          Showing latest {filtered.length} entries
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <span className="text-xs text-muted-foreground">
+          Showing latest {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}
         </span>
         <Link
           href="/dashboard/transactions"
-          className="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5"
+          className="-mr-2 inline-flex min-h-10 items-center rounded-lg px-2 font-semibold text-primary hover:underline underline-offset-4 gap-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span>View All Transactions</span>
+          <span>View all transactions</span>
           <ChevronRight className="size-3" />
         </Link>
       </div>

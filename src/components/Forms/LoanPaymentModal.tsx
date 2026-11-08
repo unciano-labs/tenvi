@@ -76,7 +76,7 @@ export function LoanPaymentModal({
       <ResponsiveDialogContent className="max-w-md">
         <ResponsiveDialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-success-soft text-success flex items-center justify-center shrink-0">
               <CheckCircle className="w-5 h-5" />
             </div>
             <div>
@@ -95,7 +95,7 @@ export function LoanPaymentModal({
               <span>Remaining Balance</span>
               <span>Total Loaned: {formatMoney(loan.amount)}</span>
             </div>
-            <div className="text-2xl font-extrabold text-foreground">
+            <div className="num text-figure text-foreground">
               {formatMoney(loan.balance_remaining)}
             </div>
           </div>
@@ -103,13 +103,13 @@ export function LoanPaymentModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Repayment Amount (PHP)
+                <label className="block text-label text-muted-foreground">
+                  Repayment amount (PHP)
                 </label>
                 <button
                   type="button"
                   onClick={() => setAmount(loan.balance_remaining.toString())}
-                  className="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer"
+                  className="text-xs font-semibold text-success hover:underline cursor-pointer"
                 >
                   Pay in full ({formatMoney(loan.balance_remaining)})
                 </button>
@@ -121,18 +121,18 @@ export function LoanPaymentModal({
                 placeholder="0.00"
                 value={amount}
                 onChange={(val) => setAmount(val)}
-                className="w-full text-xl font-bold bg-muted/60"
+                className="w-full num text-xl font-bold bg-muted/60"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              <label className="block text-label text-muted-foreground mb-2">
                 How did they pay?
               </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="h-10 w-full rounded-xl bg-muted/60 px-3 text-sm font-medium text-foreground outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-10 w-full rounded-xl bg-muted/60 px-3 text-sm font-medium text-foreground outline-none transition-colors duration-(--motion-fast) focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="cash">Cash</option>
                 <option value="gcash">GCash</option>
@@ -142,8 +142,8 @@ export function LoanPaymentModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Payment Date
+              <label className="block text-label text-muted-foreground mb-2">
+                Payment date
               </label>
               <Input
                 type="date"
@@ -155,7 +155,7 @@ export function LoanPaymentModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              <label className="block text-label text-muted-foreground mb-2">
                 Note (Optional)
               </label>
               <Input

@@ -58,7 +58,7 @@ export function DataExportPanel() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl bg-muted/50 gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <FileSpreadsheet className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <FileSpreadsheet className="size-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
               <span className="text-sm font-bold text-foreground">
                 Your Spending & Income History
               </span>
@@ -155,7 +155,7 @@ export function DataExportPanel() {
         </div>
 
         {/* Safe & Private Reassurance */}
-        <div className="p-4 rounded-2xl bg-blue-500/10 text-xs text-blue-600 dark:text-blue-400 flex items-center gap-3">
+        <div className="p-4 rounded-2xl bg-blue-500/10 text-xs text-blue-700 dark:text-blue-400 flex items-center gap-3">
           <CheckCircle2 className="size-5 shrink-0 text-blue-500" />
           <p className="leading-relaxed text-foreground/90">
             <strong>Safe and private:</strong> Your downloads are saved directly to your device and are never shared with anyone.

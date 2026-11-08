@@ -104,32 +104,45 @@ export function SplitsClient({
     }
   };
 
+  const statusTabs = [
+    { value: 'all', label: 'All', count: initialSplits.length },
+    {
+      value: 'pending',
+      label: 'Pending',
+      count: initialSplits.filter((s) => (s.participants || []).some((p) => !p.is_paid)).length,
+    },
+    {
+      value: 'settled',
+      label: 'Settled',
+      count: initialSplits.filter(
+        (s) => (s.participants || []).length > 0 && (s.participants || []).every((p) => p.is_paid)
+      ).length,
+    },
+  ] as const;
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Chipping In & Bill Splits
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+      <div className="page-header">
+        <div>
+          <h1 className="text-display text-foreground">Chipping in &amp; bill splits</h1>
+          <p className="mt-2 max-w-prose text-sm sm:text-base text-muted-foreground">
             Easily split shared credit card or group purchases and track who has paid.
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsModalOpen(true)}
-          className="rounded-xl gap-2 font-semibold shadow-xs self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Split a Bill
-        </Button>
+        <div className="page-header-actions w-full sm:w-auto">
+          <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto sm:h-11 sm:min-h-11">
+            <Plus className="size-4" />
+            Split a bill
+          </Button>
+        </div>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid-fluid gap-3 sm:gap-4 [--grid-min:16rem]">
         <StatCard
-          label="Unpaid Shares (Still Owed to You)"
+          label="Unpaid shares (still owed to you)"
           value={formatMoney(totalUnpaid)}
           subtext="Money friends haven't sent back yet"
           icon={Receipt}
@@ -137,9 +150,9 @@ export function SplitsClient({
         />
 
         <StatCard
-          label="Total Shared Bills Logged"
+          label="Total shared bills logged"
           value={formatMoney(totalSplitsAmount)}
-          subtext={`Across ${initialSplits.length} group purchases`}
+          subtext={`Across ${initialSplits.length} group ${initialSplits.length === 1 ? 'purchase' : 'purchases'}`}
           icon={Users}
           variant="neutral"
         />
@@ -151,101 +164,88 @@ export function SplitsClient({
           icon={Receipt}
           title="No bill splits yet"
           description="When you swipe your card for group dinners or groceries, split it here so everyone can chip in without confusion."
-          actionText="Split a Bill"
+          actionText="Split a bill"
           onAction={() => setIsModalOpen(true)}
         />
       ) : (
-        <div className="space-y-6">
-          {/* Search and Status Filter Bar */}
-          <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
-            {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar max-w-full shrink-0">
-              <Button
-                type="button"
-                variant={statusFilter === 'all' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  setStatusFilter('all');
-                  setVisibleCount(8);
-                }}
-                className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-                  statusFilter === 'all' ? 'shadow-xs' : 'text-muted-foreground'
-                }`}
-              >
-                All ({initialSplits.length})
-              </Button>
-              <Button
-                type="button"
-                variant={statusFilter === 'pending' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  setStatusFilter('pending');
-                  setVisibleCount(8);
-                }}
-                className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-                  statusFilter === 'pending' ? 'shadow-xs' : 'text-muted-foreground'
-                }`}
-              >
-                Pending ({initialSplits.filter((s) => (s.participants || []).some((p) => !p.is_paid)).length})
-              </Button>
-              <Button
-                type="button"
-                variant={statusFilter === 'settled' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  setStatusFilter('settled');
-                  setVisibleCount(8);
-                }}
-                className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-                  statusFilter === 'settled' ? 'shadow-xs' : 'text-muted-foreground'
-                }`}
-              >
-                Settled ({initialSplits.filter((s) => (s.participants || []).length > 0 && (s.participants || []).every((p) => p.is_paid)).length})
-              </Button>
+        <div className="flex flex-col gap-6">
+          {/* Search and status filter toolbar */}
+          <Card className="flex-row flex-wrap items-center gap-3 p-3 sm:p-4">
+            <div
+              role="group"
+              aria-label="Filter by status"
+              className="flex max-w-full min-w-0 items-center gap-1 overflow-x-auto no-scrollbar rounded-2xl bg-muted p-1"
+            >
+              {statusTabs.map((tab) => {
+                const active = statusFilter === tab.value;
+                return (
+                  <Button
+                    key={tab.value}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-pressed={active}
+                    onClick={() => {
+                      setStatusFilter(tab.value);
+                      setVisibleCount(8);
+                    }}
+                    className={`shrink-0 rounded-xl px-3 text-sm ${
+                      active
+                        ? 'bg-card text-foreground shadow-sm hover:bg-card'
+                        : 'font-medium text-muted-foreground hover:bg-card/60'
+                    }`}
+                  >
+                    {tab.label}
+                    <span className="num text-xs text-muted-foreground">{tab.count}</span>
+                  </Button>
+                );
+              })}
             </div>
 
-            {/* Search Input and Counter */}
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1 sm:w-64">
-                <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="flex min-w-[min(100%,20rem)] flex-1 items-center gap-3">
+              <div className="relative min-w-0 flex-1">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  type="text"
-                  placeholder="Search bill, friend, bank..."
+                  type="search"
+                  placeholder="Search bill, friend or bank"
+                  aria-label="Search bill, friend or bank"
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     setVisibleCount(8);
                   }}
-                  className="pl-9 h-10 text-xs rounded-xl"
+                  className="h-12 sm:h-10 pl-10 text-base sm:text-sm rounded-xl"
                 />
               </div>
 
-              <span className="text-xs text-muted-foreground font-medium whitespace-nowrap hidden sm:inline">
+              <span className="num hidden shrink-0 whitespace-nowrap text-label text-muted-foreground sm:inline" aria-live="polite">
                 {filteredSplits.length} {filteredSplits.length === 1 ? 'split' : 'splits'}
               </span>
             </div>
           </Card>
 
           {filteredSplits.length === 0 ? (
-            <Card className="p-10 text-center shadow-xs space-y-2">
-              <p className="text-sm font-bold text-foreground">No bill splits matched "{searchQuery}"</p>
-              <p className="text-xs text-muted-foreground">Try adjusting your keywords or clearing filters.</p>
+            <Card className="items-center gap-2 p-10 text-center">
+              <p className="max-w-full break-words text-base font-semibold text-foreground">
+                {searchQuery ? <>No bill splits matched &ldquo;{searchQuery}&rdquo;</> : 'No bill splits in this view'}
+              </p>
+              <p className="text-sm text-muted-foreground">Try adjusting your keywords or clearing filters.</p>
               <Button
                 type="button"
-                variant="link"
+                variant="soft"
                 size="sm"
                 onClick={() => {
                   setSearchQuery('');
                   setStatusFilter('all');
                 }}
-                className="text-xs font-semibold"
+                className="mt-2"
               >
-                Clear Search & Filters
+                Clear search &amp; filters
               </Button>
             </Card>
           ) : (
-            <div className="space-y-6">
-              {displayedSplits.map((split) => {
+            <div key={statusFilter} className="flex flex-col gap-4 sm:gap-6">
+              {displayedSplits.map((split, index) => {
                 const participants = split.participants || [];
                 const paidCount = participants.filter((p) => p.is_paid).length;
                 const allPaid = participants.length > 0 && paidCount === participants.length;
@@ -256,50 +256,49 @@ export function SplitsClient({
                 return (
                   <Card
                     key={split.id}
-                    className="p-6 sm:p-7 shadow-xs overflow-hidden min-w-0 space-y-5"
+                    style={{ ['--stagger' as string]: index }}
+                    className="motion-pop-in gap-5 p-5 sm:p-6"
                   >
-                    {/* Header row */}
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 min-w-0">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap min-w-0">
-                          <h3 className="text-base font-semibold leading-snug text-foreground whitespace-normal break-words">
-                            {split.title}
-                          </h3>
+                    {/* Header row: title/meta + total (total drops below title when narrow) */}
+                    <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-6 gap-y-3">
+                      <div className="flex min-w-0 flex-[1_1_16rem] flex-col gap-1.5">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <h3 className="text-title min-w-0 text-foreground">{split.title}</h3>
                           {allPaid && (
-                            <Badge variant="success" className="text-xs font-medium gap-1 shrink-0">
-                              All Settled ✅
+                            <Badge variant="success" className="shrink-0 gap-1 text-xs font-medium">
+                              All settled ✅
                             </Badge>
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1 min-w-0">
-                          <span>{formatDate(split.occurred_on)}</span>
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                          <span className="num">{formatDate(split.occurred_on)}</span>
                           {split.credit_card && (
-                            <Badge variant="soft" className="gap-1 font-medium text-xs shrink-0">
-                              <CardIcon className="w-3 h-3 text-primary" />
-                              {split.credit_card.bank_name} (••{split.credit_card.last_4})
+                            <Badge variant="soft" className="max-w-full shrink-0 gap-1 text-xs font-medium">
+                              <CardIcon className="size-3.5 text-primary" />
+                              <span className="truncate">
+                                {split.credit_card.bank_name} (••{split.credit_card.last_4})
+                              </span>
                             </Badge>
                           )}
-                          {split.note && <span className="whitespace-normal break-words">• {split.note}</span>}
+                          {split.note && <span className="min-w-0 break-words">· {split.note}</span>}
                         </div>
                       </div>
 
-                      <div className="sm:text-right shrink-0">
-                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">Total Bill</span>
-                        <span className="text-2xl font-bold tracking-tight text-foreground">
-                          {formatMoney(split.total_amount)}
-                        </span>
+                      <div className="flex shrink-0 flex-col gap-0.5 sm:items-end">
+                        <span className="text-label text-muted-foreground">Total bill</span>
+                        <span className="num text-figure text-foreground">{formatMoney(split.total_amount)}</span>
                       </div>
                     </div>
 
-                    {/* Progress banner */}
-                    <div className="p-3.5 rounded-2xl bg-muted/60 flex items-center justify-between text-xs font-semibold gap-2 min-w-0">
-                      <span className="text-muted-foreground truncate">
-                        {paidCount} of {participants.length} friends have chipped in
+                    {/* Progress well */}
+                    <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl bg-muted/60 p-3.5 text-sm">
+                      <span className="num min-w-0 text-muted-foreground">
+                        {paidCount} of {participants.length} {participants.length === 1 ? 'friend has' : 'friends have'} chipped in
                       </span>
                       <span
-                        className={`shrink-0 ${
-                          remainingBalance > 0 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-emerald-600 dark:text-emerald-400 font-bold'
+                        className={`num shrink-0 font-semibold ${
+                          remainingBalance > 0 ? 'text-warning-soft-foreground' : 'text-success'
                         }`}
                       >
                         {remainingBalance > 0
@@ -308,63 +307,56 @@ export function SplitsClient({
                       </span>
                     </div>
 
-                    {/* Participants List */}
-                    <div className="space-y-2 min-w-0">
-                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        Participants
-                      </p>
-                      <div className="max-h-56 overflow-y-auto pr-1.5 bili-scrollbar">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {/* Participants */}
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <p className="text-label text-muted-foreground">Participants</p>
+                      <div className="max-h-64 overflow-y-auto pr-1 bili-scrollbar">
+                        <ul className="grid-fluid-fill gap-2 [--grid-min:15rem]">
                           {participants.map((p) => (
-                            <div
+                            <li
                               key={p.id}
-                              className={`p-3.5 rounded-2xl flex items-center justify-between transition-all gap-2 min-w-0 ${
-                                p.is_paid
-                                  ? 'bg-emerald-500/10'
-                                  : 'bg-muted/50 hover:bg-muted'
+                              className={`flex min-w-0 items-center justify-between gap-3 rounded-xl p-3 transition-colors duration-(--motion-fast) ease-(--ease-in-out) ${
+                                p.is_paid ? 'bg-success-soft' : 'bg-muted/50 hover:bg-muted'
                               }`}
                             >
                               <div className="min-w-0 flex-1">
-                                <p className="text-sm font-semibold text-foreground whitespace-normal break-words">
+                                <p className="truncate text-sm font-semibold text-foreground" title={p.contact?.name || 'Friend'}>
                                   {p.contact?.name || 'Friend'}
                                 </p>
-                                <p className="text-xs font-medium text-foreground">
-                                  {formatMoney(p.share_amount)}
-                                </p>
+                                <p className="num text-sm text-muted-foreground">{formatMoney(p.share_amount)}</p>
                               </div>
 
                               {/* 1-Tap Toggle */}
                               <Button
                                 type="button"
-                                size="xs"
+                                size="sm"
                                 variant={p.is_paid ? 'default' : 'soft'}
-                                onClick={() =>
-                                  handleTogglePaid(split.id, p.id, p.is_paid)
-                                }
-                                className={`text-xs font-medium rounded-xl shrink-0 ${
+                                aria-pressed={p.is_paid}
+                                onClick={() => handleTogglePaid(split.id, p.id, p.is_paid)}
+                                className={`shrink-0 rounded-xl text-xs sm:text-sm ${
                                   p.is_paid
-                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                    : ''
+                                    ? 'bg-success text-success-foreground hover:bg-success/90'
+                                    : 'bg-card hover:bg-card/70'
                                 }`}
                               >
                                 {p.is_paid ? 'Paid ✅' : 'Tap when paid'}
                               </Button>
-                            </div>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       </div>
                     </div>
 
                     {/* Footer action */}
-                    <div className="pt-2 flex justify-end">
+                    <div className="flex justify-end">
                       <Button
                         type="button"
                         variant="ghost"
-                        size="xs"
+                        size="sm"
                         onClick={() => handleDelete(split.id)}
-                        className="text-muted-foreground hover:text-destructive gap-1"
+                        className="text-muted-foreground hover:bg-danger-soft hover:text-destructive"
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Remove split
+                        <Trash2 className="size-4" /> Remove split
                       </Button>
                     </div>
                   </Card>
@@ -375,17 +367,17 @@ export function SplitsClient({
 
           {/* Lazy Load Button */}
           {filteredSplits.length > visibleCount && (
-            <div className="pt-2 text-center">
+            <div className="flex flex-col items-center gap-2 text-center">
               <Button
                 type="button"
-                variant="secondary"
+                variant="soft"
                 size="sm"
                 onClick={() => setVisibleCount((prev) => prev + 8)}
-                className="px-6 py-2.5 text-xs font-semibold rounded-xl"
+                className="h-auto min-h-11 max-w-full whitespace-normal px-5 py-2"
               >
-                Load More Splits ({filteredSplits.length - visibleCount} remaining)
+                Load more splits ({filteredSplits.length - visibleCount} remaining)
               </Button>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="num text-xs text-muted-foreground">
                 Showing {Math.min(visibleCount, filteredSplits.length)} of {filteredSplits.length} splits
               </p>
             </div>

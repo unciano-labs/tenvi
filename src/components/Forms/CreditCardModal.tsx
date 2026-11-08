@@ -212,7 +212,7 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
       <ResponsiveDialogContent className="max-w-xl">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
-            {isEditing ? 'Edit Credit Card' : 'Add a Credit Card'}
+            {isEditing ? 'Edit credit card' : 'Add a credit card'}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
             Configure your card's billing cycle to automatically track payment due dates.
@@ -227,11 +227,9 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
 
             return (
               <div
-                className={`w-full rounded-[22px] p-4 sm:p-5 text-white border ${theme.borderColor} ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden transition-all duration-300 shadow-card flex flex-col justify-between`}
-                style={{ aspectRatio: '1.58 / 1', minHeight: '210px', backgroundColor: theme.bgHex || theme.accentHex }}
+                className={`w-full max-w-sm mx-auto rounded-[22px] p-4 sm:p-5 text-white ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden transition-colors duration-(--motion-base) ease-(--ease-in-out) flex flex-col justify-between`}
+                style={{ aspectRatio: '1.58 / 1', minHeight: '200px', backgroundColor: theme.bgHex || theme.accentHex }}
               >
-                {/* Accent top highlight line */}
-                <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />
 
                 {/* Background Pattern Overlay */}
                 <CardPatternOverlay pattern={pattern} accentHex={theme.accentHex} />
@@ -464,10 +462,10 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
               </div>
 
               {/* Color & Appearance Customization - Directly visible */}
-              <div className="pt-2 border-t border-border/40 space-y-4">
-                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                  <Palette className="size-3.5" />
-                  <span>Card Appearance (Color, Pattern & Network)</span>
+              <div className="pt-4 space-y-5">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Palette className="size-4 text-muted-foreground" />
+                  <span>Card appearance</span>
                 </div>
                   {/* Color Swatch & Color Picker Selector */}
                   <CardColorPicker
@@ -476,13 +474,13 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
                       const { network, pattern } = parseCardStyle(watchedColor || 'cyan', watchedName);
                       form.setValue('colorTheme', formatCardStyle(newColor as any, network, pattern));
                     }}
-                    label="Card Color"
+                    label="Card color"
                   />
 
                   {/* Background Pattern Selector - 20 patterns */}
-                  <div className="pt-2 border-t border-border/40">
-                    <span className="text-2xs font-semibold text-muted-foreground block mb-2 uppercase tracking-wider">
-                      Background Accent Pattern (20 options)
+                  <div>
+                    <span className="text-label text-muted-foreground block mb-2">
+                      Background pattern
                     </span>
                     <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
                       {CARD_PATTERNS.map((p) => {
@@ -496,10 +494,11 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
                             onClick={() => {
                               form.setValue('colorTheme', formatCardStyle(themeId, network, p.id));
                             }}
-                            className={`h-9 px-1 rounded-xl border text-2xs font-semibold flex items-center justify-center cursor-pointer transition-all truncate ${
+                            aria-pressed={isSelected}
+                            className={`no-spring h-10 px-1 rounded-xl text-xs font-semibold flex items-center justify-center cursor-pointer transition-colors duration-(--motion-fast) ease-(--ease-in-out) truncate outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                               isSelected
-                                ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
-                                : 'border-border/60 hover:bg-muted text-muted-foreground'
+                                ? 'bg-primary/10 text-primary ring-2 ring-primary ring-inset'
+                                : 'bg-muted/50 hover:bg-muted text-muted-foreground'
                             }`}
                             title={p.name}
                           >
@@ -511,9 +510,9 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
                   </div>
 
                   {/* Network Selector (Visa, Mastercard, JCB, UnionPay, AMEX) */}
-                  <div className="pt-2 border-t border-border/40">
-                    <span className="text-2xs font-semibold text-muted-foreground block mb-2 uppercase tracking-wider">
-                      Card Network (5 options)
+                  <div>
+                    <span className="text-label text-muted-foreground block mb-2">
+                      Card network
                     </span>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                       {(() => {
@@ -535,10 +534,11 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
                               onClick={() => {
                                 form.setValue('colorTheme', formatCardStyle(themeId, net.id, pattern));
                               }}
-                              className={`h-11 rounded-xl border flex items-center justify-center gap-1.5 p-1.5 cursor-pointer transition-all ${
+                              aria-pressed={isSelected}
+                              className={`no-spring h-12 rounded-xl flex items-center justify-center gap-1.5 p-1.5 cursor-pointer transition-colors duration-(--motion-fast) ease-(--ease-in-out) outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                                 isSelected
-                                  ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
-                                  : 'bg-muted/40 border-border/60 hover:bg-muted text-muted-foreground'
+                                  ? 'bg-primary/10 text-primary font-bold ring-2 ring-primary ring-inset'
+                                  : 'bg-muted/50 hover:bg-muted text-muted-foreground'
                               }`}
                               title={net.label}
                             >
@@ -570,7 +570,7 @@ export function CreditCardModal({ isOpen, onClose, card }: CreditCardModalProps)
             className="min-h-12 h-12 px-6"
           >
             {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-            {isPending ? 'Saving card...' : isEditing ? 'Update Card' : 'Save Card'}
+            {isPending ? 'Saving card…' : isEditing ? 'Update card' : 'Save card'}
           </Button>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>

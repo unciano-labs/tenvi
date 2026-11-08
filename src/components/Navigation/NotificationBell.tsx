@@ -134,26 +134,26 @@ export function NotificationBell() {
     switch (type) {
       case 'ticket_new':
         return (
-          <span className="px-1.5 py-0.5 rounded text-3xs font-extrabold bg-blue-500/10 text-blue-600 dark:text-blue-400">
+          <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-700 dark:text-blue-400">
             Ticket Opened
           </span>
         );
       case 'ticket_reply':
         return (
-          <span className="px-1.5 py-0.5 rounded text-3xs font-extrabold bg-purple-500/10 text-purple-600 dark:text-purple-400">
+          <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-purple-500/10 text-purple-700 dark:text-purple-400">
             New Reply
           </span>
         );
       case 'ticket_status':
         return (
-          <span className="px-1.5 py-0.5 rounded text-3xs font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
             Status Update
           </span>
         );
       case 'system':
       default:
         return (
-          <span className="px-1.5 py-0.5 rounded text-3xs font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400">
             Announcement
           </span>
         );
@@ -208,7 +208,7 @@ export function NotificationBell() {
                 >
                   <Bell className="size-4" />
                   {unreadCount > 0 ? (
-                    <span className="absolute top-1.5 right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-primary text-[9px] font-black text-primary-foreground shadow-2xs animate-in zoom-in-50">
+                    <span className="absolute top-1.5 right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-primary text-[9px] font-bold text-primary-foreground animate-in zoom-in-50">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   ) : (
@@ -224,14 +224,14 @@ export function NotificationBell() {
         <PopoverContent
           align="end"
           sideOffset={8}
-          className="w-80 sm:w-96 p-0 rounded-2xl shadow-lift border border-border/60 bg-card overflow-hidden"
+          className="w-80 sm:w-96 p-0 rounded-2xl shadow-lift bg-card overflow-hidden"
         >
           {/* Popover Header */}
-          <div className="p-3.5 px-4 border-b border-border/50 flex items-center justify-between bg-muted/20">
+          <div className="p-3.5 px-4 flex items-center justify-between bg-muted/20">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-foreground">Notifications</span>
               {unreadCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-primary/10 text-primary">
+                <span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
                   {unreadCount} new
                 </span>
               )}
@@ -243,7 +243,7 @@ export function NotificationBell() {
                   type="button"
                   onClick={handleMarkAllRead}
                   disabled={loading}
-                  className="text-3xs font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <CheckCheck className="size-3" />
                   Mark read
@@ -253,12 +253,12 @@ export function NotificationBell() {
           </div>
 
           {/* Notification List */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-border/40">
+          <div className="max-h-80 overflow-y-auto flex flex-col">
             {notifications.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground space-y-1.5">
                 <Bell className="size-6 opacity-30 mx-auto" />
                 <p className="text-xs font-semibold text-foreground/80">No notifications yet</p>
-                <p className="text-3xs text-muted-foreground max-w-xs mx-auto px-4">
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto px-4">
                   You'll receive alerts here when announcements are broadcast or support replies.
                 </p>
               </div>
@@ -271,7 +271,7 @@ export function NotificationBell() {
                     !item.is_read ? 'bg-primary/5' : ''
                   }`}
                 >
-                  <div className="size-7 rounded-xl bg-muted/80 border border-border/50 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                  <div className="size-7 rounded-xl bg-muted/80 flex items-center justify-center shrink-0 mt-0.5">
                     {getNotificationIcon(item.type)}
                   </div>
 
@@ -284,13 +284,13 @@ export function NotificationBell() {
                       >
                         {item.title}
                       </p>
-                      <span className="text-3xs text-muted-foreground whitespace-nowrap font-mono flex items-center gap-1 shrink-0">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1 shrink-0">
                         <Clock className="size-2.5" />
                         {formatNotificationDate(item.created_at).split(',')[0]}
                       </span>
                     </div>
 
-                    <p className="text-2xs text-muted-foreground line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                       {item.message}
                     </p>
                   </div>
@@ -304,7 +304,7 @@ export function NotificationBell() {
           </div>
 
           {/* Popover Footer */}
-          <div className="p-2.5 px-4 border-t border-border/50 bg-muted/20 flex items-center justify-between text-2xs">
+          <div className="p-2.5 px-4 bg-muted/20 flex items-center justify-between text-xs">
             <button
               type="button"
               onClick={() => {
@@ -340,12 +340,12 @@ export function NotificationBell() {
               <DialogHeader>
                 <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
                   <div className="flex items-center gap-2">
-                    <div className="size-8 rounded-xl bg-muted/80 border border-border/50 flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="size-8 rounded-xl bg-muted/80 flex items-center justify-center shrink-0">
                       {getNotificationIcon(selectedNotification.type)}
                     </div>
                     {getNotificationBadge(selectedNotification.type)}
                   </div>
-                  <span className="text-3xs text-muted-foreground font-mono flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock className="size-3" />
                     {formatNotificationDate(selectedNotification.created_at)}
                   </span>
@@ -358,7 +358,7 @@ export function NotificationBell() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="p-4 rounded-xl bg-muted/30 border border-border/50 max-h-72 overflow-y-auto">
+              <div className="p-4 rounded-xl bg-muted/30 max-h-72 overflow-y-auto">
                 <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line">
                   {selectedNotification.message}
                 </p>
@@ -409,7 +409,7 @@ export function NotificationBell() {
                   <DialogTitle className="text-base font-bold text-foreground">
                     All Notifications
                   </DialogTitle>
-                  <p className="text-2xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Complete history of announcements, ticket updates, and notices
                   </p>
                 </div>
@@ -447,9 +447,9 @@ export function NotificationBell() {
               <button
                 type="button"
                 onClick={() => setFilterTab('all')}
-                className={`px-2.5 py-1 text-3xs font-semibold rounded-md transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
                   filterTab === 'all'
-                    ? 'bg-card text-foreground shadow-2xs font-bold'
+                    ? 'bg-card text-foreground font-bold'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -458,9 +458,9 @@ export function NotificationBell() {
               <button
                 type="button"
                 onClick={() => setFilterTab('unread')}
-                className={`px-2.5 py-1 text-3xs font-semibold rounded-md transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
                   filterTab === 'unread'
-                    ? 'bg-card text-foreground shadow-2xs font-bold'
+                    ? 'bg-card text-foreground font-bold'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -469,9 +469,9 @@ export function NotificationBell() {
               <button
                 type="button"
                 onClick={() => setFilterTab('support')}
-                className={`px-2.5 py-1 text-3xs font-semibold rounded-md transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
                   filterTab === 'support'
-                    ? 'bg-card text-foreground shadow-2xs font-bold'
+                    ? 'bg-card text-foreground font-bold'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -480,9 +480,9 @@ export function NotificationBell() {
               <button
                 type="button"
                 onClick={() => setFilterTab('system')}
-                className={`px-2.5 py-1 text-3xs font-semibold rounded-md transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
                   filterTab === 'system'
-                    ? 'bg-card text-foreground shadow-2xs font-bold'
+                    ? 'bg-card text-foreground font-bold'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -492,12 +492,12 @@ export function NotificationBell() {
           </div>
 
           {/* Filtered Notifications List */}
-          <div className="max-h-96 overflow-y-auto divide-y divide-border/40 rounded-xl border border-border/50 bg-card">
+          <div className="max-h-96 overflow-y-auto flex flex-col rounded-xl bg-card">
             {filteredNotifications.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground space-y-1.5">
                 <Inbox className="size-6 opacity-30 mx-auto" />
                 <p className="text-xs font-semibold text-foreground/80">No notifications match your filter</p>
-                <p className="text-3xs text-muted-foreground">Try clearing search or choosing another category.</p>
+                <p className="text-xs text-muted-foreground">Try clearing search or choosing another category.</p>
               </div>
             ) : (
               filteredNotifications.map((item) => (
@@ -508,7 +508,7 @@ export function NotificationBell() {
                     !item.is_read ? 'bg-primary/5' : ''
                   }`}
                 >
-                  <div className="size-8 rounded-xl bg-muted/80 border border-border/50 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                  <div className="size-8 rounded-xl bg-muted/80 flex items-center justify-center shrink-0 mt-0.5">
                     {getNotificationIcon(item.type)}
                   </div>
                   <div className="flex-1 min-w-0 space-y-1">
@@ -523,12 +523,12 @@ export function NotificationBell() {
                         </p>
                         {getNotificationBadge(item.type)}
                       </div>
-                      <span className="text-3xs text-muted-foreground whitespace-nowrap font-mono flex items-center gap-1 shrink-0">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1 shrink-0">
                         <Clock className="size-2.5" />
                         {formatNotificationDate(item.created_at)}
                       </span>
                     </div>
-                    <p className="text-2xs text-muted-foreground line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                       {item.message}
                     </p>
                   </div>

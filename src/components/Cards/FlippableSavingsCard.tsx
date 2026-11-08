@@ -129,10 +129,10 @@ export function FlippableSavingsCard({
   };
 
   return (
-    <div className="flex flex-col items-center group/card w-full max-w-sm mx-auto transition-transform duration-300 ease-out hover:-translate-y-1.5">
+    <div className="flex flex-col items-center group/card w-full max-w-sm mx-auto">
       {/* 3D Perspective Card Container with Hover Effects */}
       <div
-        className="w-full relative perspective-1200 [perspective:1200px] select-none cursor-pointer"
+        className="@container w-full relative perspective-1200 [perspective:1200px] select-none cursor-pointer rounded-[22px] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         style={{
           aspectRatio: '1.58 / 1',
           minHeight: '215px',
@@ -151,7 +151,7 @@ export function FlippableSavingsCard({
         aria-label={`${account.institution_name} ${account.name}. Click to flip card.`}
       >
         <div
-          className={`size-full relative transition-transform duration-500 ease-in-out preserve-3d [transform-style:preserve-3d] ${
+          className={`size-full relative transition-transform duration-500 ease-(--ease-in-out) preserve-3d [transform-style:preserve-3d] ${
             isFlipped ? '[transform:rotateY(180deg)]' : ''
           }`}
           style={{
@@ -163,7 +163,7 @@ export function FlippableSavingsCard({
         >
           {/* ================= CARD FRONT (Minimal Solid) ================= */}
           <div
-            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} backface-hidden [backface-visibility:hidden] ${
+            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between ${theme.bgColor} ${theme.glowShadow} backface-hidden [backface-visibility:hidden] ${
               isFlipped ? 'opacity-0 pointer-events-none invisible' : 'opacity-100 pointer-events-auto visible'
             }`}
             style={{
@@ -175,12 +175,9 @@ export function FlippableSavingsCard({
               zIndex: isFlipped ? 1 : 2,
               opacity: isFlipped ? 0 : 1,
               visibility: isFlipped ? 'hidden' : 'visible',
-              transition: 'transform 500ms ease-in-out, opacity 350ms ease-in-out, visibility 350ms',
+              transition: 'transform 500ms var(--ease-in-out), opacity 350ms var(--ease-in-out), visibility 350ms',
             }}
           >
-            {/* Subtle solid accent top highlight line */}
-            <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />
-
             {/* Background Pattern Overlay */}
             <CardPatternOverlay pattern={pattern} accentHex={theme.accentHex} />
 
@@ -202,7 +199,7 @@ export function FlippableSavingsCard({
                     render={
                       <button
                         type="button"
-                        className="size-7 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                        className="no-spring size-9 -mr-1.5 -mt-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/85 hover:text-white flex items-center justify-center transition-colors duration-(--motion-fast) cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80"
                         title="Change card accent and pattern"
                         aria-label="Change card accent and pattern"
                       />
@@ -213,7 +210,7 @@ export function FlippableSavingsCard({
                   <PopoverContent
                     side="bottom"
                     align="end"
-                    className="w-72 sm:w-80 p-3.5 rounded-2xl bg-popover text-popover-foreground shadow-lift border border-border/70 space-y-3 z-50"
+                    className="w-72 sm:w-80 p-4 rounded-2xl bg-popover text-popover-foreground shadow-lift gap-4 z-50"
                   >
                     <CardColorPicker
                       compact
@@ -223,9 +220,9 @@ export function FlippableSavingsCard({
                     />
 
                     {/* Pattern Selector (20 patterns) */}
-                    <div className="pt-2 border-t border-border/50">
-                      <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
-                        Background Pattern ({CARD_PATTERNS.length} options)
+                    <div>
+                      <span className="text-label text-muted-foreground block mb-2">
+                        Background pattern ({CARD_PATTERNS.length} options)
                       </span>
                       <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
                         {CARD_PATTERNS.map((p) => {
@@ -235,10 +232,11 @@ export function FlippableSavingsCard({
                               key={p.id}
                               type="button"
                               onClick={() => handleChangePattern(p.id)}
-                              className={`h-7 px-1 rounded-lg border text-3xs font-semibold flex items-center justify-center cursor-pointer transition-all truncate ${
+                              aria-pressed={isSelected}
+                              className={`no-spring h-8 min-w-0 px-1 rounded-lg text-2xs font-medium block truncate cursor-pointer transition-colors duration-(--motion-fast) outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                                 isSelected
-                                  ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
-                                  : 'border-border/60 hover:bg-muted text-muted-foreground'
+                                  ? 'bg-primary/10 text-primary font-semibold ring-1 ring-primary'
+                                  : 'bg-muted/60 hover:bg-muted text-muted-foreground'
                               }`}
                               title={p.name}
                             >
@@ -254,31 +252,31 @@ export function FlippableSavingsCard({
             </div>
 
             {/* Front Middle: Chip + Balance */}
-            <div className="relative z-10 flex items-center justify-between my-auto py-1">
-              <div className="flex items-center gap-2">
+            <div className="relative z-10 flex items-center justify-between gap-3 my-auto py-1">
+              <div className="flex shrink-0 items-center gap-2">
                 <EmvChip />
                 <ContactlessWave />
               </div>
 
-              <div className="text-right">
-                <span className="text-xs font-medium uppercase tracking-wider text-white/70 block">
+              <div className="min-w-0 text-right">
+                <span className="text-xs font-medium uppercase tracking-wider text-white/75 block">
                   Current Stash
                 </span>
-                <span className="text-2xl font-bold tracking-tight text-white leading-tight">
+                <span className="num block text-[clamp(1.125rem,8cqi,1.5rem)] font-bold tracking-tight text-white leading-tight whitespace-nowrap">
                   {formatMoney(balance)}
                 </span>
               </div>
             </div>
 
             {/* Front Bottom: Identifier / Dots + Type Badge */}
-            <div className="relative z-10 flex items-end justify-between pt-1">
-              <div className="font-mono text-xs sm:text-sm font-semibold tracking-widest text-white/80">
+            <div className="relative z-10 flex items-end justify-between gap-2 pt-1">
+              <div className="min-w-0 truncate font-mono text-xs sm:text-sm font-semibold tracking-[0.18em] text-white/80">
                 {account.account_number_last4
                   ? `•••• •••• •••• ${account.account_number_last4}`
                   : 'VAULT SAVINGS'}
               </div>
 
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/90 border border-white/15 uppercase tracking-wider">
+              <span className="shrink-0 whitespace-nowrap text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/15 text-white">
                 {getAccountTypeLabel(account.account_type)}
               </span>
             </div>
@@ -286,7 +284,7 @@ export function FlippableSavingsCard({
 
           {/* ================= CARD BACK (Details Solid) ================= */}
           <div
-            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between border ${theme.borderColor} ${theme.hoverBorderColor} ${theme.bgColor} ${theme.glowShadow} backface-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] ${
+            className={`absolute inset-0 size-full rounded-[22px] p-4 sm:p-5 text-white flex flex-col justify-between ${theme.bgColor} ${theme.glowShadow} backface-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] ${
               isFlipped ? 'opacity-100 pointer-events-auto visible' : 'opacity-0 pointer-events-none invisible'
             }`}
             style={{
@@ -298,12 +296,9 @@ export function FlippableSavingsCard({
               zIndex: isFlipped ? 2 : 1,
               opacity: isFlipped ? 1 : 0,
               visibility: isFlipped ? 'visible' : 'hidden',
-              transition: 'transform 500ms ease-in-out, opacity 350ms ease-in-out, visibility 350ms',
+              transition: 'transform 500ms var(--ease-in-out), opacity 350ms var(--ease-in-out), visibility 350ms',
             }}
           >
-            {/* Subtle solid accent top highlight line */}
-            <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />
-
             {/* Background Pattern Overlay */}
             <CardPatternOverlay pattern={pattern} accentHex={theme.accentHex} />
 
@@ -324,27 +319,27 @@ export function FlippableSavingsCard({
                     render={
                       <button
                         type="button"
-                        className="size-6 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                        className="no-spring size-9 -mr-1.5 -mt-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/85 hover:text-white flex items-center justify-center transition-colors duration-(--motion-fast) cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80"
                         aria-label="Account actions menu"
                         onClick={(e) => e.stopPropagation()}
                       />
                     }
                   >
-                    <MoreVertical className="size-3" />
+                    <MoreVertical className="size-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-40 p-1 rounded-xl shadow-lift bg-popover text-popover-foreground border border-border/70 z-50 text-xs"
+                    className="w-48 p-1 rounded-xl shadow-lift bg-popover text-popover-foreground z-50 text-sm"
                   >
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
                         onOpenBalanceModal(account);
                       }}
-                      className="px-2.5 py-1.5 text-xs font-semibold cursor-pointer flex items-center gap-2 hover:bg-muted rounded-lg"
+                      className="min-h-10 px-2.5 py-2 text-sm font-medium cursor-pointer flex items-center gap-2 hover:bg-muted rounded-lg"
                     >
-                      <ArrowUpDown className="size-3 text-muted-foreground" />
-                      <span>Adjust Balance</span>
+                      <ArrowUpDown className="size-4 text-muted-foreground" />
+                      <span>Adjust balance</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="my-1" />
                     <DropdownMenuItem
@@ -352,10 +347,10 @@ export function FlippableSavingsCard({
                         e.stopPropagation();
                         onDelete(account.id);
                       }}
-                      className="px-2.5 py-1.5 text-xs font-semibold text-danger hover:bg-lighterror cursor-pointer flex items-center gap-2 rounded-lg"
+                      className="min-h-10 px-2.5 py-2 text-sm font-medium text-danger hover:bg-lighterror cursor-pointer flex items-center gap-2 rounded-lg"
                     >
-                      <Trash2 className="size-3" />
-                      <span>Remove Account</span>
+                      <Trash2 className="size-4" />
+                      <span>Remove account</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -365,22 +360,22 @@ export function FlippableSavingsCard({
             {/* Back Middle: Balance + Goal Progress or Interest */}
             <div className="relative z-10 space-y-1.5 my-auto py-0.5">
               <div className="flex items-baseline justify-between gap-2">
-                <div>
+                <div className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wider text-white/70 block">
                     Stash Balance
                   </span>
-                  <div className="text-2xl font-bold tracking-tight text-white leading-tight">
+                  <div className="num text-[clamp(1.125rem,8cqi,1.5rem)] font-bold tracking-tight text-white leading-tight whitespace-nowrap">
                     {formatMoney(balance)}
                   </div>
                 </div>
 
                 {account.interest_rate && account.interest_rate > 0 ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/30 flex items-center gap-1 shrink-0">
+                  <span className="num text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-400/25 text-amber-100 flex items-center gap-1 shrink-0">
                     <Sparkles className="size-2.5" />
                     {account.interest_rate}% p.a.
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/80 border border-white/15 shrink-0">
+                  <span className="whitespace-nowrap text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/15 text-white shrink-0">
                     {getAccountTypeLabel(account.account_type)}
                   </span>
                 )}
@@ -391,25 +386,27 @@ export function FlippableSavingsCard({
                 <div className="space-y-1">
                   <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${theme.barColor} transition-all duration-500`}
-                      style={{ width: `${progress}%` }}
+                      className={`h-full w-full origin-left rounded-full ${theme.barColor} transition-transform duration-500 ease-(--ease-out)`}
+                      style={{ transform: `scaleX(${progress / 100})` }}
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-white/70 font-medium">
+                  <div className="num flex items-center justify-between gap-2 text-[11px] text-white/80 font-medium">
                     <span>Goal: {formatMoney(target)}</span>
                     <span>{progress}% reached</span>
                   </div>
                 </div>
               ) : (
-                <div className="text-[10px] text-white/60">
-                  <span>{connectedTxs.length} transaction records connected</span>
+                <div className="num text-[11px] text-white/75">
+                  <span>
+                    {connectedTxs.length} transaction {connectedTxs.length === 1 ? 'record' : 'records'} connected
+                  </span>
                 </div>
               )}
             </div>
 
             {/* Back Bottom: Quick Update Balance Action */}
             <div
-              className="relative z-10 pt-2 border-t border-white/15 flex items-center"
+              className="relative z-10 pt-2 flex items-center"
               data-no-flip="true"
               onClick={(e) => e.stopPropagation()}
             >
@@ -419,10 +416,10 @@ export function FlippableSavingsCard({
                   e.stopPropagation();
                   onOpenBalanceModal(account);
                 }}
-                className="w-full h-7 text-xs font-semibold rounded-lg bg-white/15 hover:bg-white/25 text-white border border-white/20 cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                className="w-full h-9 min-h-9 text-xs sm:text-sm font-semibold rounded-xl bg-white/15 hover:bg-white/25 text-white cursor-pointer flex items-center justify-center gap-1.5 focus-visible:ring-white/80 focus-visible:ring-offset-0"
               >
-                <ArrowUpDown className="size-3" />
-                <span>Adjust / Record Balance</span>
+                <ArrowUpDown className="size-3.5" />
+                <span>Adjust / record balance</span>
               </Button>
             </div>
           </div>
@@ -433,9 +430,9 @@ export function FlippableSavingsCard({
       <button
         type="button"
         onClick={() => setIsFlipped((prev) => !prev)}
-        className="mt-2.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer py-1 px-3 rounded-full hover:bg-muted/60"
+        className="no-spring mt-2 inline-flex min-h-10 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground font-medium transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer px-3 rounded-full hover:bg-muted/60 outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <RotateCcw className="size-3.5 transition-transform duration-300 group-hover/card:rotate-180" />
+        <RotateCcw className={`size-3.5 transition-transform duration-(--motion-base) ease-(--ease-spring-pop) ${isFlipped ? 'rotate-180' : ''}`} />
         <span>{isFlipped ? 'Tap to view front' : 'Tap to flip'}</span>
       </button>
     </div>

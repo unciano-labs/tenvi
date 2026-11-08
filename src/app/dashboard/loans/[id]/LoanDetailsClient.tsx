@@ -363,27 +363,27 @@ export function LoanDetailsClient({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-150 pb-12">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Top Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/dashboard/loans"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex min-h-10 items-center gap-2 rounded-lg text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors duration-(--motion-fast) outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to All Loans
+          Back to all loans
         </Link>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="page-header-actions">
           <Button
             type="button"
             size="sm"
-            variant="secondary"
+            variant="soft"
             onClick={() => setIsEditLoanModalOpen(true)}
             className="gap-1.5"
           >
             <Edit2 className="w-4 h-4 text-muted-foreground" />
-            Edit Loan Details
+            Edit loan details
           </Button>
 
           {loan.status !== 'paid' && (
@@ -393,46 +393,46 @@ export function LoanDetailsClient({
               className="gap-1.5"
             >
               <Plus className="w-4 h-4" />
-              Record Repayment
+              Record repayment
             </Button>
           )}
         </div>
       </div>
 
       {/* Main Loan Overview Card */}
-      <div className="bg-card text-card-foreground rounded-3xl p-6 sm:p-8 shadow-card overflow-hidden min-w-0 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
+      <div className="bg-card text-card-foreground rounded-3xl p-5 sm:p-8 shadow-card min-w-0 flex flex-col gap-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-4 min-w-0 flex-1 basis-72">
             <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <HandCoins className="w-7 h-7" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                <h1 className="text-display text-foreground min-w-0">
                   {loan.contact?.name || 'Borrower'}
                 </h1>
                 {loan.is_installment && (
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 inline-flex items-center gap-1.5">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-primary/10 text-primary inline-flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
                     {loan.installment_months
-                      ? `${loan.installment_months} Months Installment`
-                      : 'Open-Ended (Monthly Interest)'}
+                      ? `${loan.installment_months}-month installment`
+                      : 'Open-ended (monthly interest)'}
                   </span>
                 )}
                 {Number(loan.monthly_interest_rate || 0) > 0 && (
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 inline-flex items-center gap-1.5">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-primary/10 text-primary inline-flex items-center gap-1.5">
                     <Percent className="w-3.5 h-3.5" />
-                    {loan.monthly_interest_rate}% / mo Interest
+                    {loan.monthly_interest_rate}% / mo interest
                   </span>
                 )}
                 {loan.credit_card && (
                   <span className="text-xs font-semibold px-3 py-1 rounded-full bg-muted text-foreground inline-flex items-center gap-1.5">
-                    <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
-                    Card Cycle Synced
+                    <CreditCard className="w-3.5 h-3.5 text-primary" />
+                    Card cycle synced
                   </span>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-prose">
                 {loan.reason || 'Personal loan record'}
               </p>
             </div>
@@ -440,68 +440,68 @@ export function LoanDetailsClient({
 
           {/* Status Badge */}
           <span
-            className={`text-xs font-bold px-3.5 py-1.5 rounded-full self-start whitespace-nowrap ${
+            className={`text-xs font-semibold px-3.5 py-1.5 rounded-full self-start whitespace-nowrap ${
               loan.status === 'paid'
-                ? 'bg-emerald-500/10 text-emerald-500'
+                ? 'bg-success-soft text-success'
                 : loan.status === 'partial'
-                ? 'bg-blue-500/10 text-blue-500'
-                : 'bg-amber-500/10 text-amber-500'
+                ? 'bg-primary/10 text-primary'
+                : 'bg-warning-soft text-warning-soft-foreground'
             }`}
           >
             {loan.status === 'paid'
-              ? 'All Paid Up ✅'
+              ? 'All paid up'
               : loan.status === 'partial'
-              ? 'Partially Paid'
+              ? 'Partially paid'
               : 'Unpaid'}
           </span>
         </div>
 
         {/* Balance Metrics Card */}
-        <div className="p-6 rounded-2xl bg-muted/60 space-y-5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+        <div className="p-5 sm:p-6 rounded-2xl bg-muted/50 flex flex-col gap-5">
+          <div className="grid-fluid gap-x-6 gap-y-5 [--grid-min:10rem] [&>*]:[container-type:inline-size]">
             <div>
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-                Remaining Balance
+              <span className="text-label text-muted-foreground block">
+                Remaining balance
               </span>
-              <span className="text-2xl font-bold tracking-tight text-foreground">
+              <span className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground block whitespace-nowrap">
                 {formatMoney(loan.balance_remaining)}
               </span>
             </div>
 
             <div>
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-                Total Purchase / Amount
+              <span className="text-label text-muted-foreground block">
+                Total purchase / amount
               </span>
-              <span className="text-2xl font-bold tracking-tight text-foreground">
+              <span className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground block whitespace-nowrap">
                 {formatMoney(loan.amount)}
               </span>
             </div>
 
             {Number(loan.downpayment_amount || 0) > 0 ? (
               <div>
-                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-                  Downpayment Paid
+                <span className="text-label text-muted-foreground block">
+                  Downpayment paid
                 </span>
-                <span className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+                <span className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-success block whitespace-nowrap">
                   {formatMoney(loan.downpayment_amount)}
                 </span>
               </div>
             ) : (
               <div>
-                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-                  Financed Principal
+                <span className="text-label text-muted-foreground block">
+                  Financed principal
                 </span>
-                <span className="text-2xl font-bold tracking-tight text-foreground">
+                <span className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground block whitespace-nowrap">
                   {formatMoney(loan.amount)}
                 </span>
               </div>
             )}
 
             <div>
-              <span className="text-xs text-muted-foreground font-medium block">
-                Total Repaid So Far
+              <span className="text-label text-muted-foreground block">
+                Total repaid so far
               </span>
-              <span className="text-2xl font-bold text-emerald-500">
+              <span className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-success block whitespace-nowrap">
                 {formatMoney(math.paidAmount)}
               </span>
             </div>
@@ -509,22 +509,22 @@ export function LoanDetailsClient({
 
           {/* Interest Breakdown row if loan has monthly interest */}
           {Number(loan.monthly_interest_rate || 0) > 0 && (
-            <div className="pt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-card shadow-xs flex items-center justify-between">
-                <span className="text-xs text-muted-foreground font-medium">Monthly Interest Rate</span>
-                <span className="text-xs font-bold text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+            <div className="grid-fluid gap-3 [--grid-min:14rem]">
+              <div className="p-3 rounded-xl bg-card flex items-center justify-between gap-3 min-w-0">
+                <span className="text-xs text-muted-foreground font-medium min-w-0">Monthly interest rate</span>
+                <span className="num shrink-0 whitespace-nowrap text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                   {loan.monthly_interest_rate}% / month
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-card shadow-xs flex items-center justify-between">
-                <span className="text-xs text-muted-foreground font-medium">Total Interest</span>
-                <span className="text-xs font-bold text-foreground">
+              <div className="p-3 rounded-xl bg-card flex items-center justify-between gap-3 min-w-0">
+                <span className="text-xs text-muted-foreground font-medium min-w-0">Total interest</span>
+                <span className="num shrink-0 whitespace-nowrap text-xs font-bold text-foreground">
                   {formatMoney(loan.total_interest || 0)}
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-card shadow-xs flex items-center justify-between">
-                <span className="text-xs text-muted-foreground font-medium">Total Repayable (Principal + Interest)</span>
-                <span className="text-xs font-extrabold text-blue-500">
+              <div className="p-3 rounded-xl bg-card flex items-center justify-between gap-3 min-w-0">
+                <span className="text-xs text-muted-foreground font-medium min-w-0">Total repayable (principal + interest)</span>
+                <span className="num shrink-0 whitespace-nowrap text-xs font-bold text-primary">
                   {formatMoney(
                     (Number(loan.amount) - Number(loan.downpayment_amount || 0)) +
                     Number(loan.total_interest || 0) +
@@ -539,7 +539,7 @@ export function LoanDetailsClient({
           <div className="space-y-1.5">
             <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                className="h-full bg-success rounded-full transition-colors duration-(--motion-fast)"
                 style={{ width: `${math.percentPaid}%` }}
               />
             </div>
@@ -555,10 +555,10 @@ export function LoanDetailsClient({
         </div>
 
         {/* Loan Meta details row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 pt-2">
-          <div className="p-4 rounded-2xl bg-muted/60">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-              Date Lent
+        <div className="grid-fluid gap-3 [--grid-min:10rem]">
+          <div className="p-4 rounded-xl bg-muted/50 min-w-0">
+            <span className="text-label text-muted-foreground block">
+              Date lent
             </span>
             <span className="text-sm font-bold text-foreground mt-1 block">
               {formatDate(loan.loaned_on)}
@@ -567,48 +567,48 @@ export function LoanDetailsClient({
 
           {loan.is_installment ? (
             <>
-              <div className="p-4 rounded-2xl bg-muted/60">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                  Monthly Due Day
+              <div className="p-4 rounded-xl bg-muted/50 min-w-0">
+                <span className="text-label text-muted-foreground block">
+                  Monthly due day
                 </span>
                 <span className="text-sm font-bold text-foreground mt-1 block">
                   Every {getOrdinalSuffix(loan.monthly_due_day || 15)}
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-muted/60">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                  {loan.installment_months ? 'Monthly Due Amount' : 'Monthly Interest Due'}
+              <div className="p-4 rounded-xl bg-muted/50 min-w-0">
+                <span className="text-label text-muted-foreground block">
+                  {loan.installment_months ? 'Monthly due amount' : 'Monthly interest due'}
                 </span>
-                <span className="text-sm font-bold text-blue-500 mt-1 block">
+                <span className="text-sm font-bold text-primary mt-1 block">
                   {loan.monthly_amount ? formatMoney(loan.monthly_amount) : 'Calculated'}
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-muted/60">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                  Installment Term
+              <div className="p-4 rounded-xl bg-muted/50 min-w-0">
+                <span className="text-label text-muted-foreground block">
+                  Installment term
                 </span>
                 <span className="text-sm font-bold text-foreground mt-1 block">
-                  {loan.installment_months ? `${loan.installment_months} Months` : 'No Fixed Term (Open-Ended)'}
+                  {loan.installment_months ? `${loan.installment_months} months` : 'No fixed term (open-ended)'}
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-muted/60">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                  Interest Rate
+              <div className="p-4 rounded-xl bg-muted/50 min-w-0">
+                <span className="text-label text-muted-foreground block">
+                  Interest rate
                 </span>
                 <span className="text-sm font-bold text-foreground mt-1 block">
                   {Number(loan.monthly_interest_rate || 0) > 0
                     ? `${loan.monthly_interest_rate}% / month`
-                    : '0% (No Interest)'}
+                    : '0% (no interest)'}
                 </span>
               </div>
             </>
           ) : (
-            <div className="p-4 rounded-2xl bg-muted/60">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                Target Return Date
+            <div className="p-4 rounded-xl bg-muted/50 min-w-0">
+              <span className="text-label text-muted-foreground block">
+                Target return date
               </span>
               <span className="text-sm font-bold text-foreground mt-1 block">
                 {loan.due_date ? formatDate(loan.due_date) : 'Flexible (No set date)'}
@@ -620,19 +620,19 @@ export function LoanDetailsClient({
 
       {/* Linked Credit Card & Downpayment Highlights */}
       {Boolean(loan.credit_card || Number(loan.downpayment_amount || 0) > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 @2xl/main:grid-cols-2 gap-4">
           {loan.credit_card && (
             <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card overflow-hidden min-w-0 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                 <CreditCard className="w-6 h-6" />
               </div>
-              <div className="space-y-1 flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                    Purchased via Credit Card
+              <div className="space-y-1 flex-1 min-w-0">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-label text-muted-foreground block">
+                    Purchased via credit card
                   </span>
-                  <span className="text-xs font-bold text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full">
-                    Cycle Synchronized ⚡
+                  <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    Cycle synced
                   </span>
                 </div>
                 <h3 className="text-base font-bold text-foreground">
@@ -642,18 +642,18 @@ export function LoanDetailsClient({
                   Card ending in <span className="font-semibold text-foreground">•••• {loan.credit_card.last_4}</span>
                 </p>
                 <div className="pt-2 flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold text-indigo-500 bg-indigo-500/10 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
                     Swiped: {formatMoney(loan.amount)}
                   </span>
                   <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full">
                     Statement Cutoff: Every {getOrdinalSuffix(loan.credit_card.statement_day)}
                   </span>
-                  <span className="text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-semibold text-success bg-success-soft px-2.5 py-0.5 rounded-full">
                     Payment Due: Every {getOrdinalSuffix(loan.credit_card.due_day)}
                   </span>
                   <Link
                     href="/dashboard/cards"
-                    className="text-xs font-semibold text-blue-500 hover:underline ml-auto"
+                    className="text-xs font-semibold text-primary hover:underline ml-auto"
                   >
                     View Card Statements →
                   </Link>
@@ -664,15 +664,15 @@ export function LoanDetailsClient({
 
           {Number(loan.downpayment_amount || 0) > 0 ? (
             <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card overflow-hidden min-w-0 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-success-soft text-success flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <div className="space-y-1 flex-1">
+              <div className="space-y-1 flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                    Initial Downpayment
+                  <span className="text-label text-muted-foreground block">
+                    Initial downpayment
                   </span>
-                  <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-success bg-success-soft px-2 py-0.5 rounded-full">
                     Settled Upfront ✅
                   </span>
                 </div>
@@ -692,7 +692,7 @@ export function LoanDetailsClient({
       <div className="bg-card text-card-foreground rounded-3xl p-6 sm:p-8 shadow-card overflow-hidden min-w-0 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <Bell className="w-6 h-6" />
             </div>
             <div>
@@ -703,7 +703,7 @@ export function LoanDetailsClient({
                 <span
                   className={`text-xs font-bold px-3 py-1 rounded-full ${
                     loan.notify_borrower !== false
-                      ? 'bg-blue-500/10 text-blue-500'
+                      ? 'bg-primary/10 text-primary'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
@@ -735,11 +735,11 @@ export function LoanDetailsClient({
         {/* Inline Contact Editor */}
         {isEditingContact ? (
           <div className="p-5 rounded-2xl bg-muted/60 space-y-4 animate-in fade-in duration-150">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Update Borrower Notification Details
+            <h3 className="text-sm font-semibold text-foreground">
+              Update borrower notification details
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 @xl/main:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5 text-muted-foreground" /> Borrower Mobile Number (SMS)
@@ -773,7 +773,7 @@ export function LoanDetailsClient({
                   type="checkbox"
                   checked={editNotify}
                   onChange={(e) => setEditNotify(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                  className="rounded text-primary focus:ring-blue-500 w-4 h-4"
                 />
                 <span>Automatically dispatch reminder 3 days before due date (once a day)</span>
               </label>
@@ -807,9 +807,9 @@ export function LoanDetailsClient({
         ) : (
           /* Contact Details View */
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-muted/60">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block flex items-center gap-1.5">
+            <div className="grid grid-cols-1 @xl/main:grid-cols-3 gap-4">
+              <div className="p-4 rounded-xl bg-muted/50 min-w-0">
+                <span className="text-label text-muted-foreground block flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5 text-muted-foreground" /> Mobile Number
                 </span>
                 <span className="text-sm font-bold text-foreground mt-1 block">
@@ -819,8 +819,8 @@ export function LoanDetailsClient({
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-muted/60">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block flex items-center gap-1.5">
+              <div className="p-4 rounded-xl bg-muted/50 min-w-0">
+                <span className="text-label text-muted-foreground block flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5 text-muted-foreground" /> Email Address
                 </span>
                 <span className="text-sm font-bold text-foreground mt-1 block truncate">
@@ -830,13 +830,13 @@ export function LoanDetailsClient({
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-muted/60">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block flex items-center gap-1.5">
+              <div className="p-4 rounded-xl bg-muted/50 min-w-0">
+                <span className="text-label text-muted-foreground block flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Next Scheduled Alert
                 </span>
                 <span className="text-sm font-bold text-foreground mt-1 block">
                   {loan.status === 'paid' ? (
-                    <span className="text-emerald-500 font-semibold">Loan fully paid</span>
+                    <span className="text-success font-semibold">Loan fully paid</span>
                   ) : loan.is_installment && installments.find((i) => !i.is_paid) ? (
                     (() => {
                       const next = installments.find((i) => !i.is_paid)!;
@@ -872,7 +872,7 @@ export function LoanDetailsClient({
                       {isSendingReminder === 'sms' ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <Send className="w-3.5 h-3.5 text-blue-500" />
+                        <Send className="w-3.5 h-3.5 text-primary" />
                       )}
                       Send SMS Now
                     </Button>
@@ -888,7 +888,7 @@ export function LoanDetailsClient({
                       {isSendingReminder === 'email' ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <Send className="w-3.5 h-3.5 text-indigo-500" />
+                        <Send className="w-3.5 h-3.5 text-primary" />
                       )}
                       Send Email Now
                     </Button>
@@ -904,7 +904,7 @@ export function LoanDetailsClient({
                           handleOpenCustomizer('sms');
                         }
                       }}
-                      className="bg-card hover:bg-muted shadow-xs gap-1.5 font-semibold text-foreground"
+                      className="bg-card hover:bg-muted shadow-card gap-1.5 font-semibold text-foreground"
                     >
                       <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                       {isCustomizingMessage ? 'Close Customizer' : 'Customize & Preview'}
@@ -918,14 +918,14 @@ export function LoanDetailsClient({
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                          <MessageSquare className="w-4 h-4 text-blue-500" />
+                          <MessageSquare className="w-4 h-4 text-primary" />
                           Customize Message for {loan.contact?.name || 'Borrower'}
                         </span>
-                        <div className="flex items-center gap-1 p-0.5 bg-card rounded-lg shadow-xs">
+                        <div className="flex items-center gap-1 p-0.5 bg-card rounded-lg shadow-card">
                           <button
                             type="button"
                             onClick={() => handleSwitchCustomChannel('sms')}
-                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors duration-(--motion-fast) cursor-pointer ${
                               customChannel === 'sms'
                                 ? 'bg-primary text-primary-foreground'
                                 : 'text-muted-foreground hover:text-foreground'
@@ -936,7 +936,7 @@ export function LoanDetailsClient({
                           <button
                             type="button"
                             onClick={() => handleSwitchCustomChannel('email')}
-                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors duration-(--motion-fast) cursor-pointer ${
                               customChannel === 'email'
                                 ? 'bg-primary text-primary-foreground'
                                 : 'text-muted-foreground hover:text-foreground'
@@ -959,7 +959,7 @@ export function LoanDetailsClient({
 
                     {/* Variable Inserter Chips */}
                     <div className="space-y-1.5">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                      <span className="text-label text-muted-foreground block">
                         Tap to Insert Dynamic Variable Value:
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -968,7 +968,7 @@ export function LoanDetailsClient({
                             key={v.key}
                             type="button"
                             onClick={() => handleInsertLoanVar(v.key)}
-                            className="bg-card hover:bg-muted px-2.5 py-1 rounded-lg text-xs font-medium text-foreground shadow-xs transition-all cursor-pointer"
+                            className="bg-card hover:bg-muted px-2.5 py-1 rounded-lg text-xs font-medium text-foreground shadow-card transition-colors duration-(--motion-fast) cursor-pointer"
                             title={`Insert ${currentLoanVariables[v.key]}`}
                           >
                             <span className="font-mono text-primary font-bold text-xs">
@@ -1059,7 +1059,7 @@ export function LoanDetailsClient({
                 <h2 className="text-xl font-extrabold text-foreground tracking-tight">
                   Monthly Payment Schedule
                 </h2>
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-500/10 text-blue-500">
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary">
                   {totalInstallmentsCount} Months • {totalInstallmentsCount} Records
                 </span>
               </div>
@@ -1080,7 +1080,7 @@ export function LoanDetailsClient({
                 Change Term / Plan
               </Button>
               <div className="text-xs font-semibold text-muted-foreground bg-muted/60 px-3.5 py-2 rounded-xl">
-                Progress: <span className="text-emerald-500 font-bold">{paidInstallmentsCount}</span> / {totalInstallmentsCount} paid
+                Progress: <span className="text-success font-bold">{paidInstallmentsCount}</span> / {totalInstallmentsCount} paid
               </div>
             </div>
           </div>
@@ -1109,7 +1109,7 @@ export function LoanDetailsClient({
                         key={m}
                         type="button"
                         onClick={() => setSelectedMonths(m)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-colors duration-(--motion-fast) cursor-pointer ${
                           selectedMonths === m
                             ? 'bg-primary text-primary-foreground shadow-sm'
                             : 'bg-card text-foreground hover:bg-muted'
@@ -1124,7 +1124,7 @@ export function LoanDetailsClient({
                 <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                      Monthly Due Day
+                      Monthly due day
                     </label>
                     <Input
                       type="number"
@@ -1153,7 +1153,7 @@ export function LoanDetailsClient({
                     />
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-card flex flex-col justify-center shadow-xs">
+                  <div className="p-3.5 rounded-xl bg-card flex flex-col justify-center shadow-card">
                     <span className="text-xs text-muted-foreground font-medium">New Monthly Due:</span>
                     <span className="text-lg font-extrabold text-primary">
                       ₱{previewMonthly} / month
@@ -1209,7 +1209,7 @@ export function LoanDetailsClient({
                   return (
                     <TableRow
                       key={inst.id}
-                      className={inst.is_paid ? 'bg-muted/30' : dueStatus.variant === 'overdue' ? 'bg-rose-500/10' : ''}
+                      className={inst.is_paid ? 'bg-muted/30' : dueStatus.variant === 'overdue' ? 'bg-danger-soft' : ''}
                     >
                       <TableCell className="font-bold text-foreground">
                         <div
@@ -1235,18 +1235,18 @@ export function LoanDetailsClient({
                           {formatDate(inst.due_date)}
                         </div>
                         {inst.statement_date && (
-                          <div className="text-xs text-indigo-500 font-medium">
+                          <div className="text-xs text-primary font-medium">
                             Cutoff: {formatDate(inst.statement_date)}
                           </div>
                         )}
                         <span
                           className={`text-xs font-medium block ${
                             inst.is_paid
-                              ? 'text-emerald-500'
+                              ? 'text-success'
                               : dueStatus.variant === 'overdue'
-                              ? 'text-rose-500 font-semibold'
+                              ? 'text-danger font-semibold'
                               : dueStatus.variant === 'due-today' || dueStatus.variant === 'due-soon'
-                              ? 'text-amber-500 font-semibold'
+                              ? 'text-warning-soft-foreground font-semibold'
                               : 'text-muted-foreground'
                           }`}
                         >
@@ -1338,7 +1338,7 @@ export function LoanDetailsClient({
         <div className="bg-card text-card-foreground rounded-3xl p-6 sm:p-8 shadow-card overflow-hidden min-w-0 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                 <Clock className="w-6 h-6" />
               </div>
               <div>
@@ -1355,14 +1355,14 @@ export function LoanDetailsClient({
 
             <span className="text-xs font-semibold px-3 py-1 rounded-full bg-muted text-muted-foreground shrink-0 self-start sm:self-auto">
               {Number(loan.monthly_interest_rate || 0) > 0 && !loan.installment_months
-                ? 'Open-Ended (Monthly Interest)'
+                ? 'Open-ended (monthly interest)'
                 : 'No Schedule Yet'}
             </span>
           </div>
 
           <div className="p-5 rounded-2xl bg-muted/60 space-y-5">
             <div>
-              <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">
+              <label className="block text-sm font-semibold text-foreground mb-2">
                 Select Installment Term (Number of Months)
               </label>
               <div className="flex flex-wrap gap-2.5">
@@ -1371,7 +1371,7 @@ export function LoanDetailsClient({
                     key={m}
                     type="button"
                     onClick={() => setSelectedMonths(m)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-colors duration-(--motion-fast) cursor-pointer ${
                       selectedMonths === m
                         ? 'bg-primary text-primary-foreground shadow-sm'
                         : 'bg-card text-foreground hover:bg-muted'
@@ -1383,9 +1383,9 @@ export function LoanDetailsClient({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 @xl/main:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1.5">
+                <label className="block text-sm font-semibold text-foreground mb-1.5">
                   Monthly Due Day (Day of Month)
                 </label>
                 <Input
@@ -1403,7 +1403,7 @@ export function LoanDetailsClient({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1.5">
+                <label className="block text-sm font-semibold text-foreground mb-1.5">
                   Monthly Interest Rate (%)
                 </label>
                 <Input
@@ -1424,7 +1424,7 @@ export function LoanDetailsClient({
                       onClick={() => setSelectedRate(rate)}
                       className={`text-xs font-bold px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
                         selectedRate === rate
-                          ? 'bg-indigo-500 text-white'
+                          ? 'bg-primary text-primary-foreground'
                           : 'bg-card hover:bg-muted text-muted-foreground'
                       }`}
                     >
@@ -1434,11 +1434,11 @@ export function LoanDetailsClient({
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-card shadow-xs flex flex-col justify-center">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="p-4 rounded-xl bg-card shadow-card flex flex-col justify-center">
+                <span className="text-label text-muted-foreground">
                   Calculated Monthly Share:
                 </span>
-                <span className="text-2xl font-extrabold text-blue-500 mt-0.5">
+                <span className="num text-figure text-primary mt-0.5">
                   ₱{previewMonthly} / month
                 </span>
                 <span className="text-xs text-muted-foreground font-medium mt-1">
@@ -1481,7 +1481,7 @@ export function LoanDetailsClient({
                     <span className="text-xs sm:text-sm font-bold text-foreground">
                       Repayment Record
                     </span>
-                    <span className="text-2xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                    <span className="text-2xs font-semibold px-2.5 py-0.5 rounded-full bg-success-soft text-success shrink-0">
                       Recorded
                     </span>
                   </div>
@@ -1491,7 +1491,7 @@ export function LoanDetailsClient({
                   </div>
                 </div>
                 <div className="shrink-0 text-right pt-0.5">
-                  <span className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 whitespace-nowrap block">
+                  <span className="text-sm sm:text-base font-extrabold text-success whitespace-nowrap block">
                     {formatMoney(p.amount)}
                   </span>
                 </div>
@@ -1515,7 +1515,7 @@ export function LoanDetailsClient({
             </div>
             <Link
               href="/dashboard/transactions"
-              className="text-xs font-semibold text-blue-500 hover:underline"
+              className="text-xs font-semibold text-primary hover:underline"
             >
               All Transactions →
             </Link>
@@ -1531,8 +1531,8 @@ export function LoanDetailsClient({
                   <div
                     className={`size-9 sm:size-10 rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 mt-0.5 ${
                       tx.kind === 'income'
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                        ? 'bg-success-soft text-success'
+                        : 'bg-danger-soft text-danger'
                     }`}
                   >
                     {tx.kind === 'income' ? '+' : '-'}
@@ -1543,10 +1543,10 @@ export function LoanDetailsClient({
                         {tx.note || (tx.kind === 'income' ? 'Repayment Received' : 'Purchase Swiped')}
                       </span>
                       <span
-                        className={`text-2xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${
+                        className={`text-2xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                           tx.kind === 'income'
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                            ? 'bg-success-soft text-success'
+                            : 'bg-danger-soft text-danger'
                         }`}
                       >
                         {tx.kind === 'income' ? 'Repayment In' : 'Card Swipe Out'}
@@ -1562,7 +1562,7 @@ export function LoanDetailsClient({
                 <div className="shrink-0 text-right pt-0.5">
                   <span
                     className={`text-sm sm:text-base font-extrabold whitespace-nowrap block ${
-                      tx.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'
+                      tx.kind === 'income' ? 'text-success' : 'text-foreground'
                     }`}
                   >
                     {tx.kind === 'income' ? '+' : '-'} {formatMoney(tx.amount)}

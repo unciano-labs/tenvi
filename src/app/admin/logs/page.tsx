@@ -8,14 +8,14 @@ export const metadata = {
 
 export default function AdminLogsPage() {
   return (
-    <div className="space-y-6 animate-in fade-in-50 duration-200">
-      <div>
-        <h1 className="text-2xl font-black tracking-tight text-foreground">
-          Delivery Logs & Audit Trail
-        </h1>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Real-time delivery verification across Gmail SMTP Relay and httpSMS Gateway.
-        </p>
+    <div className="flex flex-col gap-6 sm:gap-8">
+      <div className="page-header">
+        <div>
+          <h1 className="text-display text-foreground">Delivery logs & audit trail</h1>
+          <p className="mt-1 max-w-prose text-sm sm:text-base text-muted-foreground">
+            Real-time delivery verification across Gmail SMTP Relay and httpSMS Gateway.
+          </p>
+        </div>
       </div>
 
       <NotificationLogsPanel />

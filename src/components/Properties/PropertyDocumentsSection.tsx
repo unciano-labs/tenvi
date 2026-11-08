@@ -172,45 +172,45 @@ export function PropertyDocumentsSection({
 
       {/* Summary Pills */}
       {documents.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 @xl/main:grid-cols-4 gap-3">
           <div className="p-3.5 rounded-2xl bg-muted/60 flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold uppercase text-muted-foreground block tracking-wider">
-                Total Files
+              <span className="text-label text-muted-foreground block">
+                Total files
               </span>
               <span className="text-xl font-extrabold text-foreground">{stats.total}</span>
             </div>
             <FileText className="w-5 h-5 text-muted-foreground" />
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-emerald-50/70 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-success-soft flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold uppercase text-emerald-800 block tracking-wider">
-                Valid & Compliant
+              <span className="text-label text-success block">
+                Valid & compliant
               </span>
               <span className="text-xl font-extrabold text-emerald-950">{stats.valid}</span>
             </div>
-            <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            <ShieldCheck className="w-5 h-5 text-success" />
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-amber-50/70 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-warning-soft flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold uppercase text-amber-800 block tracking-wider">
-                Expiring Soon
+              <span className="text-label text-warning-soft-foreground block">
+                Expiring soon
               </span>
               <span className="text-xl font-extrabold text-amber-950">{stats.expiringSoon}</span>
             </div>
-            <Clock className="w-5 h-5 text-amber-600" />
+            <Clock className="w-5 h-5 text-warning-soft-foreground" />
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-rose-50/70 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-danger-soft flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold uppercase text-rose-800 block tracking-wider">
-                Overdue / Expired
+              <span className="text-label text-danger block">
+                Overdue / expired
               </span>
               <span className="text-xl font-extrabold text-rose-950">{stats.expired}</span>
             </div>
-            <AlertCircle className="w-5 h-5 text-rose-600" />
+            <AlertCircle className="w-5 h-5 text-danger" />
           </div>
         </div>
       )}
@@ -239,7 +239,7 @@ export function PropertyDocumentsSection({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 @2xl/main:grid-cols-2 gap-4">
           {documents.map((doc) => {
             const expiryStatus = calculateDocumentExpiryStatus(
               doc.expiry_date,
@@ -252,17 +252,17 @@ export function PropertyDocumentsSection({
             return (
               <div
                 key={doc.id}
-                className="p-5 rounded-2xl bg-card hover:bg-muted/30 shadow-card hover:shadow-lift transition-all space-y-4 group flex flex-col justify-between"
+                className="p-5 rounded-2xl bg-card hover:bg-muted/30 shadow-card hover:shadow-lift transition-colors duration-(--motion-fast) space-y-4 group flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   {/* Top Bar: Icon + Category + Expiry Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-card text-primary flex items-center justify-center shrink-0 shadow-xs">
+                      <div className="w-10 h-10 rounded-xl bg-card text-primary flex items-center justify-center shrink-0 shadow-card">
                         <TypeIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
+                        <span className="text-label text-muted-foreground block">
                           {preset?.label.split('(')[0].trim() || doc.document_type}
                         </span>
                         <h4 className="text-sm font-bold text-foreground line-clamp-1">
@@ -292,7 +292,7 @@ export function PropertyDocumentsSection({
                   <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                     {doc.document_number && (
                       <div className="space-y-0.5">
-                        <span className="text-xs font-medium text-muted-foreground block uppercase">
+                        <span className="text-label text-muted-foreground block">
                           Ref / Policy #
                         </span>
                         <span className="font-semibold text-foreground font-mono text-xs">
@@ -302,7 +302,7 @@ export function PropertyDocumentsSection({
                     )}
 
                     <div className="space-y-0.5">
-                      <span className="text-xs font-medium text-muted-foreground block uppercase">
+                      <span className="text-label text-muted-foreground block">
                         Expiry Date
                       </span>
                       <span className="font-semibold text-foreground">
@@ -312,7 +312,7 @@ export function PropertyDocumentsSection({
 
                     {doc.issue_date && (
                       <div className="space-y-0.5">
-                        <span className="text-xs font-medium text-muted-foreground block uppercase">
+                        <span className="text-label text-muted-foreground block">
                           Issued On
                         </span>
                         <span className="font-medium text-muted-foreground">
@@ -322,17 +322,17 @@ export function PropertyDocumentsSection({
                     )}
 
                     <div className="space-y-0.5">
-                      <span className="text-xs font-medium text-muted-foreground block uppercase">
+                      <span className="text-label text-muted-foreground block">
                         Alert Channels
                       </span>
                       <div className="flex items-center gap-1.5 pt-0.5">
                         {doc.notify_email && (
-                          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-primary/10 text-blue-700">
                             Email
                           </span>
                         )}
                         {doc.notify_sms && (
-                          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-success-soft text-success">
                             SMS
                           </span>
                         )}
@@ -379,7 +379,7 @@ export function PropertyDocumentsSection({
                         {isSendingAlertId === doc.id ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
-                          <Bell className="w-3.5 h-3.5 text-amber-600" />
+                          <Bell className="w-3.5 h-3.5 text-warning-soft-foreground" />
                         )}
                         Test Alert
                       </button>
@@ -397,7 +397,7 @@ export function PropertyDocumentsSection({
                     <button
                       onClick={() => handleDelete(doc)}
                       disabled={isDeletingId === doc.id}
-                      className="p-1.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
+                      className="p-1.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-danger-soft transition-colors cursor-pointer disabled:opacity-50"
                       title="Delete Document"
                     >
                       {isDeletingId === doc.id ? (

@@ -40,6 +40,12 @@ interface TailwindCashFlowChartProps {
   totalOutflow: number;
 }
 
+const TIMEFRAME_LABELS: Record<string, string> = {
+  month: 'This month',
+  '30days': 'Last 30 days',
+  '6months': 'Last 6 months',
+};
+
 export function TailwindCashFlowChart({
   data,
   timeframe,
@@ -47,19 +53,21 @@ export function TailwindCashFlowChart({
   totalInflow,
   totalOutflow,
 }: TailwindCashFlowChartProps) {
+  const hasActivity = data.some((d) => Number(d.inflow) > 0 || Number(d.outflow) > 0);
+
   return (
-    <CardBox className="h-full flex flex-col justify-between">
-      {/* Header with Title and Timeframe Dropdown */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <div>
+    <CardBox className="h-full rounded-2xl shadow-card hover:shadow-card flex flex-col gap-5">
+      {/* Header: title block wraps above the controls whenever space is tight */}
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0 flex-[1_1_12rem]">
           <div className="flex items-center gap-1.5">
-            <h4 className="card-title">Cash Flow Updates</h4>
+            <h2 className="text-title text-foreground">Cash flow updates</h2>
             <Tooltip>
               <TooltipTrigger
                 render={
                   <button
                     type="button"
-                    className="text-muted-foreground/70 hover:text-foreground cursor-pointer"
+                    className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground/80 hover:text-foreground cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label="Explain Cash Flow"
                   />
                 }
@@ -71,21 +79,21 @@ export function TailwindCashFlowChart({
               </TooltipContent>
             </Tooltip>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Inflow vs. Outflow summary
+          <p className="text-sm text-muted-foreground">
+            Inflow vs. outflow summary
           </p>
         </div>
 
         {/* Timeframe Dropdown */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 text-xs">
-            <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex items-center gap-3 text-xs" aria-hidden="true">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="size-2.5 rounded-full bg-primary" />
-              <span className="text-muted-foreground font-medium">Money In</span>
+              <span className="text-muted-foreground font-medium">Money in</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="size-2.5 rounded-full bg-secondary" />
-              <span className="text-muted-foreground font-medium">Money Out</span>
+              <span className="text-muted-foreground font-medium">Money out</span>
             </div>
           </div>
 
@@ -93,35 +101,38 @@ export function TailwindCashFlowChart({
             value={timeframe}
             onValueChange={(val) => onTimeframeChange(val as 'month' | '30days' | '6months')}
           >
-            <SelectTrigger className="w-[125px] h-8 text-xs font-semibold rounded-lg bg-muted/60 border-border/60">
-              <SelectValue />
+            <SelectTrigger aria-label="Timeframe" className="w-auto min-w-36 h-10 text-sm font-medium rounded-xl bg-muted/60">
+              <SelectValue>
+                {(value: string) => TIMEFRAME_LABELS[value] ?? value}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent align="end" className="text-xs rounded-xl shadow-lift">
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="6months">Last 6 Months</SelectItem>
+              <SelectItem value="month">This month</SelectItem>
+              <SelectItem value="30days">Last 30 days</SelectItem>
+              <SelectItem value="6months">Last 6 months</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       {/* Chart Canvas */}
-      <div className="w-full h-[240px] sm:h-[270px]">
-        {data.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground text-xs">
-            <p>No transaction history for this period yet.</p>
-            <p className="text-3xs text-muted-foreground/70 mt-1">
+      <div className="relative w-full h-[240px] sm:h-[270px]">
+        {!hasActivity && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 px-6 text-center pointer-events-none">
+            <p className="text-sm font-medium text-foreground">No transaction history for this period yet.</p>
+            <p className="max-w-xs text-xs text-muted-foreground">
               Record an income or expense to see your cash flow graph.
             </p>
           </div>
-        ) : (
+        )}
+        {data.length === 0 ? null : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
               margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
               barGap={4}
             >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={hasActivity ? 0.5 : 0.25} />
               <XAxis
                 dataKey="date"
                 stroke="var(--muted-foreground)"
@@ -146,15 +157,15 @@ export function TailwindCashFlowChart({
                   const inVal = Number(payload[0]?.value || 0);
                   const outVal = Number(payload[1]?.value || 0);
                   return (
-                    <div className="rounded-xl border border-border/80 bg-popover p-2.5 shadow-lift text-xs space-y-1">
-                      <p className="font-bold text-foreground">{label}</p>
-                      <div className="flex items-center justify-between gap-4 text-primary">
-                        <span>Money In:</span>
-                        <span className="font-semibold">{formatMoney(inVal)}</span>
+                    <div className="rounded-xl bg-popover p-3 shadow-lift text-xs space-y-1.5">
+                      <p className="font-semibold text-foreground">{label}</p>
+                      <div className="flex items-center justify-between gap-4 text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary" />Money in</span>
+                        <span className="num font-semibold text-foreground">{formatMoney(inVal)}</span>
                       </div>
-                      <div className="flex items-center justify-between gap-4 text-secondary">
-                        <span>Money Out:</span>
-                        <span className="font-semibold">{formatMoney(outVal)}</span>
+                      <div className="flex items-center justify-between gap-4 text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-secondary" />Money out</span>
+                        <span className="num font-semibold text-foreground">{formatMoney(outVal)}</span>
                       </div>
                     </div>
                   );
@@ -178,9 +189,9 @@ export function TailwindCashFlowChart({
       </div>
 
       {/* Summary Footer */}
-      <div className="flex items-center justify-between text-2xs text-muted-foreground pt-3 border-t border-border/40 mt-3">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl bg-muted/50 px-4 py-3 text-xs text-muted-foreground">
         <span>
-          Net Savings: <strong className="text-foreground">{formatMoney(totalInflow - totalOutflow)}</strong>
+          Net savings: <strong className="num font-semibold text-foreground">{formatMoney(totalInflow - totalOutflow)}</strong>
         </span>
         <span className="text-muted-foreground">
           Updated in real-time

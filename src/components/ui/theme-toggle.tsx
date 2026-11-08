@@ -149,13 +149,13 @@ export function ThemeQuickToggle({ className }: { className?: string }) {
     >
       <Sun
         className={cn(
-          'size-4 transition-all duration-300 absolute',
+          'size-4 transition-[opacity,transform] duration-(--motion-base) ease-(--ease-spring-pop) absolute',
           isDark ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100 text-amber-500'
         )}
       />
       <Moon
         className={cn(
-          'size-4 transition-all duration-300 absolute',
+          'size-4 transition-[opacity,transform] duration-(--motion-base) ease-(--ease-spring-pop) absolute',
           isDark ? 'rotate-0 scale-100 opacity-100 text-blue-400' : '-rotate-90 scale-0 opacity-0'
         )}
       />
@@ -214,7 +214,7 @@ export function ThemeSegmentedToggle({ className }: { className?: string }) {
             aria-checked={isSelected}
             onClick={() => setTheme(opt.value)}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer select-none',
+              'flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer select-none',
               isSelected
                 ? 'bg-card text-foreground shadow-xs font-bold'
                 : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
