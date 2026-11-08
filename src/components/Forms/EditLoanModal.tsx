@@ -294,7 +294,7 @@ export function EditLoanModal({
       <ResponsiveDialogContent className="max-w-xl">
         <ResponsiveDialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-blue-700 flex items-center justify-center shrink-0">
               <HandCoins className="w-5 h-5" />
             </div>
             <div>
@@ -364,7 +364,7 @@ export function EditLoanModal({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-xs font-bold text-muted-foreground tracking-wide block mb-1.5">
-                  Total Purchase (₱)
+                  Total purchase (₱)
                 </label>
                 <MoneyInput
                   placeholder="0.00"
@@ -377,7 +377,7 @@ export function EditLoanModal({
 
               <div>
                 <label className="text-xs font-bold text-muted-foreground tracking-wide block mb-1.5">
-                  Downpayment Paid (₱)
+                  Downpayment paid (₱)
                 </label>
                 <MoneyInput
                   placeholder="0.00"
@@ -389,7 +389,7 @@ export function EditLoanModal({
 
               <div>
                 <label className="text-xs font-bold text-muted-foreground tracking-wide block mb-1.5">
-                  Loaned / Swiped Date
+                  Loaned / swiped date
                 </label>
                 <Input
                   type="date"
@@ -404,7 +404,7 @@ export function EditLoanModal({
             {/* 3. Reason / Description */}
             <div>
               <label className="text-xs font-bold text-muted-foreground tracking-wide block mb-1.5">
-                Reason or Item Purchased
+                Reason or item purchased
               </label>
               <Input
                 type="text"
@@ -418,8 +418,8 @@ export function EditLoanModal({
             {/* 4. Swiped Through Credit Card */}
             <div className="p-4 rounded-2xl bg-muted/60 space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <CreditCardIcon className="w-4 h-4 text-indigo-600" />
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <CreditCardIcon className="w-4 h-4 text-primary" />
                   Swiped on a Credit Card?
                 </label>
                 {selectedCard && (
@@ -446,7 +446,7 @@ export function EditLoanModal({
               {selectedCard ? (
                 <div className="p-3 rounded-xl bg-indigo-50/70 text-xs text-indigo-900 space-y-1">
                   <div className="flex items-center gap-1.5 font-bold">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
                     Synchronized with {selectedCard.name} ({selectedCard.bank_name})
                   </div>
                   <p className="text-xs text-indigo-700 leading-relaxed">
@@ -466,8 +466,8 @@ export function EditLoanModal({
             {/* 5. Monthly Interest Rate */}
             <div className="p-4 rounded-2xl bg-muted/60 space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Percent className="w-4 h-4 text-amber-600" />
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <Percent className="w-4 h-4 text-warning-soft-foreground" />
                   Monthly Interest Rate (%)
                 </label>
                 <span className="text-xs font-bold text-muted-foreground">
@@ -497,7 +497,7 @@ export function EditLoanModal({
                       onClick={() => setMonthlyInterestRate(String(r))}
                       className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors cursor-pointer ${
                         parsedRate === r
-                          ? 'bg-primary text-primary-foreground shadow-xs'
+                          ? 'bg-primary text-primary-foreground shadow-card'
                           : 'bg-card text-foreground hover:bg-muted'
                       }`}
                     >
@@ -515,13 +515,13 @@ export function EditLoanModal({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-muted-foreground tracking-wide">
-                  Repayment Structure
+                  Repayment structure
                 </label>
                 <div className="flex bg-muted/60 p-1 rounded-xl">
                   <button
                     type="button"
                     onClick={() => setIsInstallment(true)}
-                    className={`text-xs font-semibold px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    className={`text-xs font-semibold px-3 py-1 rounded-lg transition-colors duration-(--motion-fast) cursor-pointer ${
                       isInstallment ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
                     }`}
                   >
@@ -530,7 +530,7 @@ export function EditLoanModal({
                   <button
                     type="button"
                     onClick={() => setIsInstallment(false)}
-                    className={`text-xs font-semibold px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    className={`text-xs font-semibold px-3 py-1 rounded-lg transition-colors duration-(--motion-fast) cursor-pointer ${
                       !isInstallment ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
                     }`}
                   >
@@ -544,7 +544,7 @@ export function EditLoanModal({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-xs text-muted-foreground font-medium">
-                        Installment Duration (Optional)
+                        Installment duration (Optional)
                       </label>
                       <span className="text-2xs font-semibold text-muted-foreground">
                         {installmentMonths ? `${installmentMonths} Months Fixed` : 'No Fixed Term (Open-Ended)'}
@@ -554,10 +554,10 @@ export function EditLoanModal({
                       <button
                         type="button"
                         onClick={() => setInstallmentMonths(null)}
-                        className={`py-2 px-3 text-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        className={`py-2 px-3 text-center rounded-xl text-xs font-bold transition-colors duration-(--motion-fast) cursor-pointer ${
                           installmentMonths === null
                             ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'bg-card text-foreground hover:bg-muted border border-border/50'
+                            : 'bg-card text-foreground hover:bg-muted'
                         }`}
                       >
                         No Fixed Term (Open-Ended)
@@ -567,10 +567,10 @@ export function EditLoanModal({
                           key={m}
                           type="button"
                           onClick={() => setInstallmentMonths(m)}
-                          className={`py-2 px-2.5 text-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          className={`py-2 px-2.5 text-center rounded-xl text-xs font-bold transition-colors duration-(--motion-fast) cursor-pointer ${
                             installmentMonths === m
                               ? 'bg-primary text-primary-foreground shadow-sm'
-                              : 'bg-card text-foreground hover:bg-muted border border-border/50'
+                              : 'bg-card text-foreground hover:bg-muted'
                           }`}
                         >
                           {m} Mos
@@ -586,7 +586,7 @@ export function EditLoanModal({
 
                   <div>
                     <label className="text-xs text-muted-foreground font-medium block mb-1">
-                      Monthly Due Day (Day of Month)
+                      Monthly due day (Day of month)
                     </label>
                     <div className="flex items-center gap-2">
                       <Input
@@ -609,7 +609,7 @@ export function EditLoanModal({
                 <div className="space-y-3">
                   <div>
                     <label className="text-xs font-bold text-muted-foreground tracking-wide block mb-1.5">
-                      Target Repayment Date
+                      Target repayment date
                     </label>
                     <Input
                       type="date"
@@ -621,7 +621,7 @@ export function EditLoanModal({
                   {parsedRate > 0 && (
                     <div>
                       <label className="text-xs text-muted-foreground font-medium block mb-1">
-                        Monthly Interest Due Day
+                        Monthly interest due day
                       </label>
                       <div className="flex items-center gap-2">
                         <Input

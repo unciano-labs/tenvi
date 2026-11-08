@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition-transform duration-1000 ease-spring active:scale-95 active:duration-75 active:ease-out outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4.5 cursor-pointer",
+  "group/button inline-flex shrink-0 items-center justify-center font-semibold whitespace-nowrap outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 aria-busy:cursor-progress aria-busy:opacity-80 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4.5 cursor-pointer",
   {
     variants: {
       variant: {
@@ -16,7 +16,7 @@ const buttonVariants = cva(
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         "destructive-soft": "bg-danger-soft text-danger-soft-foreground hover:bg-danger-soft/80",
         outline: "bg-muted/60 text-foreground hover:bg-muted",
-        link: "text-primary underline-offset-4 hover:underline min-h-auto h-auto p-0 active:scale-100",
+        link: "text-primary underline-offset-4 hover:underline min-h-auto h-auto p-0",
       },
       size: {
         default: "min-h-12 h-12 gap-2 px-5 text-sm sm:text-base rounded-xl",
@@ -55,6 +55,7 @@ function Button({
     <ButtonPrimitive
       data-slot="button"
       data-variant={variant || 'default'}
+      data-size={size || 'default'}
       render={render}
       nativeButton={isNative}
       className={cn(buttonVariants({ variant, size, className }))}

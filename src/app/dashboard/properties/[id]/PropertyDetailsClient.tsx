@@ -336,43 +336,43 @@ export function PropertyDetailsClient({
   const Icon = getAssetIcon(property.property_type);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Top Breadcrumb & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/dashboard/properties"
-          className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors w-fit"
+          className="inline-flex min-h-10 items-center gap-2 rounded-lg text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors duration-(--motion-fast) w-fit outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to All Properties & Fleet
+          Back to all properties
         </Link>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="page-header-actions">
           <Button
             size="sm"
             variant="soft"
             onClick={() => handleOpenTx('income')}
-            className="rounded-2xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold"
+            className="gap-1.5"
           >
-            <ArrowDownRight className="w-4 h-4 text-emerald-600" />
-            + Log Income
+            <ArrowDownRight className="w-4 h-4 text-success" />
+            Log income
           </Button>
 
           <Button
             size="sm"
             variant="soft"
             onClick={() => handleOpenTx('expense')}
-            className="rounded-2xl bg-rose-50 text-rose-800 hover:bg-rose-100 font-bold"
+            className="gap-1.5"
           >
-            <ArrowUpRight className="w-4 h-4 text-rose-600" />
-            + Log Expense
+            <ArrowUpRight className="w-4 h-4 text-danger" />
+            Log expense
           </Button>
 
           <Button
             size="sm"
-            variant="secondary"
+            variant="soft"
             onClick={() => setIsEditModalOpen(true)}
-            className="rounded-2xl font-bold"
+            className="gap-1.5"
           >
             <Edit2 className="w-3.5 h-3.5" />
             Edit
@@ -382,8 +382,9 @@ export function PropertyDetailsClient({
             size="icon-sm"
             variant="ghost"
             onClick={handleDeleteProperty}
-            className="rounded-2xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            title="Delete Property"
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            title="Delete property"
+            aria-label="Delete property"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -391,14 +392,14 @@ export function PropertyDetailsClient({
       </div>
 
       {/* Property Header Banner */}
-      <Card className="rounded-3xl p-6 sm:p-8 shadow-xs overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-start sm:items-center gap-4 min-w-0">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+      <Card className="rounded-3xl p-5 sm:p-8 min-w-0 flex-row flex-wrap items-center justify-between gap-6">
+        <div className="flex items-start gap-4 min-w-0 flex-1 basis-72">
+          <div className="size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
             <Icon className="w-7 h-7" />
           </div>
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              <h1 className="text-display text-foreground min-w-0">
                 {property.name}
               </h1>
               <Badge
@@ -409,7 +410,7 @@ export function PropertyDetailsClient({
                     ? 'warning'
                     : 'neutral'
                 }
-                className="uppercase tracking-wider font-bold"
+                className="capitalize font-semibold"
               >
                 {property.status}
               </Badge>
@@ -420,7 +421,7 @@ export function PropertyDetailsClient({
               {property.identifier && (
                 <>
                   <span>•</span>
-                  <Badge variant="outline" className="font-bold uppercase text-[11px]">
+                  <Badge variant="soft" className="font-semibold uppercase text-2xs">
                     {property.identifier}
                   </Badge>
                 </>
@@ -436,21 +437,21 @@ export function PropertyDetailsClient({
         </div>
 
         {/* Valuation & Net Equity display */}
-        <div className="p-4 rounded-2xl bg-muted w-full md:w-auto md:min-w-[220px] text-left md:text-right space-y-1">
+        <div className="@container p-4 rounded-2xl bg-muted/60 flex-1 basis-56 max-w-sm min-w-0 flex flex-col gap-2">
           <div>
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-              Market Valuation
+            <span className="text-label text-muted-foreground block">
+              Market valuation
             </span>
-            <span className="text-2xl font-bold tracking-tight text-foreground block">
+            <span className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground block whitespace-nowrap">
               {formatMoney(property.estimated_value)}
             </span>
           </div>
           {totalLinkedLiabilities > 0 && (
-            <div className="pt-1 border-t border-border/50">
-              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                Net Owner Equity ({equityPercentage}%)
+            <div>
+              <span className="text-xs font-medium text-success block">
+                Net owner equity ({equityPercentage}%)
               </span>
-              <span className="text-base font-bold text-emerald-700 dark:text-emerald-300 block">
+              <span className="num text-base font-bold text-success block">
                 {formatMoney(netOwnerEquity)}
               </span>
             </div>
@@ -460,59 +461,57 @@ export function PropertyDetailsClient({
 
       {/* Financial KPIs */}
       <div
-        className={`flex overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 ${
-          payables.length > 0 ? 'lg:grid-cols-6' : 'lg:grid-cols-5'
-        } gap-3 sm:gap-4 pb-1 sm:pb-0`}
+        className="grid-fluid gap-4 [--grid-min:13rem]"
       >
         <StatCard
-          label="Market Valuation"
+          label="Market valuation"
           value={formatMoney(property.estimated_value)}
           subtext={`Acquisition: ${formatMoney(property.purchase_price || 0)}`}
           icon={Building2}
           variant="neutral"
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         <StatCard
-          label="Net Owner Equity"
+          label="Net owner equity"
           value={formatMoney(netOwnerEquity)}
           subtext={`${equityPercentage}% owned • ${formatMoney(totalLinkedLiabilities)} debt`}
           icon={ShieldCheck}
           variant={netOwnerEquity > 0 ? 'positive' : 'warning'}
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         <StatCard
-          label="Total Income"
+          label="Total income"
           value={formatMoney(financials.totalIncome)}
           subtext={`${financials.incomeCount} revenue entries logged`}
           icon={TrendingUp}
           variant="positive"
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         <StatCard
-          label="Total Expenses"
+          label="Total expenses"
           value={formatMoney(financials.totalExpense)}
           subtext={`${financials.expenseCount} operating expenses`}
           icon={TrendingDown}
           variant="negative"
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         {payables.length > 0 && (
           <StatCard
-            label="Advances / Payables"
+            label="Advances and payables"
             value={formatMoney(totalPayablesOwed)}
             subtext={`${payables.length} advances owed to owner`}
             icon={HandCoins}
             variant="warning"
-            className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
-          />
+          className="@container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
+        />
         )}
 
         <StatCard
-          label="Net Operating Return"
+          label="Net operating return"
           value={formatMoney(financials.netCashFlow)}
           subtext={
             financials.netCashFlow >= 0
@@ -521,29 +520,29 @@ export function PropertyDetailsClient({
           }
           icon={Sparkles}
           variant={financials.netCashFlow >= 0 ? 'positive' : 'warning'}
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
       </div>
 
       {/* Obligations & Schedule Profile Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 @4xl/main:grid-cols-2 gap-6">
         {/* Left: Fixed Obligations (Amortization & Insurance) */}
-        <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-4">
-          <div className="flex items-center gap-2 text-xs uppercase font-bold text-muted-foreground tracking-wider">
-            <ShieldCheck className="w-4 h-4 text-blue-600" />
-            Fixed Obligations & Schedule
+        <div className="bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card flex flex-col gap-4 min-w-0">
+          <div className="flex items-center gap-2 text-title text-foreground">
+            <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+            Fixed obligations and schedule
           </div>
 
           <div className="space-y-3">
             {/* Monthly Amortization */}
-            <div className="p-4 rounded-2xl bg-blue-500/10 text-foreground flex items-center justify-between gap-4">
+            <div className="p-4 rounded-2xl bg-primary/10 text-foreground flex items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-blue-900 dark:text-blue-300 block">
                     Monthly Loan Amortization
                   </span>
                   {financials.computedFromLoans && (
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-semibold bg-blue-100/80 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border-blue-300/50">
+                    <Badge variant="outline" className="text-2xs px-1.5 py-0 font-semibold bg-primary/10 text-primary">
                       Auto-computed ({financials.linkedLoanCount} loan{financials.linkedLoanCount === 1 ? '' : 's'})
                     </Badge>
                   )}
@@ -567,7 +566,7 @@ export function PropertyDetailsClient({
                     {financials.activeLoansSummary.map((loan) => (
                       <span
                         key={loan.id}
-                        className="inline-flex items-center gap-1 bg-blue-100/70 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 px-2 py-0.5 rounded-lg font-medium border border-blue-200/60 dark:border-blue-800/50"
+                        className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded-lg font-medium"
                       >
                         {loan.lenderName || loan.name}: {formatMoney(loan.monthlyPayment)}/mo
                         {loan.dueDay ? ` (Due ${loan.dueDay}th)` : ''}
@@ -582,9 +581,9 @@ export function PropertyDetailsClient({
                   <span
                     className={`text-xs font-bold px-3 py-1 rounded-xl inline-block ${
                       financials.amortizationDue.urgency === 'critical'
-                        ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
+                        ? 'bg-rose-100 dark:bg-rose-950/60 text-danger dark:text-rose-300'
                         : financials.amortizationDue.urgency === 'warning'
-                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                        ? 'bg-amber-100 dark:bg-amber-950/60 text-warning-soft-foreground dark:text-amber-300'
                         : 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300'
                     }`}
                   >
@@ -596,7 +595,7 @@ export function PropertyDetailsClient({
                 {Number(financials.monthlyAmortization || 0) > 0 && (
                   <button
                     onClick={() => handleOpenTx('expense')}
-                    className="block text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline mt-1.5 cursor-pointer"
+                    className="block text-xs font-bold text-primary hover:underline mt-1.5 cursor-pointer"
                   >
                     + Log Payment
                   </button>
@@ -628,9 +627,9 @@ export function PropertyDetailsClient({
                   <span
                     className={`text-xs font-bold px-3 py-1 rounded-xl inline-block ${
                       financials.insuranceRenewal.urgency === 'critical'
-                        ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
+                        ? 'bg-rose-100 dark:bg-rose-950/60 text-danger dark:text-rose-300'
                         : financials.insuranceRenewal.urgency === 'warning'
-                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                        ? 'bg-amber-100 dark:bg-amber-950/60 text-warning-soft-foreground dark:text-amber-300'
                         : 'bg-muted text-foreground'
                     }`}
                   >
@@ -653,40 +652,40 @@ export function PropertyDetailsClient({
         </div>
 
         {/* Right: Revenue Profile & Reminders */}
-        <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-4">
-          <div className="flex items-center gap-2 text-xs uppercase font-bold text-muted-foreground tracking-wider">
-            <Receipt className="w-4 h-4 text-emerald-600" />
+        <div className="bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card flex flex-col gap-4 min-w-0">
+          <div className="flex items-center gap-2 text-title text-foreground">
+            <Receipt className="w-4 h-4 text-success" />
             Revenue Targets & Notes
           </div>
 
           <div className="space-y-3">
-            <div className="p-4 rounded-2xl bg-emerald-50/50 space-y-2">
+            <div className="p-4 rounded-2xl bg-success-soft space-y-2">
               <span className="text-xs font-bold text-emerald-950 block">Target Revenue Run-Rates</span>
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <span className="text-xs font-semibold text-emerald-800 uppercase block">
-                    Expected Daily Boundary
+                  <span className="text-xs font-semibold text-success uppercase block">
+                    Expected daily boundary
                   </span>
                   <span className="text-base font-extrabold text-emerald-950">
                     {formatMoney(property.expected_income_daily || 0)}
                   </span>
-                  <span className="text-xs text-emerald-700 block">/ day</span>
+                  <span className="text-xs text-success block">/ day</span>
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-emerald-800 uppercase block">
-                    Expected Monthly Rental
+                  <span className="text-xs font-semibold text-success uppercase block">
+                    Expected monthly rental
                   </span>
                   <span className="text-base font-extrabold text-foreground">
                     {formatMoney(property.expected_income_monthly || 0)}
                   </span>
-                  <span className="text-xs text-emerald-500 block">/ month</span>
+                  <span className="text-xs text-success block">/ month</span>
                 </div>
               </div>
             </div>
 
             {/* Notes & Reminders */}
             <div className="p-4 rounded-2xl bg-muted space-y-1">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-xs font-bold text-muted-foreground block">
                 Operating Notes & Reminders
               </span>
               <p className="text-xs text-foreground leading-relaxed">
@@ -699,10 +698,10 @@ export function PropertyDetailsClient({
 
       {/* Straight-Line Asset Depreciation Profile (Vehicles & Equipment) */}
       {depreciation && (
-        <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-4">
+        <div className="bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card flex flex-col gap-4 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-warning-soft text-warning-soft-foreground flex items-center justify-center font-bold shrink-0">
                 <Car className="w-5 h-5" />
               </div>
               <div>
@@ -723,51 +722,51 @@ export function PropertyDetailsClient({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 @xl/main:grid-cols-4 gap-3">
             <div className="p-3.5 rounded-2xl bg-muted/60 space-y-1">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-muted-foreground block">
                 Acquisition Cost
               </span>
               <span className="text-base font-extrabold text-foreground">
                 {formatMoney(depreciation.costBasis)}
               </span>
-              <span className="text-[10px] text-muted-foreground block">
+              <span className="text-2xs text-muted-foreground block">
                 {property.purchase_date ? formatDate(property.purchase_date) : 'Original purchase'}
               </span>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-muted/60 space-y-1">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-muted-foreground block">
                 Current Book Value
               </span>
               <span className="text-base font-extrabold text-foreground">
                 {formatMoney(depreciation.currentBookValue)}
               </span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
+              <span className="text-2xs text-success font-semibold block">
                 Floor: {formatMoney(depreciation.salvageValue)} (Salvage)
               </span>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-muted/60 space-y-1">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-muted-foreground block">
                 Accumulated Depr.
               </span>
-              <span className="text-base font-extrabold text-rose-600 dark:text-rose-400">
+              <span className="text-base font-extrabold text-danger">
                 -{formatMoney(depreciation.accumulatedDepreciation)}
               </span>
-              <span className="text-[10px] text-muted-foreground block">
+              <span className="text-2xs text-muted-foreground block">
                 -{depreciation.percentDepreciated}% of depreciable cost
               </span>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-muted/60 space-y-1">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-muted-foreground block">
                 Monthly Depreciation
               </span>
               <span className="text-base font-extrabold text-foreground">
                 {formatMoney(depreciation.monthlyDepreciation)}
               </span>
-              <span className="text-[10px] text-muted-foreground block">
+              <span className="text-2xs text-muted-foreground block">
                 Age: {depreciation.elapsedMonths} of {depreciation.usefulLifeYears * 12} mos
               </span>
             </div>
@@ -781,7 +780,7 @@ export function PropertyDetailsClient({
             </div>
             <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
               <div
-                className={`h-full transition-all duration-500 rounded-full ${
+                className={`h-full transition-colors duration-(--motion-fast) duration-500 rounded-full ${
                   depreciation.percentDepreciated >= 80 ? 'bg-amber-500' : 'bg-primary'
                 }`}
                 style={{ width: `${depreciation.percentDepreciated}%` }}
@@ -792,10 +791,10 @@ export function PropertyDetailsClient({
       )}
 
       {/* Mortgages & Asset Debt Liabilities */}
-      <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-4">
+      <div className="bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card flex flex-col gap-4 min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
               <Landmark className="w-5 h-5" />
             </div>
             <div>
@@ -820,7 +819,7 @@ export function PropertyDetailsClient({
               setEditingLiability(null);
               setIsLiabilityModalOpen(true);
             }}
-            className="rounded-2xl font-bold bg-blue-50 text-blue-800 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 w-fit cursor-pointer"
+            className="rounded-2xl font-bold bg-primary/10 text-primary hover:bg-primary/15 w-fit cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 mr-1" />
             Add Loan / Mortgage
@@ -828,7 +827,7 @@ export function PropertyDetailsClient({
         </div>
 
         {liabilities.length === 0 ? (
-          <div className="p-6 rounded-2xl bg-muted/40 border border-dashed border-border text-center space-y-2">
+          <div className="p-6 rounded-2xl bg-muted/40 text-center space-y-2">
             <p className="text-sm font-semibold text-foreground">No Mortgages or Debt Linked to this Asset</p>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
               If this property has bank financing, adding the mortgage calculates your true Net Owner Equity and tracks amortizations.
@@ -846,13 +845,13 @@ export function PropertyDetailsClient({
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 @2xl/main:grid-cols-2 gap-4">
             {liabilities.map((lib) => {
               const isPaidOff = lib.status === 'paid_off' || Number(lib.current_principal_balance) === 0;
               return (
                 <div
                   key={lib.id}
-                  className="p-5 rounded-2xl border border-border bg-card/60 hover:bg-muted/30 transition-colors space-y-4"
+                  className="p-5 rounded-2xl bg-card/60 hover:bg-muted/30 transition-colors space-y-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1 min-w-0">
@@ -862,7 +861,7 @@ export function PropertyDetailsClient({
                         </span>
                         <Badge
                           variant={isPaidOff ? 'success' : 'warning'}
-                          className="text-[10px] uppercase font-bold"
+                          className="text-2xs font-semibold capitalize"
                         >
                           {lib.status.replace('_', ' ')}
                         </Badge>
@@ -873,13 +872,13 @@ export function PropertyDetailsClient({
                           <span className="capitalize">{lib.liability_type.replace('_', ' ')}</span>
                         </span>
                         {lib.credit_card && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-medium text-primary border-primary/30 flex items-center gap-1">
+                          <Badge variant="outline" className="text-2xs px-1.5 py-0 font-medium text-primary flex items-center gap-1">
                             <CreditCardIcon className="w-2.5 h-2.5" />
                             {lib.credit_card.bank_name} {lib.credit_card.name} (•••• {lib.credit_card.last_4})
                           </Badge>
                         )}
                         {lib.savings && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-medium text-emerald-600 dark:text-emerald-400 border-emerald-500/30 flex items-center gap-1">
+                          <Badge variant="outline" className="text-2xs px-1.5 py-0 font-medium text-success flex items-center gap-1">
                             <Landmark className="w-2.5 h-2.5" />
                             {lib.savings.institution_name} - {lib.savings.name}
                           </Badge>
@@ -927,18 +926,18 @@ export function PropertyDetailsClient({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border/50 text-xs">
+                  <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
                     <div>
                       <span className="text-muted-foreground block text-[11px]">Outstanding Principal</span>
                       <span className="text-base font-extrabold text-foreground">
                         {formatMoney(lib.current_principal_balance)}
                       </span>
                       {Number(lib.term_months || 0) > 0 ? (
-                        <span className="text-[10px] text-muted-foreground block">
+                        <span className="text-2xs text-muted-foreground block">
                           {(lib.paid_installment_numbers?.length ?? (isPaidOff ? lib.term_months : 0))} of {lib.term_months} terms paid
                         </span>
                       ) : Number(lib.original_principal || 0) > 0 ? (
-                        <span className="text-[10px] text-muted-foreground block">
+                        <span className="text-2xs text-muted-foreground block">
                           of {formatMoney(lib.original_principal)}
                         </span>
                       ) : null}
@@ -951,19 +950,19 @@ export function PropertyDetailsClient({
                           {formatMoney(lib.monthly_payment)}
                         </span>
                         {lib.is_amortization_overridden && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold uppercase tracking-wider">
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-warning-soft text-warning-soft-foreground font-semibold">
                             Override
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-muted-foreground block">
+                      <span className="text-2xs text-muted-foreground block">
                         {lib.due_day ? `Due ${lib.due_day}th of month` : 'No set due date'}
                       </span>
                     </div>
                   </div>
 
                   {!isPaidOff && (
-                    <div className="pt-2 flex items-center justify-between gap-2 border-t border-border/50 flex-wrap">
+                    <div className="pt-2 flex items-center justify-between gap-2 flex-wrap">
                       <span className="text-[11px] text-muted-foreground">
                         Rate:{' '}
                         <strong>
@@ -994,7 +993,7 @@ export function PropertyDetailsClient({
                               lib.monthly_payment > 0 ? String(lib.monthly_payment) : String(lib.current_principal_balance)
                             );
                           }}
-                          className="rounded-xl text-xs font-bold shadow-xs h-8"
+                          className="rounded-xl text-xs font-bold shadow-card h-8"
                         >
                           Record Payment
                         </Button>
@@ -1009,10 +1008,10 @@ export function PropertyDetailsClient({
       </div>
 
       {/* Payables & Operational Advances Owed (From Receivables) */}
-      <div className="bg-card text-card-foreground rounded-3xl p-6 shadow-card space-y-4">
+      <div className="bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card flex flex-col gap-4 min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
               <HandCoins className="w-5 h-5" />
             </div>
             <div>
@@ -1034,7 +1033,7 @@ export function PropertyDetailsClient({
             {propertyContact && (
               <Link
                 href={`/dashboard/receivables/${propertyContact.id}`}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-500 hover:text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 px-3.5 py-2 rounded-xl transition-all cursor-pointer group"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary bg-primary/10 hover:bg-primary/15 px-3.5 py-2 rounded-xl transition-colors duration-(--motion-fast) cursor-pointer group"
               >
                 <span>Manage in Receivables</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -1044,30 +1043,30 @@ export function PropertyDetailsClient({
         </div>
 
         {/* Total Payables Summary Card */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 @xl/main:grid-cols-3 gap-3">
           <div className="p-4 rounded-2xl bg-muted/60 space-y-1">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-              Total Payables Outstanding
+            <span className="text-label text-muted-foreground block">
+              Total payables outstanding
             </span>
-            <span className="text-xl font-black text-foreground">
+            <span className="num text-xl font-bold text-foreground">
               {formatMoney(totalPayablesOwed)}
             </span>
           </div>
 
           <div className="p-4 rounded-2xl bg-muted/60 space-y-1">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-              Total Advances Recorded
+            <span className="text-label text-muted-foreground block">
+              Total advances recorded
             </span>
-            <span className="text-xl font-black text-foreground">
+            <span className="num text-xl font-bold text-foreground">
               {formatMoney(totalAdvancesOriginated)}
             </span>
           </div>
 
           <div className="p-4 rounded-2xl bg-muted/60 space-y-1">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-              Repaid / Cleared to Date
+            <span className="text-label text-muted-foreground block">
+              Repaid / cleared to date
             </span>
-            <span className="text-xl font-black text-emerald-500">
+            <span className="num text-xl font-bold text-success">
               {formatMoney(Math.max(0, totalAdvancesOriginated - totalPayablesOwed))}
             </span>
           </div>
@@ -1097,10 +1096,10 @@ export function PropertyDetailsClient({
                       {loan.reason || 'Asset Cash Advance'}
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded-md font-bold uppercase tracking-wider text-[10px] ${
+                      className={`px-2 py-0.5 rounded-md font-bold text-2xs ${
                         loan.status === 'paid'
-                          ? 'bg-emerald-500/10 text-emerald-500'
-                          : 'bg-indigo-500/10 text-indigo-500'
+                          ? 'bg-success-soft text-success'
+                          : 'bg-primary/10 text-primary'
                       }`}
                     >
                       {loan.status === 'paid' ? 'Settled' : 'Payable'}
@@ -1110,15 +1109,15 @@ export function PropertyDetailsClient({
                     <span>Advanced {formatDate(loan.loaned_on)}</span>
                     {loan.due_date && <span>• Due {formatDate(loan.due_date)}</span>}
                     {Number(loan.monthly_interest_rate || 0) > 0 && (
-                      <span className="text-indigo-500 font-semibold">• {loan.monthly_interest_rate}%/mo</span>
+                      <span className="text-primary font-semibold">• {loan.monthly_interest_rate}%/mo</span>
                     )}
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
                   <span
-                    className={`font-black text-sm block ${
-                      loan.status === 'paid' ? 'text-emerald-500' : 'text-foreground'
+                    className={`font-bold text-sm block ${
+                      loan.status === 'paid' ? 'text-success' : 'text-foreground'
                     }`}
                   >
                     {loan.status === 'paid'
@@ -1126,7 +1125,7 @@ export function PropertyDetailsClient({
                       : formatMoney(loan.balance_remaining)}
                   </span>
                   {loan.status !== 'paid' && Number(loan.amount) > Number(loan.balance_remaining) && (
-                    <span className="text-[10px] text-muted-foreground block">
+                    <span className="text-2xs text-muted-foreground block">
                       of {formatMoney(loan.amount)}
                     </span>
                   )}
@@ -1144,7 +1143,7 @@ export function PropertyDetailsClient({
       />
 
       {/* Transaction Ledger Section */}
-      <Card className="rounded-3xl p-6 sm:p-8 shadow-xs overflow-hidden min-w-0 space-y-6">
+      <Card className="rounded-3xl p-6 sm:p-8 shadow-card overflow-hidden min-w-0 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="min-w-0">
             <h3 className="text-lg font-bold text-foreground truncate">Asset Transaction Ledger</h3>
@@ -1228,7 +1227,7 @@ export function PropertyDetailsClient({
                   size="sm"
                   variant="soft"
                   onClick={() => handleOpenTx('income')}
-                  className="rounded-xl bg-emerald-500/10 text-emerald-500 font-bold hover:bg-emerald-500/20"
+                  className="rounded-xl bg-success-soft text-success font-bold hover:bg-emerald-500/20"
                 >
                   + Log First Income
                 </Button>
@@ -1236,7 +1235,7 @@ export function PropertyDetailsClient({
                   size="sm"
                   variant="soft"
                   onClick={() => handleOpenTx('expense')}
-                  className="rounded-xl bg-rose-500/10 text-rose-500 font-bold hover:bg-rose-500/20"
+                  className="rounded-xl bg-danger-soft text-danger font-bold hover:bg-rose-500/20"
                 >
                   + Log First Expense
                 </Button>
@@ -1255,10 +1254,10 @@ export function PropertyDetailsClient({
                   <div
                     className={`size-9 sm:size-10 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 ${
                       item.kind === 'income'
-                        ? 'bg-emerald-500/10 text-emerald-500'
+                        ? 'bg-success-soft text-success'
                         : item.kind === 'advance'
-                        ? 'bg-indigo-500/10 text-indigo-500'
-                        : 'bg-rose-500/10 text-rose-500'
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-danger-soft text-danger'
                     }`}
                   >
                     {item.kind === 'income' ? (
@@ -1279,7 +1278,7 @@ export function PropertyDetailsClient({
                         <span
                           className={`text-2xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                             item.isAdvance
-                              ? 'bg-indigo-500/10 text-indigo-500'
+                              ? 'bg-primary/10 text-primary'
                               : 'text-foreground bg-muted'
                           }`}
                         >
@@ -1300,11 +1299,11 @@ export function PropertyDetailsClient({
                     <span
                       className={`text-sm sm:text-base font-extrabold block whitespace-nowrap ${
                         item.kind === 'income'
-                          ? 'text-emerald-600 dark:text-emerald-400'
+                          ? 'text-success'
                           : item.kind === 'advance'
                           ? item.status === 'paid'
-                            ? 'text-emerald-500'
-                            : 'text-indigo-500'
+                            ? 'text-success'
+                            : 'text-primary'
                           : 'text-foreground'
                       }`}
                     >
@@ -1315,8 +1314,8 @@ export function PropertyDetailsClient({
                       className={`text-2xs capitalize block font-bold ${
                         item.kind === 'advance'
                           ? item.status === 'paid'
-                            ? 'text-emerald-500'
-                            : 'text-indigo-500'
+                            ? 'text-success'
+                            : 'text-primary'
                           : 'text-muted-foreground font-normal'
                       }`}
                     >
@@ -1404,7 +1403,7 @@ export function PropertyDetailsClient({
             </ResponsiveDialogHeader>
             <div className="space-y-4 pt-2">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
                   Payment Amount *
                 </label>
                 <MoneyInput
@@ -1416,13 +1415,13 @@ export function PropertyDetailsClient({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
                   Fund From Savings Account (Optional)
                 </label>
                 <select
                   value={paymentSavingsId}
                   onChange={(e) => setPaymentSavingsId(e.target.value)}
-                  className="w-full h-11 px-3 text-sm bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+                  className="w-full h-11 px-3 text-sm bg-background rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
                 >
                   <option value="">Do not deduct from savings (External payment)</option>
                   {savingsAccounts.map((s) => (
@@ -1435,26 +1434,26 @@ export function PropertyDetailsClient({
 
               {/* Live Commercial Amortization Breakdown */}
               {payingLiability.annual_interest_rate > 0 && paymentSplit && paymentSplit.interestPortion > 0 && (
-                <div className="p-3.5 rounded-2xl bg-muted/60 border border-border/50 text-xs space-y-2">
+                <div className="p-3.5 rounded-2xl bg-muted/60 text-xs space-y-2">
                   <div className="flex items-center justify-between font-bold text-foreground">
-                    <span className="flex items-center gap-1.5 text-muted-foreground uppercase text-[10px] tracking-wider">
+                    <span className="flex items-center gap-1.5 text-muted-foreground text-2xs">
                       <TrendingDown className="w-3.5 h-3.5 text-primary" />
                       Amortization Breakdown
                     </span>
-                    <span className="text-[10px] font-semibold text-muted-foreground">
+                    <span className="text-2xs font-semibold text-muted-foreground">
                       {payingLiability.annual_interest_rate}% p.a.
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40">
+                  <div className="grid grid-cols-2 gap-2 pt-1">
                     <div>
-                      <span className="text-muted-foreground block text-[10px]">Principal (Debt Reduction)</span>
-                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">
+                      <span className="text-muted-foreground block text-2xs">Principal (Debt Reduction)</span>
+                      <span className="font-extrabold text-success text-sm">
                         {formatMoney(paymentSplit.principalPortion)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground block text-[10px]">Interest (Financing Expense)</span>
-                      <span className="font-extrabold text-amber-600 dark:text-amber-400 text-sm">
+                      <span className="text-muted-foreground block text-2xs">Interest (Financing Expense)</span>
+                      <span className="font-extrabold text-warning-soft-foreground text-sm">
                         {formatMoney(paymentSplit.interestPortion)}
                       </span>
                     </div>
@@ -1502,7 +1501,7 @@ export function PropertyDetailsClient({
                       setIsRecordingPayment(false);
                     }
                   }}
-                  className="rounded-2xl font-bold shadow-xs"
+                  className="rounded-2xl font-bold shadow-card"
                 >
                   {isRecordingPayment ? 'Recording...' : 'Confirm Payment'}
                 </Button>

@@ -350,27 +350,27 @@ export function CardsClient({
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-150 px-4 sm:px-6 lg:px-8 pb-24 md:pb-12">
+    <div className="flex flex-col gap-6 sm:gap-8 min-w-0">
       {/* 1. Page Header (TNV-018, TNV-031, TNV-032) */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            My Credit Cards
+      <div className="page-header">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-display text-foreground">
+            My credit cards
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="max-w-prose text-sm sm:text-base text-muted-foreground">
             Keep track of when bills are made, credit limits, and optimal swipe schedules in plain language.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+        <div className="page-header-actions w-full sm:w-auto">
           <Button
             variant="soft"
             size="default"
             render={<Link href="/dashboard/settings?tab=cards" />}
-            className="flex-1 sm:flex-initial min-h-11 h-11 sm:min-h-12 sm:h-12 px-3 sm:px-4 font-semibold active:scale-[0.99] transition-transform"
+            className="flex-1 sm:flex-initial px-4"
             aria-label="Open card reminder settings"
           >
-            <Bell className="mr-1.5 sm:mr-2 size-4 text-muted-foreground shrink-0" />
+            <Bell className="size-4 text-muted-foreground shrink-0" />
             Reminders
           </Button>
 
@@ -381,10 +381,10 @@ export function CardsClient({
               setSelectedInstallmentCardId(activeCards[0]?.id || '');
               setIsInstallmentModalOpen(true);
             }}
-            className="flex-1 sm:flex-initial min-h-11 h-11 sm:min-h-12 sm:h-12 px-3.5 sm:px-4 font-semibold cursor-pointer text-foreground hover:text-primary active:scale-[0.99] transition-transform"
+            className="flex-1 sm:flex-initial px-4 text-foreground"
           >
-            <Layers className="mr-1.5 size-4 text-primary shrink-0" />
-            Add Installment
+            <Layers className="size-4 text-primary shrink-0" />
+            Add installment
           </Button>
 
           <Button
@@ -394,9 +394,9 @@ export function CardsClient({
               setEditingCard(null);
               setIsModalOpen(true);
             }}
-            className="flex-1 sm:flex-initial min-h-11 h-11 sm:min-h-12 sm:h-12 px-4 sm:px-5 font-semibold cursor-pointer shadow-none active:scale-[0.99] transition-transform"
+            className="w-full sm:w-auto px-5"
           >
-            <Plus className="mr-1.5 size-4 shrink-0" />
+            <Plus className="size-4 shrink-0" />
             Add a card
           </Button>
         </div>
@@ -450,12 +450,12 @@ export function CardsClient({
 
       {/* 6. Card Grid (TNV-017 & TNV-021) */}
       {activeCards.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl bg-card p-10 text-center shadow-card space-y-4">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-card px-6 py-12 text-center shadow-card">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
             <CardIcon className="size-7" />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-bold text-foreground">No credit cards added yet</h3>
+          <div className="flex flex-col gap-1">
+            <h3 className="text-title text-foreground">No credit cards added yet</h3>
             <p className="text-sm text-muted-foreground max-w-sm">
               Add your credit cards to automatically calculate billing grace periods and track due dates.
             </p>
@@ -466,16 +466,16 @@ export function CardsClient({
               setEditingCard(null);
               setIsModalOpen(true);
             }}
-            className="min-h-12 h-12 px-6"
+            className="px-6"
           >
-            <Plus className="mr-2 size-4" />
+            <Plus className="size-4" />
             Add your first card
           </Button>
         </div>
       ) : filteredCards.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl bg-card p-8 text-center shadow-card space-y-3">
-          <p className="text-base font-semibold text-foreground">No cards match your current search or filter</p>
-          <p className="text-xs text-muted-foreground">Try clearing your filters or searching with a different term.</p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-card px-6 py-10 text-center shadow-card">
+          <p className="text-title text-foreground">No cards match your search or filter</p>
+          <p className="text-sm text-muted-foreground max-w-sm">Try clearing your filters or searching with a different term.</p>
           <Button
             variant="soft"
             size="sm"
@@ -483,26 +483,30 @@ export function CardsClient({
               setSearchQuery('');
               setSelectedBank('all');
             }}
-            className="min-h-10"
           >
             Clear filters
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {displayedCards.map((card) => {
+        <div className="grid-fluid-fill gap-x-5 gap-y-6 [--grid-min:18.5rem]">
+          {displayedCards.map((card, index) => {
             const spending = spendingMap.get(card.id) || calculateCardSpending(card, [], []);
             const dueDetails = dueDetailsMap.get(card.id);
 
             return (
-              <CreditCardTile
+              <div
                 key={card.id}
+                className="motion-pop-in min-w-0"
+                style={{ ['--stagger' as string]: index }}
+              >
+              <CreditCardTile
                 card={card}
                 spending={spending}
                 dueDetails={dueDetails}
                 onEdit={handleEditCard}
                 onDelete={handleDeleteCard}
               />
+              </div>
             );
           })}
         </div>
@@ -510,7 +514,7 @@ export function CardsClient({
 
       {/* 7. Pagination (TNV-010) */}
       {totalPages > 1 && (
-        <div className="pt-4 flex justify-center">
+        <div className="flex justify-center">
           <Pagination>
             <PaginationContent>
               <PaginationItem>

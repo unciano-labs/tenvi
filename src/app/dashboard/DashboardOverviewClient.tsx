@@ -241,7 +241,7 @@ export function DashboardOverviewClient({
   };
 
   return (
-    <div className="space-y-6 sm:space-y-7 animate-in fade-in duration-150">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* 1. Welcome Greeting Banner with Quick Record Action */}
       <TailwindWelcomeBanner
         userName={userName}
@@ -268,8 +268,8 @@ export function DashboardOverviewClient({
       />
 
       {/* 4. Middle Section: Cash Flow Chart (8 cols) + Asset Donut (4 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-8">
+      <div className="grid grid-cols-1 @4xl/main:grid-cols-12 gap-4 sm:gap-6 items-stretch">
+        <div className="min-w-0 @4xl/main:col-span-8">
           <TailwindCashFlowChart
             data={chartData}
             timeframe={timeframe}
@@ -278,7 +278,7 @@ export function DashboardOverviewClient({
             totalOutflow={totalExpense}
           />
         </div>
-        <div className="lg:col-span-4">
+        <div className="min-w-0 @4xl/main:col-span-4">
           <TailwindAssetDonut
             totalAssets={netWorthBreakdown.totalAssets}
             cashAmount={netWorthBreakdown.liquidSavings}
@@ -289,15 +289,15 @@ export function DashboardOverviewClient({
       </div>
 
       {/* 5. Bottom Section: Best Card Recommendation (6 cols) + Recent Activity Timeline (6 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-6">
+      <div className="grid grid-cols-1 @4xl/main:grid-cols-2 gap-4 sm:gap-6 items-stretch">
+        <div className="min-w-0">
           <TailwindBestCard
             optimalData={cardRecommendation}
             creditCards={creditCards}
             onAddPurchaseClick={handleOpenTransactionModal}
           />
         </div>
-        <div className="lg:col-span-6">
+        <div className="min-w-0">
           <TailwindRecentActivity
             transactions={transactions}
           />
@@ -341,11 +341,11 @@ export function DashboardOverviewClient({
       <ResponsiveDialog open={isNetWorthModalOpen} onOpenChange={setIsNetWorthModalOpen}>
         <ResponsiveDialogContent className="sm:max-w-2xl p-0 overflow-hidden">
           <ResponsiveDialogHeader className="p-6 pb-2">
-            <ResponsiveDialogTitle className="flex items-center gap-2 text-lg font-bold">
-              <Landmark className="size-5 text-primary" />
-              <span>True Net Worth Balance Sheet</span>
+            <ResponsiveDialogTitle className="flex items-center gap-2 text-title">
+              <Landmark className="size-5 shrink-0 text-primary" aria-hidden="true" />
+              <span>True net worth balance sheet</span>
             </ResponsiveDialogTitle>
-            <ResponsiveDialogDescription className="text-xs">
+            <ResponsiveDialogDescription className="text-sm">
               Everything you own minus everything you owe.
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
@@ -353,32 +353,32 @@ export function DashboardOverviewClient({
           <ResponsiveDialogBody className="p-6 pt-2 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Assets Column */}
-              <div className="space-y-3 p-4 rounded-xl bg-lightsuccess/60 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-success">
-                    What You Own (Assets)
+              <div className="space-y-3 p-4 rounded-xl bg-success-soft">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <span className="text-label text-success-soft-foreground">
+                    What you own (assets)
                   </span>
-                  <span className="text-sm font-bold text-foreground">
+                  <span className="num text-base font-bold text-foreground">
                     {formatMoney(netWorthBreakdown.totalAssets)}
                   </span>
                 </div>
 
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between py-1.5">
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between gap-3 py-1">
                     <span className="text-muted-foreground">Bank Accounts & Cash</span>
-                    <span className="font-semibold text-foreground">
+                    <span className="num shrink-0 font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.liquidSavings)}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1.5">
+                  <div className="flex justify-between gap-3 py-1">
                     <span className="text-muted-foreground">Money Owed to You</span>
-                    <span className="font-semibold text-foreground">
+                    <span className="num shrink-0 font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.receivables)}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1.5">
+                  <div className="flex justify-between gap-3 py-1">
                     <span className="text-muted-foreground">Properties & Vehicles</span>
-                    <span className="font-semibold text-foreground">
+                    <span className="num shrink-0 font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.fixedAssets)}
                     </span>
                   </div>
@@ -386,26 +386,26 @@ export function DashboardOverviewClient({
               </div>
 
               {/* Liabilities Column */}
-              <div className="space-y-3 p-4 rounded-xl bg-lighterror/60 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-danger">
-                    What You Owe (Debts)
+              <div className="space-y-3 p-4 rounded-xl bg-danger-soft">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <span className="text-label text-danger-soft-foreground">
+                    What you owe (debts)
                   </span>
-                  <span className="text-sm font-bold text-foreground">
+                  <span className="num text-base font-bold text-foreground">
                     {formatMoney(netWorthBreakdown.totalLiabilities)}
                   </span>
                 </div>
 
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between py-1.5">
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between gap-3 py-1">
                     <span className="text-muted-foreground">Credit Card Balances</span>
-                    <span className="font-semibold text-foreground">
+                    <span className="num shrink-0 font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.creditCardBalances)}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1.5">
+                  <div className="flex justify-between gap-3 py-1">
                     <span className="text-muted-foreground">Loans & Mortgages</span>
-                    <span className="font-semibold text-foreground">
+                    <span className="num shrink-0 font-semibold text-foreground">
                       {formatMoney(netWorthBreakdown.longTermLiabilities)}
                     </span>
                   </div>
@@ -416,15 +416,15 @@ export function DashboardOverviewClient({
             {/* Bottom Summary Pill */}
             <div className="p-4 rounded-xl bg-muted/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div>
-                <span className="text-muted-foreground block text-2xs">
+                <span className="num text-muted-foreground block text-xs">
                   Assets ({formatMoney(netWorthBreakdown.totalAssets)}) − Debts ({formatMoney(netWorthBreakdown.totalLiabilities)})
                 </span>
-                <span className="text-base font-bold text-foreground">
-                  Net Worth: {formatMoney(netWorthBreakdown.netWorth)}
+                <span className="num text-base font-bold text-foreground">
+                  Net worth: {formatMoney(netWorthBreakdown.netWorth)}
                 </span>
               </div>
-              <Badge variant={netWorthBreakdown.netWorth >= 0 ? 'success' : 'warning'} className="font-bold text-xs uppercase self-start sm:self-auto">
-                Debt-to-Asset: {netWorthBreakdown.debtToAssetRatio}%
+              <Badge variant={netWorthBreakdown.netWorth >= 0 ? 'success' : 'warning'} className="num font-semibold text-xs self-start sm:self-auto">
+                Debt-to-asset: {netWorthBreakdown.debtToAssetRatio}%
               </Badge>
             </div>
           </ResponsiveDialogBody>

@@ -300,109 +300,107 @@ export function PropertiesClient({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Property & Asset Portfolio
+      <div className="page-header">
+        <div>
+          <h1 className="text-display text-foreground">
+            Property and asset portfolio
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-2 max-w-prose text-sm sm:text-base text-muted-foreground">
             Manage vehicles, real estate, income-generating units, daily boundaries, and loan/insurance renewals.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <Button
-            type="button"
-            variant="soft"
-            size="sm"
-            onClick={() => handleOpenGeneralTx('income')}
-            className="rounded-xl gap-1.5 font-bold text-xs"
-          >
-            <ArrowDownRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            + Log Income
-          </Button>
-
-          <Button
-            type="button"
-            variant="soft"
-            size="sm"
-            onClick={() => handleOpenGeneralTx('expense')}
-            className="rounded-xl gap-1.5 font-bold text-xs"
-          >
-            <ArrowUpRight className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            + Log Expense
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setEditingLiability(null);
-              setIsLiabilityModalOpen(true);
-            }}
-            className="rounded-xl gap-1.5 font-bold text-xs"
-          >
-            <ShieldAlert className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            + Add Mortgage / Debt
-          </Button>
-
+        <div className="page-header-actions">
           <Button
             type="button"
             onClick={() => {
               setEditingProperty(null);
               setIsAddPropertyModalOpen(true);
             }}
-            className="rounded-xl gap-2 font-bold text-xs shadow-xs"
+            className="gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Property / Vehicle
+            Add property or vehicle
           </Button>
+
+          <Button
+            type="button"
+            variant="soft"
+            onClick={() => handleOpenGeneralTx('income')}
+            className="gap-1.5"
+          >
+            <ArrowDownRight className="w-4 h-4 text-success" />
+            Log income
+          </Button>
+
+          <Button
+            type="button"
+            variant="soft"
+            onClick={() => handleOpenGeneralTx('expense')}
+            className="gap-1.5"
+          >
+            <ArrowUpRight className="w-4 h-4 text-danger" />
+            Log expense
+          </Button>
+
+          <Button
+            type="button"
+            variant="soft"
+            onClick={() => {
+              setEditingLiability(null);
+              setIsLiabilityModalOpen(true);
+            }}
+            className="gap-1.5"
+          >
+            <ShieldAlert className="w-4 h-4 text-primary" />
+            Add mortgage or debt
+          </Button>
+
         </div>
       </div>
 
       {/* Portfolio Overview Stat Cards */}
-      <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 pb-1 sm:pb-0">
+      <div className="grid grid-cols-1 @lg/main:grid-cols-2 @2xl/main:grid-cols-6 gap-4">
         <StatCard
-          label="Total Portfolio Value"
+          label="Total portfolio value"
           value={formatMoney(portfolioSummary.totalValuation)}
           subtext={`${properties.length} total assets (${portfolioSummary.activeCount} active)`}
           icon={Building2}
           variant="neutral"
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@2xl/main:col-span-3 @container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         <StatCard
-          label="Net Portfolio Equity"
+          label="Net portfolio equity"
           value={formatMoney(netPortfolioEquity)}
           subtext={`${formatMoney(totalLiabilitiesBalance)} debt liabilities`}
           icon={ShieldCheck}
           variant={netPortfolioEquity > 0 ? 'positive' : 'warning'}
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@2xl/main:col-span-3 @container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         <StatCard
-          label="Total Asset Income"
+          label="Total asset income"
           value={formatMoney(portfolioSummary.totalIncome)}
           subtext="Boundary, fares, rentals logged"
           icon={TrendingUp}
           variant="positive"
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@2xl/main:col-span-2 @container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         <StatCard
-          label="Operating Expenses"
+          label="Operating expenses"
           value={formatMoney(portfolioSummary.totalExpense)}
           subtext="Amortizations, PMS, repairs, insurance"
           icon={TrendingDown}
           variant="negative"
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@2xl/main:col-span-2 @container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
 
         <StatCard
-          label="Net Cash Flow"
+          label="Net cash flow"
           value={formatMoney(portfolioSummary.netCashFlow)}
           subtext={
             portfolioSummary.netCashFlow >= 0
@@ -411,42 +409,42 @@ export function PropertiesClient({
           }
           icon={Sparkles}
           variant={portfolioSummary.netCashFlow >= 0 ? 'positive' : 'warning'}
-          className="min-w-[240px] max-w-[280px] sm:min-w-0 sm:max-w-none snap-start shrink-0 sm:shrink flex flex-col justify-between"
+          className="@lg/main:col-span-2 @2xl/main:col-span-2 @container [&_.text-figure]:text-[length:min(var(--text-figure),11cqi)] [&_.text-figure]:whitespace-nowrap [&_.text-figure]:break-normal"
         />
       </div>
 
       {/* Monthly Commitments Quick Bar */}
-      <Card className="p-6 shadow-xs overflow-hidden min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1 min-w-0">
-          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            <ShieldCheck className="w-4 h-4 text-primary" />
-            Monthly Run-Rate Commitments
+      <Card className="p-5 sm:p-6 min-w-0 flex-row flex-wrap items-center justify-between gap-6">
+        <div className="@container flex flex-col gap-1 min-w-0 flex-1 basis-72">
+          <div className="flex items-center gap-2 text-label text-muted-foreground">
+            <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+            Monthly commitments
           </div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground whitespace-nowrap">
             {formatMoney(portfolioSummary.monthlyCommitments)}
-            <span className="text-xs font-normal text-muted-foreground ml-1.5">/ month required</span>
+            <span className="text-sm font-normal tracking-normal text-muted-foreground ml-1.5">/ month</span>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="num text-sm text-muted-foreground max-w-prose">
             Includes {formatMoney(portfolioSummary.totalMonthlyAmortization)} in monthly loan amortizations +{' '}
             {formatMoney(portfolioSummary.totalAnnualInsurance / 12)} /mo annual insurance reserve.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full md:w-auto">
-          <div className="p-3.5 rounded-2xl bg-muted/60 flex-1 sm:flex-initial min-w-0 sm:min-w-[140px]">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block truncate">
-              Total Monthly Loans
+        <div className="grid grid-cols-2 gap-3 flex-1 basis-72 min-w-0">
+          <div className="@container p-4 rounded-xl bg-muted/50 min-w-0 flex flex-col gap-1">
+            <span className="text-label text-muted-foreground block">
+              Monthly loan payments
             </span>
-            <span className="text-base font-bold text-foreground block">
+            <span className="num text-[length:min(1.125rem,12cqi)] font-bold text-foreground block whitespace-nowrap">
               {formatMoney(portfolioSummary.totalMonthlyAmortization)}
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-muted/60 flex-1 sm:flex-initial min-w-0 sm:min-w-[140px]">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block truncate">
-              Annual Insurance Total
+          <div className="@container p-4 rounded-xl bg-muted/50 min-w-0 flex flex-col gap-1">
+            <span className="text-label text-muted-foreground block">
+              Annual insurance
             </span>
-            <span className="text-base font-bold text-foreground block">
+            <span className="num text-[length:min(1.125rem,12cqi)] font-bold text-foreground block whitespace-nowrap">
               {formatMoney(portfolioSummary.totalAnnualInsurance)}
             </span>
           </div>
@@ -455,19 +453,19 @@ export function PropertiesClient({
 
       {/* Urgent Asset Obligations Alert Banner */}
       {portfolioSummary.urgentObligations.length > 0 && (
-        <Card className="p-5 rounded-3xl bg-amber-500/10 space-y-3 min-w-0">
+        <Card className="p-5 bg-warning-soft shadow-none gap-3 min-w-0">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-            <h4 className="text-sm font-bold text-amber-950 dark:text-amber-200">
-              Upcoming Fixed Obligations ({portfolioSummary.urgentObligations.length} due soon)
+            <AlertCircle className="w-5 h-5 text-warning-soft-foreground shrink-0" />
+            <h4 className="text-sm font-semibold text-amber-950 dark:text-amber-200">
+              Upcoming fixed obligations ({portfolioSummary.urgentObligations.length} due soon)
             </h4>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid-fluid-fill gap-3 [--grid-min:16rem]">
             {portfolioSummary.urgentObligations.map((item, idx) => (
               <div
                 key={idx}
-                className="bg-card rounded-2xl p-3.5 shadow-xs flex items-center justify-between gap-3 min-w-0"
+                className="bg-card rounded-xl p-3.5 shadow-card flex items-center justify-between gap-3 min-w-0"
               >
                 <div className="min-w-0 flex-1">
                   <span className="text-xs font-bold text-foreground block truncate">
@@ -483,7 +481,7 @@ export function PropertiesClient({
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-xs font-extrabold text-foreground block">
+                  <span className="num text-sm font-bold text-foreground block whitespace-nowrap">
                     {formatMoney(item.amount)}
                   </span>
                   <Button
@@ -504,24 +502,24 @@ export function PropertiesClient({
 
       {/* Document Renewal & Compliance Alerts Banner */}
       {documentInsights.attentionDocs.length > 0 && (
-        <Card className="p-5 rounded-3xl bg-amber-500/10 space-y-3 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 min-w-0">
+        <Card className="p-5 bg-warning-soft shadow-none gap-3 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 min-w-0">
             <div className="flex items-center gap-2 min-w-0">
-              <Clock className="w-5 h-5 text-amber-600 shrink-0" />
-              <h4 className="text-sm font-bold text-amber-950 dark:text-amber-200 truncate">
-                Asset Document Expirations & Renewals ({documentInsights.attentionDocs.length} requiring attention)
+              <Clock className="w-5 h-5 text-amber-700 dark:text-amber-400 shrink-0" />
+              <h4 className="text-sm font-semibold text-amber-950 dark:text-amber-200">
+                Document expirations and renewals ({documentInsights.attentionDocs.length} requiring attention)
               </h4>
             </div>
             <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 shrink-0">
-              LTO OR/CR, Insurance Policies, LTFRB Franchises
+              LTO OR/CR, insurance policies, LTFRB franchises
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid-fluid-fill gap-3 [--grid-min:16rem]">
             {documentInsights.attentionDocs.map((item, idx) => (
               <div
                 key={idx}
-                className="bg-card rounded-2xl p-3.5 shadow-xs flex items-center justify-between gap-3 min-w-0"
+                className="bg-card rounded-xl p-3.5 shadow-card flex items-center justify-between gap-3 min-w-0"
               >
                 <div className="min-w-0 flex-1">
                   <span className="text-xs font-bold text-foreground block truncate">
@@ -552,7 +550,7 @@ export function PropertiesClient({
 
                 <Link
                   href={`/dashboard/properties/${item.document.property_id}`}
-                  className="px-2.5 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shrink-0 transition-colors"
+                  className="min-h-9 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold shrink-0 transition-colors"
                 >
                   Manage
                 </Link>
@@ -563,27 +561,27 @@ export function PropertiesClient({
       )}
 
       {/* Filter and Search Bar */}
-      <Card className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-3xl shadow-xs overflow-hidden min-w-0">
+      <Card size="sm" className="flex-row flex-wrap items-center justify-between gap-3 p-3 min-w-0">
         {/* Type tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl overflow-x-auto no-scrollbar max-w-full min-w-0">
+        <div className="flex items-center gap-1 p-1 bg-muted rounded-xl overflow-x-auto no-scrollbar max-w-full min-w-0">
           <Button
             type="button"
             variant={selectedType === 'all' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setSelectedType('all')}
-            className={`rounded-xl text-xs font-bold whitespace-nowrap ${
-              selectedType === 'all' ? 'shadow-xs' : 'text-muted-foreground'
+            className={`shrink-0 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap ${
+              selectedType === 'all' ? 'shadow-card' : 'text-muted-foreground'
             }`}
           >
-            All Assets ({properties.length})
+            All assets ({properties.length})
           </Button>
           <Button
             type="button"
             variant={selectedType === 'vehicle' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setSelectedType('vehicle')}
-            className={`rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 ${
-              selectedType === 'vehicle' ? 'shadow-xs' : 'text-muted-foreground'
+            className={`shrink-0 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap gap-1.5 ${
+              selectedType === 'vehicle' ? 'shadow-card' : 'text-muted-foreground'
             }`}
           >
             <Car className="w-3.5 h-3.5" />
@@ -594,12 +592,12 @@ export function PropertiesClient({
             variant={selectedType === 'real_estate' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setSelectedType('real_estate')}
-            className={`rounded-xl text-xs font-bold whitespace-nowrap gap-1.5 ${
-              selectedType === 'real_estate' ? 'shadow-xs' : 'text-muted-foreground'
+            className={`shrink-0 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap gap-1.5 ${
+              selectedType === 'real_estate' ? 'shadow-card' : 'text-muted-foreground'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
-            Real Estate (
+            Real estate (
             {
               properties.filter(
                 (p) =>
@@ -613,29 +611,29 @@ export function PropertiesClient({
         </div>
 
         {/* Search */}
-        <div className="relative w-full sm:w-64">
+        <div className="relative flex-1 basis-56 min-w-0 sm:max-w-xs">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             type="text"
-            placeholder="Search assets, identifiers..."
+            placeholder="Search assets, plate or title no."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-10 text-xs rounded-xl"
+            className="pl-9 h-12 sm:h-10 text-base sm:text-sm rounded-xl"
           />
         </div>
       </Card>
 
       {/* Property Cards Grid */}
       {filteredProperties.length === 0 ? (
-        <Card className="p-12 text-center shadow-xs space-y-4 max-w-md mx-auto">
-          <div className="size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+        <Card className="items-center px-6 py-12 text-center gap-4">
+          <div className="size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
             <Building2 className="w-7 h-7" />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-bold text-foreground">
-              {searchQuery ? 'No matching properties found' : 'No properties or assets yet'}
+          <div className="flex flex-col items-center gap-1.5">
+            <h3 className="text-title text-foreground">
+              {searchQuery ? 'No matching properties' : 'No properties or assets yet'}
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground max-w-prose">
               {searchQuery
                 ? 'Try adjusting your search keyword or filters.'
                 : 'Add your cars, Grab/taxi vehicles, or rental condos to track daily boundaries, amortizations, and annual insurance.'}
@@ -647,15 +645,15 @@ export function PropertiesClient({
                 setEditingProperty(null);
                 setIsAddPropertyModalOpen(true);
               }}
-              className="rounded-xl gap-2 text-xs font-semibold"
+              className="gap-2"
             >
               <Plus className="w-4 h-4" />
-              Add First Property / Vehicle
+              Add your first property or vehicle
             </Button>
           )}
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid-fluid-fill gap-4 sm:gap-6 [--grid-min:19rem]">
           {filteredProperties.map((property) => {
             const financials =
               propertyFinancialsMap.get(property.id) ??
@@ -667,7 +665,7 @@ export function PropertiesClient({
             return (
               <Card
                 key={property.id}
-                className="p-6 shadow-xs overflow-hidden min-w-0 flex flex-col justify-between space-y-5"
+                className="@container p-5 sm:p-6 min-w-0 justify-between gap-5"
               >
                 {/* Header: Icon, Name, Identifier, Status */}
                 <div className="min-w-0">
@@ -681,11 +679,11 @@ export function PropertiesClient({
                           {property.name}
                         </h3>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge variant="soft" className="text-xs font-medium uppercase tracking-wider shrink-0">
+                          <Badge variant="soft" className="text-xs font-medium capitalize shrink-0">
                             {property.property_type.replace('_', ' ')}
                           </Badge>
                           {property.identifier && (
-                            <Badge variant="outline" className="text-xs font-medium uppercase tracking-wider shrink-0">
+                            <Badge variant="outline" className="text-xs font-medium capitalize shrink-0">
                               {property.identifier}
                             </Badge>
                           )}
@@ -721,14 +719,14 @@ export function PropertiesClient({
                   {/* Valuation & Net Equity */}
                   <div className="p-3.5 rounded-2xl bg-muted/60 mb-4 flex items-center justify-between gap-2 min-w-0">
                     <div className="min-w-0">
-                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-                        Estimated Valuation
+                      <span className="text-label text-muted-foreground block">
+                        Estimated valuation
                       </span>
-                      <span className="text-2xl font-bold tracking-tight text-foreground block">
+                      <span className="num text-[length:min(var(--text-figure),11cqi)] font-bold leading-tight tracking-tight text-foreground block whitespace-nowrap">
                         {formatMoney(property.estimated_value)}
                       </span>
                       {propDebt > 0 && (
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 block mt-0.5">
+                        <span className="text-xs font-medium text-success block mt-0.5">
                           Net Equity: {formatMoney(propEquity)} ({formatMoney(propDebt)} loan)
                         </span>
                       )}
@@ -743,7 +741,7 @@ export function PropertiesClient({
                             ? 'warning'
                             : 'soft'
                         }
-                        className="text-xs font-medium uppercase tracking-wider shrink-0"
+                        className="text-xs font-medium capitalize shrink-0"
                       >
                         {property.status}
                       </Badge>
@@ -752,30 +750,30 @@ export function PropertiesClient({
 
                   {/* Financial Flow: In vs Out vs Net */}
                   {financials && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center p-3 rounded-2xl bg-muted/40 mb-4 min-w-0">
+                    <div className="grid grid-cols-1 @@xl/main:grid-cols-3 gap-2 @sm:text-center p-3 rounded-xl bg-muted/50 mb-4 min-w-0">
                       <div className="min-w-0">
-                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
+                        <span className="text-label text-muted-foreground block">
                           Income
                         </span>
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 block">
+                        <span className="num text-xs font-semibold text-success block break-words">
                           +{formatMoney(financials.totalIncome)}
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
+                        <span className="text-label text-muted-foreground block">
                           Expense
                         </span>
-                        <span className="text-xs font-medium text-rose-600 dark:text-rose-400 block">
+                        <span className="num text-xs font-semibold text-danger block break-words">
                           -{formatMoney(financials.totalExpense)}
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground block">
-                          Net Cash
+                        <span className="text-label text-muted-foreground block">
+                          Net cash
                         </span>
                         <span
                           className={`text-xs font-bold block ${
-                            financials.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                            financials.netCashFlow >= 0 ? 'text-success' : 'text-danger'
                           }`}
                         >
                           {formatMoney(financials.netCashFlow)}
@@ -791,12 +789,12 @@ export function PropertiesClient({
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary/5 min-w-0 gap-2">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
-                          <span className="text-muted-foreground shrink-0">Monthly Amort:</span>
+                          <span className="text-muted-foreground shrink-0">Monthly amortization:</span>
                           <span className="font-medium text-foreground">
                             {formatMoney(financials?.monthlyAmortization ?? property.monthly_amortization)}
                           </span>
                           {financials?.computedFromLoans && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-semibold bg-primary/10 text-primary border-primary/30 shrink-0">
+                            <Badge variant="soft" className="text-2xs px-1.5 py-0 font-semibold bg-primary/10 text-primary shrink-0">
                               Auto ({financials.linkedLoanCount})
                             </Badge>
                           )}
@@ -823,7 +821,7 @@ export function PropertiesClient({
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/60 min-w-0 gap-2">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-muted-foreground shrink-0">Yearly Insurance:</span>
+                          <span className="text-muted-foreground shrink-0">Yearly insurance:</span>
                           <span className="font-medium text-foreground">{formatMoney(property.annual_insurance_amount)}</span>
                         </div>
                         {financials?.insuranceRenewal.daysRemaining !== null && (
@@ -845,18 +843,18 @@ export function PropertiesClient({
 
                     {/* Daily Boundary or Expected Rental */}
                     {Number(property.expected_income_daily || 0) > 0 && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 text-xs min-w-0 gap-2">
-                        <span className="text-muted-foreground">Expected Daily Boundary:</span>
-                        <span className="font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-success-soft text-xs min-w-0 gap-2">
+                        <span className="text-muted-foreground">Expected daily boundary:</span>
+                        <span className="font-medium text-success shrink-0">
                           {formatMoney(property.expected_income_daily)} / day
                         </span>
                       </div>
                     )}
 
                     {Number(property.expected_income_monthly || 0) > 0 && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 text-xs min-w-0 gap-2">
-                        <span className="text-muted-foreground">Expected Monthly Rent:</span>
-                        <span className="font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-success-soft text-xs min-w-0 gap-2">
+                        <span className="text-muted-foreground">Expected monthly rent:</span>
+                        <span className="font-medium text-success shrink-0">
                           {formatMoney(property.expected_income_monthly)} / mo
                         </span>
                       </div>
@@ -906,7 +904,7 @@ export function PropertiesClient({
                       size="xs"
                       variant="soft"
                       onClick={() => handleOpenTxModal(property.id, 'income')}
-                      className="text-emerald-600 dark:text-emerald-400 font-bold active:scale-[0.99] transition-transform"
+                      className="text-success font-semibold"
                     >
                       + Income
                     </Button>
@@ -915,7 +913,7 @@ export function PropertiesClient({
                       size="xs"
                       variant="soft"
                       onClick={() => handleOpenTxModal(property.id, 'expense')}
-                      className="text-rose-600 dark:text-rose-400 font-bold active:scale-[0.99] transition-transform"
+                      className="text-danger font-semibold"
                     >
                       + Expense
                     </Button>

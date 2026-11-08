@@ -211,10 +211,10 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
               )}
             </div>
             <div className="min-w-0">
-              <ResponsiveDialogTitle className="truncate">
+              <ResponsiveDialogTitle className="break-words">
                 {isEditing ? 'Edit Property / Asset' : 'Add Property or Asset'}
               </ResponsiveDialogTitle>
-              <ResponsiveDialogDescription className="truncate">
+              <ResponsiveDialogDescription>
                 Track revenue, boundary/rentals, amortization, and renewals
               </ResponsiveDialogDescription>
             </div>
@@ -226,7 +226,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
             {/* Basic Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-xs font-bold text-foreground">Property / Asset Name</label>
+                <label className="text-sm font-medium text-foreground">Property / asset name</label>
                 <Input
                   type="text"
                   required
@@ -238,11 +238,11 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">Asset Type</label>
+                <label className="text-sm font-medium text-foreground">Asset type</label>
                 <select
                   value={propertyType}
                   onChange={(e) => setPropertyType(e.target.value as PropertyType)}
-                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-all focus:ring-2 focus:ring-ring"
+                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-colors duration-(--motion-fast) focus:ring-2 focus:ring-ring"
                 >
                   {PROPERTY_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>
@@ -253,7 +253,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">
+                <label className="text-sm font-medium text-foreground">
                   {propertyType === 'vehicle' ? 'Plate Number / VIN' : 'Unit / Identifier'}
                 </label>
                 <Input
@@ -261,20 +261,20 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
                   placeholder={propertyType === 'vehicle' ? 'e.g. NBT-1234' : 'e.g. Unit 24B, Tower 1'}
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="text-sm uppercase"
+                  className="text-sm uppercase placeholder:normal-case"
                 />
               </div>
             </div>
 
             {/* Valuation & Acquisition */}
             <div className="p-4 rounded-3xl bg-muted/60 space-y-4">
-              <h4 className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
-                Asset Valuation & Pricing
+              <h4 className="text-sm font-semibold text-foreground">
+                Asset valuation & pricing
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">
-                    Current Market Valuation (₱)
+                    Current market valuation (₱)
                   </label>
                   <MoneyInput
                     placeholder="e.g. 750,000"
@@ -285,7 +285,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">
-                    Purchase / Acquisition Price (₱)
+                    Purchase / acquisition price (₱)
                   </label>
                   <MoneyInput
                     placeholder="e.g. 850,000"
@@ -300,19 +300,19 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
             <div className="p-4 rounded-3xl bg-primary/5 space-y-4">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-primary" />
-                <h4 className="text-xs uppercase font-bold text-foreground tracking-wider">
+                <h4 className="text-sm font-semibold text-foreground">
                   Fixed Obligations (Amortization & Insurance)
                 </h4>
               </div>
 
               {linkedLiabilities.length > 0 && (
-                <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs space-y-1.5">
+                <div className="p-3.5 rounded-2xl bg-primary/10 text-xs space-y-1.5">
                   <div className="flex items-center justify-between font-bold text-blue-950 dark:text-blue-200">
                     <span className="flex items-center gap-1.5">
-                      <Landmark className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <Landmark className="w-3.5 h-3.5 text-primary" />
                       Auto-computed from {linkedLiabilities.length} active loan record{linkedLiabilities.length === 1 ? '' : 's'}:
                     </span>
-                    <span className="text-sm font-black text-blue-600 dark:text-blue-400">
+                    <span className="text-sm font-bold text-primary">
                       ₱{autoComputedLoanAmortization.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo
                     </span>
                   </div>
@@ -331,7 +331,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
                         setMonthlyAmortization(String(autoComputedLoanAmortization));
                         if (autoComputedDueDay) setAmortizationDueDay(String(autoComputedDueDay));
                       }}
-                      className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1 mt-1"
+                      className="text-[11px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1 mt-1"
                     >
                       ↺ Use auto-computed loan values
                     </button>
@@ -342,7 +342,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">
-                    Monthly Amortization / Loan (₱)
+                    Monthly amortization / loan (₱)
                   </label>
                   <MoneyInput
                     placeholder="e.g. 16,500"
@@ -353,7 +353,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">
-                    Amortization Due Day (Day of Month)
+                    Amortization due day (Day of month)
                   </label>
                   <Input
                     type="number"
@@ -368,7 +368,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">
-                    Annual Insurance Cost (₱)
+                    Annual insurance cost (₱)
                   </label>
                   <MoneyInput
                     placeholder="e.g. 18,500"
@@ -379,7 +379,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">
-                    Insurance Renewal Date
+                    Insurance renewal date
                   </label>
                   <Input
                     type="date"
@@ -392,14 +392,14 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
             </div>
 
             {/* Expected Revenue Targets */}
-            <div className="p-4 rounded-3xl bg-emerald-500/10 space-y-4">
-              <h4 className="text-xs uppercase font-bold text-emerald-800 dark:text-emerald-300 tracking-wider">
+            <div className="p-4 rounded-3xl bg-success-soft space-y-4">
+              <h4 className="text-sm font-semibold text-success">
                 Expected Revenue Targets
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">
-                    Expected Daily Boundary / Income (₱)
+                    Expected daily boundary / income (₱)
                   </label>
                   <MoneyInput
                     placeholder="e.g. 1,200 for taxi/Grab"
@@ -410,7 +410,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">
-                    Expected Monthly Rental (₱)
+                    Expected monthly rental (₱)
                   </label>
                   <MoneyInput
                     placeholder="e.g. 35,000 for condo"
@@ -424,7 +424,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
             {/* Color & Status */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">Theme Color</label>
+                <label className="text-sm font-medium text-foreground">Theme color</label>
                 <div className="flex items-center gap-2 pt-1">
                   {THEME_OPTIONS.map((theme) => (
                     <button
@@ -444,11 +444,11 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">Operational Status</label>
+                <label className="text-sm font-medium text-foreground">Operational status</label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as PropertyStatus)}
-                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-all focus:ring-2 focus:ring-ring"
+                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-colors duration-(--motion-fast) focus:ring-2 focus:ring-ring"
                 >
                   <option value="active">Active & Generating Income</option>
                   <option value="maintenance">Under Maintenance / Repair</option>
@@ -460,7 +460,7 @@ export function PropertyModal({ isOpen, onClose, property, liabilities }: Proper
 
             {/* Notes */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground">Notes / Reminders (Optional)</label>
+              <label className="text-sm font-medium text-foreground">Notes / reminders (optional)</label>
               <Input
                 type="text"
                 placeholder="e.g. Driver: Kuya Jun, Oil change every 10k km"

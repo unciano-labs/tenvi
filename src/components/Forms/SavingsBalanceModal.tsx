@@ -75,8 +75,8 @@ export function SavingsBalanceModal({
     >
       <ResponsiveDialogContent className="max-w-md">
         <ResponsiveDialogHeader className="pr-10 sm:pr-12">
-          <ResponsiveDialogTitle className="truncate">Adjust Balance</ResponsiveDialogTitle>
-          <ResponsiveDialogDescription className="truncate">
+          <ResponsiveDialogTitle>Adjust balance</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {account ? `${account.name} (${account.institution_name})` : ''}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
@@ -136,7 +136,7 @@ export function SavingsBalanceModal({
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     {type === 'deposit'
                       ? 'Amount to Add (Deposit)'
                       : type === 'withdraw'

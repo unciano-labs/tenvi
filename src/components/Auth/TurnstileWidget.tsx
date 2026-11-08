@@ -163,7 +163,7 @@ export function TurnstileWidget({
   }, [siteKey]);
 
   return (
-    <div className={`flex flex-col items-center justify-center my-3 w-full ${className}`}>
+    <div className={`flex flex-col items-center justify-center w-full ${className}`}>
       {/* Hidden input to pass the token with standard HTML form action submissions */}
       <input type="hidden" name="cf-turnstile-response" value={token} />
 
@@ -177,21 +177,21 @@ export function TurnstileWidget({
 
       {/* Tonal Loading Placeholder while Cloudflare iframe connects */}
       {!isRendered && !blockedByAdblocker && (
-        <div className="w-[300px] h-[65px] rounded-2xl bg-muted/40 text-muted-foreground flex items-center justify-center gap-2 text-xs font-medium animate-pulse">
+        <div className="w-[300px] max-w-full h-[65px] rounded-2xl bg-muted/50 text-muted-foreground flex items-center justify-center gap-2 text-xs font-medium">
           <Loader2 className="w-4 h-4 animate-spin text-primary" />
-          <span>Loading security check...</span>
+          <span>Loading security check…</span>
         </div>
       )}
 
       {/* Fallback indicator if adblocker blocks Cloudflare script in the browser */}
       {blockedByAdblocker && (
-        <div className="w-[300px] p-3 rounded-2xl bg-muted/40 text-foreground flex items-center gap-2.5 shadow-2xs text-xs animate-in fade-in duration-200">
-          <div className="size-8 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+        <div className="w-full p-3 rounded-2xl bg-muted/50 text-foreground flex items-center gap-3 text-xs animate-in fade-in duration-(--motion-fast)">
+          <div className="size-8 rounded-xl bg-success-soft text-success-soft-foreground flex items-center justify-center shrink-0">
             <ShieldCheck className="size-4" />
           </div>
           <div className="flex flex-col min-w-0 text-left">
-            <span className="font-semibold text-xs">Security Check Active</span>
-            <span className="text-3xs text-muted-foreground">
+            <span className="font-semibold text-sm">Security check active</span>
+            <span className="text-xs text-muted-foreground">
               {process.env.NODE_ENV !== 'production'
                 ? 'Ad blocker detected · Auto-verified in development'
                 : 'Browser verification verified'}

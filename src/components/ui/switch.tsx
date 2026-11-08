@@ -16,9 +16,9 @@ function Switch({
       data-slot="switch"
       data-size={size}
       className={cn(
-        "peer group/switch relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
-        size === "default" && "h-6 w-11 bg-muted ring-1 ring-muted-foreground/20 data-checked:bg-primary data-checked:ring-0",
-        size === "sm" && "h-5 w-9 bg-muted ring-1 ring-muted-foreground/20 data-checked:bg-primary data-checked:ring-0",
+        "peer group/switch relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+        size === "default" && "h-6 w-11 bg-muted ring-1 ring-inset ring-muted-foreground/70 data-checked:bg-primary data-checked:ring-0",
+        size === "sm" && "h-5 w-9 bg-muted ring-1 ring-inset ring-muted-foreground/70 data-checked:bg-primary data-checked:ring-0",
         className
       )}
       {...props}
@@ -26,7 +26,7 @@ function Switch({
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
         className={cn(
-          "pointer-events-none block rounded-full bg-background shadow-xs transition-transform",
+          "pointer-events-none block rounded-full bg-background shadow-sm transition-transform duration-(--motion-base) ease-(--ease-spring-press)",
           size === "default" && "size-5 data-checked:translate-x-5.5 data-unchecked:translate-x-0.5",
           size === "sm" && "size-4 data-checked:translate-x-4.5 data-unchecked:translate-x-0.5"
         )}

@@ -133,10 +133,10 @@ export function PropertyTransactionModal({
     >
       <ResponsiveDialogContent className="max-w-lg">
         <ResponsiveDialogHeader className="pr-10 sm:pr-12">
-          <ResponsiveDialogTitle className="truncate">
+          <ResponsiveDialogTitle className="break-words">
             {kind === 'income' ? 'Record Asset Income' : 'Record Asset Expense'}
           </ResponsiveDialogTitle>
-          <ResponsiveDialogDescription className="truncate">
+          <ResponsiveDialogDescription>
             {kind === 'income'
               ? 'Log boundary, fares, booking revenue, or tenant rent'
               : 'Log amortization, insurance, repairs, fuel, or PMS'}
@@ -153,7 +153,7 @@ export function PropertyTransactionModal({
                 size="sm"
                 onClick={() => setKind('income')}
                 className={`flex-1 rounded-xl gap-1.5 font-bold ${
-                  kind === 'income' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'text-muted-foreground'
+                  kind === 'income' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-card' : 'text-muted-foreground'
                 }`}
               >
                 <PlusCircle className="w-3.5 h-3.5" />
@@ -166,7 +166,7 @@ export function PropertyTransactionModal({
                 size="sm"
                 onClick={() => setKind('expense')}
                 className={`flex-1 rounded-xl gap-1.5 font-bold ${
-                  kind === 'expense' ? 'shadow-xs' : 'text-muted-foreground'
+                  kind === 'expense' ? 'shadow-card' : 'text-muted-foreground'
                 }`}
               >
                 <MinusCircle className="w-3.5 h-3.5" />
@@ -177,12 +177,12 @@ export function PropertyTransactionModal({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Target Property Selector */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">Target Property / Asset</label>
+                <label className="text-sm font-medium text-foreground">Target property / asset</label>
                 <select
                   value={propertyId}
                   onChange={(e) => setPropertyId(e.target.value)}
                   required
-                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-semibold text-foreground outline-none transition-all focus:ring-2 focus:ring-ring"
+                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-semibold text-foreground outline-none transition-colors duration-(--motion-fast) focus:ring-2 focus:ring-ring"
                 >
                   {properties.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -194,7 +194,7 @@ export function PropertyTransactionModal({
 
               {/* Amount */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">Amount (₱)</label>
+                <label className="text-sm font-medium text-foreground">Amount (₱)</label>
                 <MoneyInput
                   required
                   placeholder="0.00"
@@ -223,7 +223,7 @@ export function PropertyTransactionModal({
                                 Number(selectedProperty.expected_income_daily)
                               )
                             }
-                            className="text-xs text-emerald-700 dark:text-emerald-400"
+                            className="text-xs text-success"
                           >
                             + Daily Boundary (₱{selectedProperty.expected_income_daily})
                           </Button>
@@ -239,7 +239,7 @@ export function PropertyTransactionModal({
                                 Number(selectedProperty.expected_income_monthly)
                               )
                             }
-                            className="text-xs text-emerald-700 dark:text-emerald-400"
+                            className="text-xs text-success"
                           >
                             + Monthly Rent (₱{selectedProperty.expected_income_monthly})
                           </Button>
@@ -267,7 +267,7 @@ export function PropertyTransactionModal({
                                 Number(selectedProperty.monthly_amortization)
                               )
                             }
-                            className="text-xs text-rose-700 dark:text-rose-400"
+                            className="text-xs text-danger"
                           >
                             - Monthly Amort (₱{selectedProperty.monthly_amortization})
                           </Button>
@@ -283,7 +283,7 @@ export function PropertyTransactionModal({
                                 Number(selectedProperty.annual_insurance_amount)
                               )
                             }
-                            className="text-xs text-rose-700 dark:text-rose-400"
+                            className="text-xs text-danger"
                           >
                             - Yearly Insurance (₱{selectedProperty.annual_insurance_amount})
                           </Button>
@@ -314,11 +314,11 @@ export function PropertyTransactionModal({
 
               {/* Category */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">Category</label>
+                <label className="text-sm font-medium text-foreground">Category</label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-all focus:ring-2 focus:ring-ring"
+                  className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-colors duration-(--motion-fast) focus:ring-2 focus:ring-ring"
                 >
                   <option value="">Select a category (optional)</option>
                   {filteredCategories.map((c) => (
@@ -332,11 +332,11 @@ export function PropertyTransactionModal({
               {/* Payment Method & Date */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Payment Channel</label>
+                  <label className="text-sm font-medium text-foreground">Payment channel</label>
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-all focus:ring-2 focus:ring-ring capitalize"
+                    className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-colors duration-(--motion-fast) focus:ring-2 focus:ring-ring capitalize"
                   >
                     {PAYMENT_METHODS.map((m) => (
                       <option key={m.id} value={m.id}>
@@ -347,7 +347,7 @@ export function PropertyTransactionModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Date</label>
+                  <label className="text-sm font-medium text-foreground">Date</label>
                   <Input
                     type="date"
                     required
@@ -361,7 +361,7 @@ export function PropertyTransactionModal({
               {/* If Credit Card, choose card */}
               {paymentMethod === 'credit_card' && creditCards.length > 0 && (
                 <div className="space-y-1.5 p-3 rounded-2xl bg-primary/10">
-                  <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
                     <CreditCardIcon className="w-3.5 h-3.5 text-primary" />
                     Charge to Credit Card
                   </label>
@@ -382,7 +382,7 @@ export function PropertyTransactionModal({
 
               {/* Description / Note */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">Note / Description</label>
+                <label className="text-sm font-medium text-foreground">Note / description</label>
                 <Input
                   type="text"
                   placeholder={

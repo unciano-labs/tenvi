@@ -3,28 +3,30 @@ import { Skeleton, SkeletonAccountCard, SkeletonStatCard } from '@/components/ui
 
 export default function SavingsLoading() {
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
-      {/* Header Placeholder */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-60 rounded-2xl" />
-          <Skeleton className="h-4 w-48 rounded-lg" />
+    <div className="flex flex-col gap-6 sm:gap-8" aria-busy="true" aria-label="Loading savings">
+      {/* Header placeholder (mirrors .page-header) */}
+      <div className="page-header">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-9 w-64 rounded-xl" />
+          <Skeleton className="h-4 w-full max-w-sm rounded-lg" />
         </div>
-        <Skeleton className="h-11 w-44 rounded-2xl shrink-0" />
+        <div className="page-header-actions w-full sm:w-auto">
+          <Skeleton className="h-12 sm:h-11 w-full sm:w-48 rounded-xl" />
+        </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Summary stats */}
+      <div className="grid-fluid gap-3 sm:gap-4 [--grid-min:14rem]">
         <SkeletonStatCard />
         <SkeletonStatCard />
         <SkeletonStatCard />
       </div>
 
-      {/* Accounts Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <SkeletonAccountCard />
-        <SkeletonAccountCard />
-        <SkeletonAccountCard />
+      {/* Filter toolbar */}
+      <Skeleton className="h-16 w-full rounded-2xl" />
+
+      {/* Accounts grid */}
+      <div className="grid-fluid-fill gap-x-6 gap-y-8 [--grid-min:17.5rem]">
         <SkeletonAccountCard />
         <SkeletonAccountCard />
         <SkeletonAccountCard />

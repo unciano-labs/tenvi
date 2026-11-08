@@ -61,22 +61,23 @@ export function GoogleAuthButton({
   return (
     <div className="w-full">
       {errorMsg && (
-        <div className="mb-3 p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold">
+        <div role="alert" className="mb-3 p-3 rounded-xl bg-danger-soft text-danger-soft-foreground text-sm font-medium">
           {errorMsg}
         </div>
       )}
 
       <Button
         type="button"
-        variant="secondary"
+        variant="soft"
         onClick={handleGoogleSignIn}
         disabled={isLoading}
-        className={`w-full h-12 rounded-2xl text-foreground font-bold text-sm sm:text-base flex items-center justify-center gap-3 transition-all duration-200 active:scale-[0.98] shadow-card hover:shadow-lift cursor-pointer disabled:opacity-60 disabled:pointer-events-none ${className}`}
+        aria-busy={isLoading}
+        className={`w-full text-foreground gap-3 ${className}`}
       >
         {isLoading ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-            <span>Connecting to Google...</span>
+            <span>Connecting to Google…</span>
           </>
         ) : (
           <>

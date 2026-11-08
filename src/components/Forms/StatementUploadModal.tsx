@@ -666,7 +666,7 @@ export function StatementUploadModal({
                   <button
                     type="button"
                     onClick={() => setFilterTab('purchases')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer ${
                       filterTab === 'purchases'
                         ? 'bg-card text-foreground shadow-xs'
                         : 'text-muted-foreground hover:text-foreground'
@@ -677,7 +677,7 @@ export function StatementUploadModal({
                   <button
                     type="button"
                     onClick={() => setFilterTab('credits')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer ${
                       filterTab === 'credits'
                         ? 'bg-card text-foreground shadow-xs'
                         : 'text-muted-foreground hover:text-foreground'
@@ -689,7 +689,7 @@ export function StatementUploadModal({
                     <button
                       type="button"
                       onClick={() => setFilterTab('duplicates')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer flex items-center gap-1.5 ${
                         filterTab === 'duplicates'
                           ? 'bg-card text-amber-800 shadow-xs'
                           : 'text-amber-700 hover:text-amber-900'
@@ -702,7 +702,7 @@ export function StatementUploadModal({
                   <button
                     type="button"
                     onClick={() => setFilterTab('all')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer ${
                       filterTab === 'all'
                         ? 'bg-card text-foreground shadow-xs'
                         : 'text-muted-foreground hover:text-foreground'
@@ -819,7 +819,7 @@ export function StatementUploadModal({
                               <select
                                 value={tx.categoryId || ''}
                                 onChange={(e) => handleUpdateItem(tx.id, 'categoryId', e.target.value)}
-                                className="h-8 py-0 px-2 text-xs w-full rounded-lg bg-muted/60 text-foreground outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                                className="h-8 py-0 px-2 text-xs w-full rounded-lg bg-muted/60 text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring"
                               >
                                 <option value="">(No category)</option>
                                 {categories.map((c) => (

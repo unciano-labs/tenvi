@@ -59,22 +59,22 @@ export function TailwindBestCard({
   const activeCardsCount = creditCards.filter((c) => c.is_active).length;
 
   return (
-    <CardBox className="h-full flex flex-col justify-between">
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="size-9 rounded-xl bg-lightprimary text-primary flex items-center justify-center font-bold">
+    <CardBox className="h-full rounded-2xl shadow-card hover:shadow-card flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+          <div className="flex min-w-0 flex-[1_1_13rem] items-start gap-3">
+            <div className="size-9 shrink-0 rounded-xl bg-lightprimary text-primary flex items-center justify-center" aria-hidden="true">
               <Sparkles className="size-4" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h4 className="card-title text-sm sm:text-base">Best Card to Swipe Today</h4>
+                <h2 className="text-title text-foreground">Best card to swipe today</h2>
                 <Tooltip>
                   <TooltipTrigger
                     render={
                       <button
                         type="button"
-                        className="text-muted-foreground/70 hover:text-foreground cursor-pointer"
+                        className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground/80 hover:text-foreground cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         aria-label="Explain Best Card recommendation"
                       />
                     }
@@ -86,13 +86,13 @@ export function TailwindBestCard({
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <p className="text-2xs text-muted-foreground">Smart interest-free cash float</p>
+              <p className="text-sm text-muted-foreground">Smart interest-free cash float</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] leading-none font-bold px-2 py-1 rounded-full bg-lightsuccess text-success flex items-center gap-1 whitespace-nowrap shrink-0">
-              <CheckCircle2 className="size-3" /> Best Choice
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-success-soft text-success-soft-foreground flex items-center gap-1 whitespace-nowrap">
+              <CheckCircle2 className="size-3.5" aria-hidden="true" /> Best choice
             </span>
 
             {bestCardObj && (
@@ -101,26 +101,26 @@ export function TailwindBestCard({
                   render={
                     <button
                       type="button"
-                      className="size-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-colors"
+                      className="size-9 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-(--motion-fast) ease-(--ease-in-out)"
                       aria-label="Card details options"
                     />
                   }
                 >
                   <MoreVertical className="size-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl shadow-lift border border-border/60">
-                  <DropdownMenuLabel className="px-2 py-1 text-2xs text-muted-foreground font-normal">
-                    Cycle Details
+                <DropdownMenuContent align="end" className="w-60 p-1.5 rounded-xl shadow-lift">
+                  <DropdownMenuLabel className="px-2 py-1 text-xs text-muted-foreground font-normal">
+                    Cycle details
                   </DropdownMenuLabel>
-                  <div className="px-2 py-1 text-xs space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Next Cutoff:</span>
+                  <div className="px-2 py-1 text-sm space-y-1">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted-foreground">Next cutoff</span>
                       <span className="font-semibold text-foreground">
                         {bestCardRec?.nextCutoffDateFormatted || 'N/A'}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Pay By:</span>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted-foreground">Pay by</span>
                       <span className="font-semibold text-foreground">
                         {bestCardRec?.paymentDueDateFormatted || 'N/A'}
                       </span>
@@ -129,17 +129,17 @@ export function TailwindBestCard({
                   <DropdownMenuSeparator className="my-1" />
                   <DropdownMenuItem
                     render={<Link href={`/dashboard/cards/${bestCardObj.id}`} />}
-                    className="px-2 py-1.5 text-xs font-semibold text-foreground hover:bg-muted rounded-lg cursor-pointer flex items-center justify-between"
+                    className="px-2 py-2 text-sm font-medium text-foreground rounded-lg cursor-pointer flex items-center justify-between"
                   >
-                    <span>View Card Hub</span>
+                    <span>View card hub</span>
                     <ChevronRight className="size-3.5 text-muted-foreground" />
                   </DropdownMenuItem>
                   {onAddPurchaseClick && (
                     <DropdownMenuItem
                       onClick={() => onAddPurchaseClick(bestCardObj.id)}
-                      className="px-2 py-1.5 text-xs font-semibold text-primary hover:bg-lightprimary rounded-lg cursor-pointer flex items-center justify-between"
+                      className="px-2 py-2 text-sm font-semibold text-primary rounded-lg cursor-pointer flex items-center justify-between"
                     >
-                      <span>Swipe with this Card</span>
+                      <span>Swipe with this card</span>
                       <Plus className="size-3.5" />
                     </DropdownMenuItem>
                   )}
@@ -150,26 +150,26 @@ export function TailwindBestCard({
         </div>
 
         {bestCardObj && bestCardRec ? (
-          <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 via-background to-secondary/10 border border-primary/20 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="@container flex flex-col gap-4 rounded-xl bg-muted/50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex flex-col gap-0.5">
+                <p className="text-label text-muted-foreground">
                   {bestCardObj.bank_name || 'Bank Card'}
                 </p>
-                <h5 className="text-base font-semibold leading-snug text-foreground whitespace-normal break-words mt-0.5">
-                  {bestCardObj.name} {bestCardObj.last_4 ? `(•••• ${bestCardObj.last_4})` : ''}
-                </h5>
-                <p className="text-2xs text-muted-foreground mt-0.5">
-                  Pay by <strong className="text-foreground">{bestCardRec.paymentDueDateFormatted}</strong>
+                <h3 className="text-base font-semibold leading-snug text-foreground">
+                  {bestCardObj.name} {bestCardObj.last_4 ? <span className="num whitespace-nowrap">(•••• {bestCardObj.last_4})</span> : ''}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Pay by <strong className="font-semibold text-foreground">{bestCardRec.paymentDueDateFormatted}</strong>
                 </p>
               </div>
-              <div className="size-9 rounded-xl bg-card border border-border/50 text-foreground flex items-center justify-center shadow-xs">
-                <CreditCard className="size-5 text-primary" />
+              <div className="size-9 shrink-0 rounded-xl bg-card text-primary flex items-center justify-center shadow-xs" aria-hidden="true">
+                <CreditCard className="size-5" />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40 text-xs">
-              <div>
+            <div className="grid grid-cols-1 @xs:grid-cols-2 gap-x-4 gap-y-3">
+              <div className="min-w-0">
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-muted-foreground">Available Credit</span>
                   <Tooltip>
@@ -177,19 +177,19 @@ export function TailwindBestCard({
                       render={
                         <button
                           type="button"
-                          className="text-muted-foreground/70 hover:text-foreground cursor-pointer"
+                          className="inline-flex size-5 items-center justify-center rounded text-muted-foreground/80 hover:text-foreground cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           aria-label="Available limit info"
                         />
                       }
                     >
-                      <Info className="size-2.5" />
+                      <Info className="size-3" />
                     </TooltipTrigger>
                     <TooltipContent side="top">
                       Remaining credit line you can charge right now.
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <span className="text-base font-bold text-foreground block mt-0.5">
+                <span className="num text-lg font-bold text-foreground block mt-0.5 break-words">
                   {formatMoney(
                     bestCardRec.availablePower !== undefined
                       ? bestCardRec.availablePower
@@ -197,50 +197,49 @@ export function TailwindBestCard({
                   )}
                 </span>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="text-xs font-medium text-muted-foreground">Cash Float Days</span>
+                  <span className="text-xs font-medium text-muted-foreground">Cash float days</span>
                   <Tooltip>
                     <TooltipTrigger
                       render={
                         <button
                           type="button"
-                          className="text-muted-foreground/70 hover:text-foreground cursor-pointer"
+                          className="inline-flex size-5 items-center justify-center rounded text-muted-foreground/80 hover:text-foreground cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           aria-label="Float days info"
                         />
                       }
                     >
-                      <Info className="size-2.5" />
+                      <Info className="size-3" />
                     </TooltipTrigger>
                     <TooltipContent side="top">
                       Number of interest-free days before this bill needs to be settled.
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <span className="text-base font-bold text-success block mt-0.5">
-                  {bestCardRec.floatDays} Days Free Float
+                <span className="block mt-0.5 text-success">
+                  <span className="num text-lg font-bold">{bestCardRec.floatDays}</span>{' '}
+                  <span className="text-sm font-semibold">days free float</span>
                 </span>
               </div>
             </div>
 
             {onAddPurchaseClick && (
-              <div className="pt-1">
-                <Button
-                  onClick={() => onAddPurchaseClick(bestCardObj.id)}
-                  className="w-full min-h-10 h-10 text-xs font-semibold rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.99] transition-transform"
-                >
-                  <Plus className="size-3.5" />
-                  <span>Swipe with this Card</span>
-                </Button>
-              </div>
+              <Button
+                onClick={() => onAddPurchaseClick(bestCardObj.id)}
+                className="w-full gap-2"
+              >
+                <Plus className="size-4" />
+                <span>Swipe with this card</span>
+              </Button>
             )}
           </div>
         ) : (
-          <div className="p-6 text-center rounded-xl bg-muted/40 border border-border/40 text-xs text-muted-foreground space-y-2">
-            <p>No active credit cards added yet.</p>
+          <div className="flex flex-col items-center gap-2 px-5 py-8 text-center rounded-xl bg-muted/50">
+            <p className="text-sm font-medium text-foreground">No active credit cards added yet.</p>
             <Link
               href="/dashboard/cards"
-              className="inline-flex items-center text-xs font-semibold text-primary hover:underline gap-1"
+              className="inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-semibold text-primary hover:underline underline-offset-4 gap-1 outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span>Add a credit card to enable smart swipe</span>
               <ChevronRight className="size-3" />
@@ -249,15 +248,17 @@ export function TailwindBestCard({
         )}
       </div>
 
-      <div className="pt-3 border-t border-border/40 mt-3 flex items-center justify-between text-xs">
-        <span className="text-2xs text-muted-foreground">
-          {activeCardsCount > 0 ? `${activeCardsCount} cards connected` : 'Zero card debt'}
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 text-sm">
+        <span className="text-xs text-muted-foreground">
+          {activeCardsCount > 0
+            ? `${activeCardsCount} ${activeCardsCount === 1 ? 'card' : 'cards'} connected`
+            : 'Zero card debt'}
         </span>
         <Link
           href="/dashboard/cards"
-          className="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5"
+          className="-mr-2 inline-flex min-h-10 items-center rounded-lg px-2 font-semibold text-primary hover:underline underline-offset-4 gap-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span>All Cards</span>
+          <span>All cards</span>
           <ChevronRight className="size-3" />
         </Link>
       </div>

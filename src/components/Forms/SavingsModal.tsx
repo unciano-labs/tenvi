@@ -112,12 +112,12 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
       <ResponsiveDialogContent className="max-w-lg">
         <ResponsiveDialogHeader className="pr-10 sm:pr-12">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <div className="size-10 rounded-xl bg-success-soft text-success flex items-center justify-center shrink-0">
               <PiggyBank className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <ResponsiveDialogTitle className="truncate">Add Savings or Cash Account</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription className="truncate">
+              <ResponsiveDialogTitle>Add savings or cash account</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
                 Track traditional banks, digital banks, e-wallets, or physical cash
               </ResponsiveDialogDescription>
             </div>
@@ -127,52 +127,49 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
         <ResponsiveDialogBody className="space-y-5">
           {/* Live Card Preview */}
           <div
-            className={`w-full rounded-[22px] p-4 sm:p-5 text-white border ${theme.borderColor} ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden transition-all duration-300 shadow-card flex flex-col justify-between`}
+            className={`@container w-full rounded-[22px] p-4 sm:p-5 text-white ${theme.bgColor} ${theme.glowShadow} relative overflow-hidden transition-colors duration-(--motion-base) ease-(--ease-in-out) shadow-card flex flex-col justify-between`}
             style={{ aspectRatio: '1.58 / 1', minHeight: '190px', backgroundColor: theme.bgHex || theme.accentHex }}
           >
-            {/* Accent top highlight line */}
-            <div className={`absolute top-0 inset-x-8 h-[2px] ${theme.barColor} opacity-70 z-10`} />
-
             {/* Background Pattern Overlay */}
             <CardPatternOverlay pattern={pattern} accentHex={theme.accentHex} />
 
-            <div className="relative z-10 flex items-start justify-between">
-              <div>
-                <h4 className="font-black text-xs sm:text-sm tracking-wider uppercase text-white/95">
+            <div className="relative z-10 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h4 className="truncate font-bold text-xs sm:text-sm tracking-wider uppercase text-white/95">
                   {finalInstitutionName || 'INSTITUTION'}
                 </h4>
-                <p className="text-[11px] text-white/70 font-medium">
+                <p className="truncate text-sm text-white/80 font-medium">
                   {name || 'Account Nickname'}
                 </p>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/90 border border-white/15 uppercase tracking-wider">
+              <span className="shrink-0 whitespace-nowrap text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/15 text-white capitalize">
                 {accountType.replace('_', ' ')}
               </span>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between my-auto py-1">
-              <div className="flex items-center gap-2">
+            <div className="relative z-10 flex items-center justify-between gap-3 my-auto py-1">
+              <div className="flex shrink-0 items-center gap-2">
                 <EmvChip />
                 <ContactlessWave />
               </div>
 
-              <div className="text-right">
-                <span className="text-[10px] font-medium text-white/60 block tracking-wide uppercase">
-                  Current Stash:
+              <div className="min-w-0 text-right">
+                <span className="text-xs font-medium text-white/75 block tracking-wider uppercase">
+                  Current Stash
                 </span>
-                <span className="text-lg sm:text-xl font-black text-white tracking-tight">
+                <span className="num block whitespace-nowrap text-[clamp(1.125rem,7cqi,1.375rem)] font-bold text-white tracking-tight">
                   ₱{parsedBalance.toLocaleString('en-PH')}
                 </span>
               </div>
             </div>
 
-            <div className="relative z-10 flex items-end justify-between pt-1">
-              <div className="font-mono text-xs font-semibold tracking-widest text-white/80">
+            <div className="relative z-10 flex items-end justify-between gap-2 pt-1">
+              <div className="min-w-0 truncate font-mono text-xs font-semibold tracking-[0.18em] text-white/80">
                 {accountNumberLast4 ? `•••• •••• •••• ${accountNumberLast4}` : 'VAULT SAVINGS'}
               </div>
 
               {interestRate && parseFloat(interestRate) > 0 && (
-                <span className="text-[10px] font-bold text-amber-200 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-300/30">
+                <span className="num shrink-0 text-[11px] font-semibold text-amber-100 bg-amber-400/25 px-2.5 py-1 rounded-full">
                   {interestRate}% p.a.
                 </span>
               )}
@@ -182,14 +179,14 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Institution Picker */}
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
                 Where is the money kept?
               </label>
               <select
                 value={selectedInstitution}
                 onChange={(e) => setSelectedInstitution(e.target.value)}
-                className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-all focus:ring-2 focus:ring-ring"
+                className="w-full min-h-12 h-12 rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-foreground outline-none transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) focus:ring-2 focus:ring-ring"
               >
                 {groups.map((group) => (
                   <optgroup key={group} label={group}>
@@ -209,7 +206,7 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
             {/* Custom Institution Input */}
             {selectedInstitution === 'Other Bank / Account' && (
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Account / Bank Name
                 </label>
                 <Input
@@ -226,7 +223,7 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
             {/* Nickname and Current Balance */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Account Nickname
                 </label>
                 <Input
@@ -239,7 +236,7 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Current Balance
                 </label>
                 <MoneyInput
@@ -252,9 +249,10 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
             </div>
 
             {/* Target Amount & Interest Rate */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            {/* Goal gets its own row; rate + last 4 share one, so labels never wrap and inputs stay aligned */}
+            <div className="grid grid-cols-2 items-end gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Goal Target (Optional)
                 </label>
                 <MoneyInput
@@ -266,7 +264,7 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Interest Rate % p.a.
                 </label>
                 <Input
@@ -280,7 +278,7 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Last 4 Digits
                 </label>
                 <Input
@@ -302,8 +300,8 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
             />
 
             {/* Pattern Selector - 20 patterns */}
-            <div className="pt-2 border-t border-border/40">
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <div className="pt-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Background Accent Pattern ({CARD_PATTERNS.length} options)
               </label>
               <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
@@ -314,10 +312,11 @@ export function SavingsModal({ isOpen, onClose }: SavingsModalProps) {
                       key={p.id}
                       type="button"
                       onClick={() => setPattern(p.id)}
-                      className={`h-9 px-1 rounded-xl border text-2xs font-semibold flex items-center justify-center cursor-pointer transition-all truncate ${
+                      aria-pressed={isSelected}
+                      className={`no-spring h-10 min-w-0 px-1 rounded-xl text-xs font-medium block truncate cursor-pointer transition-colors duration-(--motion-fast) ease-(--ease-in-out) outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                         isSelected
-                          ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
-                          : 'border-border/60 hover:bg-muted text-muted-foreground'
+                          ? 'bg-primary/10 text-primary font-semibold ring-1 ring-primary'
+                          : 'bg-muted/60 hover:bg-muted text-muted-foreground'
                       }`}
                       title={p.name}
                     >

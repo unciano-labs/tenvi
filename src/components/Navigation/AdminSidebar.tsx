@@ -72,9 +72,9 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-64 border-r border-border/60 bg-card/60 backdrop-blur-md shrink-0 select-none">
+    <aside className="hidden lg:flex flex-col w-64 bg-card shrink-0 select-none">
       {/* Brand Header */}
-      <div className="p-5 border-b border-border/50 flex items-center justify-between">
+      <div className="p-5 flex items-center justify-between">
         <Link href="/admin" className="flex items-center gap-3">
           <TenviIcon className="size-8 rounded-xl shadow-xs" />
           <div className="text-left">
@@ -91,7 +91,7 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
 
       {/* Nav List */}
       <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
-        <div className="px-3 py-1 text-3xs font-bold tracking-wider text-muted-foreground uppercase">
+        <div className="px-3 py-1 text-xs font-medium text-muted-foreground">
           Administration
         </div>
         {ADMIN_NAV_ITEMS.map((item) => {
@@ -117,7 +117,7 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
       </nav>
 
       {/* Bottom Switcher & Account */}
-      <div className="p-3 border-t border-border/50 space-y-2 bg-muted/20">
+      <div className="p-3 space-y-2 bg-muted/40">
         {/* Switch back to Personal Wealth Hub */}
         <Link
           href="/dashboard"
@@ -131,7 +131,7 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
         </Link>
 
         {/* User Info & Logout */}
-        <div className="pt-2 border-t border-border/40 flex items-center justify-between px-1">
+        <div className="pt-2 flex items-center justify-between px-1">
           <div className="flex flex-col min-w-0 pr-2">
             <span className="text-2xs font-bold text-foreground truncate">{userEmail}</span>
             <span className="text-3xs text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">

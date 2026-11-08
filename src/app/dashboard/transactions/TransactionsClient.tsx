@@ -18,10 +18,11 @@ import {
   CreditCard as CardIcon,
   Camera,
   Loader2,
+  ChevronDown,
 } from 'lucide-react';
 import { TransactionModal } from '@/components/Forms/TransactionModal';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -150,20 +151,27 @@ export function TransactionsClient({
     }
   };
 
+  const kindTabs = [
+    { value: 'all' as const, label: 'All activity', icon: null, iconClass: '' },
+    { value: 'expense' as const, label: 'Expenses', icon: ArrowUpRight, iconClass: 'text-danger' },
+    { value: 'income' as const, label: 'Income', icon: ArrowDownLeft, iconClass: 'text-success' },
+    { value: 'transfer' as const, label: 'Transfers', icon: ArrowLeftRight, iconClass: 'text-primary' },
+  ];
+  const visibleRows = filtered.slice(0, visibleCount);
+  const shownCount = Math.min(visibleCount, filtered.length);
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            All Transactions
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+      <div className="page-header">
+        <div>
+          <h1 className="text-display text-foreground">All transactions</h1>
+          <p className="mt-2 max-w-prose text-sm sm:text-base text-muted-foreground">
             Real-time feed of your expenses, income, debt payments, and savings deposits.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto">
+        <div className="page-header-actions w-full sm:w-auto">
           <Button
             type="button"
             variant="soft"
@@ -171,10 +179,10 @@ export function TransactionsClient({
               setAutoScanReceipt(true);
               setIsModalOpen(true);
             }}
-            className="flex-1 sm:flex-initial rounded-xl gap-2 font-semibold min-h-11 h-11 active:scale-[0.99] transition-transform text-xs sm:text-sm"
+            className="flex-1 sm:flex-initial sm:h-11 sm:min-h-11"
           >
-            <Camera className="w-4 h-4 text-primary shrink-0" />
-            <span>Scan Receipt</span>
+            <Camera className="size-4 text-primary" />
+            Scan receipt
           </Button>
 
           <Button
@@ -183,244 +191,220 @@ export function TransactionsClient({
               setAutoScanReceipt(false);
               setIsModalOpen(true);
             }}
-            className="flex-1 sm:flex-initial rounded-xl gap-2 font-semibold shadow-xs min-h-11 h-11 active:scale-[0.99] transition-transform text-xs sm:text-sm"
+            className="flex-1 sm:flex-initial sm:h-11 sm:min-h-11"
           >
-            <Plus className="w-4 h-4 shrink-0" />
-            <span>Record Transaction</span>
+            <Plus className="size-4" />
+            Record transaction
           </Button>
         </div>
       </div>
 
-      {/* Filter Controls */}
-      <Card className="p-5 shadow-xs overflow-hidden min-w-0 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Kind Filter Tabs */}
-          <div className="flex items-center gap-1.5 p-1 bg-muted rounded-2xl max-w-full overflow-x-auto no-scrollbar min-w-0">
-            <Button
-              type="button"
-              variant={kindFilter === 'all' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setKindFilter('all')}
-              className={`rounded-xl text-xs font-semibold whitespace-nowrap ${
-                kindFilter === 'all' ? 'shadow-xs' : 'text-muted-foreground'
-              }`}
-            >
-              All Activity
-            </Button>
-            <Button
-              type="button"
-              variant={kindFilter === 'expense' ? 'destructive-soft' : 'ghost'}
-              size="sm"
-              onClick={() => setKindFilter('expense')}
-              className={`rounded-xl text-xs font-semibold whitespace-nowrap gap-1.5 ${
-                kindFilter === 'expense' ? 'shadow-xs' : 'text-muted-foreground'
-              }`}
-            >
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              Expenses
-            </Button>
-            <Button
-              type="button"
-              variant={kindFilter === 'income' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setKindFilter('income')}
-              className={`rounded-xl text-xs font-semibold whitespace-nowrap gap-1.5 ${
-                kindFilter === 'income' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'text-muted-foreground'
-              }`}
-            >
-              <ArrowDownLeft className="w-3.5 h-3.5" />
-              Income
-            </Button>
-            <Button
-              type="button"
-              variant={kindFilter === 'transfer' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setKindFilter('transfer')}
-              className={`rounded-xl text-xs font-semibold whitespace-nowrap gap-1.5 ${
-                kindFilter === 'transfer' ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs' : 'text-muted-foreground'
-              }`}
-            >
-              <ArrowLeftRight className="w-3.5 h-3.5" />
-              Transfers
-            </Button>
+      {/* Filter toolbar: kind tabs, search and category wrap as one row when space allows */}
+      <Card className="gap-3 p-4 sm:p-5">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Kind filter (segmented control) */}
+          <div
+            role="group"
+            aria-label="Filter by type"
+            className="flex max-w-full min-w-0 items-center gap-1 overflow-x-auto no-scrollbar rounded-2xl bg-muted p-1"
+          >
+            {kindTabs.map((tab) => {
+              const active = kindFilter === tab.value;
+              const Icon = tab.icon;
+              return (
+                <Button
+                  key={tab.value}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={active}
+                  onClick={() => setKindFilter(tab.value)}
+                  className={`shrink-0 rounded-xl px-3 text-sm ${
+                    active
+                      ? 'bg-card text-foreground shadow-sm hover:bg-card'
+                      : 'font-medium text-muted-foreground hover:bg-card/60'
+                  }`}
+                >
+                  {Icon && <Icon className={`size-4 ${active ? tab.iconClass : ''}`} />}
+                  {tab.label}
+                </Button>
+              );
+            })}
           </div>
 
-          {/* Search box */}
-          <div className="relative w-full sm:w-64">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
-              <Search className="w-4 h-4" />
-            </div>
+          {/* Search */}
+          <div className="relative min-w-[min(100%,16rem)] flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              type="text"
-              placeholder="Search notes or categories..."
+              type="search"
+              placeholder="Search notes or categories"
+              aria-label="Search notes or categories"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 h-10 text-xs rounded-xl"
+              className="h-12 sm:h-10 pl-10 text-base sm:text-sm rounded-xl"
             />
           </div>
-        </div>
 
-        {/* Category Filter Dropdown */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-          <div className="flex items-center gap-2 max-w-full">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            <span className="text-xs font-semibold text-muted-foreground shrink-0">Category:</span>
+          {/* Category filter */}
+          <div className="relative min-w-[min(100%,12rem)] flex-1 @3xl/main:flex-none @3xl/main:w-56">
+            <Filter className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <select
+              aria-label="Filter by category"
               value={selectedCategory}
               onChange={(e) => {
                 setSelectedCategory(e.target.value);
                 setVisibleCount(20);
               }}
-              className="py-1.5 px-3 text-xs bg-muted text-foreground rounded-xl max-w-[200px] sm:max-w-none truncate outline-none focus:ring-2 focus:ring-ring"
+              className="h-12 sm:h-10 w-full appearance-none truncate rounded-xl bg-muted pl-10 pr-9 text-base sm:text-sm text-foreground outline-none transition-colors duration-(--motion-fast) ease-(--ease-in-out) hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
-              <option value="all">All Categories</option>
+              <option value="all">All categories</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} ({c.kind === 'income' ? 'Income' : 'Expense'})
                 </option>
               ))}
             </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           </div>
-
-          <span className="text-xs text-muted-foreground font-medium">
-            Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} transactions
-          </span>
         </div>
+
+        <p className="num text-label text-muted-foreground" aria-live="polite">
+          Showing {shownCount} of {filtered.length} {filtered.length === 1 ? 'transaction' : 'transactions'}
+        </p>
       </Card>
 
       {/* Transactions Feed */}
       {filtered.length === 0 ? (
         <EmptyState
           icon={Wallet}
-          title="No transactions found"
+          title={initialTransactions.length === 0 ? 'No transactions yet' : 'No matching transactions'}
           description={
             initialTransactions.length === 0
               ? 'Start tracking your spending by recording your first expense or income.'
               : 'No transactions match your current filters.'
           }
-          actionText={initialTransactions.length === 0 ? 'Record Transaction' : undefined}
+          actionText={initialTransactions.length === 0 ? 'Record transaction' : undefined}
           onAction={() => setIsModalOpen(true)}
         />
       ) : (
-        <Card className="p-5 sm:p-7 shadow-xs overflow-hidden min-w-0 space-y-4">
-          <div className="space-y-3">
-            {filtered.slice(0, visibleCount).map((t) => {
+        <Card className="gap-4 p-3 sm:p-5">
+          {/* Re-keyed on filter change so the new result set springs in (stagger capped at 5) */}
+          <ul key={`${kindFilter}|${selectedCategory}`} className="flex flex-col gap-2">
+            {visibleRows.map((t, index) => {
               const hasBottomBadges = Boolean(
                 t.loan_id || t.credit_card || t.savings || t.transfer_to_savings
               );
+              const title =
+                t.kind === 'transfer'
+                  ? `Transfer: ${t.savings?.name || 'Vault'} → ${t.transfer_to_savings?.name || 'Vault'}`
+                  : t.category?.name || (t.kind === 'income' ? 'Income' : 'Expense');
 
               return (
-                <div
+                <li
                   key={t.id}
-                  className="p-3.5 sm:p-4 rounded-2xl bg-muted/50 hover:bg-muted/80 transition-colors flex items-start justify-between gap-3 group min-w-0"
+                  style={{ ['--stagger' as string]: index }}
+                  className="motion-pop-in group flex min-w-0 items-start gap-3 rounded-xl bg-muted/50 p-3 sm:p-4 transition-colors duration-(--motion-fast) ease-(--ease-in-out) hover:bg-muted/80"
                 >
-                  {/* Left Column: + / - Circle Icon + Content Details */}
-                  <div className="flex items-start gap-3 sm:gap-3.5 min-w-0 flex-1">
-                    {/* Top-aligned Circle Icon */}
-                    <div
-                      className={`size-9 sm:size-10 rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 mt-0.5 ${
-                        t.kind === 'income'
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : t.kind === 'transfer'
-                          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                      }`}
-                    >
-                      {t.kind === 'income' ? '+' : t.kind === 'transfer' ? '⇄' : '-'}
-                    </div>
-
-                    {/* Left Content Area */}
-                    <div className="min-w-0 flex-1 space-y-1">
-                      {/* Header Row: Transaction Type & Payment Method inline */}
-                      <div className="flex items-center gap-2 flex-wrap min-w-0">
-                        <p className="text-xs sm:text-sm font-bold text-foreground truncate">
-                          {t.kind === 'transfer'
-                            ? `Transfer: ${t.savings?.name || 'Vault'} → ${t.transfer_to_savings?.name || 'Vault'}`
-                            : t.category?.name || (t.kind === 'income' ? 'Income' : 'Expense')}
-                        </p>
-                        <Badge variant="soft" className="text-2xs capitalize shrink-0 font-medium">
-                          {t.kind === 'transfer' ? 'Inter-Vault' : t.payment_method.replace('_', ' ')}
-                        </Badge>
-                      </div>
-
-                      {/* Metadata Row: Date & Note combined in single compact, muted line */}
-                      <div className="flex items-center text-xs text-muted-foreground truncate">
-                        <span className="shrink-0">{formatDate(t.occurred_on)}</span>
-                        {t.note && (
-                          <span className="truncate ml-1.5">• {t.note}</span>
-                        )}
-                      </div>
-
-                      {/* Bottom Badges Row: Interactive Traceable Link Pills */}
-                      {hasBottomBadges && (
-                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                          {/* Loan Link Pill */}
-                          {t.loan_id && (
-                            <Link
-                              href={`/dashboard/loans/${t.loan_id}`}
-                              className="inline-flex items-center gap-1 text-2xs sm:text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-0.5 rounded-full transition-colors shrink-0 max-w-full"
-                            >
-                              <HandCoins className="w-3 h-3 shrink-0" />
-                              <span className="truncate">Loan: {t.loan?.contact?.name || 'Borrower'} →</span>
-                            </Link>
-                          )}
-
-                          {/* Connected Credit Card Link Pill */}
-                          {t.credit_card && (
-                            <Link
-                              href={`/dashboard/cards/${t.credit_card.id}`}
-                              className="inline-flex items-center gap-1 text-2xs sm:text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-0.5 rounded-full transition-colors shrink-0 max-w-full"
-                              title="Traceable: View card details and statement breakdown"
-                            >
-                              <CardIcon className="w-3 h-3 text-primary shrink-0" />
-                              <span className="truncate">
-                                {t.credit_card.bank_name || t.credit_card.name} (••{t.credit_card.last_4}) →
-                              </span>
-                            </Link>
-                          )}
-
-                          {/* Connected Savings Account Link Pill */}
-                          {t.savings && (
-                            <Link
-                              href="/dashboard/savings"
-                              className="inline-flex items-center gap-1 text-2xs sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-0.5 rounded-full transition-colors shrink-0 max-w-full"
-                              title="Traceable: View under Savings Stash"
-                            >
-                              <PiggyBank className="w-3 h-3 text-emerald-600 shrink-0" />
-                              <span className="truncate">
-                                {t.savings.name} ({t.savings.institution_name}) →
-                              </span>
-                            </Link>
-                          )}
-
-                          {/* Connected Destination Savings Link Pill */}
-                          {t.transfer_to_savings && (
-                            <Link
-                              href="/dashboard/savings"
-                              className="inline-flex items-center gap-1 text-2xs sm:text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-0.5 rounded-full transition-colors shrink-0 max-w-full"
-                              title="Traceable: Destination Savings Vault"
-                            >
-                              <PiggyBank className="w-3 h-3 text-blue-600 shrink-0" />
-                              <span className="truncate">To: {t.transfer_to_savings.name} →</span>
-                            </Link>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                  {/* Kind marker */}
+                  <div
+                    aria-hidden="true"
+                    className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
+                      t.kind === 'income'
+                        ? 'bg-success-soft text-success'
+                        : t.kind === 'transfer'
+                        ? 'bg-lightprimary text-primary'
+                        : 'bg-danger-soft text-danger'
+                    }`}
+                  >
+                    {t.kind === 'income' ? '+' : t.kind === 'transfer' ? '⇄' : '−'}
                   </div>
 
-                  {/* Right Column: Amount + Delete Icon (Top-Aligned, Strict Column Separation) */}
-                  <div className="shrink-0 flex items-center gap-2 sm:gap-3 text-right pt-0.5">
+                  {/* Details */}
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <p
+                      className="line-clamp-2 text-sm sm:text-base font-semibold leading-snug text-foreground [overflow-wrap:anywhere]"
+                      title={title}
+                    >
+                      {title}
+                    </p>
+
+                    <div className="flex min-w-0 items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+                      <span className="num shrink-0">{formatDate(t.occurred_on)}</span>
+                      <Badge variant="soft" className="shrink-0 text-2xs font-medium capitalize">
+                        {t.kind === 'transfer' ? 'Inter-vault' : t.payment_method.replace('_', ' ')}
+                      </Badge>
+                      {t.note && (
+                        <span className="min-w-0 truncate" title={t.note}>
+                          {t.note}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Traceable link pills */}
+                    {hasBottomBadges && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        {t.loan_id && (
+                          <Link
+                            href={`/dashboard/loans/${t.loan_id}`}
+                            className="inline-flex max-w-full items-center gap-1 rounded-full bg-lightprimary px-2.5 py-1 text-xs font-medium text-primary transition-colors duration-(--motion-fast) hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring outline-none"
+                          >
+                            <HandCoins className="size-3.5 shrink-0" />
+                            <span className="truncate">Loan: {t.loan?.contact?.name || 'Borrower'} →</span>
+                          </Link>
+                        )}
+
+                        {t.credit_card && (
+                          <Link
+                            href={`/dashboard/cards/${t.credit_card.id}`}
+                            className="inline-flex max-w-full items-center gap-1 rounded-full bg-lightprimary px-2.5 py-1 text-xs font-medium text-primary transition-colors duration-(--motion-fast) hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring outline-none"
+                            title="Traceable: View card details and statement breakdown"
+                          >
+                            <CardIcon className="size-3.5 shrink-0" />
+                            <span className="truncate">
+                              {t.credit_card.bank_name || t.credit_card.name} (••{t.credit_card.last_4}) →
+                            </span>
+                          </Link>
+                        )}
+
+                        {t.savings && (
+                          <Link
+                            href="/dashboard/savings"
+                            className="inline-flex max-w-full items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success transition-colors duration-(--motion-fast) hover:bg-success-soft/70 focus-visible:ring-2 focus-visible:ring-ring outline-none"
+                            title="Traceable: View under Savings Stash"
+                          >
+                            <PiggyBank className="size-3.5 shrink-0" />
+                            <span className="truncate">
+                              {t.savings.name} ({t.savings.institution_name}) →
+                            </span>
+                          </Link>
+                        )}
+
+                        {t.transfer_to_savings && (
+                          <Link
+                            href="/dashboard/savings"
+                            className="inline-flex max-w-full items-center gap-1 rounded-full bg-lightprimary px-2.5 py-1 text-xs font-medium text-primary transition-colors duration-(--motion-fast) hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring outline-none"
+                            title="Traceable: Destination Savings Vault"
+                          >
+                            <PiggyBank className="size-3.5 shrink-0" />
+                            <span className="truncate">To: {t.transfer_to_savings.name} →</span>
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Amount column (stacked over delete so long amounts never squeeze the title) */}
+                  <div className="flex shrink-0 flex-col items-end gap-1 text-right">
                     <span
-                      className={`text-sm sm:text-base font-extrabold whitespace-nowrap ${
+                      className={`num whitespace-nowrap pt-0.5 text-sm sm:text-base font-bold ${
                         t.kind === 'income'
-                          ? 'text-emerald-600 dark:text-emerald-400'
+                          ? 'text-success'
                           : t.kind === 'transfer'
-                          ? 'text-blue-600 dark:text-blue-400'
+                          ? 'text-primary'
                           : 'text-foreground'
                       }`}
                     >
-                      {t.kind === 'income' ? '+' : t.kind === 'transfer' ? '⇄ ' : '- '}
+                      {t.kind === 'income' ? '+' : t.kind === 'transfer' ? '⇄ ' : '− '}
                       {formatMoney(t.amount)}
                     </span>
 
@@ -429,42 +413,43 @@ export function TransactionsClient({
                       variant="ghost"
                       size="icon-xs"
                       onClick={() => handleDelete(t.id)}
-                      className="opacity-70 sm:opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity cursor-pointer"
+                      className="size-10 min-h-10 min-w-10 sm:size-8 sm:min-h-8 sm:min-w-8 text-muted-foreground opacity-70 transition-opacity hover:text-destructive hover:bg-danger-soft sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
                       title="Delete transaction"
                       aria-label="Delete transaction"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="size-4" />
                     </Button>
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
 
           {/* Lazy Load / Server Cursor Button */}
           {(filtered.length > visibleCount || hasMoreServer) && (
-            <div className="pt-4 text-center">
+            <div className="flex flex-col items-center gap-2 pt-2 text-center">
               <Button
                 type="button"
-                variant="secondary"
+                variant="soft"
                 size="sm"
                 disabled={isLoadingMore}
+                aria-busy={isLoadingMore || undefined}
                 onClick={handleLoadMore}
-                className="px-6 py-2.5 text-xs font-semibold rounded-xl cursor-pointer"
+                className="h-auto min-h-11 max-w-full whitespace-normal px-5 py-2"
               >
                 {isLoadingMore ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-                    Fetching Older Records...
+                    <Loader2 className="size-4 animate-spin" />
+                    Fetching older records…
                   </>
                 ) : filtered.length > visibleCount ? (
-                  `Load More Transactions (${filtered.length - visibleCount} remaining in view)`
+                  `Load more transactions (${filtered.length - visibleCount} remaining in view)`
                 ) : (
-                  'Load Older Transactions From Server'
+                  'Load older transactions from server'
                 )}
               </Button>
-              <p className="text-xs text-muted-foreground mt-2">
-                Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} loaded records
+              <p className="num text-xs text-muted-foreground">
+                Showing {shownCount} of {filtered.length} loaded records
                 {hasMoreServer && ' (more available in archive)'}
               </p>
             </div>

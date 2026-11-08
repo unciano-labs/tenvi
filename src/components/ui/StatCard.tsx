@@ -48,26 +48,28 @@ export function StatCard({
   return (
     <div
       data-tour={dataTour}
-      className={`bg-card text-card-foreground rounded-3xl p-5 sm:p-6 shadow-card hover:shadow-lift transition-shadow min-w-0 ${className}`}
+      className={`@container flex min-w-0 flex-col bg-card text-card-foreground rounded-2xl p-5 shadow-card ${className}`}
     >
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground leading-snug">
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <span className="min-w-0 text-label text-muted-foreground">
           {label}
         </span>
-        <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${style.iconBg} ${style.iconText} flex items-center justify-center shrink-0`}>
-          <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+        <div className={`size-9 rounded-xl ${style.iconBg} ${style.iconText} flex items-center justify-center shrink-0`}>
+          <Icon className="size-4.5" />
         </div>
       </div>
 
       <div
-        className="text-2xl font-bold text-foreground mb-1 leading-tight"
+        className="num text-figure text-foreground whitespace-nowrap"
+        /* Figure scales with the card so 9-digit amounts never break mid-number */
+        style={{ fontSize: 'min(var(--text-figure), 11cqi)' }}
         title={value}
       >
         {value}
       </div>
 
       {subtext && (
-        <p className="text-2xs sm:text-[11px] text-muted-foreground/80 font-normal mt-1">
+        <p className="mt-auto pt-2 text-xs leading-snug text-muted-foreground">
           {subtext}
         </p>
       )}

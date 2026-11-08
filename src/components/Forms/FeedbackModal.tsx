@@ -104,7 +104,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Feedback Category Pills */}
           <div className="space-y-1.5">
-            <label className="text-2xs font-bold uppercase tracking-wider text-muted-foreground">
+            <label className="text-label text-muted-foreground">
               Feedback Category
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -116,10 +116,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
                     key={t.type}
                     type="button"
                     onClick={() => setType(t.type)}
-                    className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer text-left ${
+                    className={`no-spring flex min-h-12 items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       isSelected
-                        ? 'border-primary bg-primary/10 text-primary shadow-2xs'
-                        : 'border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+                        ? 'bg-primary/10 text-primary ring-1 ring-primary/40'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
                     <Icon className="size-4 shrink-0" />
@@ -132,8 +132,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
           {/* Subject / Title Input */}
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-2xs">
-              <label className="font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center justify-between text-xs">
+              <label className="font-bold text-muted-foreground">
                 Subject / Title
               </label>
               <span className="text-muted-foreground">{title.length}/120</span>
@@ -144,14 +144,14 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Issue with statement balance, Feature suggestion"
-              className="w-full text-xs p-2.5 rounded-xl bg-muted/40 border border-border/60 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-foreground"
+              className="w-full text-xs p-2.5 rounded-xl bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus:ring-1 focus:ring-primary outline-none transition-colors text-foreground"
             />
           </div>
 
           {/* Message Input */}
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-2xs">
-              <label className="font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center justify-between text-xs">
+              <label className="font-bold text-muted-foreground">
                 Description
               </label>
               <span className="text-muted-foreground">{message.length}/2000</span>
@@ -162,12 +162,12 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="What happened? What would you like to see improved?"
-              className="w-full text-xs p-3 rounded-xl bg-muted/40 border border-border/60 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none text-foreground"
+              className="w-full text-xs p-3 rounded-xl bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus:ring-1 focus:ring-primary outline-none transition-colors resize-none text-foreground"
             />
           </div>
 
           {/* Auto-detected metadata preview */}
-          <div className="p-2.5 rounded-lg bg-muted/30 border border-border/40 text-3xs text-muted-foreground flex items-center justify-between">
+          <div className="p-2.5 rounded-lg bg-muted/30 text-xs text-muted-foreground flex items-center justify-between">
             <span className="flex items-center gap-1.5 font-mono truncate">
               📍 Route: <code className="text-foreground">{pathname}</code>
             </span>
@@ -181,7 +181,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
             <Link
               href="/dashboard/support"
               onClick={() => onOpenChange(false)}
-              className="inline-flex items-center gap-1.5 text-2xs text-primary hover:underline font-semibold"
+              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold"
             >
               <span>View your past tickets & support replies</span>
               <ExternalLink className="size-3" />

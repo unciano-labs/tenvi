@@ -145,16 +145,16 @@ export function BroadcastClient() {
   };
 
   const categoryPills: { category: BroadcastCategory; label: string; color: string; bg: string }[] = [
-    { category: 'feature_update', label: 'Feature Update', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/15 border-purple-500/30' },
-    { category: 'announcement', label: 'Announcement', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/15 border-blue-500/30' },
-    { category: 'maintenance', label: 'Maintenance', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/15 border-amber-500/30' },
-    { category: 'security_notice', label: 'Security Notice', color: 'text-destructive', bg: 'bg-destructive/15 border-destructive/30' },
+    { category: 'feature_update', label: 'Feature update', color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-500/12' },
+    { category: 'announcement', label: 'Announcement', color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-500/12' },
+    { category: 'maintenance', label: 'Maintenance', color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-500/15' },
+    { category: 'security_notice', label: 'Security notice', color: 'text-destructive', bg: 'bg-destructive/10' },
   ];
 
   function getCategoryBadge(cat: BroadcastCategory) {
     const p = categoryPills.find((item) => item.category === cat) || categoryPills[0];
     return (
-      <span className={`px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase border ${p.bg} ${p.color}`}>
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${p.bg} ${p.color}`}>
         {p.label}
       </span>
     );
@@ -168,246 +168,224 @@ export function BroadcastClient() {
       : 1;
 
   return (
-    <div className="space-y-6 pb-16 animate-in fade-in-50 duration-200">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="size-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <Mail className="size-5" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                Email Broadcast & Announcements
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Dispatch platform announcements, update notes, and system notices directly to member inboxes.
-              </p>
-            </div>
+      <div className="page-header">
+        <div className="flex items-start gap-3">
+          <div className="size-10 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <Mail className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-display text-foreground">Email broadcast & announcements</h1>
+            <p className="mt-1 max-w-prose text-sm sm:text-base text-muted-foreground">
+              Dispatch platform announcements, update notes, and system notices directly to member inboxes.
+            </p>
           </div>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={loadData}
-          disabled={loading}
-          className="cursor-pointer gap-1.5 self-start sm:self-auto"
-        >
-          <RotateCcw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Refresh Stats
-        </Button>
-      </div>
-
-      {/* Metrics Banner */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-xl bg-card border border-border/60 shadow-xs">
-          <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block">
-            Total Broadcasts
-          </span>
-          <span className="text-xl font-black text-foreground mt-0.5 block">{stats.totalBroadcasts}</span>
-        </div>
-        <div className="p-3.5 rounded-xl bg-card border border-border/60 shadow-xs">
-          <span className="text-2xs font-bold text-primary uppercase tracking-wider block">
-            Emails Delivered
-          </span>
-          <span className="text-xl font-black text-foreground mt-0.5 block">{stats.totalDelivered}</span>
-        </div>
-        <div className="p-3.5 rounded-xl bg-card border border-border/60 shadow-xs">
-          <span className="text-2xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-            Active Members
-          </span>
-          <span className="text-xl font-black text-foreground mt-0.5 block">
-            {stats.activeMemberCount} Recipients
-          </span>
-        </div>
-        <div className="p-3.5 rounded-xl bg-card border border-border/60 shadow-xs">
-          <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block">
-            SMTP Gateway
-          </span>
-          <div className="flex items-center gap-1.5 mt-1">
-            {stats.smtpConfigured ? (
-              <>
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">
-                  Live Gmail SMTP {stats.smtpUser ? `(${stats.smtpUser})` : ''}
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="size-2 rounded-full bg-amber-500" />
-                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                  Simulation Mode
-                </span>
-              </>
-            )}
-          </div>
+        <div className="page-header-actions">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            disabled={loading}
+            aria-busy={loading}
+            className="gap-1.5"
+          >
+            <RotateCcw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh stats
+          </Button>
         </div>
       </div>
 
-      {/* Main Two-Column: Composer & Live Preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Email Blast Composer (7 cols) */}
-        <div className="lg:col-span-7 rounded-2xl bg-card border border-border/60 shadow-xs p-5 sm:p-6 space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-border/40">
-            <div className="flex items-center gap-2 text-foreground font-bold text-sm">
+      {/* Metrics */}
+      <div className="grid-fluid gap-3 sm:gap-4 [--grid-min:9.5rem]">
+        <div className="flex min-w-0 flex-col gap-1 rounded-2xl bg-card p-5 shadow-card">
+          <span className="text-label text-muted-foreground">Total broadcasts</span>
+          <span className="num text-figure text-foreground">{stats.totalBroadcasts}</span>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1 rounded-2xl bg-card p-5 shadow-card">
+          <span className="text-label text-muted-foreground">Emails delivered</span>
+          <span className="num text-figure text-foreground">{stats.totalDelivered}</span>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1 rounded-2xl bg-card p-5 shadow-card">
+          <span className="text-label text-muted-foreground">Active members</span>
+          <span className="text-figure text-foreground">
+            <span className="num">{stats.activeMemberCount}</span>{' '}
+            <span className="text-sm font-medium text-muted-foreground">
+              {stats.activeMemberCount === 1 ? 'recipient' : 'recipients'}
+            </span>
+          </span>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1 rounded-2xl bg-card p-5 shadow-card">
+          <span className="text-label text-muted-foreground">SMTP gateway</span>
+          {stats.smtpConfigured ? (
+            <div className="flex min-w-0 flex-col gap-0.5 pt-1">
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-success">
+                <span className="size-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
+                Live Gmail SMTP
+              </span>
+              {stats.smtpUser && (
+                <span className="truncate font-mono text-xs text-muted-foreground" title={stats.smtpUser}>
+                  {stats.smtpUser}
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="flex items-center gap-1.5 pt-1 text-sm font-semibold text-amber-700 dark:text-amber-400">
+              <span className="size-2 shrink-0 rounded-full bg-amber-500" aria-hidden="true" />
+              Simulation mode
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Composer & live preview */}
+      <div className="grid grid-cols-1 @5xl/main:grid-cols-12 gap-6 items-start">
+        {/* Composer */}
+        <div className="@5xl/main:col-span-7 flex min-w-0 flex-col gap-6 rounded-2xl bg-card p-5 sm:p-6 shadow-card">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="flex items-center gap-2 text-title text-foreground">
               <Send className="size-4 text-primary" />
-              <span>Compose Announcement</span>
-            </div>
-            <span className="text-3xs text-muted-foreground font-mono">
-              Targeting: ~{selectedRecipientEstimate} recipient(s)
+              Compose announcement
+            </h2>
+            <span className="text-label text-muted-foreground">
+              Targeting about <span className="num">{selectedRecipientEstimate}</span>{' '}
+              {selectedRecipientEstimate === 1 ? 'recipient' : 'recipients'}
             </span>
           </div>
 
           {/* Audience Selection */}
-          <div className="space-y-2">
-            <label className="text-2xs font-bold uppercase tracking-wider text-muted-foreground">
-              Target Audience
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setAudience('all_members')}
-                className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  audience === 'all_members'
-                    ? 'border-primary bg-primary/10 text-primary font-bold shadow-2xs'
-                    : 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <Users className="size-4 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs truncate">All Members</p>
-                  <p className="text-3xs opacity-80 font-normal truncate">{stats.activeMemberCount} members</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAudience('admins_only')}
-                className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  audience === 'admins_only'
-                    ? 'border-primary bg-primary/10 text-primary font-bold shadow-2xs'
-                    : 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <ShieldAlert className="size-4 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs truncate">Admins Only</p>
-                  <p className="text-3xs opacity-80 font-normal truncate">Internal test</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAudience('test_only')}
-                className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  audience === 'test_only'
-                    ? 'border-primary bg-primary/10 text-primary font-bold shadow-2xs'
-                    : 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <Mail className="size-4 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs truncate">Test to Self</p>
-                  <p className="text-3xs opacity-80 font-normal truncate">Admin inbox</p>
-                </div>
-              </button>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-label text-foreground">Target audience</legend>
+            <div className="grid-fluid gap-2 [--grid-min:10rem]">
+              {[
+                { key: 'all_members' as const, icon: Users, title: 'All members', sub: `${stats.activeMemberCount} members` },
+                { key: 'admins_only' as const, icon: ShieldAlert, title: 'Admins only', sub: 'Internal test' },
+                { key: 'test_only' as const, icon: Mail, title: 'Test to self', sub: 'Admin inbox' },
+              ].map((opt) => {
+                const Icon = opt.icon;
+                const selected = audience === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setAudience(opt.key)}
+                    className={`no-spring flex min-h-14 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left cursor-pointer outline-none transition-colors duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring ${
+                      selected
+                        ? 'bg-primary/10 text-primary ring-1 ring-primary/40'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className="size-4 shrink-0" />
+                    <span className="min-w-0">
+                      <span className={`block truncate text-sm ${selected ? 'font-semibold' : 'font-medium'}`}>{opt.title}</span>
+                      <span className="block truncate text-xs opacity-80">{opt.sub}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          </div>
+          </fieldset>
 
           {/* Category Pills */}
-          <div className="space-y-2">
-            <label className="text-2xs font-bold uppercase tracking-wider text-muted-foreground">
-              Announcement Category
-            </label>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-label text-foreground">Announcement category</legend>
             <div className="flex flex-wrap items-center gap-2">
               {categoryPills.map((cp) => (
                 <button
                   key={cp.category}
                   type="button"
+                  aria-pressed={category === cp.category}
                   onClick={() => setCategory(cp.category)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`no-spring h-10 rounded-full px-4 text-sm cursor-pointer outline-none transition-colors duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring ${
                     category === cp.category
-                      ? `${cp.bg} ${cp.color} font-bold shadow-2xs`
-                      : 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted hover:text-foreground'
+                      ? `${cp.bg} ${cp.color} font-semibold`
+                      : 'bg-muted/50 font-medium text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                 >
                   {cp.label}
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           {/* Subject Line */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-2xs">
-              <label className="font-bold uppercase tracking-wider text-muted-foreground">
-                Email Subject Line
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <label htmlFor="broadcast-subject" className="text-label text-foreground">
+                Email subject line
               </label>
-              <span className="text-muted-foreground">{subject.length}/140</span>
+              <span className="num text-xs text-muted-foreground">{subject.length}/140</span>
             </div>
             <input
+              id="broadcast-subject"
               type="text"
               maxLength={140}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="e.g. Tenvi Platform Update: New Support Ticket Desk & Bug Tracker Live!"
-              className="w-full text-xs p-3 rounded-xl bg-muted/30 border border-border/60 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-foreground transition-all"
+              className="h-12 w-full min-w-0 rounded-xl bg-muted/60 px-4 text-base text-foreground outline-none placeholder:text-muted-foreground/80 transition-shadow duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
 
           {/* Message Body */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-2xs">
-              <label className="font-bold uppercase tracking-wider text-muted-foreground">
-                Announcement Message
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <label htmlFor="broadcast-message" className="text-label text-foreground">
+                Announcement message
               </label>
-              <span className="text-muted-foreground">{message.length}/4000</span>
+              <span className="num text-xs text-muted-foreground">{message.length}/4000</span>
             </div>
             <textarea
+              id="broadcast-message"
               rows={7}
               maxLength={4000}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Write your announcement message here. Separate paragraphs with double enter for clean spacing in the email template..."
-              className="w-full text-xs p-3 rounded-xl bg-muted/30 border border-border/60 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-foreground resize-y leading-relaxed transition-all"
+              className="w-full min-w-0 rounded-xl bg-muted/60 px-4 py-3 text-base leading-relaxed text-foreground outline-none resize-y placeholder:text-muted-foreground/80 transition-shadow duration-(--motion-fast) ease-(--ease-in-out) focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
 
           {/* In-App Notification Toggle */}
-          <div className="p-3.5 rounded-xl bg-muted/30 border border-border/50 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <Bell className="size-3.5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-foreground">Also send in-app notification</p>
-                <p className="text-3xs text-muted-foreground">
+          <label
+            htmlFor="send-in-app"
+            className="flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-muted/50 p-4"
+          >
+            <span className="flex min-w-0 items-start gap-3">
+              <span className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Bell className="size-4" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-foreground">Also send in-app notification</span>
+                <span className="block text-xs leading-snug text-muted-foreground">
                   Recipients will also receive an unread alert badge on their dashboard bell.
-                </p>
-              </div>
-            </div>
+                </span>
+              </span>
+            </span>
             <input
               type="checkbox"
               id="send-in-app"
               checked={sendInApp}
               onChange={(e) => setSendInApp(e.target.checked)}
-              className="size-4 accent-primary rounded cursor-pointer"
+              className="size-5 shrink-0 accent-primary rounded cursor-pointer"
             />
-          </div>
+          </label>
 
           {/* Action Buttons */}
-          <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-border/40">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={handleSendTestToSelf}
               disabled={isSending || !subject.trim() || !message.trim()}
-              className="cursor-pointer gap-1.5 text-xs h-9"
+              className="gap-1.5"
             >
-              <Mail className="size-3.5" />
-              <span>Send Test Email to Me</span>
+              <Mail className="size-4" />
+              <span>Send test email to me</span>
             </Button>
 
             <Button
@@ -415,65 +393,55 @@ export function BroadcastClient() {
               size="sm"
               onClick={() => setConfirmOpen(true)}
               disabled={isSending || !subject.trim() || !message.trim()}
-              className="cursor-pointer gap-1.5 font-bold text-xs h-9 px-5 bg-primary shadow-xs"
+              aria-busy={isSending}
+              className="gap-1.5 px-5"
             >
-              {isSending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Send className="size-3.5" />
-              )}
-              <span>Broadcast to Members ({selectedRecipientEstimate})</span>
+              {isSending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              <span>
+                Broadcast to members (<span className="num">{selectedRecipientEstimate}</span>)
+              </span>
             </Button>
           </div>
         </div>
 
-        {/* Right Column: Live Email Preview (5 cols) */}
-        <div className="lg:col-span-5 space-y-3">
-          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground px-1">
-            <span className="flex items-center gap-1.5">
-              <Eye className="size-3.5 text-primary" />
-              Recipient Email Preview
-            </span>
-            <span className="text-3xs uppercase font-mono tracking-wider bg-muted px-2 py-0.5 rounded">
-              HTML Output
+        {/* Live Email Preview */}
+        <div className="@5xl/main:col-span-5 flex min-w-0 flex-col gap-3">
+          <div className="flex items-center justify-between gap-3 px-1">
+            <h2 className="flex items-center gap-1.5 text-label text-foreground">
+              <Eye className="size-4 text-primary" />
+              Recipient email preview
+            </h2>
+            <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
+              HTML output
             </span>
           </div>
 
           {/* Email Preview Card */}
-          <div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-card">
+          <div className="overflow-hidden rounded-2xl bg-card shadow-card">
             {/* Window bar */}
-            <div className="px-4 py-2.5 bg-muted/60 border-b border-border/50 flex items-center justify-between text-3xs text-muted-foreground font-mono">
-              <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-red-400" />
-                <span className="size-2 rounded-full bg-amber-400" />
-                <span className="size-2 rounded-full bg-emerald-400" />
+            <div className="flex items-center justify-between gap-3 bg-muted/70 px-4 py-2.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5 shrink-0" aria-hidden="true">
+                <span className="size-2.5 rounded-full bg-red-400" />
+                <span className="size-2.5 rounded-full bg-amber-400" />
+                <span className="size-2.5 rounded-full bg-emerald-400" />
               </div>
-              <span>From: Tenvi &lt;noreply@tenvi.app&gt;</span>
+              <span className="min-w-0 truncate font-mono">From: Tenvi &lt;noreply@tenvi.app&gt;</span>
             </div>
 
             {/* Email Canvas */}
-            <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-900/60">
-              <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-                {/* Email Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-900">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
-                      Tenvi
-                    </span>
-                    {getCategoryBadge(category)}
-                  </div>
+            <div className="bg-slate-100 p-4 sm:p-6 dark:bg-slate-900/60">
+              <div className="flex flex-col gap-4 rounded-xl bg-white p-5 sm:p-6 shadow-sm dark:bg-slate-950">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">Tenvi</span>
+                  {getCategoryBadge(category)}
                 </div>
 
-                {/* Email Title */}
-                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-snug">
+                <h3 className="text-base font-bold leading-snug text-slate-900 dark:text-white">
                   {subject.trim() || 'Subject: Announcement headline will appear here'}
                 </h3>
 
-                {/* Email Salutation & Body */}
-                <div className="text-xs text-slate-700 dark:text-slate-300 space-y-2.5 leading-relaxed">
-                  <p className="font-semibold text-slate-900 dark:text-white">
-                    Hello Member,
-                  </p>
+                <div className="flex flex-col gap-2.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  <p className="font-semibold text-slate-900 dark:text-white">Hello Member,</p>
                   {message.trim() ? (
                     message
                       .split('\n\n')
@@ -483,24 +451,20 @@ export function BroadcastClient() {
                         </p>
                       ))
                   ) : (
-                    <p className="text-slate-400 italic">
+                    <p className="italic text-slate-500">
                       Your announcement body content will be formatted into readable paragraphs here...
                     </p>
                   )}
                 </div>
 
-                {/* CTA Button */}
-                <div className="pt-2">
-                  <span className="inline-block px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-2xs shadow-xs">
+                <div className="pt-1">
+                  <span className="inline-block rounded-xl bg-blue-700 px-4 py-2 text-xs font-semibold text-white">
                     Open Your Tenvi Dashboard &rarr;
                   </span>
                 </div>
 
-                {/* Email Footer */}
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-900 text-3xs text-slate-400 space-y-0.5">
-                  <p className="font-semibold text-slate-500 dark:text-slate-400">
-                    Tenvi — Personal Wealth Infrastructure
-                  </p>
+                <div className="mt-2 flex flex-col gap-0.5 rounded-lg bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                  <p className="font-semibold text-slate-600 dark:text-slate-300">Tenvi — Personal Wealth Infrastructure</p>
                   <p>This message was broadcast by the Tenvi administration team.</p>
                 </div>
               </div>
@@ -509,121 +473,119 @@ export function BroadcastClient() {
         </div>
       </div>
 
-      {/* Broadcast History & Delivery Logs */}
-      <div className="rounded-2xl bg-card border border-border/60 shadow-xs p-5 sm:p-6 space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-border/40">
-          <div className="flex items-center gap-2 font-bold text-sm text-foreground">
+      {/* Broadcast History */}
+      <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 sm:p-6 shadow-card">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="flex items-center gap-2 text-title text-foreground">
             <Clock className="size-4 text-primary" />
-            <span>Broadcast Announcement History</span>
-          </div>
-          <span className="text-3xs text-muted-foreground font-mono">
-            {history.length} broadcast records
+            Broadcast history
+          </h2>
+          <span className="text-label text-muted-foreground">
+            <span className="num">{history.length}</span> {history.length === 1 ? 'record' : 'records'}
           </span>
         </div>
 
         {history.length === 0 ? (
-          <div className="py-12 text-center rounded-xl border border-dashed border-border/80 text-muted-foreground text-xs space-y-1 bg-muted/10">
-            <Mail className="size-6 opacity-40 mx-auto" />
-            <p className="font-bold text-foreground">No broadcast announcements sent yet</p>
-            <p className="text-3xs">Use the composer above to dispatch your first update.</p>
+          <div className="flex flex-col items-center gap-1 rounded-xl bg-muted/40 px-6 py-12 text-center text-sm text-muted-foreground">
+            <Mail className="mb-1 size-6 opacity-50" />
+            <p className="font-semibold text-foreground">No broadcast announcements sent yet</p>
+            <p className="text-xs">Use the composer above to dispatch your first update.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <ul className="flex flex-col gap-2">
             {history.map((b) => (
-              <div
+              <li
                 key={b.id}
-                className="p-4 rounded-xl border border-border/60 bg-muted/20 hover:bg-muted/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="flex flex-col gap-3 rounded-xl bg-muted/40 p-4 @2xl/main:flex-row @2xl/main:items-center @2xl/main:justify-between"
               >
-                <div className="space-y-1 min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     {getCategoryBadge(b.category)}
-                    <span className="text-3xs text-muted-foreground font-mono flex items-center gap-1">
-                      <Clock className="size-2.5" />
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="size-3" />
                       {formatDate(b.created_at)}
                     </span>
-                    <span className="text-3xs font-semibold px-2 py-0.2 rounded bg-muted text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       Audience: {b.audience.replace('_', ' ')}
                     </span>
                   </div>
-
-                  <h4 className="text-xs font-bold text-foreground truncate">
+                  <h3 className="truncate text-sm font-semibold text-foreground" title={b.subject}>
                     {b.subject}
-                  </h4>
-
-                  <p className="text-3xs text-muted-foreground line-clamp-1">
-                    {b.message}
-                  </p>
+                  </h3>
+                  <p className="truncate text-xs text-muted-foreground">{b.message}</p>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right text-3xs">
-                    <span className="font-bold text-foreground block">
-                      {(b.sent_count || 0) + (b.simulated_count || 0)} / {b.recipient_count} Delivered
+                <div className="flex shrink-0 items-center justify-between gap-4 @2xl/main:justify-end">
+                  <div className="flex flex-col @2xl/main:items-end">
+                    <span className="num text-sm font-semibold text-foreground">
+                      {(b.sent_count || 0) + (b.simulated_count || 0)} / {b.recipient_count} delivered
                     </span>
-                    <span className="text-muted-foreground font-mono">
-                      {b.sent_count > 0 ? `${b.sent_count} live` : ''}
-                      {b.simulated_count > 0 ? ` ${b.simulated_count} simulated` : ''}
-                      {b.failed_count > 0 ? ` (${b.failed_count} failed)` : ''}
+                    <span className="num text-xs text-muted-foreground">
+                      {[
+                        b.sent_count > 0 ? `${b.sent_count} live` : '',
+                        b.simulated_count > 0 ? `${b.simulated_count} simulated` : '',
+                        b.failed_count > 0 ? `${b.failed_count} failed` : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
                     </span>
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setViewingBroadcast(b)}
-                    className="h-8 text-2xs cursor-pointer"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setViewingBroadcast(b)}>
                     View
                   </Button>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </div>
+      </section>
 
       {/* Confirmation Dialog Before Mass Send */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md p-6">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-amber-500">
-              <AlertTriangle className="size-5" />
-              <DialogTitle className="text-base font-bold">Confirm Email Broadcast</DialogTitle>
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="size-5 shrink-0" />
+              <DialogTitle className="text-title text-foreground">Confirm email broadcast</DialogTitle>
             </div>
-            <DialogDescription className="text-xs text-muted-foreground pt-1">
-              You are about to dispatch an announcement email to <strong>{selectedRecipientEstimate} recipient(s)</strong>.
+            <DialogDescription className="text-sm text-muted-foreground pt-1">
+              You are about to dispatch an announcement email to{' '}
+              <strong className="num">
+                {selectedRecipientEstimate} {selectedRecipientEstimate === 1 ? 'recipient' : 'recipients'}
+              </strong>
+              .
             </DialogDescription>
           </DialogHeader>
 
-          <div className="p-3.5 rounded-xl bg-muted/40 border border-border/60 text-xs space-y-2 my-2">
+          <div className="flex flex-col gap-3 rounded-xl bg-muted/50 p-4 text-sm my-1">
             <div>
-              <span className="text-3xs font-bold uppercase text-muted-foreground block">Subject</span>
-              <p className="font-semibold text-foreground">{subject}</p>
+              <span className="text-label text-muted-foreground block">Subject</span>
+              <p className="font-semibold text-foreground break-words">{subject}</p>
             </div>
             <div>
-              <span className="text-3xs font-bold uppercase text-muted-foreground block">Audience</span>
+              <span className="text-label text-muted-foreground block">Audience</span>
               <p className="font-semibold text-foreground capitalize">{audience.replace('_', ' ')}</p>
             </div>
             {sendInApp && (
-              <p className="text-3xs text-primary font-semibold flex items-center gap-1">
-                <Check className="size-3" />
+              <p className="text-xs text-primary font-semibold flex items-center gap-1.5">
+                <Check className="size-3.5 shrink-0" />
                 In-app notification bell alert will also be triggered
               </p>
             )}
-            <div className="pt-2 text-3xs text-muted-foreground flex items-center gap-1.5 border-t border-border/40">
-              <ShieldCheck className="size-3 text-emerald-500 shrink-0" />
+            <div className="text-xs text-muted-foreground flex items-start gap-1.5">
+              <ShieldCheck className="size-3.5 mt-0.5 text-success shrink-0" />
               <span>Anti-ban pacing active: sends with 1.5s interval delay to protect Gmail reputation.</span>
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+          <DialogFooter className="gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setConfirmOpen(false)}
               disabled={isSending}
-              className="cursor-pointer"
             >
               Cancel
             </Button>
@@ -632,10 +594,11 @@ export function BroadcastClient() {
               size="sm"
               onClick={handleConfirmBroadcast}
               disabled={isSending}
-              className="cursor-pointer font-bold bg-primary"
+              aria-busy={isSending}
+              className="gap-1.5"
             >
-              {isSending ? <Loader2 className="size-3.5 animate-spin mr-1.5" /> : <Send className="size-3.5 mr-1.5" />}
-              Send Broadcast Now
+              {isSending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              Send broadcast now
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -647,27 +610,28 @@ export function BroadcastClient() {
           {viewingBroadcast && (
             <>
               <DialogHeader>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {getCategoryBadge(viewingBroadcast.category)}
-                  <span className="text-3xs text-muted-foreground font-mono">
+                  <span className="text-xs text-muted-foreground">
                     {formatDate(viewingBroadcast.created_at)}
                   </span>
                 </div>
-                <DialogTitle className="text-base font-bold pt-1">
+                <DialogTitle className="text-title text-foreground pt-1 break-words">
                   {viewingBroadcast.subject}
                 </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground">
-                  Sent to {viewingBroadcast.recipient_count} recipients ({viewingBroadcast.audience.replace('_', ' ')})
+                <DialogDescription className="text-sm text-muted-foreground">
+                  Sent to <span className="num">{viewingBroadcast.recipient_count}</span>{' '}
+                  {viewingBroadcast.recipient_count === 1 ? 'recipient' : 'recipients'} ({viewingBroadcast.audience.replace('_', ' ')})
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="p-4 rounded-xl bg-muted/40 border border-border/60 text-xs text-foreground whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+              <div className="p-4 rounded-xl bg-muted/50 text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed max-h-60 overflow-y-auto">
                 {viewingBroadcast.message}
               </div>
 
-              <div className="p-3 rounded-lg bg-card border border-border/40 text-3xs text-muted-foreground flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-1 text-xs text-muted-foreground">
                 <span>Sender: {viewingBroadcast.admin_name || 'Administrator'}</span>
-                <span>
+                <span className="num">
                   Delivered: {viewingBroadcast.sent_count + viewingBroadcast.simulated_count} / {viewingBroadcast.recipient_count}
                 </span>
               </div>
@@ -677,7 +641,6 @@ export function BroadcastClient() {
                   size="sm"
                   variant="outline"
                   onClick={() => setViewingBroadcast(null)}
-                  className="cursor-pointer"
                 >
                   Close
                 </Button>

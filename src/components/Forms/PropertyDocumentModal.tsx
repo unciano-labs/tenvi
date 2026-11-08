@@ -203,7 +203,7 @@ export function PropertyDocumentModal({
       <ResponsiveDialogContent className="max-w-xl">
         <ResponsiveDialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-primary flex items-center justify-center shrink-0">
               <FileCheck className="w-5 h-5" />
             </div>
             <div>
@@ -221,11 +221,11 @@ export function PropertyDocumentModal({
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Document Type Presets */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground block uppercase tracking-wider">Document Category</label>
+              <label className="text-xs font-bold text-muted-foreground block">Document category</label>
               <select
                 value={documentType}
                 onChange={(e) => handleDocumentTypeChange(e.target.value as PropertyDocumentType)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-muted/60 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-muted/60 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors duration-(--motion-fast) cursor-pointer"
               >
                 {DOCUMENT_TYPE_PRESETS.map((preset) => (
                   <option key={preset.value} value={preset.value}>
@@ -241,7 +241,7 @@ export function PropertyDocumentModal({
             {/* Title & Document Number */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground block uppercase tracking-wider">
+                <label className="text-xs font-bold text-muted-foreground block">
                   Document Title <span className="text-destructive">*</span>
                 </label>
                 <Input
@@ -254,7 +254,7 @@ export function PropertyDocumentModal({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground block uppercase tracking-wider">
+                <label className="text-xs font-bold text-muted-foreground block">
                   Reference / Plate / Policy #
                 </label>
                 <Input
@@ -269,7 +269,7 @@ export function PropertyDocumentModal({
             {/* Dates Section */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground block uppercase tracking-wider">Issue / Effective Date</label>
+                <label className="text-xs font-bold text-muted-foreground block">Issue / effective date</label>
                 <Input
                   type="date"
                   value={issueDate}
@@ -278,7 +278,7 @@ export function PropertyDocumentModal({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground block flex items-center justify-between uppercase tracking-wider">
+                <label className="text-xs font-bold text-muted-foreground block flex items-center justify-between">
                   <span>Expiration / Renewal Date</span>
                   <span className="text-xs text-muted-foreground font-normal lowercase">leave blank if permanent</span>
                 </label>
@@ -292,24 +292,24 @@ export function PropertyDocumentModal({
 
             {/* Automated Expiration Alerts Card */}
             {expiryDate && (
-              <div className="p-4 rounded-2xl bg-amber-50/70 space-y-3">
+              <div className="p-4 rounded-2xl bg-warning-soft space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
-                  <Bell className="w-4 h-4 text-amber-600" />
+                  <Bell className="w-4 h-4 text-warning-soft-foreground" />
                   Automated Renewal & Expiry Alerts
                 </div>
-                <p className="text-xs text-amber-800 leading-relaxed">
+                <p className="text-xs text-warning-soft-foreground leading-relaxed">
                   Tenvi will automatically monitor this document and send alerts when it is approaching expiration.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                   <div>
                     <label className="text-xs font-bold text-amber-900 uppercase block mb-1">
-                      Notice Lead Time
+                      Notice lead time
                     </label>
                     <select
                       value={notifyBeforeDays}
                       onChange={(e) => setNotifyBeforeDays(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl bg-card text-xs font-bold text-amber-950 focus:outline-none shadow-xs cursor-pointer"
+                      className="w-full px-3 py-2 rounded-xl bg-card text-xs font-bold text-amber-950 focus:outline-none shadow-card cursor-pointer"
                     >
                       <option value={60}>60 Days Before</option>
                       <option value={45}>45 Days Before</option>
@@ -326,7 +326,7 @@ export function PropertyDocumentModal({
                       onCheckedChange={(checked) => setNotifyEmail(!!checked)}
                     />
                     <label htmlFor="notifyEmail" className="text-xs font-bold text-amber-950 cursor-pointer">
-                      Email Alerts
+                      Email alerts
                     </label>
                   </div>
 
@@ -337,7 +337,7 @@ export function PropertyDocumentModal({
                       onCheckedChange={(checked) => setNotifySms(!!checked)}
                     />
                     <label htmlFor="notifySms" className="text-xs font-bold text-amber-950 cursor-pointer">
-                      SMS Alerts
+                      SMS alerts
                     </label>
                   </div>
                 </div>
@@ -346,7 +346,7 @@ export function PropertyDocumentModal({
 
             {/* File Upload Drop Zone */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground block flex items-center justify-between uppercase tracking-wider">
+              <label className="text-xs font-bold text-muted-foreground block flex items-center justify-between">
                 <span>Digital File (PDF, Image)</span>
                 <span className="text-xs text-muted-foreground font-normal lowercase">optional (max 15MB)</span>
               </label>
@@ -359,11 +359,11 @@ export function PropertyDocumentModal({
                 onDragLeave={() => setIsDragOver(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`rounded-2xl p-5 text-center transition-all cursor-pointer ${
+                className={`rounded-2xl p-5 text-center transition-colors duration-(--motion-fast) cursor-pointer ${
                   isDragOver
                     ? 'bg-primary/10 ring-2 ring-primary'
                     : selectedFile
-                    ? 'bg-emerald-50/50 ring-2 ring-emerald-400/40'
+                    ? 'bg-success-soft ring-2 ring-emerald-400/40'
                     : 'bg-muted/60 hover:bg-muted/80'
                 }`}
               >
@@ -377,7 +377,7 @@ export function PropertyDocumentModal({
 
                 {selectedFile ? (
                   <div className="flex items-center justify-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 text-success flex items-center justify-center">
                       <FileCheck className="w-5 h-5" />
                     </div>
                     <div className="text-left">
@@ -389,7 +389,7 @@ export function PropertyDocumentModal({
                   </div>
                 ) : isEditing && documentToEdit?.file_url && documentToEdit.file_url !== '#no-file' ? (
                   <div className="flex items-center justify-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-50 text-primary flex items-center justify-center">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="text-left">
@@ -413,7 +413,7 @@ export function PropertyDocumentModal({
 
             {/* Notes */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground block uppercase tracking-wider">Notes & Renewal Instructions</label>
+              <label className="text-xs font-bold text-muted-foreground block">Notes & renewal instructions</label>
               <textarea
                 rows={2}
                 value={notes}

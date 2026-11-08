@@ -300,7 +300,7 @@ export function LoanModal({
       <ResponsiveDialogContent className="max-w-lg">
         <ResponsiveDialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-blue-700 flex items-center justify-center shrink-0">
               <HandCoins className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -316,14 +316,14 @@ export function LoanModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Who owes you / Entity */}
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              <label className="block text-label text-muted-foreground mb-2">
                 Who Owes You? (Person, Business, or Asset Entity)
               </label>
               {(contacts.length > 0 || properties.length > 0) && (
                 <select
                   value={selectValue}
                   onChange={(e) => handleContactChange(e.target.value)}
-                  className="h-10 w-full rounded-xl bg-muted/60 px-3 text-sm text-foreground outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring mb-2"
+                  className="h-10 w-full rounded-xl bg-muted/60 px-3 text-sm text-foreground outline-none transition-colors duration-(--motion-fast) focus-visible:ring-2 focus-visible:ring-ring mb-2"
                 >
                   <option value="">-- Choose from existing contacts / entities --</option>
                   {contacts.length > 0 && (
@@ -373,8 +373,8 @@ export function LoanModal({
             {/* Borrower Contact & Notification Settings */}
             <div className="p-4 rounded-2xl bg-muted/60 space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <Bell className="w-3.5 h-3.5 text-blue-600" />
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Bell className="w-3.5 h-3.5 text-primary" />
                   Automated Reminders (3 Days Before Due)
                 </label>
                 <Switch
@@ -419,14 +419,14 @@ export function LoanModal({
 
             {/* Amount */}
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Total Purchase / Loan Amount (PHP)
+              <label className="block text-label text-muted-foreground mb-2">
+                Total purchase / loan amount (PHP)
               </label>
               <MoneyInput
                 value={amount}
                 onChange={(val) => setAmount(val)}
                 placeholder="0.00"
-                className="text-xl font-bold bg-muted/60"
+                className="num text-xl font-bold bg-muted/60"
                 required
               />
             </div>
@@ -434,13 +434,13 @@ export function LoanModal({
             {/* Credit Card Swiped (Optional) */}
             {creditCards.length > 0 && (
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <label className="block text-label text-muted-foreground mb-2 flex items-center gap-1.5">
                   <CreditCardIcon className="w-3.5 h-3.5" /> Charged to Credit Card? (Optional)
                 </label>
                 <select
                   value={creditCardId}
                   onChange={(e) => handleCardChange(e.target.value)}
-                  className="h-10 w-full rounded-xl bg-muted/60 px-3 text-sm text-foreground outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-xl bg-muted/60 px-3 text-sm text-foreground outline-none transition-colors duration-(--motion-fast) focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <option value="">-- No (Paid with cash or direct transfer) --</option>
                   {creditCards.map((card) => (
@@ -453,7 +453,7 @@ export function LoanModal({
                   <div className="p-3 rounded-xl bg-indigo-50/70 mt-2 space-y-1">
                     <div className="flex items-center justify-between text-xs font-bold text-indigo-900">
                       <span>Card Billing Cycle Synced ⚡</span>
-                      <span className="text-indigo-600">Cutoff: Every {getOrdinalSuffix(selectedCard.statement_day)}</span>
+                      <span className="text-primary">Cutoff: Every {getOrdinalSuffix(selectedCard.statement_day)}</span>
                     </div>
                     <p className="text-xs text-indigo-700">
                       Payment due day automatically synchronized with your card&apos;s payment due date (every {getOrdinalSuffix(selectedCard.due_day)}).
@@ -466,11 +466,11 @@ export function LoanModal({
             {/* Downpayment Section */}
             <div className="p-4 rounded-2xl bg-muted/60 space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                  Downpayment Received Upfront (Optional)
+                <label className="text-xs font-semibold text-foreground">
+                  Downpayment received upfront (Optional)
                 </label>
                 {parsedDownpayment > 0 && (
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-bold text-success bg-success-soft px-2 py-0.5 rounded-md">
                     ₱{parsedDownpayment.toLocaleString('en-PH', { minimumFractionDigits: 2 })} Paid Upfront
                   </span>
                 )}
@@ -487,7 +487,7 @@ export function LoanModal({
                 <select
                   value={downpaymentPaymentMethod}
                   onChange={(e) => setDownpaymentPaymentMethod(e.target.value)}
-                  className="h-10 w-full rounded-xl bg-card px-3 text-sm text-foreground outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-xl bg-card px-3 text-sm text-foreground outline-none transition-colors duration-(--motion-fast) focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <option value="cash">Received in Cash</option>
                   <option value="gcash">Received via GCash</option>
@@ -508,14 +508,14 @@ export function LoanModal({
 
             {/* Repayment Type Toggle */}
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Repayment Plan
+              <label className="block text-label text-muted-foreground mb-2">
+                Repayment plan
               </label>
               <div className="grid grid-cols-2 gap-2 p-1 bg-muted/60 rounded-2xl">
                 <button
                   type="button"
                   onClick={() => setIsInstallment(false)}
-                  className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition-colors duration-(--motion-fast) cursor-pointer ${
                     !isInstallment
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -526,7 +526,7 @@ export function LoanModal({
                 <button
                   type="button"
                   onClick={() => setIsInstallment(true)}
-                  className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition-colors duration-(--motion-fast) flex items-center justify-center gap-1.5 cursor-pointer ${
                     isInstallment
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -559,10 +559,10 @@ export function LoanModal({
                         setInstallmentMonths(null);
                         setCustomMonthsInput('');
                       }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-(--motion-fast) cursor-pointer ${
                         installmentMonths === null
                           ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'bg-card text-foreground hover:bg-muted border border-border/50'
+                          : 'bg-card text-foreground hover:bg-muted'
                       }`}
                     >
                       No Fixed Term (Open-Ended)
@@ -575,10 +575,10 @@ export function LoanModal({
                           setInstallmentMonths(m);
                           setCustomMonthsInput(String(m));
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-(--motion-fast) cursor-pointer ${
                           installmentMonths === m
                             ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'bg-card text-foreground hover:bg-muted border border-border/50'
+                            : 'bg-card text-foreground hover:bg-muted'
                         }`}
                       >
                         {m} Mos
@@ -616,7 +616,7 @@ export function LoanModal({
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">
-                      Monthly Due Day (Day of Month)
+                      Monthly due day (Day of month)
                     </label>
                     <span className="text-xs font-bold text-primary">
                       Due every {getOrdinalSuffix(monthlyDueDay || 15)}
@@ -647,7 +647,7 @@ export function LoanModal({
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                      <Percent className="w-3.5 h-3.5 text-indigo-600" /> Monthly Interest Rate (%)
+                      <Percent className="w-3.5 h-3.5 text-primary" /> Monthly Interest Rate (%)
                     </label>
                     {monthlyInterestRate > 0 && (
                       <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
@@ -680,7 +680,7 @@ export function LoanModal({
                         onClick={() => setMonthlyInterestRate(rate)}
                         className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
                           monthlyInterestRate === rate
-                            ? 'bg-primary text-primary-foreground shadow-xs'
+                            ? 'bg-primary text-primary-foreground shadow-card'
                             : 'bg-card hover:bg-muted text-foreground'
                         }`}
                       >
@@ -713,7 +713,7 @@ export function LoanModal({
                         <span className="font-semibold text-foreground">₱{parsedAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                       </div>
                       {parsedDownpayment > 0 && (
-                        <div className="flex justify-between text-emerald-700">
+                        <div className="flex justify-between text-success">
                           <span>Less Downpayment:</span>
                           <span className="font-semibold">- ₱{parsedDownpayment.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                         </div>
@@ -749,7 +749,7 @@ export function LoanModal({
                         </span>
                       </div>
                       {selectedCard && (
-                        <div className="text-indigo-600 font-medium pt-1">
+                        <div className="text-primary font-medium pt-1">
                           💳 Swiped on {selectedCard.bank_name} • Statement Cutoff: {getOrdinalSuffix(selectedCard.statement_day)} • Payment Due: {getOrdinalSuffix(selectedCard.due_day)}
                         </div>
                       )}
@@ -765,7 +765,7 @@ export function LoanModal({
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                      <Percent className="w-3.5 h-3.5 text-indigo-600" /> Monthly Interest Rate (%) (Optional)
+                      <Percent className="w-3.5 h-3.5 text-primary" /> Monthly Interest Rate (%) (Optional)
                     </label>
                     {monthlyInterestRate > 0 && (
                       <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
@@ -798,7 +798,7 @@ export function LoanModal({
                         onClick={() => setMonthlyInterestRate(rate)}
                         className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
                           monthlyInterestRate === rate
-                            ? 'bg-primary text-primary-foreground shadow-xs'
+                            ? 'bg-primary text-primary-foreground shadow-card'
                             : 'bg-card hover:bg-muted text-foreground'
                         }`}
                       >
@@ -812,7 +812,7 @@ export function LoanModal({
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="text-xs font-semibold text-muted-foreground">
-                        Monthly Interest Due Day
+                        Monthly interest due day
                       </label>
                       <span className="text-xs font-bold text-primary">
                         Due every {getOrdinalSuffix(monthlyDueDay || 15)}
@@ -838,7 +838,7 @@ export function LoanModal({
 
             {/* Reason */}
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              <label className="block text-label text-muted-foreground mb-2">
                 Reason / What was it for? (Optional)
               </label>
               <Input
@@ -853,7 +853,7 @@ export function LoanModal({
             {/* Dates */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                <label className="block text-label text-muted-foreground mb-2 flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" /> Date Lent
                 </label>
                 <Input
@@ -867,7 +867,7 @@ export function LoanModal({
 
               {!isInstallment && (
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <label className="block text-label text-muted-foreground mb-2 flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" /> Promised Return Date (Optional)
                   </label>
                   <Input

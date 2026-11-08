@@ -101,61 +101,33 @@ export function MobileNav() {
   }, [pathname]);
 
   return (
-    <div className="md:hidden fixed inset-x-0 bottom-4 pb-safe z-50 flex justify-center pointer-events-none">
-      {/* Optional lightweight SVG lens refraction filter */}
-      <svg className="sr-only" aria-hidden="true">
-        <defs>
-          <filter id="liquid-lens-refraction" x="-20%" y="-20%" width="140%" height="140%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="1" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </defs>
-      </svg>
-
+    <div className="lg:hidden fixed inset-x-0 bottom-3 pb-safe z-40 flex justify-center pointer-events-none">
       <nav
         id="mobile-bottom-nav"
         onClick={() => setIsShrunk(false)}
         onTouchStart={() => setIsShrunk(false)}
         onMouseEnter={() => setIsShrunk(false)}
-        style={{
-          WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
-          backdropFilter: 'blur(24px) saturate(1.5)',
-        }}
-        className={`pointer-events-auto origin-bottom relative rounded-full backdrop-blur-2xl backdrop-saturate-150 bg-background/55 dark:bg-card/75 border border-white/25 dark:border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),inset_0_-1px_2px_rgba(0,0,0,0.15),0_12px_32px_-4px_rgba(0,0,0,0.25)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_2px_rgba(0,0,0,0.4),0_16px_36px_-4px_rgba(0,0,0,0.6)] flex items-center justify-center transition-[width,height,transform,box-shadow] duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] transform-gpu select-none px-2.5 ${
-          isShrunk
-            ? 'h-12 w-[260px] shadow-md'
-            : 'h-[62px] w-[330px] max-w-[calc(100vw-1.75rem)]'
+        /* Shrink is a transform (no width/height animation) so nothing reflows mid-scroll */
+        className={`pointer-events-auto origin-bottom relative h-16 w-[min(22rem,calc(100vw-1.5rem))] rounded-[1.375rem] bg-card/95 backdrop-blur-xl shadow-lift px-1.5 select-none transition-transform duration-(--motion-base) ease-(--ease-spring-soft) ${
+          isShrunk ? 'scale-[0.88] translate-y-1' : 'scale-100'
         }`}
         aria-label="Mobile Bottom Navigation"
         role="navigation"
       >
         <div className="relative flex items-center w-full h-full">
-          {/* Animated Sliding Liquid Glass / Lens Refraction Bubble */}
+          {/* Active indicator: a single tonal pill that springs between items via translateX */}
           <div
             id="mobile-nav-liquid-indicator"
             aria-hidden="true"
-            className={`absolute top-0 bottom-0 left-0 flex items-center justify-center pointer-events-none transition-[transform,width,opacity] duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] z-0 transform-gpu ${
+            className={`absolute inset-y-1.5 left-0 pointer-events-none transition-[transform,opacity] duration-(--motion-base) ease-(--ease-spring-pop) ${
               activeIndex >= 0 ? 'opacity-100' : 'opacity-0'
             }`}
             style={{
-              width: '20%',
+              width: `${100 / Math.max(1, navItems.length)}%`,
               transform: `translateX(${Math.max(0, activeIndex) * 100}%)`,
             }}
           >
-            <div
-              className={`relative border border-white/60 dark:border-white/30 bg-gradient-to-b from-white/40 via-white/15 to-white/30 dark:from-white/25 dark:via-white/10 dark:to-white/20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),inset_0_-3px_6px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.2)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-3px_6px_rgba(0,0,0,0.45),0_10px_24px_rgba(0,0,0,0.4)] transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] ${
-                isShrunk ? 'w-[38px] h-[38px] rounded-full' : 'w-[56px] h-[50px] rounded-[20px]'
-              }`}
-            >
-              {/* Glossy top specular highlight rim */}
-              <div className="absolute inset-x-2 top-0.5 h-[1.5px] rounded-full bg-gradient-to-r from-transparent via-white/95 dark:via-white/70 to-transparent pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)]" />
-              {/* Subtle primary tint */}
-              <div
-                className={`absolute inset-0 bg-primary/10 dark:bg-primary/20 pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] ${
-                  isShrunk ? 'rounded-full' : 'rounded-[20px]'
-                }`}
-              />
-            </div>
+            <div className="mx-1 h-full rounded-2xl bg-primary/10 dark:bg-primary/15" />
           </div>
 
           {navItems.map((item, index) => {
@@ -169,27 +141,19 @@ export function MobileNav() {
                 aria-label={item.label}
                 aria-current={item.active ? 'page' : undefined}
                 onClick={() => setIsShrunk(false)}
-                className={`relative z-10 flex-1 h-full flex flex-col items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] active:scale-95 cursor-pointer touch-manipulation select-none ${
-                  isShrunk ? 'rounded-full' : 'py-1 rounded-[20px]'
-                } ${
-                  item.active
-                    ? 'text-primary dark:text-primary font-semibold'
-                    : 'text-muted-foreground/80 hover:text-foreground hover:bg-white/10 dark:hover:bg-white/5'
+                className={`no-spring relative z-10 flex-1 min-w-0 h-full flex flex-col items-center justify-center gap-1 rounded-2xl cursor-pointer touch-manipulation select-none outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-(--motion-fast) ease-(--ease-in-out) ${
+                  item.active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Icon
-                  className={`size-5 shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] ${
-                    item.active
-                      ? 'scale-105 stroke-[2.25] text-primary dark:text-primary drop-shadow-[0_1px_2px_rgba(0,0,0,0.15)]'
-                      : 'stroke-2 text-muted-foreground/80'
-                  }`}
+                  className={`size-5 shrink-0 transition-transform duration-(--motion-base) ease-(--ease-spring-pop) ${
+                    isShrunk ? 'translate-y-2' : 'translate-y-0'
+                  } ${item.active ? 'stroke-[2.25]' : 'stroke-2'}`}
                 />
                 <span
-                  className={`leading-none truncate overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.34,1.45,0.64,1)] ${
-                    isShrunk
-                      ? 'opacity-0 max-h-0 max-w-0 scale-75 -translate-y-1 mt-0 pointer-events-none'
-                      : 'opacity-100 max-h-5 max-w-[58px] scale-100 translate-y-0 text-[10px] mt-1 tracking-tight'
-                  } ${item.active ? 'font-bold text-primary dark:text-primary' : 'text-muted-foreground'}`}
+                  className={`max-w-full truncate px-0.5 text-[11px] leading-none transition-opacity duration-(--motion-fast) ease-(--ease-in-out) ${
+                    isShrunk ? 'opacity-0' : 'opacity-100'
+                  } ${item.active ? 'font-semibold' : 'font-medium'}`}
                 >
                   {item.label}
                 </span>

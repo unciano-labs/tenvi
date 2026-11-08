@@ -92,7 +92,7 @@ function HoldToPayButton({ item, onPay, isPending }: HoldToPayButtonProps) {
       }}
       onContextMenu={(e) => e.preventDefault()}
       className={cn(
-        "relative min-h-10 min-w-[130px] sm:min-w-[140px] px-4 py-2 rounded-xl overflow-hidden cursor-pointer select-none touch-none transition-all duration-200 text-xs font-semibold flex items-center justify-center shadow-xs shrink-0",
+        "relative min-h-10 min-w-[130px] sm:min-w-[140px] px-4 py-2 rounded-xl overflow-hidden cursor-pointer select-none touch-none transition-colors duration-(--motion-fast) ease-(--ease-in-out) text-xs font-semibold flex items-center justify-center shadow-xs shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isPaid
           ? "bg-emerald-600 dark:bg-emerald-500 text-white cursor-default"
           : "bg-emerald-500/15 hover:bg-emerald-500/20 active:scale-[0.98] text-emerald-800 dark:text-emerald-200"
@@ -211,7 +211,7 @@ export function PayTheseSoonPanel({
             <div className="flex size-7 items-center justify-center rounded-lg bg-warning-soft text-warning-soft-foreground">
               <Clock className="size-4" />
             </div>
-            <CardTitle className="text-base font-semibold">Pay These Soon</CardTitle>
+            <CardTitle className="text-title">Pay these soon</CardTitle>
           </div>
           <Badge variant="warning">
             {visibleCards.length} {visibleCards.length === 1 ? 'bill' : 'bills'} due within 3 days
@@ -230,9 +230,9 @@ export function PayTheseSoonPanel({
             return (
               <div
                 key={item.cardId}
-                className="flex flex-col gap-3 rounded-2xl bg-muted/60 p-4 transition-colors hover:bg-muted sm:flex-row sm:items-start sm:justify-between"
+                className="flex flex-wrap items-start justify-between gap-3 rounded-2xl bg-muted/50 p-4"
               >
-                <div className="flex items-start gap-3">
+                <div className="flex min-w-0 flex-[1_1_16rem] items-start gap-3">
                   <div
                     className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl ${
                       isUrgentOrOverdue
@@ -251,7 +251,7 @@ export function PayTheseSoonPanel({
                       <span className="font-semibold text-foreground text-base leading-snug whitespace-normal break-words">
                         {item.bankName} {item.cardName}
                       </span>
-                      <span className="text-xs text-muted-foreground font-mono shrink-0">
+                      <span className="num text-xs text-muted-foreground font-mono shrink-0">
                         •••• {item.last4}
                       </span>
                     </div>
@@ -261,9 +261,9 @@ export function PayTheseSoonPanel({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-4 sm:justify-end">
+                <div className="flex flex-wrap items-center justify-between gap-3 ml-auto">
                   <div className="text-right">
-                    <div className="font-bold text-base text-foreground">
+                    <div className="num font-bold text-base text-foreground">
                       {formatMoney(item.amountDue)}
                     </div>
                     <Badge

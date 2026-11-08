@@ -53,7 +53,7 @@ function SheetContent({
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "fixed z-50 flex flex-col gap-4 bg-card p-6 text-card-foreground shadow-lift transition-[transform,opacity] duration-[var(--dur-slow)] ease-[var(--ease-standard)] outline-none data-ending-style:opacity-0 data-starting-style:opacity-0",
+          "fixed z-50 flex flex-col gap-4 bg-card p-6 text-card-foreground shadow-overlay transition-transform duration-(--dur-slow) ease-(--ease-in-out) outline-none",
           side === "right" && "inset-y-0 right-0 h-full w-full max-w-md data-starting-style:translate-x-full data-ending-style:translate-x-full",
           side === "left" && "inset-y-0 left-0 h-full w-full max-w-md data-starting-style:-translate-x-full data-ending-style:-translate-x-full",
           side === "top" && "inset-x-0 top-0 h-auto rounded-b-2xl data-starting-style:-translate-y-full data-ending-style:-translate-y-full",

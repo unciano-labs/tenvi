@@ -222,10 +222,10 @@ export function CardInstallmentModal({
               <Layers className="size-4" />
             </div>
             <div>
-              <ResponsiveDialogTitle className="text-lg font-bold">
-                Record Card Installment
+              <ResponsiveDialogTitle className="text-title">
+                Record card installment
               </ResponsiveDialogTitle>
-              <ResponsiveDialogDescription className="text-xs text-muted-foreground">
+              <ResponsiveDialogDescription className="text-sm text-muted-foreground">
                 Set up an installment plan linked directly to your credit card limit and billing cycle.
               </ResponsiveDialogDescription>
             </div>
@@ -235,8 +235,8 @@ export function CardInstallmentModal({
         <ResponsiveDialogBody className="space-y-4 sm:space-y-5 pt-1">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Card Selector / Card Info */}
-            <div className="p-3 rounded-2xl bg-muted/60 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-3.5 rounded-2xl bg-muted/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 min-w-0 flex-[1_1_14rem]">
                 <div className="p-2 rounded-xl bg-card shadow-xs text-primary shrink-0">
                   <CardIcon className="size-4" />
                 </div>
@@ -251,11 +251,12 @@ export function CardInstallmentModal({
               </div>
 
               {creditCards.length > 1 && (
-                <div className="shrink-0">
+                <div className="min-w-0 max-w-full">
                   <select
                     value={selectedCardId}
                     onChange={(e) => setSelectedCardId(e.target.value)}
-                    className="h-8 px-2.5 rounded-lg border border-border bg-card text-foreground text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    aria-label="Credit card"
+                    className="h-11 max-w-full px-3 rounded-xl bg-card shadow-xs text-foreground text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {creditCards.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -347,7 +348,7 @@ export function CardInstallmentModal({
                     variant={isZeroPercentPromo ? 'soft' : 'ghost'}
                     size="sm"
                     onClick={() => handleRateChange('0')}
-                    className="h-5 px-1.5 text-3xs font-extrabold uppercase rounded cursor-pointer"
+                    className="h-5 px-1.5 text-2xs font-extrabold uppercase rounded cursor-pointer"
                   >
                     <Sparkles className="size-2.5 mr-0.5 text-amber-500" />
                     0% Promo
@@ -397,7 +398,7 @@ export function CardInstallmentModal({
                     <Clock className="size-3.5 text-muted-foreground" />
                     First Billing Month
                   </label>
-                  <Badge variant="outline" className="text-3xs py-0 px-1 font-normal text-muted-foreground border-border">
+                  <Badge variant="outline" className="text-2xs py-0 px-1.5 font-normal text-muted-foreground">
                     Optional (BNPL)
                   </Badge>
                 </div>
@@ -420,7 +421,7 @@ export function CardInstallmentModal({
             </div>
 
             {/* Monthly Amortization (Auto-Computed & Editable) */}
-            <div className="p-3.5 rounded-2xl bg-card border border-primary/25 shadow-xs space-y-2">
+            <div className="p-4 rounded-2xl bg-primary/5 space-y-2">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
                   <div className="flex items-center gap-1.5">
@@ -428,12 +429,12 @@ export function CardInstallmentModal({
                       Monthly Amortization
                     </span>
                     {isAmortizationOverridden ? (
-                      <Badge variant="warning" className="text-3xs py-0 px-1 font-bold">
+                      <Badge variant="warning" className="text-2xs py-0 px-1 font-bold">
                         Adjusted
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="text-3xs py-0 px-1 font-medium bg-primary/10 text-primary border-primary/25">
-                        Auto-Computed
+                      <Badge variant="outline" className="text-2xs py-0 px-1 font-medium bg-primary/10 text-primary">
+                        Auto-computed
                       </Badge>
                     )}
                   </div>
@@ -479,7 +480,7 @@ export function CardInstallmentModal({
 
             {/* Commitment Summary Banner */}
             {scheduleData && (
-              <div className="p-3 rounded-2xl bg-muted/50 border border-border/60 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+              <div className="p-4 rounded-2xl bg-muted/50 grid-fluid gap-3 [--grid-min:7.5rem] text-xs">
                 <div>
                   <span className="text-2xs text-muted-foreground block font-medium">Monthly Due</span>
                   <span className="font-extrabold text-foreground block">
@@ -491,7 +492,7 @@ export function CardInstallmentModal({
                   <span className="font-extrabold text-foreground block">
                     {formatMoney(scheduleData.remainingUnpaidBalance)}
                   </span>
-                  <span className="text-3xs text-muted-foreground block font-medium">
+                  <span className="text-2xs text-muted-foreground block font-medium">
                     {scheduleData.unpaidCount} terms remaining
                   </span>
                 </div>
@@ -501,7 +502,7 @@ export function CardInstallmentModal({
                     {scheduleData.paidCount} of {scheduleData.schedule.length} paid
                   </span>
                   {scheduleData.paidCount > 0 && (
-                    <span className="text-3xs text-emerald-600 dark:text-emerald-400 block font-semibold">
+                    <span className="text-2xs text-emerald-600 dark:text-emerald-400 block font-semibold">
                       {formatMoney(scheduleData.paidPrincipal)} paid prin
                     </span>
                   )}
@@ -511,7 +512,7 @@ export function CardInstallmentModal({
                   <span className="font-extrabold text-foreground block">
                     {formatMoney(scheduleData.totalPayment)}
                   </span>
-                  <span className="text-3xs text-amber-600 dark:text-amber-400 block font-medium">
+                  <span className="text-2xs text-amber-600 dark:text-amber-400 block font-medium">
                     {scheduleData.totalInterest === 0 ? '0% Promo' : `${formatMoney(scheduleData.totalInterest)} int`}
                   </span>
                 </div>
@@ -520,15 +521,16 @@ export function CardInstallmentModal({
 
             {/* Collapsible Full Schedule Preview */}
             {scheduleData && scheduleData.schedule.length > 0 && (
-              <div className="border border-border/60 rounded-2xl overflow-hidden">
+              <div className="bg-muted/40 rounded-2xl overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setShowSchedulePreview((prev) => !prev)}
-                  className="w-full p-3 bg-muted/40 hover:bg-muted/70 transition-colors flex items-center justify-between text-xs font-bold text-foreground cursor-pointer"
+                  aria-expanded={showSchedulePreview}
+                  className="no-spring w-full min-h-12 p-3 hover:bg-muted/70 transition-colors duration-(--motion-fast) ease-(--ease-in-out) flex items-center justify-between gap-3 text-left text-xs font-semibold text-foreground cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="size-3.5 text-primary" />
-                    Preview Payment Schedule ({scheduleData.schedule.length} installments) • Click status to toggle
+                  <span className="flex min-w-0 items-start gap-1.5">
+                    <Calendar className="mt-px size-3.5 shrink-0 text-primary" />
+                    <span>Preview payment schedule ({scheduleData.schedule.length} installments) · tap a status to toggle</span>
                   </span>
                   {showSchedulePreview ? (
                     <ChevronUp className="size-4 text-muted-foreground" />
@@ -538,10 +540,10 @@ export function CardInstallmentModal({
                 </button>
 
                 {showSchedulePreview && (
-                  <div className="p-3 bg-card border-t border-border/40 max-h-56 overflow-y-auto space-y-1">
-                    <div className="grid grid-cols-5 text-3xs font-bold uppercase tracking-wider text-muted-foreground pb-1.5 border-b border-border/40 px-2">
+                  <div className="p-3 bg-card max-h-56 overflow-auto space-y-1">
+                    <div className="grid grid-cols-5 min-w-[28rem] text-2xs font-medium text-muted-foreground pb-1.5 px-2">
                       <span>Term</span>
-                      <span>Due Date</span>
+                      <span>Due date</span>
                       <span className="text-center">Status</span>
                       <span className="text-right">Payment</span>
                       <span className="text-right">Remaining</span>
@@ -553,7 +555,7 @@ export function CardInstallmentModal({
                       return (
                         <div
                           key={row.installmentNumber}
-                          className={`grid grid-cols-5 items-center text-xs py-1.5 px-2 hover:bg-muted/40 rounded-lg transition-colors ${
+                          className={`grid grid-cols-5 min-w-[28rem] items-center text-xs py-1.5 px-2 hover:bg-muted/40 rounded-lg transition-colors ${
                             row.isPaid ? 'opacity-80 bg-muted/20' : ''
                           }`}
                         >
@@ -571,7 +573,7 @@ export function CardInstallmentModal({
                               {row.isPaid ? (
                                 <Badge
                                   variant="outline"
-                                  className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 text-3xs font-bold py-0.5 px-1.5"
+                                  className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-2xs font-bold py-0.5 px-1.5"
                                 >
                                   <CheckCircle2 className="size-3 mr-1" />
                                   Paid
@@ -579,7 +581,7 @@ export function CardInstallmentModal({
                               ) : isPast ? (
                                 <Badge
                                   variant="outline"
-                                  className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 text-3xs font-bold py-0.5 px-1.5"
+                                  className="bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 text-2xs font-bold py-0.5 px-1.5"
                                 >
                                   <AlertCircle className="size-3 mr-1" />
                                   Unpaid
@@ -587,7 +589,7 @@ export function CardInstallmentModal({
                               ) : (
                                 <Badge
                                   variant="outline"
-                                  className="bg-muted text-muted-foreground border-border/60 hover:bg-muted/80 text-3xs font-medium py-0.5 px-1.5"
+                                  className="bg-muted text-muted-foreground hover:bg-muted/80 text-2xs font-medium py-0.5 px-1.5"
                                 >
                                   <Clock className="size-3 mr-1" />
                                   Upcoming

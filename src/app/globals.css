@@ -7,20 +7,51 @@
 @theme {
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  /* Spring physics easings for tactile UI interactions */
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-spring-snappy: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* ── Motion system (single source of truth) ───────────────────────────────
+     ease-in-out  → movement & exits          ease-out → entrances, no overshoot
+     spring-press → buttons/badges (≈10% overshoot, visible bounce)
+     spring-pop   → menus, popovers, cards, toasts (≈4% overshoot)
+     spring-soft  → sidebar, sheets, dialogs (≈0.7% overshoot, well damped)
+     Springs are true damped-spring curves sampled into CSS linear().
+     Older browsers fall back to cubic-bezier via @supports below. */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring-press: linear(0, 0.028, 0.099, 0.2, 0.317, 0.44, 0.562, 0.675, 0.777, 0.865, 0.937, 0.995, 1.038, 1.068, 1.087, 1.097, 1.099, 1.095, 1.087, 1.077, 1.065, 1.053, 1.041, 1.03, 1.02, 1.012, 1.005, 1, 0.996, 0.993, 0.991, 0.99, 0.99, 0.991, 0.992, 0.993, 0.994, 0.995, 0.996, 0.997, 1);
+  --ease-spring-pop: linear(0, 0.024, 0.085, 0.171, 0.27, 0.374, 0.478, 0.576, 0.666, 0.746, 0.816, 0.874, 0.922, 0.96, 0.989, 1.01, 1.025, 1.035, 1.041, 1.043, 1.042, 1.04, 1.037, 1.033, 1.028, 1.024, 1.019, 1.015, 1.012, 1.009, 1.006, 1.004, 1);
+  --ease-spring-soft: linear(0, 0.018, 0.065, 0.131, 0.207, 0.289, 0.372, 0.452, 0.528, 0.599, 0.663, 0.72, 0.77, 0.814, 0.851, 0.883, 0.909, 0.932, 0.95, 0.964, 0.976, 0.985, 0.992, 0.997, 1.001, 1.004, 1.005, 1.006, 1.007, 1.007, 1.007, 1.007, 1.006, 1.006, 1.005, 1.004, 1.004, 1.003, 1.003, 1.002, 1);
 
-  /* Fast-first, slow-settle ease-out for card expansions (350ms) */
-  --ease-expand: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-expand: 350ms;
+  /* Legacy aliases — existing components reference these names */
+  --ease-spring: var(--ease-spring-pop);
+  --ease-spring-snappy: var(--ease-spring-pop);
+  --ease-expand: var(--ease-out);
+  --ease-standard: var(--ease-in-out);
+  --ease-out-soft: var(--ease-out);
 
-  /* macOS-style motion tokens */
-  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);  /* macOS smooth ease */
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);    /* settling motion */
-  --dur-fast: 150ms;
-  --dur-base: 250ms;
-  --dur-slow: 350ms;
+  /* Durations: fast = hover/exits, base = menus/cards/sidebar, settle = press spring */
+  --motion-fast: 180ms;
+  --motion-base: 340ms;
+  --motion-settle: 640ms;
+  --dur-fast: var(--motion-fast);
+  --dur-base: var(--motion-base);
+  --dur-slow: 380ms;
+  --duration-expand: var(--motion-base);
+
+  /* ── Type scale (fluid, Inter) ───────────────────────────────────────────── */
+  --text-display: clamp(1.625rem, 1.3rem + 1.1vw, 2.125rem);
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.022em;
+  --text-display--font-weight: 700;
+  --text-title: 1.125rem;
+  --text-title--line-height: 1.35;
+  --text-title--letter-spacing: -0.012em;
+  --text-title--font-weight: 600;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.4;
+  --text-label--font-weight: 500;
+  --text-figure: clamp(1.5rem, 1.25rem + 0.9vw, 1.875rem);
+  --text-figure--line-height: 1.1;
+  --text-figure--letter-spacing: -0.02em;
+  --text-figure--font-weight: 700;
 
   /* Calm, eye-friendly, low-contrast solid palette for senior adults & non-techy users */
   --color-canvas: #f8f9fa;           /* Warm soft pearl canvas (avoids cold glaring white) */
@@ -125,6 +156,19 @@
     border: none !important;
   }
 
+  /* Long unbroken strings (emails, account names) wrap instead of overflowing */
+  h1, h2, h3, h4, p, dd, dt, li, td, th, label {
+    overflow-wrap: break-word;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
   /* Accessibility: Respect prefers-reduced-motion (TNV-029) */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -146,12 +190,110 @@
   animation-duration: 0.01ms !important;
 }
 
-/* Dropdown/popover/select spring open + fast close (macOS-style) */
+/* Browsers without linear() get close cubic-bezier approximations */
+@supports not (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring-press: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-spring-pop: cubic-bezier(0.3, 1.3, 0.6, 1);
+    --ease-spring-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* ── Layout utilities ─────────────────────────────────────────────────────── */
+
+/* Page header: title block + actions. Wraps intrinsically (no breakpoints),
+   so actions drop below the title whenever the title would get squeezed. */
+@utility page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+
+  & > :first-child {
+    flex: 1 1 20rem;
+    min-width: 0;
+  }
+}
+
+@utility page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Fluid card grid: as many columns as fit, never narrower than --grid-min.
+   grid-fluid stretches to fill (stat rows); grid-fluid-fill keeps item size (lists). */
+@utility grid-fluid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min, 15rem)), 1fr));
+}
+
+@utility grid-fluid-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-min, 18rem)), 1fr));
+}
+
+/* Money and counts: aligned digits */
+@utility num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ── Motion utilities ─────────────────────────────────────────────────────── */
+
+/* Card/section entrance: spring in, staggered by --stagger (capped at 5 items) */
+@keyframes tenvi-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+
+@utility motion-pop-in {
+  animation: tenvi-pop-in var(--motion-base) var(--ease-spring-pop) both;
+  animation-delay: calc(min(var(--stagger, 0), 5) * 50ms);
+}
+
+/* Interactive surface (clickable cards): quiet hover elevation + press */
+@utility motion-surface {
+  transition: box-shadow var(--motion-fast) var(--ease-in-out),
+              background-color var(--motion-fast) var(--ease-in-out),
+              transform var(--motion-settle) var(--ease-spring-soft);
+
+  &:active {
+    transform: scale(0.985);
+    transition-duration: var(--motion-fast), var(--motion-fast), 90ms;
+    transition-timing-function: var(--ease-in-out), var(--ease-in-out), var(--ease-out);
+  }
+}
+
+/* Dropdown/popover/select/menu: spring open from trigger, quick ease-in-out close */
 [data-slot="dropdown-menu-content"],
 [data-slot="popover-content"],
-[data-slot="select-content"] {
-  --motion-spring-open: var(--ease-spring) 200ms;
-  --motion-standard-close: var(--ease-standard) 120ms;
+[data-slot="select-content"],
+[data-slot="context-menu-content"] {
+  &[data-open] {
+    animation-duration: var(--motion-base) !important;
+    animation-timing-function: var(--ease-spring-pop) !important;
+  }
+
+  &[data-closed] {
+    animation-duration: var(--motion-fast) !important;
+    animation-timing-function: var(--ease-in-out) !important;
+  }
+}
+
+/* Toasts: spring in from their edge, ease-in-out out; sonner restacks the rest */
+[data-sonner-toast]:not([data-swiping="true"]) {
+  transition: transform 420ms var(--ease-spring-pop), opacity var(--motion-fast) var(--ease-in-out),
+              height var(--motion-base) var(--ease-in-out), box-shadow var(--motion-fast) var(--ease-in-out) !important;
+}
+
+[data-sonner-toast][data-removed="true"] {
+  transition-timing-function: var(--ease-in-out) !important;
+  transition-duration: var(--motion-fast) !important;
 }
 
 /* View Transitions API: macOS-style fluid layout shifts */
@@ -168,11 +310,7 @@
   border-radius: 1.25rem;
   box-shadow: var(--shadow-card);
   border: none !important;
-  transition: width var(--dur-base) var(--ease-standard),
-              height var(--dur-base) var(--ease-standard),
-              padding var(--dur-base) var(--ease-standard),
-              gap var(--dur-base) var(--ease-standard),
-              box-shadow var(--dur-base) var(--ease-standard);
+  transition: box-shadow var(--motion-fast) var(--ease-in-out);
 }
 
 /* Inset subtle well for secondary details */
@@ -483,6 +621,7 @@
   /* Elevation Shadows */
   --shadow-card: var(--shadow-card);
   --shadow-lift: var(--shadow-lift);
+  --shadow-overlay: var(--shadow-overlay);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -500,48 +639,44 @@
   --card-foreground: #1c2536;
   --popover: #ffffff;
   --popover-foreground: #1c2536;
-  --primary: #5d87ff;
+  /* Brand blue: same hue as the original #5d87ff, deepened to pass WCAG AA (4.6:1 with white) */
+  --primary: #3f6bf0;
   --primary-foreground: #ffffff;
   --secondary: #49beff;
-  --secondary-foreground: #ffffff;
+  --secondary-foreground: #0b2540;
   --muted: #f1f4f9;
-  --muted-foreground: #7c8fac;
-  --accent: rgba(93, 135, 255, 0.1);
-  --accent-foreground: #5d87ff;
-  --destructive: #ef4444;
+  --muted-foreground: #5a6a85;
+  --accent: rgba(63, 107, 240, 0.1);
+  --accent-foreground: #3f6bf0;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --border: #e5eaef;
   --input: #e5eaef;
-  --ring: #5d87ff;
+  --ring: #3f6bf0;
 
-  /* macOS-style motion tokens */
-  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --dur-fast: 150ms;
-  --dur-base: 250ms;
-  --dur-slow: 350ms;
+  /* Motion tokens live in @theme at the top of this file */
 
   /* Custom Status Tokens */
-  --success: #13deb9;
+  /* Teal kept for fills/dots; text uses the deeper shade (5:1 on white) */
+  --success: #0a7d6a;
   --success-foreground: #ffffff;
-  --success-soft: rgba(19, 222, 185, 0.12);
-  --success-soft-foreground: #13deb9;
+  --success-soft: rgba(19, 222, 185, 0.14);
+  --success-soft-foreground: #0a7d6a;
 
   --warning: #f6b51e;
   --warning-foreground: #ffffff;
   --warning-soft: rgba(246, 181, 30, 0.12);
   --warning-soft-foreground: #b45309;
 
-  --danger: #ef4444;
+  --danger: #dc2626;
   --danger-foreground: #ffffff;
-  --danger-soft: rgba(239, 68, 68, 0.12);
-  --danger-soft-foreground: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.1);
+  --danger-soft-foreground: #c81e1e;
 
   --info: #8754ec;
 
   /* Light Variants */
-  --lightprimary: rgba(93, 135, 255, 0.12);
+  --lightprimary: rgba(63, 107, 240, 0.1);
   --lightsecondary: rgba(73, 190, 255, 0.12);
   --lightsuccess: rgba(19, 222, 185, 0.12);
   --lightwarning: rgba(246, 181, 30, 0.12);
@@ -549,8 +684,10 @@
   --lightinfo: rgba(135, 84, 236, 0.12);
 
   /* Elevation Shadows */
-  --shadow-card: 0 4px 14px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-  --shadow-lift: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+  /* Elevation: 1 = resting cards, 2 = menus/popovers/hovered interactive cards, 3 = dialogs */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 2px 8px -2px rgba(16, 24, 40, 0.06);
+  --shadow-lift: 0 2px 4px -1px rgba(16, 24, 40, 0.05), 0 12px 24px -6px rgba(16, 24, 40, 0.12);
+  --shadow-overlay: 0 4px 8px -2px rgba(16, 24, 40, 0.06), 0 24px 48px -12px rgba(16, 24, 40, 0.22);
 
   --chart-1: #5d87ff;
   --chart-2: #49beff;
@@ -560,41 +697,41 @@
   --radius: 0.625rem;
 
   --sidebar: #ffffff;
-  --sidebar-foreground: #2a3547;
-  --sidebar-primary: #5d87ff;
+  --sidebar-foreground: #3d4b63;
+  --sidebar-primary: #3f6bf0;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(93, 135, 255, 0.1);
-  --sidebar-accent-foreground: #5d87ff;
+  --sidebar-accent: rgba(63, 107, 240, 0.09);
+  --sidebar-accent-foreground: #3f6bf0;
   --sidebar-border: #e5eaef;
-  --sidebar-ring: #5d87ff;
+  --sidebar-ring: #3f6bf0;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --background: #1c2536;
+    --background: #141b28;
     --foreground: #ffffff;
     --card: #1c2536;
     --card-foreground: #ffffff;
-    --popover: #222d42;
+    --popover: #243049;
     --popover-foreground: #ffffff;
-    --primary: #5d87ff;
-    --primary-foreground: #ffffff;
+    --primary: #7c9cff;
+    --primary-foreground: #0d1526;
     --secondary: #49beff;
-    --secondary-foreground: #ffffff;
-    --muted: #2a3851;
-    --muted-foreground: #7c8fac;
+    --secondary-foreground: #0b2540;
+    --muted: #26324a;
+    --muted-foreground: #9aa8c0;
     --accent: rgba(93, 135, 255, 0.18);
-    --accent-foreground: #5d87ff;
+    --accent-foreground: #8eabff;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
     --border: #333f55;
     --input: #333f55;
-    --ring: #5d87ff;
+    --ring: #7c9cff;
 
-    --success: #13deb9;
+    --success: #2ed3b0;
     --success-foreground: #ffffff;
     --success-soft: rgba(19, 222, 185, 0.2);
-    --success-soft-foreground: #13deb9;
+    --success-soft-foreground: #5ee6c7;
 
     --warning: #f6b51e;
     --warning-foreground: #ffffff;
@@ -615,8 +752,9 @@
     --lighterror: rgba(239, 68, 68, 0.2);
     --lightinfo: rgba(135, 84, 236, 0.2);
 
-    --shadow-card: 0 4px 14px -2px rgba(0, 0, 0, 0.3), 0 2px 6px -1px rgba(0, 0, 0, 0.2);
-    --shadow-lift: 0 10px 25px -4px rgba(0, 0, 0, 0.4), 0 4px 10px -2px rgba(0, 0, 0, 0.2);
+    --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px -4px rgba(0, 0, 0, 0.35);
+    --shadow-lift: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 28px -6px rgba(0, 0, 0, 0.55);
+    --shadow-overlay: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 28px 56px -12px rgba(0, 0, 0, 0.65);
 
     --chart-1: #5d87ff;
     --chart-2: #49beff;
@@ -624,42 +762,42 @@
     --chart-4: #f6b51e;
     --chart-5: #ef4444;
 
-    --sidebar: #1c2536;
-    --sidebar-foreground: #7c8fac;
-    --sidebar-primary: #5d87ff;
-    --sidebar-primary-foreground: #ffffff;
+    --sidebar: #182030;
+    --sidebar-foreground: #aab6cb;
+    --sidebar-primary: #7c9cff;
+    --sidebar-primary-foreground: #0d1526;
     --sidebar-accent: rgba(93, 135, 255, 0.18);
-    --sidebar-accent-foreground: #5d87ff;
+    --sidebar-accent-foreground: #8eabff;
     --sidebar-border: #333f55;
-    --sidebar-ring: #5d87ff;
+    --sidebar-ring: #7c9cff;
   }
 }
 
 .dark {
-  --background: #1c2536;
+  --background: #141b28;
   --foreground: #ffffff;
   --card: #1c2536;
   --card-foreground: #ffffff;
-  --popover: #222d42;
+  --popover: #243049;
   --popover-foreground: #ffffff;
-  --primary: #5d87ff;
-  --primary-foreground: #ffffff;
+  --primary: #7c9cff;
+  --primary-foreground: #0d1526;
   --secondary: #49beff;
-  --secondary-foreground: #ffffff;
-  --muted: #2a3851;
-  --muted-foreground: #7c8fac;
+  --secondary-foreground: #0b2540;
+  --muted: #26324a;
+  --muted-foreground: #9aa8c0;
   --accent: rgba(93, 135, 255, 0.18);
-  --accent-foreground: #5d87ff;
+  --accent-foreground: #8eabff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #333f55;
   --input: #333f55;
-  --ring: #5d87ff;
+  --ring: #7c9cff;
 
-  --success: #13deb9;
+  --success: #2ed3b0;
   --success-foreground: #ffffff;
   --success-soft: rgba(19, 222, 185, 0.2);
-  --success-soft-foreground: #13deb9;
+  --success-soft-foreground: #5ee6c7;
 
   --warning: #f6b51e;
   --warning-foreground: #ffffff;
@@ -680,8 +818,9 @@
   --lighterror: rgba(239, 68, 68, 0.2);
   --lightinfo: rgba(135, 84, 236, 0.2);
 
-  --shadow-card: 0 4px 14px -2px rgba(0, 0, 0, 0.3), 0 2px 6px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lift: 0 10px 25px -4px rgba(0, 0, 0, 0.4), 0 4px 10px -2px rgba(0, 0, 0, 0.2);
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px -4px rgba(0, 0, 0, 0.35);
+  --shadow-lift: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 28px -6px rgba(0, 0, 0, 0.55);
+    --shadow-overlay: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 28px 56px -12px rgba(0, 0, 0, 0.65);
 
   --chart-1: #5d87ff;
   --chart-2: #49beff;
@@ -689,14 +828,14 @@
   --chart-4: #f6b51e;
   --chart-5: #ef4444;
 
-  --sidebar: #1c2536;
-  --sidebar-foreground: #7c8fac;
-  --sidebar-primary: #5d87ff;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar: #182030;
+  --sidebar-foreground: #aab6cb;
+  --sidebar-primary: #7c9cff;
+  --sidebar-primary-foreground: #0d1526;
   --sidebar-accent: rgba(93, 135, 255, 0.18);
-  --sidebar-accent-foreground: #5d87ff;
+  --sidebar-accent-foreground: #8eabff;
   --sidebar-border: #333f55;
-  --sidebar-ring: #5d87ff;
+  --sidebar-ring: #7c9cff;
 }
 
 @utility card-title {
@@ -855,18 +994,27 @@
   backface-visibility: hidden;
 }
 
-/* Tactile Spring Press Physics for Buttons (scale sinks to 95%, springs back at 1/4x slower speed: 1000ms) */
-button:not(:disabled):not([role="menuitem"]):not([role="option"]):not([role="tab"]):not(.no-spring):not([class*="hover:underline"]),
-[data-slot="button"]:not([data-variant="link"]):not(:disabled) {
+/* Tactile press for buttons. Visual only — click handlers fire on pointer-up as normal.
+   Press: sink to 96% in 90ms. Release: spring back with a gentle overshoot (~640ms).
+   Colour/shadow changes use a separate 180ms ease-in-out so hover never lags.
+   Disabled and loading (aria-busy) buttons skip the spring entirely. */
+button:not(:disabled):not([aria-busy="true"]):not([role="menuitem"]):not([role="option"]):not([role="tab"]):not(.no-spring):not([class*="hover:underline"]),
+[data-slot="button"]:not([data-variant="link"]):not(:disabled):not([aria-busy="true"]) {
   transition-property: transform, background-color, border-color, color, fill, stroke, opacity, box-shadow;
-  transition-duration: 1000ms;
-  transition-timing-function: var(--ease-spring);
-  will-change: transform;
+  transition-duration: var(--motion-settle), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast);
+  transition-timing-function: var(--ease-spring-press), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out);
 }
 
-button:not(:disabled):not([role="menuitem"]):not([role="option"]):not([role="tab"]):not(.no-spring):not([class*="hover:underline"]):active,
-[data-slot="button"]:not([data-variant="link"]):not(:disabled):active {
-  transform: scale(0.95);
-  transition-duration: 75ms;
-  transition-timing-function: ease-out;
+button:not(:disabled):not([aria-busy="true"]):not([role="menuitem"]):not([role="option"]):not([role="tab"]):not(.no-spring):not([class*="hover:underline"]):active,
+[data-slot="button"]:not([data-variant="link"]):not(:disabled):not([aria-busy="true"]):active {
+  transform: scale(var(--press-scale, 0.96));
+  transition-duration: 90ms, var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast);
+  transition-timing-function: var(--ease-out), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out), var(--ease-in-out);
+}
+
+/* Larger buttons overshoot less (springs scale with surface size) */
+[data-slot="button"][data-size="lg"],
+button.w-full,
+a.w-full {
+  --press-scale: 0.98;
 }

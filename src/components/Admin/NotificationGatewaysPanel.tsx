@@ -282,28 +282,28 @@ export function NotificationGatewaysPanel({
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 @5xl/main:grid-cols-3 gap-6 items-start">
         {/* Gateway Configuration Column */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="@5xl/main:col-span-2 min-w-0 space-y-6">
           <form onSubmit={handleSave} className="space-y-6">
             {/* Gmail SMTP Server Configuration Card */}
-            <div className="bg-card text-card-foreground rounded-3xl p-6 sm:p-7 shadow-card overflow-hidden space-y-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
+            <div className="bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card space-y-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-[1_1_16rem] items-start gap-3">
                   <div className="size-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
                     <Server className="size-5" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-base font-bold text-foreground">
-                        Gmail SMTP Relay Engine
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <h2 className="text-title text-foreground">
+                        Gmail SMTP relay engine
                       </h2>
-                      <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">
+                      <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                         smtp.gmail.com:465 (SSL)
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Connect your Google Account to dispatch production email reminders, debt notices, and member broadcasts.
                     </p>
                   </div>
@@ -311,14 +311,14 @@ export function NotificationGatewaysPanel({
 
                 <div className="shrink-0">
                   {smtpEmail && (smtpAppPassword || hasStoredSmtpPassword) ? (
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                       <CheckCircle2 className="size-3.5" />
-                      Live Configured
+                      Live configured
                     </span>
                   ) : (
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
                       <Info className="size-3.5" />
-                      Simulation Mode
+                      Simulation mode
                     </span>
                   )}
                 </div>
@@ -327,8 +327,8 @@ export function NotificationGatewaysPanel({
               <div className="p-4 sm:p-5 rounded-2xl bg-muted/60 space-y-4">
                 {/* Gmail Account Address */}
                 <div>
-                  <label className="block text-2xs font-bold text-foreground uppercase tracking-wider mb-1.5">
-                    Gmail Account Address (Sender)
+                  <label className="block text-xs font-bold text-foreground mb-1.5">
+                    Gmail account address (sender)
                   </label>
                   <Input
                     type="email"
@@ -338,25 +338,25 @@ export function NotificationGatewaysPanel({
                       setSmtpEmail(e.target.value);
                       setSmtpVerificationResult(null);
                     }}
-                    className="h-10 bg-card text-xs sm:text-sm font-medium"
+                    className="h-12 sm:h-10 bg-card text-base sm:text-sm font-medium"
                   />
-                  <p className="text-2xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     System emails will be delivered with this Gmail account authenticated as the verified sender.
                   </p>
                 </div>
 
                 {/* Google App Password */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-2xs font-bold text-foreground uppercase tracking-wider">
-                      Google App Password (16 characters)
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-1.5">
+                    <label className="block text-xs font-bold text-foreground">
+                      Google app password (16 characters)
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowSmtpGuide(!showSmtpGuide)}
-                      className="text-2xs font-semibold text-blue-500 hover:text-blue-400 flex items-center gap-1 cursor-pointer"
+                      className="min-h-8 text-xs font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer rounded outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      {showSmtpGuide ? 'Hide Setup Guide' : 'How to generate App Password?'}
+                      {showSmtpGuide ? 'Hide setup guide' : 'How to generate an app password?'}
                       {showSmtpGuide ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
                     </button>
                   </div>
@@ -370,18 +370,19 @@ export function NotificationGatewaysPanel({
                         setSmtpAppPassword(e.target.value);
                         setSmtpVerificationResult(null);
                       }}
-                      className="h-10 bg-card text-xs sm:text-sm font-mono pr-10"
+                      className="h-12 sm:h-10 bg-card text-base sm:text-sm font-mono pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowSmtpPassword(!showSmtpPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-md cursor-pointer"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-md cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       title={showSmtpPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showSmtpPassword ? 'Hide password' : 'Show password'}
                     >
                       {showSmtpPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
-                  <p className="text-2xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {hasStoredSmtpPassword && !smtpAppPassword
                       ? 'Encrypted password saved on server. Leave blank to preserve existing credentials.'
                       : 'Never enter your primary Google account password. Generate a dedicated 16-character App Password.'}
@@ -390,7 +391,7 @@ export function NotificationGatewaysPanel({
 
                 {/* Step-by-Step Google App Password Guide */}
                 {showSmtpGuide && (
-                  <div className="p-4 rounded-xl bg-card space-y-2 text-2xs text-muted-foreground animate-in fade-in duration-150">
+                  <div className="p-4 rounded-xl bg-card space-y-2 text-xs text-muted-foreground">
                     <div className="flex items-center gap-2 font-bold text-foreground">
                       <Key className="size-3.5 text-rose-500" />
                       4 Steps to Generate a Google App Password:
@@ -407,10 +408,10 @@ export function NotificationGatewaysPanel({
                 {/* Handshake Result Feedback */}
                 {smtpVerificationResult && (
                   <div
-                    className={`p-3.5 rounded-xl text-xs flex items-start gap-2.5 animate-in fade-in duration-150 ${
+                    className={`p-3.5 rounded-xl text-xs flex items-start gap-2.5 ${
                       smtpVerificationResult.success
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
                     }`}
                   >
                     {smtpVerificationResult.success ? (
@@ -420,7 +421,7 @@ export function NotificationGatewaysPanel({
                     )}
                     <div>
                       <p className="font-bold">
-                        {smtpVerificationResult.success ? 'Handshake Successful' : 'SMTP Handshake Error'}
+                        {smtpVerificationResult.success ? 'Handshake successful' : 'SMTP handshake error'}
                       </p>
                       <p className="mt-0.5 leading-relaxed">
                         {smtpVerificationResult.message || smtpVerificationResult.error}
@@ -430,26 +431,26 @@ export function NotificationGatewaysPanel({
                 )}
 
                 {/* Verification & Test Dispatch Action Bar */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     disabled={isVerifyingSmtp || !smtpEmail || (!smtpAppPassword && !hasStoredSmtpPassword)}
                     onClick={handleVerifySmtp}
-                    className="gap-1.5 text-xs text-rose-600 dark:text-rose-400 cursor-pointer"
+                    className="gap-1.5 text-xs text-rose-700 dark:text-rose-400 cursor-pointer"
                   >
                     <ShieldCheck className="size-3.5" />
-                    {isVerifyingSmtp ? 'Testing Handshake...' : 'Verify Gmail Connection'}
+                    {isVerifyingSmtp ? 'Testing handshake...' : 'Verify Gmail connection'}
                   </Button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 flex-[1_1_16rem] items-center justify-end gap-2">
                     <Input
                       type="email"
                       placeholder="Test email recipient"
                       value={testEmailRecipient}
                       onChange={(e) => setTestEmailRecipient(e.target.value)}
-                      className="h-8 text-2xs w-48 bg-card"
+                      className="h-12 sm:h-10 min-w-0 flex-1 sm:max-w-56 bg-card text-base sm:text-sm"
                     />
                     <Button
                       type="button"
@@ -460,7 +461,7 @@ export function NotificationGatewaysPanel({
                       className="gap-1.5 text-xs cursor-pointer"
                     >
                       <Send className="size-3" />
-                      {isTestingEmail ? 'Sending...' : 'Test Send'}
+                      {isTestingEmail ? 'Sending...' : 'Test send'}
                     </Button>
                   </div>
                 </div>
@@ -468,22 +469,22 @@ export function NotificationGatewaysPanel({
             </div>
 
             {/* httpSMS Mobile Gateway Configuration Card */}
-            <div className="bg-card text-card-foreground rounded-3xl p-6 sm:p-7 shadow-card overflow-hidden space-y-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
+            <div className="bg-card text-card-foreground rounded-2xl p-5 sm:p-6 shadow-card space-y-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-[1_1_16rem] items-start gap-3">
                   <div className="size-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
                     <Smartphone className="size-5" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-base font-bold text-foreground">
-                        httpSMS Android Gateway Engine
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <h2 className="text-title text-foreground">
+                        httpSMS Android gateway engine
                       </h2>
-                      <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">
+                      <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                         api.httpsms.com
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Transmits outgoing Philippine SMS notifications through your connected Android device carrier SIM plan.
                     </p>
                   </div>
@@ -491,14 +492,14 @@ export function NotificationGatewaysPanel({
 
                 <div className="shrink-0">
                   {(httpsmsApiKey || hasStoredHttpSmsApiKey) && httpsmsFromNumber ? (
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                       <CheckCircle2 className="size-3.5" />
                       Live Gateway
                     </span>
                   ) : (
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
                       <Info className="size-3.5" />
-                      Simulation Mode
+                      Simulation mode
                     </span>
                   )}
                 </div>
@@ -507,17 +508,17 @@ export function NotificationGatewaysPanel({
               <div className="p-4 sm:p-5 rounded-2xl bg-muted/60 space-y-4">
                 {/* Account API Key */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-2xs font-bold text-foreground uppercase tracking-wider">
-                      httpSMS Account API Key
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-1.5">
+                    <label className="block text-xs font-bold text-foreground">
+                      httpSMS account API key
                     </label>
                     <a
                       href="https://httpsms.com/settings"
                       target="_blank"
                       rel="noreferrer"
-                      className="text-2xs font-semibold text-blue-500 hover:text-blue-400 flex items-center gap-1"
+                      className="text-xs font-semibold text-blue-500 hover:text-blue-400 flex items-center gap-1"
                     >
-                      Get Key from httpsms.com
+                      Get key from httpsms.com
                       <ExternalLink className="size-2.5" />
                     </a>
                   </div>
@@ -528,7 +529,7 @@ export function NotificationGatewaysPanel({
                       placeholder={hasStoredHttpSmsApiKey ? '•••••••••••••••• (Saved on Server)' : 'Enter your httpSMS API Key'}
                       value={httpsmsApiKey}
                       onChange={(e) => setHttpsmsApiKey(e.target.value)}
-                      className="h-10 bg-card text-xs sm:text-sm font-mono pr-10"
+                      className="h-12 sm:h-10 bg-card text-base sm:text-sm font-mono pr-10"
                     />
                     <button
                       type="button"
@@ -539,7 +540,7 @@ export function NotificationGatewaysPanel({
                       {showHttpSmsApiKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
-                  <p className="text-2xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {hasStoredHttpSmsApiKey && !httpsmsApiKey
                       ? 'Encrypted API key saved on server. Leave blank to keep existing key.'
                       : 'Copy your API key from the httpSMS web dashboard.'}
@@ -548,16 +549,16 @@ export function NotificationGatewaysPanel({
 
                 {/* Sender Device SIM */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-2xs font-bold text-foreground uppercase tracking-wider">
-                      Sender Phone Number (Android Gateway SIM)
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-1.5">
+                    <label className="block text-xs font-bold text-foreground">
+                      Sender phone number (Android gateway SIM)
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowHttpSmsGuide(!showHttpSmsGuide)}
-                      className="text-2xs font-semibold text-blue-500 hover:text-blue-400 flex items-center gap-1 cursor-pointer"
+                      className="min-h-8 text-xs font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer rounded outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      {showHttpSmsGuide ? 'Hide Setup Guide' : 'Setup Guide'}
+                      {showHttpSmsGuide ? 'Hide setup guide' : 'Setup guide'}
                       {showHttpSmsGuide ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
                     </button>
                   </div>
@@ -566,16 +567,16 @@ export function NotificationGatewaysPanel({
                     placeholder="+639171234567 or 09171234567"
                     value={httpsmsFromNumber}
                     onChange={(e) => setHttpsmsFromNumber(e.target.value)}
-                    className="h-10 bg-card text-xs sm:text-sm font-medium"
+                    className="h-12 sm:h-10 bg-card text-base sm:text-sm font-medium"
                   />
-                  <p className="text-2xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     The active mobile number of the SIM card inside your Android phone running the httpSMS app.
                   </p>
                 </div>
 
                 {/* Step-by-Step httpSMS Guide */}
                 {showHttpSmsGuide && (
-                  <div className="p-4 rounded-xl bg-card space-y-2 text-2xs text-muted-foreground animate-in fade-in duration-150">
+                  <div className="p-4 rounded-xl bg-card space-y-2 text-xs text-muted-foreground">
                     <div className="flex items-center gap-2 font-bold text-foreground">
                       <Zap className="size-3.5 text-blue-500" />
                       Turn Any Android Phone into an Automated SMS Gateway:
@@ -592,10 +593,10 @@ export function NotificationGatewaysPanel({
                 {/* httpSMS Handshake Feedback */}
                 {httpSmsVerificationResult && (
                   <div
-                    className={`p-3.5 rounded-xl text-xs flex items-start gap-2.5 animate-in fade-in duration-150 ${
+                    className={`p-3.5 rounded-xl text-xs flex items-start gap-2.5 ${
                       httpSmsVerificationResult.success
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
                     }`}
                   >
                     {httpSmsVerificationResult.success ? (
@@ -605,7 +606,7 @@ export function NotificationGatewaysPanel({
                     )}
                     <div>
                       <p className="font-bold">
-                        {httpSmsVerificationResult.success ? 'Handshake Successful' : 'httpSMS Handshake Error'}
+                        {httpSmsVerificationResult.success ? 'Handshake successful' : 'httpSMS Handshake Error'}
                       </p>
                       <p className="mt-0.5 leading-relaxed">
                         {httpSmsVerificationResult.message || httpSmsVerificationResult.error}
@@ -615,26 +616,26 @@ export function NotificationGatewaysPanel({
                 )}
 
                 {/* Verification & Test Dispatch Action Bar */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     disabled={isVerifyingHttpSms || (!httpsmsApiKey && !hasStoredHttpSmsApiKey)}
                     onClick={handleVerifyHttpSms}
-                    className="gap-1.5 text-xs text-blue-600 dark:text-blue-400 cursor-pointer"
+                    className="gap-1.5 text-xs text-blue-700 dark:text-blue-400 cursor-pointer"
                   >
                     <ShieldCheck className="size-3.5" />
                     {isVerifyingHttpSms ? 'Verifying...' : 'Verify httpSMS Key'}
                   </Button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 flex-[1_1_16rem] items-center justify-end gap-2">
                     <Input
                       type="tel"
                       placeholder="0917 123 4567"
                       value={testSmsRecipient}
                       onChange={(e) => setTestSmsRecipient(e.target.value)}
-                      className="h-8 text-2xs w-48 bg-card"
+                      className="h-12 sm:h-10 min-w-0 flex-1 sm:max-w-56 bg-card text-base sm:text-sm"
                     />
                     <Button
                       type="button"
@@ -655,20 +656,20 @@ export function NotificationGatewaysPanel({
             {/* Save All Gateway Settings Button */}
             <div className="flex justify-end">
               <Button type="submit" disabled={isSaving} className="font-semibold cursor-pointer">
-                {isSaving ? 'Saving Gateway Settings...' : 'Save All Gateway Settings'}
+                {isSaving ? 'Saving gateway settings...' : 'Save all gateway settings'}
               </Button>
             </div>
           </form>
         </div>
 
         {/* Live Diagnostics & Due Cards Column */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {/* Card Due Evaluation Widget */}
-          <div className="bg-card text-card-foreground shadow-card rounded-3xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <div className="bg-card text-card-foreground shadow-card rounded-2xl p-5 sm:p-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="min-w-0 text-sm font-semibold text-foreground flex items-center gap-2">
                 <Clock className="size-4 text-muted-foreground" />
-                Cards in Due Window ({upcomingCards.length})
+                Cards in due window ({upcomingCards.length})
               </h3>
 
               <Button
@@ -676,11 +677,12 @@ export function NotificationGatewaysPanel({
                 variant="ghost"
                 onClick={handleCheckAndDispatch}
                 disabled={isCheckingAlerts}
-                className="h-7 text-2xs gap-1.5 cursor-pointer"
+                aria-busy={isCheckingAlerts}
+                className="gap-1.5"
                 title="Evaluate eligible cards and dispatch due notifications"
               >
-                <RefreshCw className={`size-3 ${isCheckingAlerts ? 'animate-spin' : ''}`} />
-                Check Now
+                <RefreshCw className={`size-4 ${isCheckingAlerts ? 'animate-spin' : ''}`} />
+                Check now
               </Button>
             </div>
 
@@ -688,7 +690,7 @@ export function NotificationGatewaysPanel({
               <div className="p-4 rounded-2xl bg-muted text-center space-y-1">
                 <CheckCircle2 className="size-6 text-emerald-500 mx-auto" />
                 <p className="text-xs font-bold text-foreground">All clear!</p>
-                <p className="text-2xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   No cards are due within the active {daysBeforeWindow}-day reminder window.
                 </p>
               </div>
@@ -703,16 +705,16 @@ export function NotificationGatewaysPanel({
                       <span className="font-bold text-foreground block">
                         {item.bank_name} {item.name}
                       </span>
-                      <span className="text-2xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         •••• {item.last_4} • Due Day {item.due_day}
                       </span>
                     </div>
 
                     <span
-                      className={`font-bold px-2.5 py-0.5 rounded-full text-2xs ${
+                      className={`font-bold px-2.5 py-0.5 rounded-full text-xs ${
                         item.dueInfo.urgency === 'critical'
-                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                          ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                          : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
                       }`}
                     >
                       {item.dueInfo.label}
@@ -734,10 +736,10 @@ export function NotificationGatewaysPanel({
           </div>
 
           {/* SMTP Relay Engine Diagnostics Card */}
-          <div className="bg-card text-card-foreground shadow-card rounded-3xl p-6 space-y-3.5">
-            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <div className="bg-card text-card-foreground shadow-card rounded-2xl p-5 sm:p-6 space-y-3.5">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <Server className="size-4 text-rose-500" />
-              SMTP Delivery Diagnostics
+              SMTP delivery diagnostics
             </h3>
 
             <div className="space-y-2 text-xs">
@@ -758,10 +760,10 @@ export function NotificationGatewaysPanel({
               <div className="p-3 rounded-2xl bg-muted flex items-center justify-between">
                 <span className="text-muted-foreground font-medium">Operating Mode</span>
                 <span
-                  className={`font-bold px-2 py-0.5 rounded-md text-2xs uppercase tracking-wider ${
+                  className={`font-bold px-2 py-0.5 rounded-md text-xs ${
                     smtpEmail && (smtpAppPassword || hasStoredSmtpPassword)
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                      : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
                   }`}
                 >
                   {smtpEmail && (smtpAppPassword || hasStoredSmtpPassword) ? 'Live Gmail SMTP' : 'Simulation'}
@@ -771,10 +773,10 @@ export function NotificationGatewaysPanel({
           </div>
 
           {/* httpSMS Gateway Engine Diagnostics Card */}
-          <div className="bg-card text-card-foreground shadow-card rounded-3xl p-6 space-y-3.5">
-            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <div className="bg-card text-card-foreground shadow-card rounded-2xl p-5 sm:p-6 space-y-3.5">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <Smartphone className="size-4 text-blue-500" />
-              httpSMS Gateway Diagnostics
+              httpSMS gateway diagnostics
             </h3>
 
             <div className="space-y-2 text-xs">
@@ -791,10 +793,10 @@ export function NotificationGatewaysPanel({
               <div className="p-3 rounded-2xl bg-muted flex items-center justify-between">
                 <span className="text-muted-foreground font-medium">Operating Mode</span>
                 <span
-                  className={`font-bold px-2 py-0.5 rounded-md text-2xs uppercase tracking-wider ${
+                  className={`font-bold px-2 py-0.5 rounded-md text-xs ${
                     (httpsmsApiKey || hasStoredHttpSmsApiKey) && httpsmsFromNumber
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                      : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
                   }`}
                 >
                   {(httpsmsApiKey || hasStoredHttpSmsApiKey) && httpsmsFromNumber ? 'Live Gateway' : 'Simulation'}
@@ -804,19 +806,19 @@ export function NotificationGatewaysPanel({
           </div>
 
           {/* Card Due Alert Templates Quick Link */}
-          <div className="bg-card text-card-foreground shadow-card rounded-3xl p-6 space-y-3">
+          <div className="bg-card text-card-foreground shadow-card rounded-2xl p-5 sm:p-6 space-y-3">
             <div className="flex items-center gap-2 text-foreground font-bold text-sm">
               <MessageSquare className="size-4 text-amber-500" />
-              <span>Card Due Alert Messages</span>
+              <span>Card due alert messages</span>
             </div>
-            <p className="text-2xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Want to adjust how automated SMS or email reminders sound when members have upcoming credit card bills?
             </p>
             <Link
               href="/admin/settings?tab=templates"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
             >
-              <span>Edit Card Reminder Templates</span>
+              <span>Edit card reminder templates</span>
               <ArrowRight className="size-3.5" />
             </Link>
           </div>

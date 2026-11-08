@@ -92,7 +92,14 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider defaultOpen={true} className="h-dvh max-h-dvh w-full overflow-hidden">
-      <div className="h-full w-full bg-background flex flex-col md:flex-row overflow-hidden">
+      <div className="h-full w-full bg-background flex flex-col lg:flex-row overflow-hidden">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[100] focus:rounded-xl focus:bg-card focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lift"
+        >
+          Skip to content
+        </a>
+
         {/* Desktop Sidebar (Pinned & collapsible via shadcn) */}
         <Sidebar userEmail={userEmail} userName={userName} />
 
@@ -104,7 +111,7 @@ export default async function DashboardLayout({
           {/* Sticky Top Header with search, theme switch, notifications, and profile dropdown */}
           <TopHeader userName={userName} userEmail={userEmail} userRole={userRole} />
 
-          <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 py-4 sm:py-8 pb-36 pb-[calc(9rem+env(safe-area-inset-bottom,0px))] md:pb-28 min-w-0">
+          <div id="main-content" tabIndex={-1} className="@container/main outline-none max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 pb-[calc(8.5rem+env(safe-area-inset-bottom,0px))] lg:pb-24 min-w-0">
             {children}
           </div>
         </main>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Smartphone,
   Building2,
@@ -190,6 +190,16 @@ export function WelcomeWizardModal({
     return COLOR_THEMES.find((t) => t.id === selectedColor) || COLOR_THEMES[0];
   }, [selectedColor]);
 
+  // Keyboard: Escape dismisses the wizard (same as the close button) unless a save is in flight
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSubmitting) onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, isSubmitting, onClose]);
+
   if (!isOpen) return null;
 
   const handleSelectPreset = (preset: AccountPreset) => {
@@ -268,41 +278,42 @@ export function WelcomeWizardModal({
   }[step];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-500">
-      <div className="relative w-full max-w-xl bg-card rounded-3xl shadow-lift overflow-hidden animate-in zoom-in-95 duration-500 ease-out flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-xs animate-in fade-in duration-(--motion-base) ease-(--ease-in-out)">
+      <div role="dialog" aria-modal="true" aria-labelledby="welcome-wizard-title" className="relative w-full max-w-xl bg-card rounded-3xl shadow-overlay overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-(--motion-base) [animation-timing-function:var(--ease-spring-soft)] flex flex-col max-h-[calc(100dvh-1.5rem)]">
         {/* Top Header - Solid Slate 900 matching project theme */}
         <div className="bg-slate-900 p-5 sm:p-6 text-white relative shrink-0">
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition active:scale-95 cursor-pointer"
+            className="absolute top-4 right-4 size-10 inline-flex items-center justify-center text-slate-300 hover:text-white rounded-xl hover:bg-slate-800 transition-colors duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/80"
             aria-label="Close welcome setup"
           >
             <X className="w-5 h-5" />
           </button>
 
           {/* Step Pill */}
-          <div className="flex items-center gap-2 mb-2.5">
+          <div className="flex items-center gap-2 mb-3 pr-12">
             <Badge variant="neutral" className="bg-slate-800 text-slate-200">
               <span className="w-2 h-2 rounded-full bg-emerald-400 mr-1.5" />
               Step {step} of 5
             </Badge>
-            <span className="text-xs text-slate-400 font-medium hidden sm:inline">
-              Newbie Setup
+            <span className="text-xs text-slate-300 font-medium hidden sm:inline">
+              Newbie setup
             </span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-            Welcome, {userName}! 👋
+          <h2 id="welcome-wizard-title" className="pr-12 text-xl sm:text-2xl font-bold leading-tight tracking-tight text-white">
+            Welcome, {userName}! <span aria-hidden="true">👋</span>
           </h2>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
+          <p className="text-sm text-slate-300 mt-1.5 leading-relaxed max-w-prose">
             {stepMeta.subtitle}
           </p>
 
           {/* Step Progress Bar - Solid Slate */}
-          <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4 overflow-hidden">
+          <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4 overflow-hidden" role="progressbar" aria-valuemin={1} aria-valuemax={5} aria-valuenow={step} aria-label="Setup progress">
+            {/* scaleX instead of width: no layout work while the bar animates */}
             <div
-              className="bg-emerald-500 h-1.5 rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${(step / 5) * 100}%` }}
+              className="bg-emerald-500 h-1.5 w-full origin-left rounded-full transition-transform duration-(--motion-base) ease-(--ease-in-out)"
+              style={{ transform: `scaleX(${step / 5})` }}
             />
           </div>
         </div>
@@ -313,12 +324,12 @@ export function WelcomeWizardModal({
           {step !== 4 && (
             <div className="relative">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
-                  Your Live Pocket Card
+                <span className="text-label text-muted-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+                  Your live pocket card
                 </span>
                 <Badge variant="success">
-                  Ready to Spend
+                  Ready to spend
                 </Badge>
               </div>
 
@@ -384,7 +395,7 @@ export function WelcomeWizardModal({
 
           {/* 🌟 STEP 1: PICK STARTING WALLET */}
           {step === 1 && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-500 ease-out">
+            <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-(--motion-base) ease-(--ease-out)">
               <div>
                 <label className="block text-sm font-bold text-foreground mb-1">
                   1. Which wallet or account do you want to start with?
@@ -403,7 +414,7 @@ export function WelcomeWizardModal({
                       key={preset.id}
                       type="button"
                       onClick={() => handleSelectPreset(preset)}
-                      className={`p-4 rounded-2xl text-left flex items-center gap-3.5 transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+                      className={`p-4 rounded-2xl text-left flex items-center gap-3.5 transition-[background-color,box-shadow] duration-(--motion-fast) ease-(--ease-in-out) cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                         isSelected
                           ? 'bg-card ring-2 ring-primary text-foreground shadow-card'
                           : 'bg-muted/60 hover:bg-muted text-muted-foreground shadow-2xs'
@@ -438,7 +449,7 @@ export function WelcomeWizardModal({
 
           {/* 🌟 STEP 2: NAME & SOLID COLOR THEME */}
           {step === 2 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-3 duration-500 ease-out">
+            <div className="space-y-5 animate-in fade-in slide-in-from-right-3 duration-(--motion-base) ease-(--ease-out)">
               {/* Nickname Input */}
               <div>
                 <label className="block text-sm font-bold text-foreground mb-1">
@@ -507,7 +518,7 @@ export function WelcomeWizardModal({
 
           {/* 🌟 STEP 3: STARTING BALANCE */}
           {step === 3 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-3 duration-500 ease-out">
+            <div className="space-y-5 animate-in fade-in slide-in-from-right-3 duration-(--motion-base) ease-(--ease-out)">
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-sm font-bold text-foreground">
@@ -568,7 +579,7 @@ export function WelcomeWizardModal({
 
           {/* 🌟 STEP 4: PICK FINANCIAL SUPERPOWERS / GOALS */}
           {step === 4 && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-500 ease-out">
+            <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-(--motion-base) ease-(--ease-out)">
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-foreground mb-1">
                   What would you like Tenvi to watch over for you?
@@ -585,8 +596,17 @@ export function WelcomeWizardModal({
                   return (
                     <div
                       key={mod.id}
+                      role="checkbox"
+                      aria-checked={isChecked}
+                      tabIndex={0}
                       onClick={() => toggleModule(mod.id)}
-                      className={`p-4 rounded-2xl flex items-center justify-between cursor-pointer transition-all duration-150 active:scale-[0.98] ${
+                      onKeyDown={(e) => {
+                        if (e.key === ' ' || e.key === 'Enter') {
+                          e.preventDefault();
+                          toggleModule(mod.id);
+                        }
+                      }}
+                      className={`motion-surface p-4 rounded-2xl flex items-center justify-between cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                         isChecked
                           ? 'bg-card ring-2 ring-primary text-foreground shadow-card'
                           : 'bg-muted/60 hover:bg-muted text-muted-foreground shadow-2xs'
@@ -637,7 +657,7 @@ export function WelcomeWizardModal({
 
           {/* 🌟 STEP 5: CELEBRATION & HIGH FIVE */}
           {step === 5 && (
-            <div className="space-y-5 animate-in zoom-in-95 duration-600 ease-out">
+            <div className="space-y-5 animate-in fade-in zoom-in-95 duration-(--motion-base) [animation-timing-function:var(--ease-spring-pop)]">
               <div className="relative py-2 text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-amber-100 text-amber-800 shadow-xs mb-2">
                   <Trophy className="w-8 h-8" />
@@ -700,14 +720,14 @@ export function WelcomeWizardModal({
         </div>
 
         {/* Modal Navigation Controls Footer */}
-        <div className="p-4 sm:p-5 bg-card flex items-center justify-between gap-3 shrink-0">
+        <div className="px-4 py-3 sm:px-5 sm:py-4 bg-card shadow-[0_-1px_0_var(--muted)] flex flex-wrap items-center justify-between gap-2 shrink-0">
           {/* Back / Skip Button */}
           {step > 1 && step < 5 ? (
             <Button
               type="button"
               variant="secondary"
               onClick={() => setStep((prev) => (prev - 1) as any)}
-              size="sm"
+              size="sm" className="h-12 min-h-12 sm:h-10 sm:min-h-10"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -718,7 +738,7 @@ export function WelcomeWizardModal({
               variant="ghost"
               onClick={onClose}
               size="sm"
-              className="text-muted-foreground"
+              className="h-12 min-h-12 sm:h-10 sm:min-h-10 text-muted-foreground"
             >
               Skip for now
             </Button>
@@ -731,49 +751,50 @@ export function WelcomeWizardModal({
             <Button
               type="button"
               onClick={() => setStep((prev) => (prev + 1) as any)}
-              size="sm"
+              size="sm" className="h-12 min-h-12 sm:h-10 sm:min-h-10"
             >
-              Next Step
+              Next step
               <ArrowRight className="w-4 h-4" />
             </Button>
           ) : step === 4 ? (
             <Button
               type="button"
               onClick={() => setStep(5)}
-              size="sm"
+              size="sm" className="h-12 min-h-12 sm:h-10 sm:min-h-10"
             >
-              See My Pocket
+              See my pocket
               <ArrowRight className="w-4 h-4" />
             </Button>
           ) : (
             /* STEP 5 ACTIONS */
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap [&>button]:flex-1 sm:[&>button]:flex-none">
               <Button
                 type="button"
                 variant="secondary"
                 disabled={isSubmitting}
                 onClick={() => handleFinalSubmit(true)}
-                size="sm"
+                size="sm" className="h-12 min-h-12 sm:h-10 sm:min-h-10"
               >
                 <Compass className="w-4 h-4" />
-                Take 30s Tour
+                Take 30s tour
               </Button>
 
               <Button
                 type="button"
                 disabled={isSubmitting}
+                aria-busy={isSubmitting}
                 onClick={() => handleFinalSubmit(false)}
-                size="sm"
+                size="sm" className="h-12 min-h-12 sm:h-10 sm:min-h-10"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Setting Up...
+                    Setting up…
                   </>
                 ) : (
                   <>
                     <Check className="w-4 h-4 stroke-[3]" />
-                    Explore My Dashboard 🚀
+                    Explore my dashboard 🚀
                   </>
                 )}
               </Button>

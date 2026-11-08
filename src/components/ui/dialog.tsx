@@ -53,7 +53,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2.5rem)] -translate-x-1/2 -translate-y-1/2 gap-5 rounded-3xl bg-card p-6 sm:p-8 text-card-foreground shadow-lift outline-none sm:max-w-lg my-6 max-h-[calc(100dvh-3rem)] overflow-y-auto data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:duration-[var(--dur-base)] data-open:[animation-timing-function:var(--ease-out-soft)] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:duration-[var(--dur-fast)] data-closed:[animation-timing-function:var(--ease-standard)]",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2.5rem)] -translate-x-1/2 -translate-y-1/2 gap-5 rounded-3xl bg-card p-6 sm:p-8 text-card-foreground shadow-overlay outline-none sm:max-w-lg my-6 max-h-[calc(100dvh-3rem)] overflow-y-auto data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-bottom-2 data-open:duration-[var(--dur-base)] data-open:[animation-timing-function:var(--ease-spring-soft)] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:duration-[var(--dur-fast)] data-closed:[animation-timing-function:var(--ease-standard)]",
           className
         )}
         {...props}

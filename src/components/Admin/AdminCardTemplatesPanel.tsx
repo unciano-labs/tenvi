@@ -68,7 +68,7 @@ export function AdminCardTemplatesPanel() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <div className="space-y-6">
       <NotificationTemplatesEditor
         initialSettings={settings}
         mode="cards_only"

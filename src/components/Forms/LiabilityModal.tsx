@@ -311,7 +311,7 @@ export function LiabilityModal({
   return (
     <ResponsiveDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ResponsiveDialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0">
-        <ResponsiveDialogHeader className="p-6 pb-2">
+        <ResponsiveDialogHeader className="p-6 pb-2 pr-14 sm:pr-16">
           <ResponsiveDialogTitle>
             {isEditing ? 'Edit Debt / Liability' : 'Add Mortgage or Loan Liability'}
           </ResponsiveDialogTitle>
@@ -325,7 +325,7 @@ export function LiabilityModal({
             {/* Nickname & Lender */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
                   Liability Nickname *
                 </label>
                 <Input
@@ -338,7 +338,7 @@ export function LiabilityModal({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
                   Bank / Lender Name *
                 </label>
                 <Input
@@ -354,13 +354,13 @@ export function LiabilityModal({
             {/* Liability Type & Linked Property */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-                  Liability Type
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
+                  Liability type
                 </label>
                 <select
                   value={liabilityType}
                   onChange={(e) => setLiabilityType(e.target.value as LiabilityType)}
-                  className="w-full h-11 px-3 text-sm bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+                  className="w-full h-11 px-3 text-sm bg-background rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
                 >
                   {LIABILITY_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>
@@ -371,13 +371,13 @@ export function LiabilityModal({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-                  Link to Property / Asset (Optional)
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
+                  Link to property / asset (Optional)
                 </label>
                 <select
                   value={propertyId}
                   onChange={(e) => setPropertyId(e.target.value)}
-                  className="w-full h-11 px-3 text-sm bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+                  className="w-full h-11 px-3 text-sm bg-background rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
                 >
                   <option value="">No linked asset (Standalone debt)</option>
                   {properties.map((p) => (
@@ -390,13 +390,13 @@ export function LiabilityModal({
             </div>
 
             {/* Account Linking Section (Credit Card or Savings) */}
-            <div className="p-3.5 rounded-2xl border border-border/80 bg-muted/20 space-y-3">
+            <div className="p-3.5 rounded-2xl bg-muted/20 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                   <Link2 className="w-3.5 h-3.5 text-primary" />
                   <span>Linked Account (Credit Card or Savings)</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground font-medium">Optional</span>
+                <span className="text-2xs text-muted-foreground font-medium">Optional</span>
               </div>
 
               {/* Segmented Selector for Account Type */}
@@ -405,9 +405,9 @@ export function LiabilityModal({
                   type="button"
                   onClick={() => handleLinkedAccountTypeChange('')}
                   className={cn(
-                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-all text-center',
+                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-colors duration-(--motion-fast) text-center',
                     linkedAccountType === ''
-                      ? 'bg-background text-foreground shadow-xs'
+                      ? 'bg-background text-foreground shadow-card'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
@@ -417,9 +417,9 @@ export function LiabilityModal({
                   type="button"
                   onClick={() => handleLinkedAccountTypeChange('credit_card')}
                   className={cn(
-                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5',
+                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-colors duration-(--motion-fast) flex items-center justify-center gap-1.5',
                     linkedAccountType === 'credit_card'
-                      ? 'bg-background text-primary shadow-xs'
+                      ? 'bg-background text-primary shadow-card'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
@@ -430,9 +430,9 @@ export function LiabilityModal({
                   type="button"
                   onClick={() => handleLinkedAccountTypeChange('savings')}
                   className={cn(
-                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5',
+                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-colors duration-(--motion-fast) flex items-center justify-center gap-1.5',
                     linkedAccountType === 'savings'
-                      ? 'bg-background text-emerald-600 dark:text-emerald-400 shadow-xs'
+                      ? 'bg-background text-success shadow-card'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
@@ -455,7 +455,7 @@ export function LiabilityModal({
                   <select
                     value={creditCardId}
                     onChange={(e) => handleCreditCardSelect(e.target.value)}
-                    className="w-full h-11 px-3 text-sm bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+                    className="w-full h-11 px-3 text-sm bg-background rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
                   >
                     <option value="">-- Choose Credit Card --</option>
                     {creditCards.map((c) => (
@@ -479,7 +479,7 @@ export function LiabilityModal({
                   <label className="text-xs font-semibold text-foreground flex items-center justify-between">
                     <span>Select Savings Account</span>
                     {selectedSavings && (
-                      <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="text-[11px] font-semibold text-success">
                         Balance: ₱{formatMoney(selectedSavings.current_balance)}
                       </span>
                     )}
@@ -487,7 +487,7 @@ export function LiabilityModal({
                   <select
                     value={savingsId}
                     onChange={(e) => setSavingsId(e.target.value)}
-                    className="w-full h-11 px-3 text-sm bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+                    className="w-full h-11 px-3 text-sm bg-background rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
                   >
                     <option value="">-- Choose Savings / Settlement Account --</option>
                     {savingsAccounts.map((s) => (
@@ -497,7 +497,7 @@ export function LiabilityModal({
                     ))}
                   </select>
                   <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <Info className="w-3 h-3 text-emerald-600 shrink-0" />
+                    <Info className="w-3 h-3 text-success shrink-0" />
                     <span>Auto-debit source for amortization payments and balance sheet matching.</span>
                   </div>
                 </div>
@@ -507,7 +507,7 @@ export function LiabilityModal({
             {/* Balances */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
                   Current Principal Balance *
                 </label>
                 <MoneyInput
@@ -527,8 +527,8 @@ export function LiabilityModal({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-                  Original Loan Principal
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
+                  Original loan principal
                 </label>
                 <MoneyInput
                   value={originalPrincipal}
@@ -546,13 +546,13 @@ export function LiabilityModal({
             </div>
 
             {/* Interest Rate Mode & Input */}
-            <div className="p-3.5 rounded-2xl border border-border/80 bg-muted/20 space-y-3">
+            <div className="p-3.5 rounded-2xl bg-muted/20 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                   <Percent className="w-3.5 h-3.5 text-primary" />
                   <span>Interest Rate & Computation Mode</span>
                 </div>
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-2xs font-semibold text-muted-foreground">
                   {rateType === 'monthly_addon' ? 'Flat Add-on' : 'Compounded Annual'}
                 </span>
               </div>
@@ -563,9 +563,9 @@ export function LiabilityModal({
                   type="button"
                   onClick={() => handleRateTypeChange('annual')}
                   className={cn(
-                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-all text-center',
+                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-colors duration-(--motion-fast) text-center',
                     rateType === 'annual'
-                      ? 'bg-background text-foreground shadow-xs'
+                      ? 'bg-background text-foreground shadow-card'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
@@ -575,9 +575,9 @@ export function LiabilityModal({
                   type="button"
                   onClick={() => handleRateTypeChange('monthly_addon')}
                   className={cn(
-                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-all text-center',
+                    'py-1.5 px-2 text-xs font-semibold rounded-lg transition-colors duration-(--motion-fast) text-center',
                     rateType === 'monthly_addon'
-                      ? 'bg-background text-primary shadow-xs'
+                      ? 'bg-background text-primary shadow-card'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
@@ -621,8 +621,8 @@ export function LiabilityModal({
             {/* Term & Start Date */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-                  Loan Term (Months)
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
+                  Loan term (Months)
                 </label>
                 <Input
                   type="number"
@@ -639,8 +639,8 @@ export function LiabilityModal({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-                  Loan Start Date
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
+                  Loan start date
                 </label>
                 <Input
                   type="date"
@@ -655,8 +655,8 @@ export function LiabilityModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Monthly Amortization
+                  <label className="text-xs font-bold text-muted-foreground">
+                    Monthly amortization
                   </label>
                   {isAmortizationOverridden ? (
                     <button
@@ -670,13 +670,13 @@ export function LiabilityModal({
                           rateType
                         )
                       }
-                      className="text-[10px] text-primary hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                      className="text-2xs text-primary hover:underline flex items-center gap-1 font-semibold cursor-pointer"
                       title="Reset to calculated formula amount"
                     >
                       <RotateCcw className="w-2.5 h-2.5" /> Auto-compute
                     </button>
                   ) : monthlyPayment ? (
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <span className="text-2xs text-success font-semibold flex items-center gap-1">
                       <Sparkles className="w-2.5 h-2.5" /> Auto-computed
                     </span>
                   ) : null}
@@ -698,8 +698,8 @@ export function LiabilityModal({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-                  Monthly Due Day (Day of Month)
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
+                  Monthly due day (Day of month)
                 </label>
                 <Input
                   type="number"
@@ -719,13 +719,13 @@ export function LiabilityModal({
             </div>
 
             {/* Start Payment Month (Buy Now, Pay Later Support) */}
-            <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/50 space-y-1.5">
+            <div className="p-3.5 rounded-2xl bg-muted/40 space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-primary" />
                   First Payment Month / BNPL (Optional)
                 </label>
-                <span className="text-[10px] text-muted-foreground font-semibold px-2 py-0.5 rounded-md bg-muted">
+                <span className="text-2xs text-muted-foreground font-semibold px-2 py-0.5 rounded-md bg-muted">
                   Buy Now, Pay Later
                 </span>
               </div>
@@ -753,20 +753,20 @@ export function LiabilityModal({
 
             {/* Notes */}
             <div>
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-                Account or Loan Notes
+              <label className="text-xs font-bold text-muted-foreground block mb-1">
+                Account or loan notes
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Account number, branch, contact person, or special terms..."
-                className="w-full h-16 p-3 text-sm bg-background border border-input rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                className="w-full h-16 p-3 text-sm bg-background rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none"
               />
             </div>
           </form>
         </ResponsiveDialogBody>
 
-        <div className="p-4 border-t flex items-center justify-end gap-2 bg-muted/20">
+        <div className="flex flex-wrap items-center justify-end gap-2 bg-muted/40 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:rounded-b-3xl">
           <Button
             type="button"
             variant="ghost"
@@ -780,7 +780,7 @@ export function LiabilityModal({
             type="submit"
             form="liability-form"
             disabled={isSubmitting}
-            className="rounded-2xl font-bold shadow-xs"
+            className="rounded-2xl font-bold shadow-card"
           >
             {isSubmitting ? (
               <>
